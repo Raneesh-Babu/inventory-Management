@@ -41,10 +41,10 @@
 
     <div id="authCard" class="card">
       <div style="margin-bottom:8px;font-weight:700">Local storage / Validation</div>
-      <p class="muted">This page reads localStorage key <code>"ShopID tag"</code> and <code>"MobileTag"</code>. If MobileTag is missing, enter it below to continue.</p>
+      <p class="muted">This page reads localStorage key <code>"ShopIDtag"</code> and <code>"MobileTag"</code>. If MobileTag is missing, enter it below to continue.</p>
       <div class="row">
         <label>ShopID (from localStorage)</label>
-        <input id="shopidInput" type="text" placeholder="ShopID tag (read-only)" readonly />
+        <input id="shopidInput" type="text" placeholder="ShopIDtag (read-only)" readonly />
       </div>
       <div class="row">
         <label>Mobile (Username)</label>
@@ -177,7 +177,7 @@
   const blockStatus = document.getElementById('blockStatus');
 
   // Local storage keys
-  const SHOPID_KEY = 'ShopID tag'; // as you requested
+  const SHOPID_KEY = 'ShopIDtag'; // updated key (was "ShopID tag")
   const MOBILE_KEY = 'MobileTag';  // fallback key name for mobile
 
   // Runtime state
@@ -217,7 +217,7 @@
     localStorage.removeItem(MOBILE_KEY);
     shopidInput.value = '';
     mobileInput.value = '';
-    setMessage('Cleared ShopID tag and MobileTag from localStorage');
+    setMessage('Cleared ShopIDtag and MobileTag from localStorage');
   });
 
   // Fetch rows from Baserow (returns array)
@@ -355,7 +355,7 @@
     mobileValue = localStorage.getItem(MOBILE_KEY) || mobileInput.value.trim();
 
     if (!shopIdValue) {
-      setMessage('ShopID tag not found in localStorage. Please set localStorage key "' + SHOPID_KEY + '" then reload.', true);
+      setMessage('ShopIDtag not found in localStorage. Please set localStorage key "' + SHOPID_KEY + '" then reload.', true);
       shopidInput.value = '';
       managerPanel.classList.add('hidden');
       return;
