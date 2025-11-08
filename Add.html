@@ -166,7 +166,6 @@
 
         .staff-list {
             margin-top: 40px;
-            overflow-x: auto;
         }
 
         .staff-list h3 {
@@ -177,42 +176,109 @@
             margin-bottom: 20px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
+        .staff-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
         }
 
-        th, td {
-            border: 1px solid var(--light-gray);
-            padding: 15px;
-            text-align: center;
+        .staff-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 20px;
             transition: var(--transition);
+            border-left: 4px solid var(--primary);
         }
 
-        th {
-            background: linear-gradient(to right, var(--primary), var(--primary-dark));
-            color: white;
+        .staff-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .staff-card.blocked {
+            border-left-color: var(--danger);
+            background-color: rgba(230, 57, 70, 0.05);
+        }
+
+        .staff-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .staff-name {
+            font-size: 1.2rem;
             font-weight: 600;
-            position: sticky;
-            top: 0;
+            color: var(--dark);
         }
 
-        tr:nth-child(even) {
-            background-color: rgba(248, 249, 250, 0.5);
+        .staff-role {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
 
-        tr:hover {
-            background-color: rgba(67, 97, 238, 0.05);
+        .staff-details {
+            margin-bottom: 15px;
         }
 
-        .blocked {
-            background: rgba(230, 57, 70, 0.1);
-            border-left: 4px solid var(--danger);
+        .detail-row {
+            display: flex;
+            margin-bottom: 8px;
         }
 
-        .blocked:hover {
-            background: rgba(230, 57, 70, 0.15);
+        .detail-label {
+            font-weight: 600;
+            color: var(--gray);
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: var(--dark);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+
+        .status-blocked {
+            background: rgba(230, 57, 70, 0.2);
+            color: var(--danger);
+        }
+
+        .staff-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .update-btn {
+            background: linear-gradient(to right, var(--success), #3a86ff);
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .update-btn:hover {
+            box-shadow: 0 4px 12px rgba(76, 201, 240, 0.4);
         }
 
         .status-message {
@@ -239,16 +305,6 @@
             background-color: rgba(67, 97, 238, 0.1);
             color: var(--primary);
             border: 1px solid var(--primary);
-        }
-
-        .update-btn {
-            background: linear-gradient(to right, var(--success), #3a86ff);
-            padding: 10px 15px;
-            font-size: 0.9rem;
-        }
-
-        .update-btn:hover {
-            box-shadow: 0 4px 12px rgba(76, 201, 240, 0.4);
         }
 
         /* Responsive Design */
@@ -290,13 +346,8 @@
                 padding: 12px 14px;
             }
             
-            th, td {
-                padding: 10px 8px;
-                font-size: 0.9rem;
-            }
-            
-            table {
-                min-width: 600px;
+            .staff-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -321,41 +372,30 @@
                 font-size: 1rem;
             }
             
-            th, td {
-                padding: 8px 6px;
-                font-size: 0.85rem;
+            .staff-card {
+                padding: 15px;
             }
             
-            table {
-                min-width: 500px;
+            .staff-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
             
-            .update-btn {
-                padding: 8px 12px;
-                font-size: 0.8rem;
+            .staff-actions {
+                flex-direction: column;
             }
         }
 
-        /* Animation for table rows */
+        /* Animation for cards */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        tbody tr {
+        .staff-card {
             animation: fadeIn 0.5s ease forwards;
         }
-
-        tbody tr:nth-child(1) { animation-delay: 0.05s; }
-        tbody tr:nth-child(2) { animation-delay: 0.1s; }
-        tbody tr:nth-child(3) { animation-delay: 0.15s; }
-        tbody tr:nth-child(4) { animation-delay: 0.2s; }
-        tbody tr:nth-child(5) { animation-delay: 0.25s; }
-        tbody tr:nth-child(6) { animation-delay: 0.3s; }
-        tbody tr:nth-child(7) { animation-delay: 0.35s; }
-        tbody tr:nth-child(8) { animation-delay: 0.4s; }
-        tbody tr:nth-child(9) { animation-delay: 0.45s; }
-        tbody tr:nth-child(10) { animation-delay: 0.5s; }
 
         /* Custom scrollbar */
         ::-webkit-scrollbar {
@@ -407,20 +447,7 @@
 
         <div class="staff-list">
             <h3>Staff Members</h3>
-            <table id="staffTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Password</th>
-                        <th>Role</th>
-                        <th>Block</th>
-                        <th>Notice</th>
-                        <th>Update</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class="staff-grid" id="staffGrid"></div>
         </div>
     </div>
 
@@ -514,7 +541,9 @@
                 field_6136324: password,
                 field_6136325: "Staff",
                 field_6138245: shopID,
-                field_6138941: shopName
+                field_6138941: shopName,
+                field_6168111: false, // Block field (boolean)
+                field_6169112: ""     // Notice field (text)
             };
 
             try {
@@ -547,31 +576,60 @@
                 });
                 const result = await res.json();
                 const staff = result.results.filter(u => u.ShopID == shopID);
-                const tbody = document.querySelector("#staffTable tbody");
-                tbody.innerHTML = "";
+                const staffGrid = document.getElementById("staffGrid");
+                staffGrid.innerHTML = "";
 
                 staff.forEach(u => {
-                    const tr = document.createElement("tr");
-                    if (u.Block === "B") tr.classList.add("blocked");
+                    const staffCard = document.createElement("div");
+                    staffCard.className = "staff-card";
+                    if (u.Block) staffCard.classList.add("blocked");
 
-                    tr.innerHTML = `
-                        <td><input value="${u.Name || ""}" data-id="${u.id}" data-field="field_6138249"></td>
-                        <td>${u.Username || ""}</td>
-                        <td><input value="${u.Password || ""}" data-id="${u.id}" data-field="field_6136324"></td>
-                        <td><select data-id="${u.id}" data-field="field_6136325">
-                            <option ${u.Role === "Staff" ? "selected" : ""}>Staff</option>
-                            <option ${u.Role === "Manager" ? "selected" : ""}>Manager</option>
-                        </select></td>
-                        <td>
-                            <select data-id="${u.id}" data-field="field_6168111">
-                                <option value="">Active</option>
-                                <option value="B" ${u.Block === "B" ? "selected" : ""}>Blocked</option>
-                            </select>
-                        </td>
-                        <td><textarea data-id="${u.id}" data-field="field_6169112">${u.Notice || ""}</textarea></td>
-                        <td><button class="update-btn" onclick="updateUser(${u.id})">Update</button></td>
+                    staffCard.innerHTML = `
+                        <div class="staff-header">
+                            <div class="staff-name">${u.Name || "N/A"}</div>
+                            <div class="staff-role">${u.Role || "Staff"}</div>
+                        </div>
+                        <div class="staff-details">
+                            <div class="detail-row">
+                                <div class="detail-label">Username:</div>
+                                <div class="detail-value">${u.Username || "N/A"}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Password:</div>
+                                <div class="detail-value">
+                                    <input type="text" value="${u.Password || ""}" data-id="${u.id}" data-field="field_6136324">
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Role:</div>
+                                <div class="detail-value">
+                                    <select data-id="${u.id}" data-field="field_6136325">
+                                        <option value="Staff" ${u.Role === "Staff" ? "selected" : ""}>Staff</option>
+                                        <option value="Manager" ${u.Role === "Manager" ? "selected" : ""}>Manager</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Status:</div>
+                                <div class="detail-value">
+                                    <select data-id="${u.id}" data-field="field_6168111">
+                                        <option value="false" ${!u.Block ? "selected" : ""}>Active</option>
+                                        <option value="true" ${u.Block ? "selected" : ""}>Blocked</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Notice:</div>
+                                <div class="detail-value">
+                                    <textarea data-id="${u.id}" data-field="field_6169112" placeholder="Add notice for staff">${u.Notice || ""}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="staff-actions">
+                            <button class="update-btn" onclick="updateUser(${u.id})">Update</button>
+                        </div>
                     `;
-                    tbody.appendChild(tr);
+                    staffGrid.appendChild(staffCard);
                 });
             } catch (error) {
                 statusMsg.textContent = "Error fetching staff: " + error.message;
@@ -586,10 +644,17 @@
                 const inputs = document.querySelectorAll(`[data-id="${id}"]`);
                 const data = {};
                 
-                // Map field names to their values
+                // Map field names to their values with proper type conversion
                 inputs.forEach(el => {
                     const fieldName = el.getAttribute("data-field");
-                    data[fieldName] = el.value;
+                    let value = el.value;
+                    
+                    // Convert boolean fields
+                    if (fieldName === "field_6168111") {
+                        value = value === "true";
+                    }
+                    
+                    data[fieldName] = value;
                 });
 
                 // Send PATCH request to update the user
