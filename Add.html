@@ -17,7 +17,7 @@ h1, h2 {
   color: #2c3e50;
 }
 .container {
-  max-width: 900px;
+  max-width: 950px;
   margin: auto;
   background: white;
   padding: 20px;
@@ -59,12 +59,24 @@ th {
 .blocked {
   background: #f8d7da;
 }
+.header-box {
+  background: #ecf0f1;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  margin-bottom: 20px;
+}
 </style>
 </head>
 <body>
 
 <h1>Manager Dashboard</h1>
-<div id="mainContainer" class="container" style="display:none;">
+<div class="container" id="mainContainer" style="display:none;">
+  <div class="header-box">
+    <h3 id="welcomeText"></h3>
+    <h4 id="shopNameText"></h4>
+  </div>
+
   <h3>Add New Staff</h3>
   <input type="text" id="username" placeholder="Username (10-digit mobile)" maxlength="10">
   <input type="text" id="name" placeholder="Full Name">
@@ -95,13 +107,13 @@ th {
 <script>
 const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const tableId = 729979;
-const baseUrl = "https://api.baserow.io/api/database/rows/table/" + tableId + "/";
+const baseUrl = `https://api.baserow.io/api/database/rows/table/${tableId}/`;
 const mainContainer = document.getElementById("mainContainer");
 const statusMsg = document.getElementById("statusMessage");
 
 const mobileTag = localStorage.getItem("MobileTag");
 
-// Validate the logged-in manager
+// Validate manager using MobileTag
 async function validateManager() {
   if (!mobileTag) {
     statusMsg.textContent = "No MobileTag found. Please login first.";
@@ -127,17 +139,22 @@ async function validateManager() {
     return;
   }
 
-  // Save manager info to localStorage
+  // Save manager details to localStorage
   localStorage.setItem("Role", currentUser.Role);
   localStorage.setItem("ShopID", currentUser.ShopID);
+  localStorage.setItem("ShopName", currentUser["Shop Name"]);
   localStorage.setItem("Name", currentUser.Name);
+
+  document.getElementById("welcomeText").textContent = "👋 Welcome, " + currentUser.Name;
+  document.getElementById("shopNameText").textContent = "🏪 Shop Name: " + currentUser["Shop Name"];
 
   statusMsg.textContent = "";
   mainContainer.style.display = "block";
+
   fetchStaff(currentUser.ShopID);
 }
 
-// Button enable check
+// Enable Add button when fields are valid
 const addBtn = document.getElementById("addBtn");
 const usernameInput = document.getElementById("username");
 const nameInput = document.getElementById("name");
@@ -150,19 +167,21 @@ const passwordInput = document.getElementById("password");
   });
 });
 
-// Add staff
+// Add staff (inherits manager's ShopID & Shop Name)
 addBtn.addEventListener("click", async () => {
   const username = usernameInput.value.trim();
   const name = nameInput.value.trim();
   const password = passwordInput.value.trim();
   const shopID = localStorage.getItem("ShopID");
+  const shopName = localStorage.getItem("ShopName");
 
   const data = {
     field_6136323: username,
     field_6138249: name,
     field_6136324: password,
     field_6136325: "Staff",
-    field_6138245: shopID
+    field_6138245: shopID,
+    field_6138941: shopName
   };
 
   await fetch(baseUrl, {
@@ -174,13 +193,13 @@ addBtn.addEventListener("click", async () => {
     body: JSON.stringify(data)
   });
 
-  alert("Staff added successfully!");
+  alert("✅ Staff added successfully!");
   fetchStaff(shopID);
   usernameInput.value = nameInput.value = passwordInput.value = "";
   addBtn.disabled = true;
 });
 
-// Fetch staff for this ShopID
+// Fetch staff under same ShopID
 async function fetchStaff(shopID) {
   const res = await fetch(baseUrl + "?user_field_names=true", {
     headers: { "Authorization": "Token " + apiKey }
@@ -215,7 +234,7 @@ async function fetchStaff(shopID) {
   });
 }
 
-// Update record
+// Update record in Baserow
 async function updateUser(id) {
   const inputs = document.querySelectorAll(`[data-id='${id}']`);
   const data = {};
@@ -229,7 +248,7 @@ async function updateUser(id) {
     },
     body: JSON.stringify(data)
   });
-  alert("User updated successfully!");
+  alert("✅ User updated successfully!");
   const shopID = localStorage.getItem("ShopID");
   fetchStaff(shopID);
 }
