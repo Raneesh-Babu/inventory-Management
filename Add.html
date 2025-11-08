@@ -1,184 +1,204 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Manager Dashboard — Baserow</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manager Dashboard</title>
 <style>
-:root{--bg:#f7fafc;--card:#fff;--accent:#0b5fff}
-body{font-family:Inter,Segoe UI,system-ui,Arial;margin:0;background:var(--bg);color:#0f172a}
-.wrap{max-width:980px;margin:28px auto;padding:18px}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-h1{font-size:20px;margin:0}
-.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(8,15,40,0.06)}
-.row{display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-label{min-width:120px;font-weight:600;color:#334155}
-input[type="text"],input[type="password"],textarea,select{flex:1;padding:10px;border:1px solid #e6eef8;border-radius:8px;font-size:14px}
-textarea{min-height:72px;resize:vertical}
-button{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
-button.secondary{background:#e6eef8;color:#0b5fff}
-.status{padding:8px;border-radius:8px}
-.blocked{background:#fff1f2;color:#9b1c1c}
-.active{background:#ecfeff;color:#056b6a}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-.small{font-size:13px;padding:6px 10px;border-radius:8px}
-.muted{color:#64748b;font-size:13px}
-.hidden{display:none}
-@media(max-width:640px){label{min-width:100%}}
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f4f7fa;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  color: #2c3e50;
+}
+.container {
+  max-width: 900px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+input, select, button, textarea {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+button {
+  background: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background: #2980b9;
+}
+.staff-list {
+  margin-top: 30px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+th {
+  background: #3498db;
+  color: white;
+}
+.blocked {
+  background: #f8d7da;
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <h1>Manager Dashboard — Baserow</h1>
-  <div class="muted">Table: <strong>729979</strong></div>
-</header>
 
-<div id="message" class="card" style="margin-bottom:12px;">
-  <div id="msgText">Initializing...</div>
-</div>
+<h1>Manager Dashboard</h1>
+<div class="container">
+  <h3>Add New Staff</h3>
+  <input type="text" id="username" placeholder="Username (10-digit mobile)" maxlength="10">
+  <input type="text" id="name" placeholder="Full Name">
+  <input type="password" id="password" placeholder="Password">
+  <button id="addBtn" disabled>Add Staff</button>
 
-<div id="authCard" class="card">
-  <p class="muted">Reads localStorage keys <code>ShopIDTag</code> and <code>MobileTag</code>.  
-  Enter or update below if needed.</p>
-  <div class="row">
-    <label>ShopID (ShopIDTag)</label>
-    <input id="shopidInput" type="text" placeholder="ShopIDTag (read-only)" readonly />
-  </div>
-  <div class="row">
-    <label>Mobile (Username)</label>
-    <input id="mobileInput" type="text" placeholder="10-digit mobile (MobileTag)" />
-    <button id="saveMobileBtn" class="small secondary">Save MobileTag</button>
-  </div>
-  <div class="row">
-    <label></label>
-    <div class="controls">
-      <button id="validateBtn">Validate & Load User</button>
-      <button id="clearLocalBtn" class="small secondary">Clear stored tags</button>
-    </div>
-  </div>
-</div>
-
-<div id="managerPanel" class="card hidden" style="margin-top:14px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-    <div style="font-weight:700">Manager Controls</div>
-    <div id="roleBadge" class="muted"></div>
-  </div>
-
-  <div id="userForm">
-    <div class="row"><label>Username</label><input id="f_username" type="text"/></div>
-    <div class="row"><label>Name</label><input id="f_name" type="text"/></div>
-    <div class="row"><label>Shop Name</label><input id="f_shopname" type="text"/></div>
-    <div class="row"><label>Password</label><input id="f_password" type="password"/></div>
-    <div class="row"><label>Role</label>
-      <select id="f_role"><option></option><option>Manager</option><option>Staff</option></select>
-    </div>
-    <div class="row"><label>ShopID</label><input id="f_shopid" type="text"/></div>
-    <div class="row"><label>Notice</label><textarea id="f_notice"></textarea></div>
-    <div class="row"><label>Block</label>
-      <select id="f_block"><option value="">Active</option><option value="B">Blocked (B)</option></select>
-      <div id="blockStatus" style="margin-left:6px"></div>
-    </div>
-    <div class="row"><label>Last Login</label><input id="f_lastlogin" type="text" readonly/></div>
-
-    <div class="row" style="margin-top:8px;">
-      <label></label>
-      <div class="controls">
-        <button id="saveBtn">Save Changes</button>
-        <button id="blockBtn" class="small secondary">Toggle Block</button>
-        <button id="refreshBtn" class="small secondary">Refresh</button>
-      </div>
-    </div>
-
-    <div id="rowInfo" class="muted" style="margin-top:12px"></div>
+  <div class="staff-list">
+    <h3>Staff Members</h3>
+    <table id="staffTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Role</th>
+          <th>Block</th>
+          <th>Notice</th>
+          <th>Update</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div>
 
 <script>
-(async function(){
-const BASE_URL='https://api.baserow.io/api/database/rows/table/729979/';
-const API_TOKEN='jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
-const FIELDS={
-  username:'field_6136323',
-  name:'field_6138249',
-  shopname:'field_6138941',
-  password:'field_6136324',
-  role:'field_6136325',
-  shopid:'field_6138245',
-  notice:'field_6169112',
-  block:'field_6168111',
-  lastlogin:'field_6168126'
-};
-const SHOPID_KEY='ShopIDTag';
-const MOBILE_KEY='MobileTag';
-const msg=document.getElementById('msgText');
-const managerPanel=document.getElementById('managerPanel');
-function m(t,e=false){msg.textContent=t;msg.style.color=e?'#b91c1c':'#0b5fff';}
+const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const tableId = 729979;
+const baseUrl = "https://api.baserow.io/api/database/rows/table/" + tableId + "/";
 
-const shopidInput=document.getElementById('shopidInput');
-const mobileInput=document.getElementById('mobileInput');
-const saveMobileBtn=document.getElementById('saveMobileBtn');
-const validateBtn=document.getElementById('validateBtn');
-const clearLocalBtn=document.getElementById('clearLocalBtn');
+const role = localStorage.getItem("Role");
+const shopID = localStorage.getItem("ShopID");
+const mobileTag = localStorage.getItem("MobileTag");
 
-let shopId=localStorage.getItem(SHOPID_KEY);
-let mobile=localStorage.getItem(MOBILE_KEY);
-if(shopId)shopidInput.value=shopId;
-if(mobile)mobileInput.value=mobile;
+const addBtn = document.getElementById("addBtn");
+const usernameInput = document.getElementById("username");
+const nameInput = document.getElementById("name");
+const passwordInput = document.getElementById("password");
 
-saveMobileBtn.onclick=()=>{const v=mobileInput.value.trim();if(!v){alert('Enter mobile');return;}localStorage.setItem(MOBILE_KEY,v);mobile=v;m('MobileTag saved');};
-clearLocalBtn.onclick=()=>{localStorage.removeItem(SHOPID_KEY);localStorage.removeItem(MOBILE_KEY);shopidInput.value='';mobileInput.value='';m('Cleared localStorage');};
-
-async function fetchAll(){
-  const r=await fetch(BASE_URL+'?page_size=1000',{headers:{Authorization:'Token '+API_TOKEN}});
-  if(!r.ok)throw new Error('Fetch failed '+r.status);
-  return await r.json();
+if (role !== "Manager") {
+  document.body.innerHTML = "<h2 style='color:red;text-align:center;'>Access Denied - Managers Only</h2>";
+} else {
+  fetchStaff();
 }
-function findRow(rows,u,s){return rows.find(r=>r.values[FIELDS.username]==u&&r.values[FIELDS.shopid]==s);}
-async function patch(id,b){const r=await fetch(BASE_URL+id+'/',{method:'PATCH',headers:{Authorization:'Token '+API_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error('Patch '+r.status);return await r.json();}
 
-const f={};
-['username','name','shopname','password','role','shopid','notice','block','lastlogin'].forEach(k=>f[k]=document.getElementById('f_'+k));
-const saveBtn=document.getElementById('saveBtn');
-const blockBtn=document.getElementById('blockBtn');
-const refreshBtn=document.getElementById('refreshBtn');
-const blockStatus=document.getElementById('blockStatus');
-const roleBadge=document.getElementById('roleBadge');
-const rowInfo=document.getElementById('rowInfo');
-let row=null;
+// Enable Add button when all fields valid
+[usernameInput, nameInput, passwordInput].forEach(input => {
+  input.addEventListener("input", () => {
+    const valid = usernameInput.value.length === 10 && nameInput.value && passwordInput.value;
+    addBtn.disabled = !valid;
+  });
+});
 
-function render(r){
-  const v=r.values;
-  for(let k in f){f[k].value=v[FIELDS[k]]||'';}
-  blockStatus.innerHTML=v[FIELDS.block]=='B'?'<span class="status blocked">Blocked</span>':'<span class="status active">Active</span>';
-  rowInfo.textContent='Row ID '+r.id;
+// Add staff
+addBtn.addEventListener("click", async () => {
+  const username = usernameInput.value.trim();
+  const name = nameInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  const data = {
+    field_6136323: username,
+    field_6138249: name,
+    field_6136324: password,
+    field_6136325: "Staff",
+    field_6138245: shopID
+  };
+
+  await fetch(baseUrl, {
+    method: "POST",
+    headers: {
+      "Authorization": "Token " + apiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  });
+
+  alert("Staff added successfully!");
+  fetchStaff();
+  usernameInput.value = nameInput.value = passwordInput.value = "";
+  addBtn.disabled = true;
+});
+
+// Fetch and display staff
+async function fetchStaff() {
+  const res = await fetch(baseUrl + "?user_field_names=true", {
+    headers: { "Authorization": "Token " + apiKey }
+  });
+  const result = await res.json();
+  const staff = result.results.filter(u => u.ShopID == shopID);
+  const tbody = document.querySelector("#staffTable tbody");
+  tbody.innerHTML = "";
+
+  staff.forEach(u => {
+    const tr = document.createElement("tr");
+    if (u.Block === "B") tr.classList.add("blocked");
+
+    tr.innerHTML = `
+      <td><input value="${u.Name || ""}" data-id="${u.id}" data-field="field_6138249"></td>
+      <td>${u.Username || ""}</td>
+      <td><input value="${u.Password || ""}" data-id="${u.id}" data-field="field_6136324"></td>
+      <td><select data-id="${u.id}" data-field="field_6136325">
+        <option ${u.Role === "Staff" ? "selected" : ""}>Staff</option>
+        <option ${u.Role === "Manager" ? "selected" : ""}>Manager</option>
+      </select></td>
+      <td>
+        <select data-id="${u.id}" data-field="field_6168111">
+          <option value="">Active</option>
+          <option value="B" ${u.Block === "B" ? "selected" : ""}>Blocked</option>
+        </select>
+      </td>
+      <td><textarea data-id="${u.id}" data-field="field_6169112">${u.Notice || ""}</textarea></td>
+      <td><button onclick="updateUser(${u.id})">Update</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
-async function validate(){
-  shopId=localStorage.getItem(SHOPID_KEY);
-  mobile=localStorage.getItem(MOBILE_KEY)||mobileInput.value.trim();
-  if(!shopId){m('ShopIDTag missing in localStorage',true);managerPanel.classList.add('hidden');return;}
-  if(!mobile){m('MobileTag missing',true);managerPanel.classList.add('hidden');return;}
-  m('Fetching...');
-  try{
-    const rows=await fetchAll();
-    row=findRow(rows,mobile,shopId);
-    if(!row){m('No matching row',true);managerPanel.classList.add('hidden');return;}
-    await patch(row.id,{[FIELDS.lastlogin]:new Date().toISOString()});
-    if((row.values[FIELDS.role]||'').toLowerCase()!=='manager'){m('Role not Manager',true);managerPanel.classList.add('hidden');return;}
-    managerPanel.classList.remove('hidden');
-    roleBadge.textContent='Role: Manager';
-    render(row);
-    m('Manager loaded');
-  }catch(e){m(e.message,true);}
-}
-validateBtn.onclick=validate;
-saveBtn.onclick=async()=>{if(!row)return;const body={};for(let k in f){body[FIELDS[k]]=f[k].value;}body[FIELDS.lastlogin]=new Date().toISOString();try{row=await patch(row.id,body);render(row);m('Saved');}catch(e){m(e.message,true);}};
-blockBtn.onclick=async()=>{if(!row)return;const val=row.values[FIELDS.block]=='B'?'':'B';try{row=await patch(row.id,{[FIELDS.block]:val});render(row);m('Block toggled');}catch(e){m(e.message,true);}};
-refreshBtn.onclick=validate;
 
-// auto-load if tags exist
-if(shopId&&mobile)validate(); else m('Set ShopIDTag and MobileTag then Validate');
-})();
+// Update record
+async function updateUser(id) {
+  const inputs = document.querySelectorAll(`[data-id='${id}']`);
+  const data = {};
+  inputs.forEach(el => data[el.getAttribute("data-field")] = el.value);
+
+  await fetch(baseUrl + id + "/", {
+    method: "PATCH",
+    headers: {
+      "Authorization": "Token " + apiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  });
+  alert("User updated successfully!");
+  fetchStaff();
+}
 </script>
 </body>
 </html>
