@@ -542,8 +542,7 @@
                 field_6136325: "Staff",
                 field_6138245: shopID,
                 field_6138941: shopName,
-                field_6168111: false, // Block field (boolean)
-                field_6169112: ""     // Notice field (text)
+                field_6168111: false // Block field (boolean)
             };
 
             try {
@@ -616,12 +615,6 @@
                                         <option value="false" ${!u.Block ? "selected" : ""}>Active</option>
                                         <option value="true" ${u.Block ? "selected" : ""}>Blocked</option>
                                     </select>
-                                </div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Notice:</div>
-                                <div class="detail-value">
-                                    <textarea data-id="${u.id}" data-field="field_6169112" placeholder="Add notice for staff">${u.Notice || ""}</textarea>
                                 </div>
                             </div>
                         </div>
