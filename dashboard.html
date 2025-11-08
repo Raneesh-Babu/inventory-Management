@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Dashboard</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+h2 { margin-bottom: 20px; }
+.info { text-align: left; margin-top: 10px; }
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover { background: #c82333; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Shop Details</h2>
+  <div class="info">
+    <p><b>Shop Name:</b> <span id="shopName"></span></p>
+    <p><b>Shop ID:</b> <span id="shopId"></span></p>
+    <p><b>Owner Name:</b> <span id="owner"></span></p>
+    <p><b>Mobile No:</b> <span id="mobile"></span></p>
+    <p><b>Last Login:</b> <span id="lastLogin"></span></p>
+  </div>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+function checkSession() {
+  const shopId = localStorage.getItem("ShopIDTag");
+  const lastActive = localStorage.getItem("ActiveTime");
+
+  if (!shopId) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const inactiveTime = Date.now() - lastActive;
+  if (inactiveTime > 5 * 60 * 1000) { // 5 minutes
+    logout();
+    return;
+  }
+
+  // Keep session alive when active
+  window.onmousemove = () => localStorage.setItem("ActiveTime", Date.now());
+  window.onkeydown = () => localStorage.setItem("ActiveTime", Date.now());
+
+  document.getElementById("shopName").textContent = localStorage.getItem("ShopTag");
+  document.getElementById("shopId").textContent = localStorage.getItem("ShopIDTag");
+  document.getElementById("owner").textContent = localStorage.getItem("NameTag");
+  document.getElementById("mobile").textContent = localStorage.getItem("MobileTag");
+  document.getElementById("lastLogin").textContent = new Date(localStorage.getItem("LastLogin")).toLocaleString();
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+window.addEventListener("load", checkSession);
+</script>
+</body>
+</html>
