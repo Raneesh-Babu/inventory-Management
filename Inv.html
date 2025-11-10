@@ -9,15 +9,15 @@
 body { font-family: Poppins, sans-serif; background: #f8fafc; margin:0; padding:20px; }
 .container { max-width:600px; margin:auto; background:white; padding:20px; border-radius:15px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 h2 { text-align:center; color:#333; }
-input, select, button { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; }
-button { background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; }
-button:disabled { background:#999; }
+input, select, button, textarea { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; }
+button { background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; transition:0.3s; }
+button:hover { background:#0056b3; }
+button:disabled { background:#999; cursor:not-allowed; }
 #cameraContainer { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; }
 #reader { width:100%; height:80%; }
 #switchCameraBtn, #closeCameraBtn { position:absolute; bottom:20px; background:white; color:black; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; }
 #switchCameraBtn { left:20px; }
 #closeCameraBtn { right:20px; }
-img { max-width:100px; border-radius:8px; display:block; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -45,11 +45,6 @@ img { max-width:100px; border-radius:8px; display:block; margin-top:10px; }
 
     <label>Price:</label>
     <input type="number" id="price">
-
-    <label>Image:</label>
-    <input type="file" id="image">
-
-    <div id="previewContainer"></div>
 
     <label>Count:</label>
     <input type="number" id="count">
@@ -123,14 +118,13 @@ dateInput.value = new Date().toISOString().split('T')[0];
   }catch(e){ console.error(e); status.textContent="Error fetching user."; }
 })();
 
-// ✅ 2. Handle Product Type
+// ✅ 2. Product Type Handler
 productType.addEventListener("change", ()=>{
   if(productType.value==="new"){
     productIdInput.value = "PRD-" + Date.now();
     document.getElementById("productName").value = "";
     document.getElementById("details").value = "";
     document.getElementById("price").value = "";
-    document.getElementById("previewContainer").innerHTML = "";
   }else{
     productIdInput.value = "";
   }
@@ -147,12 +141,6 @@ async function fetchProduct(pid){
     document.getElementById("productName").value = product["Product Name"] || "";
     document.getElementById("details").value = product["Details"] || "";
     document.getElementById("price").value = product["Price"] || "";
-    if(product["Image"] && product["Image"].length){
-      const img = document.createElement("img");
-      img.src = product["Image"][0].url;
-      document.getElementById("previewContainer").innerHTML="";
-      document.getElementById("previewContainer").appendChild(img);
-    }
   }else{
     alert("Product not found in table.");
   }
@@ -193,29 +181,43 @@ function stopCamera(){
   readerContainer.style.display="none";
 }
 
-// ✅ 5. Add to Inventory
+// ✅ 5. Add to Inventory (with duplicate check)
 addBtn.addEventListener("click", async ()=>{
   const pid = productIdInput.value.trim();
   if(!pid){ alert("Enter or scan Product ID"); return; }
 
-  // Add product if it's new
-  if(productType.value==="new"){
-    const fd = new FormData();
-    fd.append("Product ID", pid);
-    fd.append("Product Name", document.getElementById("productName").value);
-    fd.append("Details", document.getElementById("details").value);
-    fd.append("Price", document.getElementById("price").value);
-    const file = document.getElementById("image").files[0];
-    if(file) fd.append("Image", file);
+  const pname = document.getElementById("productName").value.trim();
+  const details = document.getElementById("details").value.trim();
+  const price = document.getElementById("price").value.trim();
 
-    await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-      method:"POST",
-      headers:{Authorization:`Token ${API_KEY}`},
-      body:fd
-    });
+  // Check if product already exists
+  const prodRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+    headers:{Authorization:`Token ${API_KEY}`}
+  });
+  const prodData = await prodRes.json();
+  const existing = prodData.results.find(p=>String(p["Product ID"])===String(pid));
+
+  // If new product and not already in table, add it
+  if(productType.value==="new"){
+    if(existing){
+      alert("Product ID already exists in Product Table. Skipping duplicate addition.");
+    } else {
+      const productBody = {
+        "Product ID": pid,
+        "Product Name": pname,
+        "Details": details,
+        "Price": parseFloat(price)
+      };
+      await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+        method:"POST",
+        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+        body:JSON.stringify(productBody)
+      });
+      alert("✅ New product added successfully.");
+    }
   }
 
-  // Add inventory record
+  // Always add inventory record
   const invBody = {
     "Product ID": pid,
     "Count": parseInt(document.getElementById("count").value),
