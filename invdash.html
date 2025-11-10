@@ -3,176 +3,222 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Product Dashboard</title>
+<title>📦 Product Dashboard</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
-h2 { text-align: center; color: #333; }
-#searchBar { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-input, button { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
-button { background-color: #007bff; color: white; border: none; cursor: pointer; }
-button:hover { background-color: #0056b3; }
-#productList { width: 100%; border-collapse: collapse; margin-top: 10px; }
-#productList th, #productList td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-#productList th { background: #007bff; color: white; }
-.details { background: #eef; padding: 10px; margin-top: 5px; display: none; border-radius: 5px; }
-.price-edit { width: 60px; }
+  body { font-family: 'Poppins', sans-serif; background:#f4f6f9; margin:0; padding:0; }
+  header { background:#007bff; color:white; text-align:center; padding:15px; font-size:20px; font-weight:bold; }
+  .container { padding:20px; max-width:900px; margin:auto; }
+  .search-bar { display:flex; gap:10px; margin-bottom:20px; }
+  input[type="text"] { flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; }
+  button { background:#007bff; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+  button:disabled { background:#ccc; cursor:not-allowed; }
+  .card { background:white; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:15px; padding:15px; }
+  .card h3 { margin:0; color:#007bff; cursor:pointer; }
+  .expandable { display:none; margin-top:10px; }
+  .batch-item { border-top:1px solid #eee; padding:10px 0; }
+  .batch-item input { width:100px; padding:4px; border:1px solid #ccc; border-radius:5px; }
+  .btn-small { padding:4px 8px; font-size:12px; margin-top:5px; }
+  #reader { width:100%; height: 350px; margin-top:10px; display:none; }
+  .price-edit { background:#f8f9ff; padding:10px; border-radius:8px; margin-bottom:10px; }
 </style>
 </head>
 <body>
+<header>📦 Product Dashboard</header>
 
-<h2>Product Dashboard</h2>
+<div class="container">
+  <div id="status"></div>
 
-<div id="searchBar">
-  <input type="text" id="searchInput" placeholder="Search by Product Name or ID">
-  <button onclick="searchProduct()">Search</button>
-  <button onclick="startScanner()">📷 Scan</button>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by Product Name or ID">
+    <button onclick="searchProduct()">Search</button>
+    <button onclick="toggleScanner()">📷 Scan</button>
+  </div>
+
+  <div id="reader"></div>
+  <h3>Products</h3>
+  <div id="productList"></div>
 </div>
 
-<video id="qrVideo" style="display:none; width:100%; max-height:400px;"></video>
-
-<table id="productList">
-  <thead>
-    <tr>
-      <th>Product ID</th>
-      <th>Name</th>
-      <th>Total Count</th>
-      <th>Price</th>
-      <th>Details</th>
-    </tr>
-  </thead>
-  <tbody id="productBody"></tbody>
-</table>
-
-<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-const BASEROW_URL = "https://api.baserow.io/api/database/rows/table";
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const USERS_TABLE = 729979;
 const PRODUCTS_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
-const USERS_TABLE = 729979;
 
+let role = "";
 let shopID = localStorage.getItem("ShopIDTag");
 let mobileTag = localStorage.getItem("MobileTag");
-let userRole = null;
+let html5QrCode;
+let products = [];
+let inventory = [];
 
-// ✅ Check login and role
-async function checkUserRole() {
+async function init() {
   if (!mobileTag) {
-    alert("Please login first!");
-    window.location.href = "login.html";
+    alert("Please login first.");
+    location.href = "login.html";
     return;
   }
-  const res = await fetch(`${BASEROW_URL}/${USERS_TABLE}/?user_field_names=true`, {
+
+  // 🔹 Fetch user role
+  const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
   const data = await res.json();
   const user = data.results.find(u => u.Username === mobileTag);
-  if (!user) { alert("User not found!"); return; }
-  userRole = user.Role;
-  loadProducts();
+  if (!user) {
+    alert("User not found.");
+    return;
+  }
+  role = user.Role;
+  document.getElementById("status").innerHTML = `<b>User:</b> ${mobileTag} | <b>Role:</b> ${role}`;
+
+  await loadData();
 }
 
-// ✅ Load products and inventory
-async function loadProducts() {
-  const prodRes = await fetch(`${BASEROW_URL}/${PRODUCTS_TABLE}/?user_field_names=true`, {
+async function loadData() {
+  const pRes = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
-  const invRes = await fetch(`${BASEROW_URL}/${INVENTORY_TABLE}/?user_field_names=true`, {
+  const iRes = await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
-  const [prodData, invData] = await Promise.all([prodRes.json(), invRes.json()]);
 
-  const products = prodData.results.filter(p => p.ShopID === shopID);
-  const inventory = invData.results.filter(i => i.ShopID === shopID);
+  const pData = await pRes.json();
+  const iData = await iRes.json();
 
-  displayProducts(products, inventory);
+  products = pData.results.filter(p => p.ShopID === shopID);
+  inventory = iData.results.filter(i => i.ShopID === shopID);
+
+  renderProducts(products);
 }
 
-// ✅ Display table with expandable batch details
-function displayProducts(products, inventory) {
-  const tbody = document.getElementById("productBody");
-  tbody.innerHTML = "";
-
-  products.forEach(p => {
-    const batches = inventory.filter(i => i["Product ID"] === p["Product ID"]);
+function renderProducts(list) {
+  const container = document.getElementById("productList");
+  container.innerHTML = "";
+  list.forEach(prod => {
+    const batches = inventory.filter(i => i["Product ID"] === prod["Product ID"]);
     const totalCount = batches.reduce((sum, b) => sum + Number(b.Count || 0), 0);
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${p["Product ID"]}</td>
-      <td>${p["Product Name"]}</td>
-      <td>${totalCount}</td>
-      <td>
-        ${
-          userRole === "Manager"
-          ? `<input type="number" class="price-edit" value="${p.Price}" onchange="updatePrice('${p.id}', this.value)">`
-          : p.Price
-        }
-      </td>
-      <td><button onclick="toggleDetails('${p["Product ID"]}')">View</button></td>
-    `;
-    tbody.appendChild(tr);
-
-    const detailsDiv = document.createElement("tr");
-    detailsDiv.innerHTML = `
-      <td colspan="5">
-        <div id="details-${p["Product ID"]}" class="details">
-          ${batches.map(b => `
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <h3 onclick="toggleExpand('${prod["Product ID"]}')">${prod["Product Name"]} (${prod["Product ID"]})</h3>
+      <p><b>Total Count:</b> ${totalCount}</p>
+      <p><b>Price:</b> ₹${prod.Price || 0}</p>
+      ${role === "Manager" ? `<button class="btn-small" onclick="togglePriceEdit('${prod["Product ID"]}')">✏️ Edit Price</button>` : ""}
+      <div id="priceEdit-${prod["Product ID"]}" class="price-edit" style="display:none;">
+        <input type="number" id="priceVal-${prod.id}" value="${prod.Price || 0}">
+        <button class="btn-small" onclick="updatePrice(${prod.id}, '${prod["Product ID"]}')">Save Price</button>
+      </div>
+      <div id="expand-${prod["Product ID"]}" class="expandable">
+        ${batches.map(b => `
+          <div class="batch-item">
             <p><b>Batch:</b> ${b["Batch No"]} | 
-            <b>Count:</b> ${b.Count} | 
-            <b>Expire:</b> ${b["Expire Date"]} | 
-            <b>Location:</b> ${b.Location}</p>`).join("")}
-        </div>
-      </td>`;
-    tbody.appendChild(detailsDiv);
+            <b>Count:</b> <input type="number" id="count-${b.id}" value="${b.Count}" ${role !== "Manager" ? "disabled" : ""}>
+            <b>Expire:</b> <input type="date" id="exp-${b.id}" value="${b["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}>
+            <b>Location:</b> <input type="text" id="loc-${b.id}" value="${b.Location || ""}" ${role !== "Manager" ? "disabled" : ""}></p>
+            ${role === "Manager" ? `<button class="btn-small" onclick="updateInventory(${b.id})">Save</button>` : ""}
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
   });
 }
 
-function toggleDetails(pid) {
-  const div = document.getElementById(`details-${pid}`);
-  div.style.display = div.style.display === "block" ? "none" : "block";
+function toggleExpand(pid) {
+  const section = document.getElementById(`expand-${pid}`);
+  section.style.display = section.style.display === "block" ? "none" : "block";
 }
 
-// ✅ Update product price (Manager only)
-async function updatePrice(rowId, newPrice) {
-  if (userRole !== "Manager") return alert("Only Manager can update price!");
-  await fetch(`${BASEROW_URL}/${PRODUCTS_TABLE}/${rowId}/?user_field_names=true`, {
+function togglePriceEdit(pid) {
+  const section = document.getElementById(`priceEdit-${pid}`);
+  section.style.display = section.style.display === "block" ? "none" : "block";
+}
+
+function searchProduct() {
+  const val = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = products.filter(p =>
+    p["Product Name"].toLowerCase().includes(val) ||
+    p["Product ID"].toLowerCase().includes(val)
+  );
+  renderProducts(filtered);
+}
+
+// ---- SCANNER ----
+function toggleScanner() {
+  const reader = document.getElementById("reader");
+  if (reader.style.display === "none" || reader.style.display === "") {
+    reader.style.display = "block";
+    startScanner();
+  } else {
+    stopScanner();
+  }
+}
+
+function startScanner() {
+  html5QrCode = new Html5Qrcode("reader");
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      html5QrCode.start(
+        devices[0].id,
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          stopScanner();
+          document.getElementById("searchInput").value = decodedText;
+          searchProduct();
+        }
+      );
+    }
+  });
+}
+
+function stopScanner() {
+  const reader = document.getElementById("reader");
+  reader.style.display = "none";
+  if (html5QrCode) html5QrCode.stop().catch(() => {});
+}
+
+// ---- Update Inventory ----
+async function updateInventory(id) {
+  const count = parseInt(document.getElementById(`count-${id}`).value);
+  const exp = document.getElementById(`exp-${id}`).value;
+  const loc = document.getElementById(`loc-${id}`).value;
+
+  await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
     method: "PATCH",
     headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ Price: Number(newPrice) })
+    body: JSON.stringify({
+      Count: count,
+      "Expire Date": exp,
+      Location: loc
+    })
   });
+
+  alert("Inventory updated successfully!");
+  loadData();
+}
+
+// ---- Update Price ----
+async function updatePrice(id, pid) {
+  const newPrice = parseFloat(document.getElementById(`priceVal-${id}`).value);
+  if (isNaN(newPrice) || newPrice <= 0) {
+    alert("Invalid price");
+    return;
+  }
+
+  await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/${id}/?user_field_names=true`, {
+    method: "PATCH",
+    headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ Price: newPrice })
+  });
+
   alert("Price updated successfully!");
+  document.getElementById(`priceEdit-${pid}`).style.display = "none";
+  loadData();
 }
 
-// ✅ Search products
-function searchProduct() {
-  const q = document.getElementById("searchInput").value.toLowerCase();
-  const rows = document.querySelectorAll("#productBody tr");
-  rows.forEach(r => {
-    r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
-  });
-}
-
-// ✅ QR Scanner
-function startScanner() {
-  const videoElem = document.getElementById("qrVideo");
-  videoElem.style.display = "block";
-  const html5QrCode = new Html5Qrcode("qrVideo");
-
-  html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    (decodedText) => {
-      document.getElementById("searchInput").value = decodedText;
-      searchProduct();
-      html5QrCode.stop();
-      videoElem.style.display = "none";
-    },
-    (error) => {}
-  ).catch(err => console.error(err));
-}
-
-checkUserRole();
+init();
 </script>
 </body>
 </html>
