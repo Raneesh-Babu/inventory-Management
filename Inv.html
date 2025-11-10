@@ -6,64 +6,338 @@
 <title>Add Product & Inventory</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
-body { font-family: Poppins, sans-serif; background: #f8fafc; margin:0; padding:20px; }
-.container { max-width:600px; margin:auto; background:white; padding:20px; border-radius:15px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-h2 { text-align:center; color:#333; }
-input, select, button, textarea { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; }
-button { background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; }
-button:disabled { background:#999; }
-#cameraContainer { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; }
-#reader { width:100%; height:80%; }
-#switchCameraBtn, #closeCameraBtn { position:absolute; bottom:20px; background:white; color:black; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; }
-#switchCameraBtn { left:20px; }
-#closeCameraBtn { right:20px; }
-img { max-width:100px; border-radius:8px; display:block; margin-top:10px; }
-#buttonsRow { display:flex; gap:10px; }
+/* Enhanced CSS with better styling and validations */
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --success: #06d6a0;
+  --danger: #ef476f;
+  --warning: #ffd166;
+  --dark: #333;
+  --light: #f8f9fa;
+  --gray: #6c757d;
+  --border: #dee2e6;
+  --border-radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0; 
+  padding: 20px;
+  min-height: 100vh;
+  color: var(--dark);
+}
+
+.container { 
+  max-width: 600px; 
+  margin: auto; 
+  background: white; 
+  padding: 30px; 
+  border-radius: var(--border-radius); 
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+h2 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label { 
+  display: block; 
+  margin-bottom: 8px; 
+  font-weight: 500;
+  color: var(--dark);
+}
+
+input, select, button, textarea { 
+  width: 100%; 
+  padding: 14px 16px; 
+  margin: 8px 0; 
+  border-radius: var(--border-radius); 
+  border: 2px solid var(--border);
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+input:invalid, select:invalid, textarea:invalid {
+  border-color: var(--danger);
+}
+
+input:valid, select:valid, textarea:valid {
+  border-color: var(--success);
+}
+
+button { 
+  background: var(--primary); 
+  color: white; 
+  border: none; 
+  font-weight: 600; 
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 15px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+button:hover { 
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled { 
+  background: var(--gray); 
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#cameraContainer { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.9); 
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#reader { 
+  width: 90%; 
+  max-width: 500px;
+  height: 60%; 
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
+
+#switchCameraBtn, #closeCameraBtn { 
+  position: relative;
+  margin: 20px 10px 0;
+  background: white; 
+  color: var(--dark); 
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: var(--border-radius); 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: var(--transition);
+  width: auto;
+}
+
+#switchCameraBtn:hover, #closeCameraBtn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+#buttonsRow { 
+  display: flex; 
+  gap: 10px; 
+  align-items: stretch;
+}
+
+#buttonsRow input {
+  margin: 0;
+}
+
+#buttonsRow button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+#fetchBtn {
+  background: var(--success);
+}
+
+#fetchBtn:hover {
+  background: #05c290;
+}
+
+#scanBtn {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+#scanBtn:hover {
+  background: #ffc94d;
+}
+
+#status {
+  color: var(--dark);
+  font-weight: 600;
+  padding: 12px 16px;
+  background: rgba(67, 97, 238, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+#loginPrompt {
+  color: var(--danger);
+  display: none;
+  padding: 12px 16px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--danger);
+  font-weight: 500;
+}
+
+.error-message {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
+
+.success-message {
+  color: var(--success);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
+
+.field-required::after {
+  content: " *";
+  color: var(--danger);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  #buttonsRow {
+    flex-direction: column;
+  }
+  
+  #buttonsRow button {
+    width: 100%;
+  }
+}
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Add Product / Inventory</h2>
-  <div id="status" style="color:#444; font-weight:bold;"></div>
-  <div id="loginPrompt" style="color:red; display:none;">Please login first</div>
+  <div id="status" class="status-message"></div>
+  <div id="loginPrompt" class="error-message">Please login first</div>
   
   <div id="app" style="display:none;">
-    <label>Product Type:</label>
-    <select id="productType">
-      <option value="existing">Existing Product</option>
-      <option value="new">New Product</option>
-    </select>
-
-    <label>Product ID:</label>
-    <div id="buttonsRow">
-      <input type="text" id="productId" placeholder="Enter or Scan Product ID">
-      <button id="fetchBtn" style="background:green;">Fetch</button>
-      <button id="scanBtn">Scan</button>
+    <div class="form-group">
+      <label for="productType" class="field-required">Product Type:</label>
+      <select id="productType" required>
+        <option value="existing">Existing Product</option>
+        <option value="new">New Product</option>
+      </select>
     </div>
 
-    <label>Product Name:</label>
-    <input type="text" id="productName">
+    <div class="form-group">
+      <label for="productId" class="field-required">Product ID:</label>
+      <div id="buttonsRow">
+        <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
+        <button id="fetchBtn">Fetch</button>
+        <button id="scanBtn">Scan</button>
+      </div>
+      <div id="productIdError" class="error-message"></div>
+    </div>
 
-    <label>Details:</label>
-    <textarea id="details"></textarea>
+    <div class="form-group">
+      <label for="productName" class="field-required">Product Name:</label>
+      <input type="text" id="productName" required>
+      <div id="productNameError" class="error-message"></div>
+    </div>
 
-    <label>Price:</label>
-    <input type="number" id="price">
+    <div class="form-group">
+      <label for="details">Details:</label>
+      <textarea id="details"></textarea>
+    </div>
 
-    <label>Count:</label>
-    <input type="number" id="count">
+    <div class="form-group">
+      <label for="price" class="field-required">Price:</label>
+      <input type="number" id="price" min="0" step="0.01" required>
+      <div id="priceError" class="error-message"></div>
+    </div>
 
-    <label>Batch No:</label>
-    <input type="text" id="batchNo">
+    <div class="form-group">
+      <label for="count" class="field-required">Count:</label>
+      <input type="number" id="count" min="1" required>
+      <div id="countError" class="error-message"></div>
+    </div>
 
-    <label>Expire Date:</label>
-    <input type="date" id="expireDate">
+    <div class="form-group">
+      <label for="batchNo" class="field-required">Batch No:</label>
+      <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+      <div id="batchNoError" class="error-message"></div>
+    </div>
 
-    <label>Date:</label>
-    <input type="text" id="date" readonly>
+    <div class="form-group">
+      <label for="expireDate" class="field-required">Expire Date:</label>
+      <input type="date" id="expireDate" required>
+      <div id="expireDateError" class="error-message"></div>
+    </div>
 
-    <label>Location:</label>
-    <input type="text" id="location">
+    <div class="form-group">
+      <label for="date" class="field-required">Date:</label>
+      <input type="text" id="date" readonly required>
+    </div>
+
+    <div class="form-group">
+      <label for="location" class="field-required">Location:</label>
+      <input type="text" id="location" required>
+      <div id="locationError" class="error-message"></div>
+    </div>
 
     <button id="addBtn">Add to Inventory</button>
   </div>
@@ -101,6 +375,72 @@ let currentCamera = "environment";
 
 dateInput.value = new Date().toISOString().split('T')[0];
 
+// Field validation functions
+function validateBatchNo(batchNo) {
+  const batchNoRegex = /^[0-9]+$/;
+  return batchNoRegex.test(batchNo);
+}
+
+function validateForm() {
+  let isValid = true;
+  
+  // Reset error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Check required fields
+  const requiredFields = [
+    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+  ];
+  
+  requiredFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (!field.value.trim()) {
+      document.getElementById(fieldId + 'Error').textContent = 'This field is required';
+      document.getElementById(fieldId + 'Error').style.display = 'block';
+      isValid = false;
+    }
+  });
+  
+  // Validate batch number
+  const batchNo = document.getElementById('batchNo').value;
+  if (batchNo && !validateBatchNo(batchNo)) {
+    document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
+    document.getElementById('batchNoError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate price
+  const price = document.getElementById('price').value;
+  if (price && parseFloat(price) < 0) {
+    document.getElementById('priceError').textContent = 'Price cannot be negative';
+    document.getElementById('priceError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate count
+  const count = document.getElementById('count').value;
+  if (count && parseInt(count) < 1) {
+    document.getElementById('countError').textContent = 'Count must be at least 1';
+    document.getElementById('countError').style.display = 'block';
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+// Add real-time validation
+document.getElementById('batchNo').addEventListener('input', function() {
+  const batchNoError = document.getElementById('batchNoError');
+  if (this.value && !validateBatchNo(this.value)) {
+    batchNoError.textContent = 'Batch number should contain only numbers';
+    batchNoError.style.display = 'block';
+  } else {
+    batchNoError.style.display = 'none';
+  }
+});
+
 // ✅ 1. Role Validation
 (async function init(){
   if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
@@ -137,7 +477,12 @@ productType.addEventListener("change", ()=>{
 
 // ✅ 3. Fetch Product Details (manual fetch or scan)
 async function fetchProduct(pid){
-  if(!pid){ alert("Enter Product ID"); return; }
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+  
   try{
     const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
       headers:{Authorization:`Token ${API_KEY}`}
@@ -148,18 +493,43 @@ async function fetchProduct(pid){
       document.getElementById("productName").value = product["Product Name"] || "";
       document.getElementById("details").value = product["Details"] || "";
       document.getElementById("price").value = product["Price"] || "";
-      alert("✅ Product details fetched!");
+      
+      // Clear any previous errors
+      document.getElementById("productIdError").style.display = "none";
+      
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = '✅ Product details fetched!';
+      successMsg.style.display = 'block';
+      
+      // Remove any existing success message
+      const existingSuccess = document.querySelector('#productId + .success-message');
+      if (existingSuccess) existingSuccess.remove();
+      
+      // Add success message after product ID input
+      productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
     }else{
-      alert("⚠️ Product not found in table.");
+      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").style.display = "block";
     }
-  }catch(err){ console.error(err); alert("Error fetching product."); }
+  }catch(err){ 
+    console.error(err); 
+    document.getElementById("productIdError").textContent = "Error fetching product.";
+    document.getElementById("productIdError").style.display = "block";
+  }
 }
 
 fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
 
 // ✅ 4. Camera Scanning
 scanBtn.addEventListener("click", ()=>{
-  readerContainer.style.display="block";
+  readerContainer.style.display="flex";
   startCamera();
 });
 
@@ -194,8 +564,17 @@ function stopCamera(){
 
 // ✅ 5. Add to Inventory
 addBtn.addEventListener("click", async ()=>{
+  // Validate form before submission
+  if (!validateForm()) {
+    return;
+  }
+  
   const pid = productIdInput.value.trim();
-  if(!pid){ alert("Enter or scan Product ID"); return; }
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
 
   // Add product if it's new (and not duplicate)
   if(productType.value==="new"){
