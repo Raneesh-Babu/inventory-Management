@@ -370,6 +370,18 @@
     border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: var(--box-shadow);
+    border: 2px solid var(--primary);
+  }
+
+  .scanner-active {
+    border: 2px solid var(--primary);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { border-color: var(--primary); }
+    50% { border-color: var(--accent); }
+    100% { border-color: var(--primary); }
   }
 
   h3 {
@@ -440,7 +452,7 @@
     <button onclick="toggleScanner()"><i class="fas fa-camera"></i> Scan</button>
   </div>
 
-  <div id="reader"></div>
+  <div id="reader" class="scanner-active"></div>
   
   <h3><i class="fas fa-boxes"></i> Products</h3>
   <div id="productList"></div>
@@ -551,14 +563,6 @@ function renderProducts(list) {
                     <label>Location:</label>
                     <input type="text" id="loc-${b.id}" value="${b.Location || ""}" ${role !== "Manager" ? "disabled" : ""}>
                   </div>
-                  <div class="batch-detail-item">
-                    <label>Supplier:</label>
-                    <span>${b.Supplier || "N/A"}</span>
-                  </div>
-                  <div class="batch-detail-item">
-                    <label>Created:</label>
-                    <span>${b["Created Date"] || "N/A"}</span>
-                  </div>
                 </div>
                 ${role === "Manager" ? `
                   <div class="batch-actions" style="margin-top: 15px;">
@@ -628,27 +632,48 @@ function toggleScanner() {
 
 function startScanner() {
   html5QrCode = new Html5Qrcode("reader");
-  Html5QrCode.getCameras().then(devices => {
+  Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
-      // Use rear camera
+      // Use rear camera if available, otherwise use first camera
       const backCam = devices.find(c => c.label.toLowerCase().includes("back")) || devices[0];
       html5QrCode.start(
         backCam.id,
-        { fps: 10, qrbox: 250 },
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 } 
+        },
         (decodedText) => {
           stopScanner();
           document.getElementById("searchInput").value = decodedText;
           searchProduct();
+        },
+        (errorMessage) => {
+          // Ignore scanning errors
         }
-      );
+      ).catch(err => {
+        console.error("Unable to start scanning:", err);
+        alert("Unable to start camera. Please check permissions and try again.");
+        stopScanner();
+      });
+    } else {
+      alert("No cameras found. Please check your device permissions.");
     }
+  }).catch(err => {
+    console.error("Camera error:", err);
+    alert("Error accessing camera. Please check permissions and try again.");
   });
 }
 
 function stopScanner() {
   const reader = document.getElementById("reader");
   reader.style.display = "none";
-  if (html5QrCode) html5QrCode.stop().catch(() => {});
+  if (html5QrCode && html5QrCode.isScanning) {
+    html5QrCode.stop().then(() => {
+      console.log("Scanner stopped");
+    }).catch(err => {
+      console.error("Error stopping scanner:", err);
+    });
+  }
 }
 
 // 🔹 Update Inventory
