@@ -14,9 +14,10 @@ button{padding:10px 14px;border:0;border-radius:8px;background:#2563eb;color:#ff
 button:disabled{background:#ccc}
 label{font-weight:600}
 .notice{background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:10px}
-.fullscreen-camera{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:9999}
+.fullscreen-camera{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:9999}
 #reader{width:90%;max-width:400px;margin:auto}
-.close-btn{position:absolute;top:15px;right:20px;background:#ff4444;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.close-btn,.switch-btn{background:#ff4444;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;margin:8px}
+.switch-btn{background:#2563eb}
 </style>
 </head>
 <body>
@@ -73,7 +74,10 @@ label{font-weight:600}
 
 <!-- Fullscreen Camera -->
 <div class="fullscreen-camera" id="cameraOverlay">
-  <div class="close-btn" id="closeCam">Close</div>
+  <div style="display:flex;justify-content:center;gap:10px;margin-bottom:10px;">
+    <div class="close-btn" id="closeCam">Close</div>
+    <div class="switch-btn" id="switchCam">Switch Camera</div>
+  </div>
   <div id="reader"></div>
 </div>
 
@@ -128,26 +132,37 @@ label{font-weight:600}
     }
   };
 
-  // Fullscreen QR scanner
+  // Fullscreen QR scanner with switch camera
   const cameraOverlay=document.getElementById("cameraOverlay");
   const html5QrCode=new Html5Qrcode("reader");
+  let cameras=[], currentCamIndex=0;
 
-  document.getElementById("startCamera").onclick=()=>{
+  document.getElementById("startCamera").onclick=async()=>{
     cameraOverlay.style.display="flex";
-    Html5Qrcode.getCameras().then(devices=>{
-      if(devices && devices.length){
-        html5QrCode.start(
-          devices[0].id,
-          {fps:10,qrbox:250},
-          qrCodeMessage=>{
-            productIdField.value=qrCodeMessage;
-            html5QrCode.stop();
-            cameraOverlay.style.display="none";
-            status.innerText="✅ Scanned: "+qrCodeMessage;
-          });
-      }
-    });
+    cameras = await Html5Qrcode.getCameras();
+    if(!cameras.length){alert("No cameras found");return;}
+    startCam(cameras[currentCamIndex].id);
   };
+
+  document.getElementById("switchCam").onclick=()=>{
+    if(!cameras.length)return;
+    currentCamIndex=(currentCamIndex+1)%cameras.length;
+    html5QrCode.stop().then(()=>startCam(cameras[currentCamIndex].id));
+  };
+
+  function startCam(camId){
+    html5QrCode.start(
+      camId,
+      {fps:10,qrbox:250},
+      qrCodeMessage=>{
+        productIdField.value=qrCodeMessage;
+        html5QrCode.stop();
+        cameraOverlay.style.display="none";
+        status.innerText="✅ Scanned: "+qrCodeMessage;
+      }
+    ).catch(err=>console.error(err));
+  }
+
   document.getElementById("closeCam").onclick=()=>{
     html5QrCode.stop().catch(()=>{});
     cameraOverlay.style.display="none";
