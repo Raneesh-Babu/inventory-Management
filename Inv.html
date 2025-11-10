@@ -1,266 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>Inventory Manager</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product & Inventory</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <style>
-body {
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-  margin: 0;
-  padding: 12px;
-  color: #111;
-}
-.card {
-  background: white;
-  padding: 18px;
-  border-radius: 14px;
-  max-width: 600px;
-  margin: auto;
-  box-shadow: 0 3px 15px rgba(0,0,0,0.1);
-}
-h1 {
-  margin: 0 0 12px;
-  font-size: 20px;
-  text-align:center;
-}
-label {
-  display: block;
-  margin-top: 10px;
-  font-weight: 600;
-  font-size: 14px;
-}
-input, textarea, select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-  font-size: 14px;
-}
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 15px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
-}
-button.ghost { background: #e5e7eb; color: #111; }
-button:disabled { opacity: 0.5; }
-.notice {
-  background: #fff3cd;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-bottom: 10px;
-  text-align:center;
-}
-.error { background: #fee2e2; }
-video {
-  width: 100%;
-  border-radius: 8px;
-  background: #000;
-  margin-top: 10px;
-}
-img.preview { max-width: 120px; margin-top: 8px; border-radius: 6px; }
-hr { margin: 16px 0; border: none; border-top: 1px solid #ddd; }
+  body { font-family: Arial, sans-serif; background:#f5f6fa; margin:0; padding:0; text-align:center; }
+  h2 { background:#0984e3; color:white; padding:10px; margin:0; }
+  .container { padding:15px; max-width:450px; margin:auto; }
+  input, textarea, select, button {
+    width:100%; padding:10px; margin:6px 0; border:1px solid #ccc; border-radius:6px;
+  }
+  button { background:#0984e3; color:white; font-weight:bold; border:none; cursor:pointer; border-radius:8px; }
+  button:disabled { background:#b2bec3; cursor:not-allowed; }
+  #reader { width:100%; margin-top:10px; display:none; }
+  #status { margin:10px 0; font-weight:bold; color:#2d3436; }
 </style>
 </head>
 <body>
-<div class="card">
-<h1>Inventory Manager</h1>
-<div id="status" class="notice">Loading...</div>
-<div id="errorBox" class="notice error" style="display:none;"></div>
+<h2>Add Product & Inventory</h2>
+<div class="container">
+  <div id="status">Checking user...</div>
+  <div id="loginPrompt" style="display:none; color:red;">Please login first.</div>
+  <div id="accessDenied" style="display:none; color:red;"></div>
 
-<div id="main" style="display:none;">
-  <label>Operation</label>
-  <select id="op">
-    <option value="existing">Existing Product (Scan or Type)</option>
-    <option value="new">New Product (Generate ID)</option>
-  </select>
+  <div id="app" style="display:none;">
+    <button id="startScanBtn">Start Camera Scan</button>
+    <div id="reader"></div>
 
-  <label>Product ID</label>
-  <input id="productId" type="text" placeholder="Scan barcode or type manually" />
-  <div style="display:flex;gap:6px;">
-    <button id="genBtn" class="ghost">Generate ID</button>
-    <button id="fetchBtn" class="ghost">Fetch Product</button>
+    <h3>Product Details</h3>
+    <input type="text" id="productId" placeholder="Product ID (scan or auto)">
+    <input type="text" id="productName" placeholder="Product Name">
+    <textarea id="details" placeholder="Details"></textarea>
+    <input type="number" id="price" placeholder="Price">
+    <input type="file" id="image">
+
+    <h3>Inventory Details</h3>
+    <input type="number" id="count" placeholder="Count">
+    <input type="number" id="batchNo" placeholder="Batch No">
+    <input type="date" id="expireDate" placeholder="Expire Date">
+    <input type="text" id="location" placeholder="Location">
+
+    <button id="addBtn" disabled>Add to Inventory</button>
   </div>
-
-  <div id="cameraSection">
-    <button id="startCam">Start Camera (Rear)</button>
-    <button id="stopCam" class="ghost">Stop Camera</button>
-    <video id="video" autoplay playsinline></video>
-  </div>
-
-  <hr>
-
-  <h3>Product Details</h3>
-  <label>Product Name</label><input id="pname" type="text">
-  <label>Details</label><textarea id="pdetails" rows="3"></textarea>
-  <label>Price</label><input id="price" type="number" step="0.01">
-  <label>Image (preview only)</label><input id="imgfile" type="file" accept="image/*"><img id="preview" class="preview" style="display:none">
-
-  <hr>
-  <h3>Inventory Details</h3>
-  <label>Count</label><input id="count" type="number">
-  <label>Batch No</label><input id="batch" type="text">
-  <label>Expire Date</label><input id="expiry" type="date">
-  <label>Date</label><input id="date" type="date">
-  <label>Location</label><input id="location" type="text">
-  <label>ShopID</label><input id="shopid" type="text" readonly>
-
-  <button id="saveBtn">Save to Inventory</button>
-</div>
 </div>
 
-<!-- ZXing for camera scanning -->
-<script src="https://unpkg.com/@zxing/library@0.20.0"></script>
 <script>
-(async()=>{
-  // CONFIG
-  const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-  const BASEROW = "https://api.baserow.io/api/database/rows";
-  const USER_TABLE = 729979;
-  const PRODUCT_TABLE = 734793;
-  const INVENTORY_TABLE = 734795;
+const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+const BASEROW_BASE = 'https://api.baserow.io';
+const USERS_TABLE = 729979;
+const PRODUCTS_TABLE = 734793;
+const INVENTORY_TABLE = 734795;
 
+let role = "";
+let scanner = null;
+
+// 1️⃣ User Validation
+(async function(){
   const MobileTag = localStorage.getItem("MobileTag");
-  const ShopIDTag = localStorage.getItem("ShopIDTag") || "";
-  document.getElementById("shopid").value = ShopIDTag;
+  const ShopIDTag = localStorage.getItem("ShopIDTag");
 
-  const status = document.getElementById("status");
-  const errorBox = document.getElementById("errorBox");
-  const main = document.getElementById("main");
-
-  // Login validation
-  if(!MobileTag){ status.innerText="Please login first."; return; }
-
-  // Get Role
-  async function getRole(){
-    const res = await fetch(`${BASEROW}/table/${USER_TABLE}/?user_field_names=true`, {
-      headers:{Authorization:`Token ${API_KEY}`}
-    });
-    const data = await res.json();
-    const user = data.results.find(r=>String(r.Username)===String(MobileTag));
-    return user?user.Role:null;
-  }
-
-  const role = await getRole();
-  if(!role){ errorBox.style.display="block"; errorBox.innerText="User not found."; return; }
-  status.innerText=`Logged in as ${MobileTag} (${role})`;
-  main.style.display="block";
-  if(role.toLowerCase()!=="manager"){
-    document.querySelectorAll("input,textarea,select,button").forEach(e=>e.disabled=true);
-    status.innerText+=" — Read Only (Staff)";
+  if(!MobileTag){
+    document.getElementById("loginPrompt").style.display = "block";
+    document.getElementById("status").innerText = "MobileTag missing. Please login.";
     return;
   }
 
-  // ZXing camera setup
-  let codeReader = new ZXing.BrowserMultiFormatReader();
-  const video = document.getElementById("video");
-  document.getElementById("startCam").onclick = async () => {
-    try {
-      const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-      if(!devices.length){ alert("No camera found"); return; }
-      // Choose back camera if available
-      const rear = devices.find(d=>d.label.toLowerCase().includes("back")) || devices[devices.length-1];
-      await codeReader.decodeFromVideoDevice(rear.deviceId, video, (result,err)=>{
-        if(result){
-          document.getElementById("productId").value=result.text;
-          status.innerText="Scanned: "+result.text;
-        }
-      });
-    } catch(err){ alert("Camera Error: "+err); }
-  };
-  document.getElementById("stopCam").onclick=()=>{ codeReader.reset(); };
+  document.getElementById("status").innerText = "Checking user role...";
 
-  // Image preview
-  document.getElementById("imgfile").addEventListener("change", e=>{
-    const f=e.target.files[0];
-    if(f){
-      const r=new FileReader();
-      r.onload=()=>{const p=document.getElementById("preview");p.src=r.result;p.style.display="block";}
-      r.readAsDataURL(f);
+  try {
+    const url = `${BASEROW_BASE}/api/database/rows/table/${USERS_TABLE}/?user_field_names=true&page_size=1000`;
+    const res = await fetch(url, { headers: { Authorization: 'Token ' + API_KEY } });
+    const data = await res.json();
+    const user = data.results.find(u => String(u.Username) === String(MobileTag));
+
+    if(!user){
+      document.getElementById("accessDenied").style.display = "block";
+      document.getElementById("accessDenied").innerText = "User not found. Please login again.";
+      return;
     }
+
+    role = user.Role || "Staff";
+    document.getElementById("status").innerText = "Role: " + role;
+    document.getElementById("app").style.display = "block";
+
+    if(role.toLowerCase() === "manager"){
+      document.getElementById("addBtn").disabled = false;
+    } else {
+      document.getElementById("addBtn").disabled = true;
+      document.getElementById("status").innerText += " (Read only)";
+    }
+  } catch(err){
+    document.getElementById("status").innerText = "Error fetching user info";
+  }
+})();
+
+// 2️⃣ Camera Scanning
+document.getElementById("startScanBtn").addEventListener("click", () => {
+  const reader = document.getElementById("reader");
+  reader.style.display = "block";
+  if(scanner) scanner.clear();
+  scanner = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(devices => {
+    if(devices && devices.length) {
+      let backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+      scanner.start(
+        backCam.id,
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          document.getElementById("productId").value = qrCodeMessage;
+          fetchProductDetails(qrCodeMessage);
+          stopScan();
+        },
+        error => {}
+      );
+    }
+  }).catch(err => alert("Camera error: " + err));
+});
+
+function stopScan(){
+  if(scanner){
+    scanner.stop().then(()=>{ 
+      document.getElementById("reader").style.display="none";
+    }).catch(()=>{});
+  }
+}
+
+// 3️⃣ Fetch product details by barcode
+async function fetchProductDetails(productId){
+  const url = `${BASEROW_BASE}/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true&page_size=1000`;
+  const res = await fetch(url, { headers: { Authorization: 'Token ' + API_KEY }});
+  const data = await res.json();
+  const product = data.results.find(p => String(p['Product ID']) === String(productId));
+
+  if(product){
+    document.getElementById("productName").value = product['Product Name'] || "";
+    document.getElementById("details").value = product['Details'] || "";
+    document.getElementById("price").value = product['Price'] || "";
+    document.getElementById("status").innerText = "Existing product loaded.";
+  } else {
+    document.getElementById("status").innerText = "New product detected.";
+  }
+}
+
+// 4️⃣ Add to Inventory
+document.getElementById("addBtn").addEventListener("click", async ()=>{
+  if(role.toLowerCase() !== "manager") return alert("Access denied. Manager only.");
+
+  let pid = document.getElementById("productId").value.trim();
+  if(!pid){
+    pid = "PID-" + Date.now();
+    document.getElementById("productId").value = pid;
+  }
+
+  const name = document.getElementById("productName").value.trim();
+  const details = document.getElementById("details").value.trim();
+  const price = document.getElementById("price").value.trim();
+  const count = document.getElementById("count").value.trim();
+  const batchNo = document.getElementById("batchNo").value.trim();
+  const expireDate = document.getElementById("expireDate").value;
+  const location = document.getElementById("location").value.trim();
+  const ShopID = localStorage.getItem("ShopIDTag") || "";
+
+  const now = new Date().toISOString().split('T')[0];
+
+  // 🔹 Check if product exists
+  const purl = `${BASEROW_BASE}/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`;
+  const pres = await fetch(purl, { headers:{Authorization:'Token '+API_KEY}});
+  const pdata = await pres.json();
+  const exists = pdata.results.find(p=>String(p['Product ID'])===String(pid));
+
+  if(!exists){
+    // ➕ Add new product
+    const formData = new FormData();
+    formData.append('Product ID', pid);
+    formData.append('Product Name', name);
+    formData.append('Details', details);
+    formData.append('Price', price);
+    const fileInput = document.getElementById("image");
+    if(fileInput.files.length>0) formData.append('Image', fileInput.files[0]);
+
+    await fetch(`${BASEROW_BASE}/api/database/rows/table/${PRODUCTS_TABLE}/`, {
+      method:"POST", headers:{Authorization:'Token '+API_KEY}, body:formData
+    });
+  }
+
+  // ➕ Add to Inventory
+  await fetch(`${BASEROW_BASE}/api/database/rows/table/${INVENTORY_TABLE}/`, {
+    method:"POST",
+    headers:{Authorization:'Token '+API_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({
+      'Product ID': pid,
+      'Count': parseInt(count)||0,
+      'Batch No': parseInt(batchNo)||0,
+      'Expire Date': expireDate,
+      'Date': now,
+      'Location': location,
+      'ShopID': ShopID
+    })
   });
 
-  // Generate new product ID
-  document.getElementById("genBtn").onclick=()=>{
-    if(document.getElementById("op").value==="new"){
-      const id="P"+Date.now();
-      document.getElementById("productId").value=id;
-      status.innerText="Generated Product ID: "+id;
-    } else alert("Switch to New Product to generate ID");
-  };
-
-  // Fetch product
-  document.getElementById("fetchBtn").onclick=async()=>{
-    const pid=document.getElementById("productId").value.trim();
-    if(!pid){ alert("Enter Product ID"); return; }
-    const res=await fetch(`${BASEROW}/table/${PRODUCT_TABLE}/?user_field_names=true`,{
-      headers:{Authorization:`Token ${API_KEY}`}
-    });
-    const data=await res.json();
-    const prod=data.results.find(r=>String(r["Product ID"])===pid);
-    if(prod){
-      document.getElementById("pname").value=prod["Product Name"]||"";
-      document.getElementById("pdetails").value=prod["Details"]||"";
-      document.getElementById("price").value=prod["Price"]||"";
-      status.innerText="Product loaded.";
-    } else alert("Product not found");
-  };
-
-  // Save to Baserow
-  document.getElementById("saveBtn").onclick=async()=>{
-    const pid=document.getElementById("productId").value.trim();
-    if(!pid){ alert("Product ID required"); return; }
-    const op=document.getElementById("op").value;
-
-    // Product data
-    const productPayload={
-      "Product ID":pid,
-      "Product Name":document.getElementById("pname").value,
-      "Details":document.getElementById("pdetails").value,
-      "Price":parseFloat(document.getElementById("price").value)||0
-    };
-
-    if(op==="new"){
-      const addP=await fetch(`${BASEROW}/table/${PRODUCT_TABLE}/?user_field_names=true`,{
-        method:"POST",
-        headers:{Authorization:`Token ${API_KEY}`,"Content-Type":"application/json"},
-        body:JSON.stringify(productPayload)
-      });
-      if(!addP.ok){ alert("Failed to add product"); return; }
-      status.innerText="✅ New Product Added";
-    }
-
-    const invPayload={
-      "Product ID":pid,
-      "Count":Number(document.getElementById("count").value)||0,
-      "Batch No":document.getElementById("batch").value,
-      "Expire Date":document.getElementById("expiry").value,
-      "Date":document.getElementById("date").value,
-      "Location":document.getElementById("location").value,
-      "ShopID":document.getElementById("shopid").value
-    };
-
-    const invRes=await fetch(`${BASEROW}/table/${INVENTORY_TABLE}/?user_field_names=true`,{
-      method:"POST",
-      headers:{Authorization:`Token ${API_KEY}`,"Content-Type":"application/json"},
-      body:JSON.stringify(invPayload)
-    });
-    if(invRes.ok){
-      status.innerText+=" ✅ Inventory Updated";
-    } else alert("Inventory save failed");
-  };
-
-  document.getElementById("date").value=new Date().toISOString().slice(0,10);
-})();
+  alert("Product added successfully!");
+  document.getElementById("status").innerText = "Added successfully.";
+});
 </script>
 </body>
 </html>
