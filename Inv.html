@@ -1,402 +1,220 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Add Inventory — Camera Scanner</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body{font-family:Inter,system-ui,Roboto,Arial;margin:12px;background:#f4f7fb;color:#111}
-    .card{max-width:1000px;margin:auto;background:#fff;padding:16px;border-radius:10px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
-    h1{margin:0 0 12px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1 1 220px;min-width:220px}
-    label{display:block;font-weight:600;margin-bottom:6px}
-    input,textarea,select{width:100%;padding:8px;border:1px solid #d1d7e0;border-radius:8px;box-sizing:border-box}
-    button{background:#2563eb;color:#fff;padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
-    button.ghost{background:#eef2ff;color:#111}
-    .notice{padding:10px;border-radius:8px;background:#fff3cd;margin-bottom:12px}
-    .error{background:#ffe6e6}
-    .video-wrap{width:320px;height:240px;background:#000;border-radius:8px;overflow:hidden}
-    video{width:100%;height:100%;object-fit:cover}
-    img.preview{max-width:150px;margin-top:8px;border-radius:6px}
-    .muted{color:#666;font-size:13px}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Add Inventory — Camera Barcode</title>
+<style>
+body{font-family:Inter,system-ui,Roboto,Arial;margin:12px;background:#f4f7fb;color:#111}
+.card{max-width:1000px;margin:auto;background:#fff;padding:16px;border-radius:10px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
+h1{margin:0 0 12px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1 1 220px;min-width:220px}
+label{display:block;font-weight:600;margin-bottom:6px}
+input,textarea,select{width:100%;padding:8px;border:1px solid #d1d7e0;border-radius:8px;box-sizing:border-box}
+button{background:#2563eb;color:#fff;padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
+button.ghost{background:#eef2ff;color:#111}
+.notice{padding:10px;border-radius:8px;background:#fff3cd;margin-bottom:12px}
+.error{background:#ffe6e6}
+.video-wrap{width:320px;height:240px;background:#000;border-radius:8px;overflow:hidden}
+video{width:100%;height:100%;object-fit:cover}
+img.preview{max-width:150px;margin-top:8px;border-radius:6px}
+.muted{color:#666;font-size:13px}
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>Add Products — Camera Barcode</h1>
-    <div id="status" class="notice">Initializing...</div>
+<div class="card">
+<h1>Add Products — Camera Barcode</h1>
+<div id="status" class="notice">Initializing...</div>
+<div id="loginPrompt" class="notice error" style="display:none;">MobileTag not found in localStorage. Please login first.</div>
+<div id="accessDenied" class="notice error" style="display:none;"></div>
 
-    <div id="loginPrompt" class="notice error" style="display:none;">
-      MobileTag not found in localStorage. Please login first.
+<div id="app" style="display:none;">
+  <div style="margin-bottom:12px">
+    <label>Operation</label>
+    <select id="op">
+      <option value="existing">Existing Product (scan barcode)</option>
+      <option value="new">New Product (create Product ID)</option>
+    </select>
+  </div>
+
+  <div class="row" style="align-items:end;">
+    <div class="col">
+      <label>Product ID / Barcode</label>
+      <input id="productId" type="text" placeholder="Scan or type product id" />
     </div>
+    <div style="flex:0 0 360px;display:flex;gap:8px;">
+      <button id="startScan">Start Camera Scan</button>
+      <button id="stopScan" class="ghost">Stop Camera</button>
+      <button id="fetchBtn" class="ghost">Fetch Product</button>
+      <button id="genBtn" class="ghost">Generate ID</button>
+    </div>
+  </div>
 
-    <div id="accessDenied" class="notice error" style="display:none;"></div>
-
-    <div id="app" style="display:none;">
-      <div style="margin-bottom:12px">
-        <label>Operation</label>
-        <select id="op">
-          <option value="existing">Existing Product (scan barcode)</option>
-          <option value="new">New Product (create Product ID)</option>
-        </select>
-      </div>
-
-      <div class="row" style="align-items:end;">
+  <div style="margin-top:12px;display:flex;gap:12px;">
+    <div class="video-wrap"><video id="video" autoplay muted playsinline></video></div>
+    <div style="flex:1">
+      <label>Product Name</label><input id="pname" type="text" />
+      <label style="margin-top:8px">Details</label><textarea id="pdetails" rows="3"></textarea>
+      <div class="row" style="margin-top:8px;">
+        <div class="col"><label>Price</label><input id="price" type="number" step="0.01" /></div>
         <div class="col">
-          <label>Product ID / Barcode</label>
-          <input id="productId" type="text" placeholder="Scan or type product id" />
+          <label>Image (local preview)</label>
+          <input id="imgfile" type="file" accept="image/*" />
+          <img id="imgpreview" class="preview" style="display:none" />
         </div>
-        <div style="flex:0 0 360px;display:flex;gap:8px;">
-          <button id="startScan">Start Camera Scan</button>
-          <button id="stopScan" class="ghost">Stop Camera</button>
-          <button id="fetchBtn" class="ghost">Fetch Product</button>
-          <button id="genBtn" class="ghost">Generate ID</button>
-        </div>
-      </div>
-
-      <div style="margin-top:12px;display:flex;gap:12px;">
-        <div class="video-wrap" id="videoWrap"><video id="video" autoplay muted playsinline></video></div>
-        <div style="flex:1">
-          <label>Product Name</label>
-          <input id="pname" type="text" />
-          <label style="margin-top:8px">Details</label>
-          <textarea id="pdetails" rows="3"></textarea>
-
-          <div class="row" style="margin-top:8px;">
-            <div class="col">
-              <label>Price</label>
-              <input id="price" type="number" step="0.01" />
-            </div>
-            <div class="col">
-              <label>Image (local preview only)</label>
-              <input id="imgfile" type="file" accept="image/*" />
-              <img id="imgpreview" class="preview" style="display:none" />
-              <div class="muted">Note: file upload to Baserow is not performed by this demo.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <hr style="margin:16px 0">
-
-      <h3>Stock / Batch Info</h3>
-      <div class="row">
-        <div class="col"><label>Count</label><input id="count" type="number" /></div>
-        <div class="col"><label>Batch No</label><input id="batch" type="text" /></div>
-        <div class="col"><label>Expiry Date</label><input id="expiry" type="date" /></div>
-        <div class="col"><label>Date (auto)</label><input id="date" type="date" /></div>
-      </div>
-
-      <div style="margin-top:12px" class="row">
-        <div class="col"><label>Location</label><input id="location" type="text" /></div>
-        <div class="col"><label>ShopID (from localStorage.ShopIDTag)</label><input id="shopid" type="text" readonly /></div>
-      </div>
-
-      <div style="margin-top:12px;">
-        <button id="addBtn">Add to Inventory</button>
-        <span id="action" style="margin-left:10px"></span>
       </div>
     </div>
   </div>
 
-  <!-- ZXing (browser) for scanning -->
-  <script src="https://unpkg.com/@zxing/browser@0.0.11/dist/index.min.js"></script>
+  <hr style="margin:16px 0">
+  <h3>Stock / Batch Info</h3>
+  <div class="row">
+    <div class="col"><label>Count</label><input id="count" type="number" /></div>
+    <div class="col"><label>Batch No</label><input id="batch" type="text" /></div>
+    <div class="col"><label>Expiry Date</label><input id="expiry" type="date" /></div>
+    <div class="col"><label>Date</label><input id="date" type="date" /></div>
+  </div>
+  <div style="margin-top:12px" class="row">
+    <div class="col"><label>Location</label><input id="location" type="text" /></div>
+    <div class="col"><label>ShopID</label><input id="shopid" type="text" readonly /></div>
+  </div>
+  <div style="margin-top:12px;">
+    <button id="addBtn">Add to Inventory</button>
+    <span id="action" style="margin-left:10px"></span>
+  </div>
+</div>
+</div>
 
-  <script>
-  (async function(){
-    // ====== CONFIG ======
-    // Set your API key here:
-    const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw'; // <-- REPLACE with your API Key if different
-    // Baserow base (cloud):
-    const BASEROW_BASE = 'https://api.baserow.io';
+<script src="https://unpkg.com/@zxing/browser@0.0.11/dist/index.min.js"></script>
+<script>
+(async function(){
+  // 🔧 Configuration
+  const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+  const BASEROW_BASE = 'https://api.baserow.io';
+  const USER_TABLE_ID = 729979;
+  const PRODUCTS_TABLE_ID = 734793;
+  const INVENTORY_TABLE_ID = 734795;
 
-    // Table IDs & field names (you provided)
-    const USER_TABLE_ID = 729979;   // users table (unchanged)
-    const PRODUCTS_TABLE_ID = 734793;
-    const INVENTORY_TABLE_ID = 734795;
+  const status = document.getElementById("status");
+  const loginPrompt = document.getElementById("loginPrompt");
+  const accessDenied = document.getElementById("accessDenied");
+  const app = document.getElementById("app");
+  const addBtn = document.getElementById("addBtn");
 
-    // Fields (human-readable names; we'll use user_field_names=true)
-    // Products table fields
-    const PROD_ID_FIELD = 'Product ID';
-    const PROD_NAME_FIELD = 'Product Name';
-    const PROD_DETAILS_FIELD = 'Details';
-    const PROD_PRICE_FIELD = 'Price';
-    const PROD_IMAGE_FIELD = 'Image'; // file (not uploaded by demo)
+  // Get MobileTag
+  const MobileTag = localStorage.getItem("MobileTag");
+  const ShopIDTag = localStorage.getItem("ShopIDTag") || "";
+  document.getElementById("shopid").value = ShopIDTag;
 
-    // Inventory table fields
-    const INV_PROD_ID_FIELD = 'Product ID';
-    const INV_COUNT_FIELD = 'Count';
-    const INV_BATCH_FIELD = 'Batch No';
-    const INV_EXP_FIELD = 'Expiry Date';
-    const INV_DATE_FIELD = 'Date';
-    const INV_LOCATION_FIELD = 'Location';
-    const INV_SHOP_FIELD = 'ShopID';
+  if(!MobileTag){
+    loginPrompt.style.display = "block";
+    status.innerText = "Please login first. MobileTag not found.";
+    return;
+  }
 
-    const status = document.getElementById('status');
-    const loginPrompt = document.getElementById('loginPrompt');
-    const accessDenied = document.getElementById('accessDenied');
-    const app = document.getElementById('app');
-    const productIdEl = document.getElementById('productId');
-    const pname = document.getElementById('pname');
-    const pdetails = document.getElementById('pdetails');
-    const price = document.getElementById('price');
-    const imgfile = document.getElementById('imgfile');
-    const imgpreview = document.getElementById('imgpreview');
-    const startScanBtn = document.getElementById('startScan');
-    const stopScanBtn = document.getElementById('stopScan');
-    const video = document.getElementById('video');
-    const fetchBtn = document.getElementById('fetchBtn');
-    const genBtn = document.getElementById('genBtn');
-    const op = document.getElementById('op');
-    const countEl = document.getElementById('count');
-    const batchEl = document.getElementById('batch');
-    const expiryEl = document.getElementById('expiry');
-    const dateEl = document.getElementById('date');
-    const locationEl = document.getElementById('location');
-    const shopidEl = document.getElementById('shopid');
-    const addBtn = document.getElementById('addBtn');
-    const action = document.getElementById('action');
+  // Fetch user role
+  async function getUserRole(){
+    const url = `${BASEROW_BASE}/api/database/rows/table/${USER_TABLE_ID}/?user_field_names=true&page_size=1000`;
+    const res = await fetch(url, { headers: { Authorization: 'Token ' + API_KEY }});
+    const data = await res.json();
+    const rows = data.results || data;
+    const user = rows.find(r => String(r['Username']) === String(MobileTag));
+    return user ? user['Role'] : null;
+  }
 
-    // init date to today
-    function setToday(){
-      const d = new Date(); dateEl.value = d.toISOString().slice(0,10);
-    }
-    setToday();
+  const role = await getUserRole();
+  if(!role){
+    accessDenied.style.display = "block";
+    accessDenied.innerText = "User not found. Please login.";
+    status.innerText = "Access denied.";
+    return;
+  }
 
-    // image preview
-    imgfile.addEventListener('change', (e)=>{
-      const f = e.target.files[0];
-      if(!f){ imgpreview.style.display='none'; return; }
-      imgpreview.src = URL.createObjectURL(f);
-      imgpreview.style.display = 'block';
+  status.innerText = `Logged in as ${MobileTag} (${role})`;
+  app.style.display = "block";
+
+  // Enable/disable fields based on role
+  if(role.toLowerCase() !== "manager"){
+    document.querySelectorAll("input,textarea,select,button").forEach(el=>{
+      if(el.id !== "startScan" && el.id !== "stopScan")
+        el.disabled = true;
     });
+    addBtn.style.background = "#ccc";
+    status.innerText += " — Read-only (Staff)";
+  }
 
-    // ===== localStorage check =====
-    const MobileTag = localStorage.getItem('MobileTag');
-    const ShopIDTag = localStorage.getItem('ShopIDTag') || '';
-    shopidEl.value = ShopIDTag;
+  // Pre-fill today's date
+  document.getElementById("date").value = new Date().toISOString().slice(0,10);
 
-    if(!MobileTag){
-      loginPrompt.style.display = 'block';
-      status.innerText = 'MobileTag not found. Please login and set localStorage.MobileTag';
-      return;
-    }
+  // ZXing camera scan
+  const { BrowserMultiFormatReader } = ZXingBrowser;
+  const codeReader = new BrowserMultiFormatReader();
+  let selectedDeviceId = null;
+  const video = document.getElementById("video");
 
-    status.innerText = 'Verifying user from Users table...';
-
-    // fetch users and find by MobileTag
-    async function fetchUserByMobile(){
-      const url = `${BASEROW_BASE}/api/database/rows/table/${USER_TABLE_ID}/?user_field_names=true&page_size=1000`;
-      const res = await fetch(url, { headers: { Authorization: 'Token ' + API_KEY }});
-      if(!res.ok) throw new Error('Users fetch failed: ' + res.status);
-      const data = await res.json();
-      const rows = data.results || data;
-      for(const r of rows){
-        // try multiple possible fields
-        if((r['MobileTag'] && String(r['MobileTag']) === String(MobileTag)) ||
-           (r['mobile'] && String(r['mobile']) === String(MobileTag)) ||
-           (r['User'] && String(r['User']) === String(MobileTag)) ||
-           (r['username'] && String(r['username']) === String(MobileTag))){
-          return r;
-        }
-      }
-      return null;
-    }
-
-    let currentUser = null;
-    try{
-      currentUser = await fetchUserByMobile();
-    } catch(err){
-      console.error(err);
-      status.innerText = 'Error fetching user — see console';
-      return;
-    }
-
-    if(!currentUser){
-      accessDenied.style.display='block';
-      accessDenied.innerText = 'MobileTag not found in Users table. Please login through the app.';
-      status.innerText = 'MobileTag not found in Users table.';
-      return;
-    }
-
-    const userRole = currentUser['Role'] || currentUser['role'] || '';
-    const username = currentUser['User'] || currentUser['username'] || '';
-
-    if(String(userRole).toLowerCase() !== 'manager'){
-      accessDenied.style.display='block';
-      accessDenied.innerText = `Access Denied. Your role is "${userRole}". Only Manager can add stock.`;
-      status.innerText = 'Access denied.';
-      return;
-    }
-
-    status.innerText = `Welcome ${username || 'Manager'} — ready.`;
-    app.style.display = 'block';
-
-    // ===== ZXing scanner =====
-    const { BrowserMultiFormatReader, NotFoundException } = window.ZXingBrowser || window.ZXing;
-    const codeReader = new BrowserMultiFormatReader();
-    let selectedDeviceId = null;
-
-    async function startScanner(){
-      status.innerText = 'Requesting camera...';
-      try{
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        if(devices && devices.length) selectedDeviceId = devices[0].deviceId;
-        await codeReader.reset();
-        codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result, err) => {
-          if(result){
-            const txt = result.text;
-            productIdEl.value = txt;
-            status.innerText = 'Scanned: ' + txt;
-          }
-          if(err && !(err instanceof NotFoundException)){
-            console.error(err);
-          }
-        });
-        status.innerText = 'Scanning...';
-      } catch(err){
-        console.error(err);
-        status.innerText = 'Camera error: ' + (err.message || err);
-      }
-    }
-    function stopScanner(){ try{ codeReader.reset(); }catch(e){} status.innerText='Camera stopped'; }
-
-    startScanBtn.addEventListener('click', startScanner);
-    stopScanBtn.addEventListener('click', stopScanner);
-
-    // generate ID
-    genBtn.addEventListener('click', ()=> {
-      const id = 'P' + Date.now();
-      productIdEl.value = id;
-      status.innerText = 'Generated Product ID: ' + id;
-    });
-
-    // fetch product by product id from Products table
-    async function fetchProduct(pid){
-      status.innerText = 'Fetching product...';
-      try{
-        const url = `${BASEROW_BASE}/api/database/rows/table/${PRODUCTS_TABLE_ID}/?user_field_names=true&page_size=1000`;
-        const res = await fetch(url, { headers: { Authorization: 'Token ' + API_KEY }});
-        if(!res.ok) throw new Error('Products fetch failed: ' + res.status);
-        const data = await res.json();
-        const rows = data.results || data;
-        const p = rows.find(r => String(r[PROD_ID_FIELD]) === String(pid));
-        if(!p){ status.innerText = 'Product not found for ID: ' + pid; return null; }
-        // populate
-        pname.value = p[PROD_NAME_FIELD] || '';
-        pdetails.value = p[PROD_DETAILS_FIELD] || '';
-        price.value = p[PROD_PRICE_FIELD] || '';
-        // image: if file array available, show first (may be url object)
-        if(p[PROD_IMAGE_FIELD]){
-          if(Array.isArray(p[PROD_IMAGE_FIELD]) && p[PROD_IMAGE_FIELD].length){
-            imgpreview.src = p[PROD_IMAGE_FIELD][0].download_url || p[PROD_IMAGE_FIELD][0].url;
-            imgpreview.style.display = 'block';
-          } else if(typeof p[PROD_IMAGE_FIELD] === 'string'){
-            imgpreview.src = p[PROD_IMAGE_FIELD];
-            imgpreview.style.display = 'block';
-          }
-        }
-        status.innerText = 'Product loaded.';
-        return p;
-      } catch(err){
-        console.error(err);
-        status.innerText = 'Error fetching products. See console.';
-        return null;
-      }
-    }
-
-    fetchBtn.addEventListener('click', async ()=>{
-      const pid = productIdEl.value && productIdEl.value.trim();
-      if(!pid){ status.innerText = 'Please scan or enter Product ID'; return; }
-      await fetchProduct(pid);
-    });
-
-    // create product row (if op=new). NOTE: image file not uploaded in this demo.
-    async function createProductIfNew(pid){
-      // verify if exists
-      const existing = await fetchProduct(pid);
-      if(existing) return existing;
-      // create new product row
-      status.innerText = 'Creating product in Products table...';
-      const payload = {};
-      payload[PROD_ID_FIELD] = pid;
-      payload[PROD_NAME_FIELD] = pname.value || '';
-      payload[PROD_DETAILS_FIELD] = pdetails.value || '';
-      payload[PROD_PRICE_FIELD] = price.value || '';
-      // IMAGE: skipped; file upload not performed here
-
-      try{
-        const url = `${BASEROW_BASE}/api/database/rows/table/${PRODUCTS_TABLE_ID}/?user_field_names=true`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Authorization': 'Token ' + API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if(!res.ok){
-          const txt = await res.text();
-          throw new Error('Create product failed: ' + res.status + ' ' + txt);
-        }
-        const created = await res.json();
-        status.innerText = 'Product created (id ' + (created.id || '') + ')';
-        return created;
-      } catch(err){
-        console.error(err);
-        status.innerText = 'Error creating product. See console.';
-        throw err;
-      }
-    }
-
-    // Add to inventory
-    addBtn.addEventListener('click', async ()=>{
-      action.innerText = '';
-      const pid = productIdEl.value && productIdEl.value.trim();
-      if(!pid){ action.innerText = 'Product ID required'; return; }
-
-      try{
-        if(op.value === 'new'){
-          // create product first (if not exists)
-          await createProductIfNew(pid);
-        } else {
-          // ensure product exists for existing flow
-          const p = await fetchProduct(pid);
-          if(!p){ action.innerText = 'Product not found; switch to New Product to create it.'; return; }
-        }
-
-        // build inventory payload
-        const payload = {};
-        payload[INV_PROD_ID_FIELD] = pid;
-        payload[INV_COUNT_FIELD] = Number(countEl.value) || 0;
-        payload[INV_BATCH_FIELD] = batchEl.value || '';
-        payload[INV_EXP_FIELD] = expiryEl.value || '';
-        payload[INV_DATE_FIELD] = dateEl.value || (new Date().toISOString().slice(0,10));
-        payload[INV_LOCATION_FIELD] = locationEl.value || '';
-        payload[INV_SHOP_FIELD] = shopidEl.value || ShopIDTag || '';
-
-        status.innerText = 'Adding inventory row...';
-        const url = `${BASEROW_BASE}/api/database/rows/table/${INVENTORY_TABLE_ID}/?user_field_names=true`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Authorization': 'Token ' + API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if(!res.ok){
-          const txt = await res.text();
-          throw new Error('Add inventory failed: ' + res.status + ' ' + txt);
-        }
-        const saved = await res.json();
-        status.innerText = 'Inventory added: id ' + (saved.id || '');
-        action.innerText = 'Added ✅';
-      } catch(err){
-        console.error(err);
-        status.innerText = 'Error — see console';
-        action.innerText = 'Error: ' + (err.message || err);
+  document.getElementById("startScan").onclick = async () => {
+    const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+    if(devices.length) selectedDeviceId = devices[0].deviceId;
+    await codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result) => {
+      if(result){
+        document.getElementById("productId").value = result.text;
+        status.innerText = "Scanned: " + result.text;
       }
     });
+  };
+  document.getElementById("stopScan").onclick = ()=>codeReader.reset();
 
-    // Clean up scanner on unload
-    window.addEventListener('beforeunload', ()=>{ try{ codeReader.reset(); }catch(e){} });
-  })();
-  </script>
+  // Fetch Product
+  async function fetchProduct(pid){
+    const url = `${BASEROW_BASE}/api/database/rows/table/${PRODUCTS_TABLE_ID}/?user_field_names=true&page_size=1000`;
+    const res = await fetch(url, { headers: { Authorization: 'Token ' + API_KEY }});
+    const data = await res.json();
+    const rows = data.results || data;
+    return rows.find(r => String(r['Product ID']) === String(pid));
+  }
+
+  document.getElementById("fetchBtn").onclick = async ()=>{
+    const pid = document.getElementById("productId").value.trim();
+    if(!pid){ status.innerText = "Enter or scan a Product ID."; return; }
+    const p = await fetchProduct(pid);
+    if(!p){ status.innerText = "No product found."; return; }
+    document.getElementById("pname").value = p["Product Name"] || "";
+    document.getElementById("pdetails").value = p["Details"] || "";
+    document.getElementById("price").value = p["Price"] || "";
+    status.innerText = "Product loaded.";
+  };
+
+  // Generate ID
+  document.getElementById("genBtn").onclick = ()=>{
+    document.getElementById("productId").value = "P" + Date.now();
+  };
+
+  // Add to inventory
+  document.getElementById("addBtn").onclick = async ()=>{
+    const payload = {
+      "Product ID": document.getElementById("productId").value,
+      "Count": Number(document.getElementById("count").value) || 0,
+      "Batch No": document.getElementById("batch").value,
+      "Expiry Date": document.getElementById("expiry").value,
+      "Date": document.getElementById("date").value,
+      "Location": document.getElementById("location").value,
+      "ShopID": document.getElementById("shopid").value
+    };
+    const res = await fetch(`${BASEROW_BASE}/api/database/rows/table/${INVENTORY_TABLE_ID}/?user_field_names=true`, {
+      method: "POST",
+      headers: { Authorization: "Token " + API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if(res.ok){
+      status.innerText = "Inventory added successfully.";
+      document.getElementById("action").innerText = "✅ Added";
+    } else {
+      const txt = await res.text();
+      status.innerText = "Error: " + txt;
+    }
+  };
+})();
+</script>
 </body>
 </html>
