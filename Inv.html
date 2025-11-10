@@ -430,6 +430,29 @@ function validateForm() {
   return isValid;
 }
 
+// Function to clear form fields
+function clearForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
+  
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
+  
+  // Reset product type to existing
+  productType.value = 'existing';
+  
+  // Clear all error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
 // Add real-time validation
 document.getElementById('batchNo').addEventListener('input', function() {
   const batchNoError = document.getElementById('batchNoError');
@@ -576,52 +599,69 @@ addBtn.addEventListener("click", async ()=>{
     return; 
   }
 
-  // Add product if it's new (and not duplicate)
-  if(productType.value==="new"){
-    try{
-      const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-        headers:{Authorization:`Token ${API_KEY}`}
-      });
-      const data = await res.json();
-      const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
-      if(!existing){
-        const body = {
-          "Product ID": pid,
-          "Product Name": document.getElementById("productName").value,
-          "Details": document.getElementById("details").value,
-          "Price": document.getElementById("price").value,
-          "ShopID": ShopID
-        };
-        await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-          method:"POST",
-          headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-          body:JSON.stringify(body)
+  // Disable button to prevent duplicate submissions
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding...';
+
+  try {
+    // Add product if it's new (and not duplicate)
+    if(productType.value==="new"){
+      try{
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+          headers:{Authorization:`Token ${API_KEY}`}
         });
-        alert("✅ Product added to Product Table!");
-      }else{
-        alert("⚠️ Product ID already exists, skipping Product Table insert.");
-      }
-    }catch(e){ console.error(e); alert("Error adding product."); }
+        const data = await res.json();
+        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        if(!existing){
+          const body = {
+            "Product ID": pid,
+            "Product Name": document.getElementById("productName").value,
+            "Details": document.getElementById("details").value,
+            "Price": document.getElementById("price").value,
+            "ShopID": ShopID
+          };
+          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+            method:"POST",
+            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+          });
+          alert("✅ Product added to Product Table!");
+        }else{
+          alert("⚠️ Product ID already exists, skipping Product Table insert.");
+        }
+      }catch(e){ console.error(e); alert("Error adding product."); }
+    }
+
+    // Always add inventory record
+    const invBody = {
+      "Product ID": pid,
+      "Count": parseInt(document.getElementById("count").value),
+      "Batch No": document.getElementById("batchNo").value,
+      "Expire Date": document.getElementById("expireDate").value,
+      "Date": dateInput.value,
+      "Location": document.getElementById("location").value,
+      "ShopID": ShopID
+    };
+
+    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      method:"POST",
+      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+      body:JSON.stringify(invBody)
+    });
+
+    alert("✅ Added to Inventory Successfully!");
+    
+    // Clear form after successful submission
+    clearForm();
+    
+  } catch (error) {
+    console.error("Error during submission:", error);
+    alert("❌ Error adding to inventory. Please try again.");
+  } finally {
+    // Re-enable button after operation is complete
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add to Inventory';
   }
-
-  // Always add inventory record
-  const invBody = {
-    "Product ID": pid,
-    "Count": parseInt(document.getElementById("count").value),
-    "Batch No": document.getElementById("batchNo").value,
-    "Expire Date": document.getElementById("expireDate").value,
-    "Date": dateInput.value,
-    "Location": document.getElementById("location").value,
-    "ShopID": ShopID
-  };
-
-  await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-    method:"POST",
-    headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-    body:JSON.stringify(invBody)
-  });
-
-  alert("✅ Added to Inventory Successfully!");
 });
 </script>
 </body>
