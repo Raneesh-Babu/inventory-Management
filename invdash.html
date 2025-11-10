@@ -8,7 +8,10 @@
 <style>
   body { font-family: 'Poppins', sans-serif; background:#f4f6f9; margin:0; padding:0; }
   header { background:#007bff; color:white; text-align:center; padding:15px; font-size:20px; font-weight:bold; }
-  .container { padding:20px; max-width:900px; margin:auto; }
+  .container { padding:20px; max-width:950px; margin:auto; }
+  .stats { display:flex; justify-content:space-around; margin-bottom:20px; }
+  .stat-box { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; flex:1; margin:5px; }
+  .stat-box h3 { margin:5px 0; color:#007bff; }
   .search-bar { display:flex; gap:10px; margin-bottom:20px; }
   input[type="text"] { flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; }
   button { background:#007bff; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
@@ -20,7 +23,7 @@
   .batch-item input { width:100px; padding:4px; border:1px solid #ccc; border-radius:5px; }
   .btn-small { padding:4px 8px; font-size:12px; margin-top:5px; }
   #reader { width:100%; height: 350px; margin-top:10px; display:none; }
-  .price-edit { background:#f8f9ff; padding:10px; border-radius:8px; margin-bottom:10px; }
+  .price-edit { margin-top:10px; }
 </style>
 </head>
 <body>
@@ -28,6 +31,17 @@
 
 <div class="container">
   <div id="status"></div>
+
+  <div class="stats">
+    <div class="stat-box">
+      <h3 id="totalProducts">0</h3>
+      <p>Total Products</p>
+    </div>
+    <div class="stat-box">
+      <h3 id="totalBatches">0</h3>
+      <p>Total Batches</p>
+    </div>
+  </div>
 
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Search by Product Name or ID">
@@ -53,6 +67,7 @@ let html5QrCode;
 let products = [];
 let inventory = [];
 
+// 🔹 Initialize
 async function init() {
   if (!mobileTag) {
     alert("Please login first.");
@@ -60,7 +75,7 @@ async function init() {
     return;
   }
 
-  // 🔹 Fetch user role
+  // Fetch Role
   const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
@@ -76,13 +91,12 @@ async function init() {
   await loadData();
 }
 
+// 🔹 Load Products + Inventory
 async function loadData() {
-  const pRes = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
-  const iRes = await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
+  const [pRes, iRes] = await Promise.all([
+    fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, { headers: { Authorization: `Token ${API_KEY}` } }),
+    fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, { headers: { Authorization: `Token ${API_KEY}` } })
+  ]);
 
   const pData = await pRes.json();
   const iData = await iRes.json();
@@ -90,31 +104,32 @@ async function loadData() {
   products = pData.results.filter(p => p.ShopID === shopID);
   inventory = iData.results.filter(i => i.ShopID === shopID);
 
+  document.getElementById("totalProducts").innerText = products.length;
+  document.getElementById("totalBatches").innerText = inventory.length;
+
   renderProducts(products);
 }
 
+// 🔹 Render Product Cards
 function renderProducts(list) {
   const container = document.getElementById("productList");
   container.innerHTML = "";
   list.forEach(prod => {
     const batches = inventory.filter(i => i["Product ID"] === prod["Product ID"]);
-    const totalCount = batches.reduce((sum, b) => sum + Number(b.Count || 0), 0);
+    const totalCount = batches.reduce((sum, b) => sum + (Number(b.Count) || 0), 0);
+
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
       <h3 onclick="toggleExpand('${prod["Product ID"]}')">${prod["Product Name"]} (${prod["Product ID"]})</h3>
       <p><b>Total Count:</b> ${totalCount}</p>
-      <p><b>Price:</b> ₹${prod.Price || 0}</p>
-      ${role === "Manager" ? `<button class="btn-small" onclick="togglePriceEdit('${prod["Product ID"]}')">✏️ Edit Price</button>` : ""}
-      <div id="priceEdit-${prod["Product ID"]}" class="price-edit" style="display:none;">
-        <input type="number" id="priceVal-${prod.id}" value="${prod.Price || 0}">
-        <button class="btn-small" onclick="updatePrice(${prod.id}, '${prod["Product ID"]}')">Save Price</button>
-      </div>
+      <p><b>Price:</b> ₹<span id="price-${prod.id}">${prod.Price || 0}</span> 
+      ${role === "Manager" ? `<button class="btn-small" onclick="togglePriceEdit('${prod.id}', '${prod.Price || 0}')">Edit</button>` : ""}</p>
       <div id="expand-${prod["Product ID"]}" class="expandable">
         ${batches.map(b => `
           <div class="batch-item">
-            <p><b>Batch:</b> ${b["Batch No"]} | 
-            <b>Count:</b> <input type="number" id="count-${b.id}" value="${b.Count}" ${role !== "Manager" ? "disabled" : ""}>
+            <p><b>Batch:</b> ${b["Batch No"]}</p>
+            <p><b>Count:</b> <input type="number" id="count-${b.id}" value="${b.Count}" ${role !== "Manager" ? "disabled" : ""}>
             <b>Expire:</b> <input type="date" id="exp-${b.id}" value="${b["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}>
             <b>Location:</b> <input type="text" id="loc-${b.id}" value="${b.Location || ""}" ${role !== "Manager" ? "disabled" : ""}></p>
             ${role === "Manager" ? `<button class="btn-small" onclick="updateInventory(${b.id})">Save</button>` : ""}
@@ -126,16 +141,13 @@ function renderProducts(list) {
   });
 }
 
+// 🔹 Expand / Collapse
 function toggleExpand(pid) {
   const section = document.getElementById(`expand-${pid}`);
   section.style.display = section.style.display === "block" ? "none" : "block";
 }
 
-function togglePriceEdit(pid) {
-  const section = document.getElementById(`priceEdit-${pid}`);
-  section.style.display = section.style.display === "block" ? "none" : "block";
-}
-
+// 🔹 Search
 function searchProduct() {
   const val = document.getElementById("searchInput").value.trim().toLowerCase();
   const filtered = products.filter(p =>
@@ -145,7 +157,7 @@ function searchProduct() {
   renderProducts(filtered);
 }
 
-// ---- SCANNER ----
+// 🔹 Scanner (rear camera)
 function toggleScanner() {
   const reader = document.getElementById("reader");
   if (reader.style.display === "none" || reader.style.display === "") {
@@ -160,8 +172,10 @@ function startScanner() {
   html5QrCode = new Html5Qrcode("reader");
   Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
+      // Use rear camera
+      const backCam = devices.find(c => c.label.toLowerCase().includes("back")) || devices[0];
       html5QrCode.start(
-        devices[0].id,
+        backCam.id,
         { fps: 10, qrbox: 250 },
         (decodedText) => {
           stopScanner();
@@ -179,42 +193,39 @@ function stopScanner() {
   if (html5QrCode) html5QrCode.stop().catch(() => {});
 }
 
-// ---- Update Inventory ----
+// 🔹 Update Inventory
 async function updateInventory(id) {
-  const count = parseInt(document.getElementById(`count-${id}`).value);
+  const count = Number(document.getElementById(`count-${id}`).value);
   const exp = document.getElementById(`exp-${id}`).value;
   const loc = document.getElementById(`loc-${id}`).value;
 
   await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
     method: "PATCH",
     headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      Count: count,
-      "Expire Date": exp,
-      Location: loc
-    })
+    body: JSON.stringify({ Count: count, "Expire Date": exp, Location: loc })
   });
 
   alert("Inventory updated successfully!");
   loadData();
 }
 
-// ---- Update Price ----
-async function updatePrice(id, pid) {
-  const newPrice = parseFloat(document.getElementById(`priceVal-${id}`).value);
-  if (isNaN(newPrice) || newPrice <= 0) {
-    alert("Invalid price");
-    return;
+// 🔹 Toggle Price Edit
+function togglePriceEdit(id, price) {
+  const span = document.getElementById(`price-${id}`);
+  const newPrice = prompt("Enter new price:", price);
+  if (newPrice !== null && !isNaN(newPrice)) {
+    updateProductPrice(id, Number(newPrice));
   }
+}
 
+// 🔹 Update Price
+async function updateProductPrice(id, price) {
   await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/${id}/?user_field_names=true`, {
     method: "PATCH",
     headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ Price: newPrice })
+    body: JSON.stringify({ Price: Number(price) })
   });
-
   alert("Price updated successfully!");
-  document.getElementById(`priceEdit-${pid}`).style.display = "none";
   loadData();
 }
 
