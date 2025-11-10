@@ -1,197 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add / Manage Inventory</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inventory Manager</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
-body{font-family:Inter,system-ui,Arial;margin:0;padding:20px;background:#f3f4f6}
-.container{max-width:950px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,0.06)}
-h1{margin-top:0}
-label{font-weight:600;display:block;margin-top:12px}
-input,textarea,select{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box}
-button{padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
-button.primary{background:#2563eb;color:#fff}
-button.secondary{background:#e5e7eb}
-.notice{padding:10px;margin-bottom:10px;border-radius:8px;background:#fef3c7}
-video{width:100%;max-width:340px;border-radius:8px}
-#cameraWrap{display:none;margin-top:12px}
+body{font-family:Inter,system-ui,Arial;margin:0;background:#f5f6fa;color:#111}
+.container{max-width:900px;margin:20px auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,0.1)}
+h1{margin-bottom:16px;text-align:center}
+input,textarea,select{width:100%;padding:8px;margin-top:4px;margin-bottom:12px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
+button{padding:10px 14px;border:0;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer}
+button:disabled{background:#ccc}
+label{font-weight:600}
+.notice{background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:10px}
+.fullscreen-camera{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:9999}
+#reader{width:90%;max-width:400px;margin:auto}
+.close-btn{position:absolute;top:15px;right:20px;background:#ff4444;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Inventory Management</h1>
-  <div id="status" class="notice">Loading user details…</div>
-
-  <div id="loginError" class="notice" style="background:#fee2e2;display:none">
-    ⚠️ Please login first (MobileTag missing in local storage)
-  </div>
-
-  <div id="accessError" class="notice" style="background:#fee2e2;display:none"></div>
-
-  <div id="mainForm" style="display:none">
+  <h1>Inventory Manager</h1>
+  <div id="status" class="notice">Checking access...</div>
+  <div id="form" style="display:none;">
     <label>Operation</label>
-    <select id="operation">
-      <option value="existing">Existing Product (Scan / Type ID)</option>
+    <select id="op">
+      <option value="existing">Existing Product</option>
       <option value="new">New Product</option>
     </select>
 
-    <div style="margin-top:12px">
-      <label>Product ID</label>
-      <input id="productId" placeholder="Scan or type product ID">
-      <div style="margin-top:6px">
-        <button id="startCam" class="secondary">Start Camera</button>
-        <button id="stopCam" class="secondary">Stop Camera</button>
-        <button id="fetchBtn" class="secondary">Fetch Product</button>
-        <button id="genBtn" class="secondary">Generate ID</button>
-      </div>
-    </div>
-
-    <div id="cameraWrap">
-      <video id="preview" playsinline></video>
-    </div>
+    <label>Product ID / Barcode</label>
+    <input id="productId" type="text" placeholder="Scan or enter Product ID">
+    <button id="startCamera">Start Camera Scan</button>
 
     <label>Product Name</label>
-    <input id="pname">
+    <input id="pname" type="text">
+
     <label>Details</label>
     <textarea id="pdetails" rows="3"></textarea>
+
     <label>Price</label>
     <input id="price" type="number" step="0.01">
-    <label>Image (optional)</label>
-    <input id="img" type="file" accept="image/*">
+
+    <label>Image (Preview Only)</label>
+    <input id="imgfile" type="file" accept="image/*">
+    <img id="preview" style="max-width:120px;border-radius:8px;display:none">
 
     <hr>
     <h3>Stock / Batch Info</h3>
-    <label>Count</label><input id="count" type="number">
-    <label>Batch No</label><input id="batch">
-    <label>Expire Date</label><input id="expire" type="date">
-    <label>Date</label><input id="date" type="date">
-    <label>Location</label><input id="location">
-    <label>Shop ID</label><input id="shopid" readonly>
+    <label>Count</label>
+    <input id="count" type="number">
 
-    <div style="margin-top:16px">
-      <button id="addBtn" class="primary">Add to Inventory</button>
-      <span id="msg" style="margin-left:10px"></span>
-    </div>
+    <label>Batch No</label>
+    <input id="batch" type="text">
+
+    <label>Expire Date</label>
+    <input id="expiry" type="date">
+
+    <label>Date</label>
+    <input id="date" type="date">
+
+    <label>Location</label>
+    <input id="location" type="text">
+
+    <label>Shop ID</label>
+    <input id="shopid" type="text" readonly>
+
+    <button id="submitBtn">Submit</button>
   </div>
 </div>
 
-<!-- html5-qrcode -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<!-- Fullscreen Camera -->
+<div class="fullscreen-camera" id="cameraOverlay">
+  <div class="close-btn" id="closeCam">Close</div>
+  <div id="reader"></div>
+</div>
+
 <script>
 (async ()=>{
-  const API_KEY="jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-  const BASE="https://api.baserow.io";
-  const USER_TBL=729979, PROD_TBL=734793, INV_TBL=734795;
-  const MobileTag=localStorage.getItem("MobileTag");
-  const ShopIDTag=localStorage.getItem("ShopIDTag")||"";
-  const status=document.getElementById("status");
-  const mainForm=document.getElementById("mainForm");
-  const accessError=document.getElementById("accessError");
-  const loginError=document.getElementById("loginError");
+  const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+  const BASE = "https://api.baserow.io";
+  const USER_TABLE = 729979;
+  const PRODUCT_TABLE = 734793;
+  const INVENTORY_TABLE = 734795;
 
-  if(!MobileTag){ loginError.style.display="block"; status.style.display="none"; return; }
+  const MobileTag = localStorage.getItem("MobileTag");
+  const ShopIDTag = localStorage.getItem("ShopIDTag") || "";
+  const status = document.getElementById("status");
+  const form = document.getElementById("form");
 
-  async function getRole(){
-    const r=await fetch(`${BASE}/api/database/rows/table/${USER_TBL}/?user_field_names=true`,{
-      headers:{Authorization:"Token "+API_KEY}
-    });
-    const j=await r.json();
-    const u=(j.results||j).find(x=>String(x.Username)===String(MobileTag));
-    return u?u.Role:null;
-  }
+  if(!MobileTag){status.innerText="❌ Login first (MobileTag missing).";return;}
 
-  const role=await getRole();
-  if(!role){ accessError.style.display="block"; accessError.textContent="User not found."; status.style.display="none"; return; }
-
-  status.textContent=`Logged in as ${MobileTag} (${role})`;
-  mainForm.style.display="block";
-  document.getElementById("shopid").value=ShopIDTag;
-  document.getElementById("date").value=new Date().toISOString().slice(0,10);
+  // Get Role from Baserow
+  const roleRes = await fetch(`${BASE}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`,{
+    headers:{Authorization:"Token "+API_KEY}
+  });
+  const roleData = await roleRes.json();
+  const userRow = roleData.results.find(r=>r.Username==MobileTag);
+  if(!userRow){status.innerText="User not found.";return;}
+  const role = userRow.Role;
+  status.innerText = `✅ Logged in as ${MobileTag} (${role})`;
 
   if(role.toLowerCase()!=="manager"){
-    document.querySelectorAll("input,textarea,select,button").forEach(e=>e.disabled=true);
-    status.textContent+=" – Read only (Staff)";
+    status.innerText += " — Staff view (Read-only)";
+    form.querySelectorAll("input,textarea,select,button").forEach(e=>e.disabled=true);
     return;
   }
 
-  /* ---------- Camera Scan ---------- */
-  let html5QrCode;
-  const camWrap=document.getElementById("cameraWrap");
-  const startCam=document.getElementById("startCam");
-  const stopCam=document.getElementById("stopCam");
-  const productId=document.getElementById("productId");
-  startCam.onclick=async()=>{
-    camWrap.style.display="block";
-    if(html5QrCode){html5QrCode.stop();html5QrCode.clear();}
-    html5QrCode=new Html5Qrcode("preview");
-    const devices=await Html5Qrcode.getCameras();
-    const id=devices[0]?.id;
-    if(!id){alert("No camera found");return;}
-    html5QrCode.start(id,{fps:10,qrbox:250},
-      decoded=>{productId.value=decoded;status.textContent="Scanned → "+decoded;},
-      err=>{}
-    );
-  };
-  stopCam.onclick=()=>{ if(html5QrCode){html5QrCode.stop();html5QrCode.clear();} camWrap.style.display="none"; };
+  form.style.display="block";
+  document.getElementById("shopid").value=ShopIDTag;
+  document.getElementById("date").value=new Date().toISOString().slice(0,10);
 
-  /* ---------- Product Handling ---------- */
-  const fetchBtn=document.getElementById("fetchBtn");
-  const genBtn=document.getElementById("genBtn");
-  fetchBtn.onclick=async()=>{
-    const pid=productId.value.trim();
-    if(!pid){status.textContent="Enter Product ID";return;}
-    const res=await fetch(`${BASE}/api/database/rows/table/${PROD_TBL}/?user_field_names=true`,{
-      headers:{Authorization:"Token "+API_KEY}
+  const productIdField=document.getElementById("productId");
+  const op=document.getElementById("op");
+  const preview=document.getElementById("preview");
+  const imgfile=document.getElementById("imgfile");
+  imgfile.onchange=()=>{const f=imgfile.files[0];if(f){preview.src=URL.createObjectURL(f);preview.style.display="block";}}
+
+  op.onchange=()=>{
+    if(op.value==="new"){
+      productIdField.value="P"+Date.now();
+      productIdField.readOnly=true;
+    }else{
+      productIdField.value="";
+      productIdField.readOnly=false;
+    }
+  };
+
+  // Fullscreen QR scanner
+  const cameraOverlay=document.getElementById("cameraOverlay");
+  const html5QrCode=new Html5Qrcode("reader");
+
+  document.getElementById("startCamera").onclick=()=>{
+    cameraOverlay.style.display="flex";
+    Html5Qrcode.getCameras().then(devices=>{
+      if(devices && devices.length){
+        html5QrCode.start(
+          devices[0].id,
+          {fps:10,qrbox:250},
+          qrCodeMessage=>{
+            productIdField.value=qrCodeMessage;
+            html5QrCode.stop();
+            cameraOverlay.style.display="none";
+            status.innerText="✅ Scanned: "+qrCodeMessage;
+          });
+      }
     });
-    const data=await res.json();
-    const prod=(data.results||data).find(p=>String(p["Product ID"])===pid);
-    if(!prod){status.textContent="No product found";return;}
-    document.getElementById("pname").value=prod["Product Name"]||"";
-    document.getElementById("pdetails").value=prod["Details"]||"";
-    document.getElementById("price").value=prod["Price"]||"";
-    status.textContent="Product loaded successfully";
   };
-  genBtn.onclick=()=>{ productId.value="P"+Date.now(); status.textContent="Generated Product ID"; };
+  document.getElementById("closeCam").onclick=()=>{
+    html5QrCode.stop().catch(()=>{});
+    cameraOverlay.style.display="none";
+  };
 
-  /* ---------- Add to Inventory ---------- */
-  const addBtn=document.getElementById("addBtn");
-  const msg=document.getElementById("msg");
-  addBtn.onclick=async()=>{
-    const pid=productId.value.trim();
-    const op=document.getElementById("operation").value;
-    if(!pid){msg.textContent="❌ Product ID required";return;}
+  // Submit handler
+  document.getElementById("submitBtn").onclick=async()=>{
+    const pid=productIdField.value.trim();
+    if(!pid){alert("Enter or scan Product ID");return;}
 
-    // if new → create product first
-    if(op==="new"){
+    // 1️⃣ Create product if new
+    if(op.value==="new"){
       const payload={
         "Product ID":pid,
         "Product Name":document.getElementById("pname").value,
         "Details":document.getElementById("pdetails").value,
-        "Price":Number(document.getElementById("price").value)||0
+        "Price":parseFloat(document.getElementById("price").value)||0
       };
-      await fetch(`${BASE}/api/database/rows/table/${PROD_TBL}/?user_field_names=true`,{
-        method:"POST",
-        headers:{Authorization:"Token "+API_KEY,"Content-Type":"application/json"},
+      await fetch(`${BASE}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`,{
+        method:"POST",headers:{Authorization:"Token "+API_KEY,"Content-Type":"application/json"},
         body:JSON.stringify(payload)
       });
     }
 
+    // 2️⃣ Add to inventory
     const inv={
       "Product ID":pid,
       "Count":Number(document.getElementById("count").value)||0,
       "Batch No":document.getElementById("batch").value,
-      "Expire Date":document.getElementById("expire").value,
+      "Expire Date":document.getElementById("expiry").value,
       "Date":document.getElementById("date").value,
       "Location":document.getElementById("location").value,
       "ShopID":ShopIDTag
     };
-    const r=await fetch(`${BASE}/api/database/rows/table/${INV_TBL}/?user_field_names=true`,{
+    const invRes=await fetch(`${BASE}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`,{
       method:"POST",
       headers:{Authorization:"Token "+API_KEY,"Content-Type":"application/json"},
       body:JSON.stringify(inv)
     });
-    msg.textContent=r.ok?"✅ Inventory added":"❌ Error adding inventory";
+    if(invRes.ok){status.innerText="✅ Inventory Added Successfully";}
+    else{status.innerText="❌ Failed to Add Inventory";}
   };
 })();
 </script>
