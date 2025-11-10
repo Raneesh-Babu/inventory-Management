@@ -3,734 +3,666 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📦 Premium Product Dashboard</title>
+<title>Add Product & Inventory</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  :root {
-    --primary: #4361ee;
-    --primary-dark: #3a56d4;
-    --secondary: #7209b7;
-    --accent: #4cc9f0;
-    --light: #f8f9fa;
-    --dark: #212529;
-    --success: #4bb543;
-    --warning: #ffc107;
-    --danger: #dc3545;
-    --gray-100: #f8f9fa;
-    --gray-200: #e9ecef;
-    --gray-300: #dee2e6;
-    --gray-400: #ced4da;
-    --gray-500: #adb5bd;
-    --gray-600: #6c757d;
-    --gray-700: #495057;
-    --gray-800: #343a40;
-    --gray-900: #212529;
-    --border-radius: 12px;
-    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    --box-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.12);
-    --transition: all 0.3s ease;
-  }
+/* Enhanced CSS with better styling and validations */
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --success: #06d6a0;
+  --danger: #ef476f;
+  --warning: #ffd166;
+  --dark: #333;
+  --light: #f8f9fa;
+  --gray: #6c757d;
+  --border: #dee2e6;
+  --border-radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --transition: all 0.3s ease;
+}
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+* {
+  box-sizing: border-box;
+}
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-    color: var(--gray-800);
-    line-height: 1.6;
-    min-height: 100vh;
-  }
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0; 
+  padding: 20px;
+  min-height: 100vh;
+  color: var(--dark);
+}
 
-  header {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: white;
-    text-align: center;
-    padding: 20px 15px;
-    font-size: 24px;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-  }
+.container { 
+  max-width: 600px; 
+  margin: auto; 
+  background: white; 
+  padding: 30px; 
+  border-radius: var(--border-radius); 
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
 
-  header::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
-    opacity: 0.3;
-  }
+.container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
 
+h2 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label { 
+  display: block; 
+  margin-bottom: 8px; 
+  font-weight: 500;
+  color: var(--dark);
+}
+
+input, select, button, textarea { 
+  width: 100%; 
+  padding: 14px 16px; 
+  margin: 8px 0; 
+  border-radius: var(--border-radius); 
+  border: 2px solid var(--border);
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+input:invalid, select:invalid, textarea:invalid {
+  border-color: var(--danger);
+}
+
+input:valid, select:valid, textarea:valid {
+  border-color: var(--success);
+}
+
+button { 
+  background: var(--primary); 
+  color: white; 
+  border: none; 
+  font-weight: 600; 
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 15px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+button:hover { 
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled { 
+  background: var(--gray); 
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#cameraContainer { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.9); 
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#reader { 
+  width: 90%; 
+  max-width: 500px;
+  height: 60%; 
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
+
+#switchCameraBtn, #closeCameraBtn { 
+  position: relative;
+  margin: 20px 10px 0;
+  background: white; 
+  color: var(--dark); 
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: var(--border-radius); 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: var(--transition);
+  width: auto;
+}
+
+#switchCameraBtn:hover, #closeCameraBtn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+#buttonsRow { 
+  display: flex; 
+  gap: 10px; 
+  align-items: stretch;
+}
+
+#buttonsRow input {
+  margin: 0;
+}
+
+#buttonsRow button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+#fetchBtn {
+  background: var(--success);
+}
+
+#fetchBtn:hover {
+  background: #05c290;
+}
+
+#scanBtn {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+#scanBtn:hover {
+  background: #ffc94d;
+}
+
+#status {
+  color: var(--dark);
+  font-weight: 600;
+  padding: 12px 16px;
+  background: rgba(67, 97, 238, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+#loginPrompt {
+  color: var(--danger);
+  display: none;
+  padding: 12px 16px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--danger);
+  font-weight: 500;
+}
+
+.error-message {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
+
+.success-message {
+  color: var(--success);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
+
+.field-required::after {
+  content: " *";
+  color: var(--danger);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .container {
-    padding: 30px 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  #status {
-    background: white;
-    padding: 15px 20px;
-    border-radius: var(--border-radius);
-    margin-bottom: 25px;
-    box-shadow: var(--box-shadow);
-    font-weight: 500;
-    border-left: 4px solid var(--primary);
-  }
-
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-  }
-
-  .stat-box {
-    background: white;
-    padding: 25px 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    text-align: center;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-box:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-  }
-
-  .stat-box::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 5px;
-    height: 100%;
-    background: linear-gradient(to bottom, var(--primary), var(--secondary));
-  }
-
-  .stat-box h3 {
-    margin: 10px 0;
-    color: var(--primary);
-    font-size: 32px;
-    font-weight: 700;
-  }
-
-  .stat-box p {
-    color: var(--gray-600);
-    font-weight: 500;
-    font-size: 15px;
-  }
-
-  .search-bar {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    background: white;
     padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
   }
-
-  input[type="text"] {
-    flex: 1;
-    padding: 12px 15px;
-    border: 1px solid var(--gray-300);
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    transition: var(--transition);
-  }
-
-  input[type="text"]:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-  }
-
-  button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-  }
-
-  button:disabled {
-    background: var(--gray-400);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .btn-small {
-    padding: 8px 12px;
-    font-size: 13px;
-    margin-top: 5px;
-  }
-
-  .btn-danger {
-    background: var(--danger);
-  }
-
-  .btn-danger:hover {
-    background: #c82333;
-    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-  }
-
-  .card {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    margin-bottom: 20px;
-    padding: 20px;
-    transition: var(--transition);
-    border-left: 4px solid transparent;
-  }
-
-  .card:hover {
-    box-shadow: var(--box-shadow-hover);
-    border-left-color: var(--primary);
-  }
-
-  .product-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-
-  .product-title {
-    margin: 0;
-    color: var(--primary);
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    flex: 1;
-  }
-
-  .product-title:hover {
-    color: var(--secondary);
-  }
-
-  .product-title i {
-    font-size: 16px;
-    transition: var(--transition);
-  }
-
-  .card.expanded .product-title i {
-    transform: rotate(90deg);
-  }
-
-  .card p {
-    margin: 8px 0;
-    color: var(--gray-700);
-  }
-
-  .expandable {
-    display: none;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--gray-200);
-  }
-
-  .batch-list {
-    display: flex;
+  
+  #buttonsRow {
     flex-direction: column;
-    gap: 10px;
   }
-
-  .batch-item {
-    background: var(--gray-100);
-    border-radius: 8px;
-    padding: 15px;
-    transition: var(--transition);
-    cursor: pointer;
-    border: 1px solid var(--gray-200);
-  }
-
-  .batch-item:hover {
-    background: var(--gray-200);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  }
-
-  .batch-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .batch-info {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-  }
-
-  .batch-info span {
-    font-weight: 500;
-    color: var(--gray-800);
-  }
-
-  .batch-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .batch-details {
-    display: none;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--gray-300);
-  }
-
-  .batch-details.expanded {
-    display: block;
-  }
-
-  .batch-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-  }
-
-  .batch-detail-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .batch-detail-item label {
-    font-weight: 600;
-    color: var(--gray-700);
-    font-size: 14px;
-  }
-
-  .batch-detail-item span {
-    color: var(--gray-800);
-    font-size: 15px;
-  }
-
-  .batch-detail-item input {
-    padding: 8px 10px;
-    border: 1px solid var(--gray-300);
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    transition: var(--transition);
-  }
-
-  .batch-detail-item input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
-  }
-
-  .batch-detail-item input:disabled {
-    background-color: var(--gray-100);
-    color: var(--gray-600);
-  }
-
-  .price-edit {
-    margin-top: 10px;
-  }
-
-  #reader {
+  
+  #buttonsRow button {
     width: 100%;
-    height: 350px;
-    margin-top: 10px;
-    display: none;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--box-shadow);
   }
-
-  h3 {
-    margin: 25px 0 15px;
-    color: var(--gray-800);
-    font-weight: 600;
-    font-size: 20px;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .search-bar {
-      flex-direction: column;
-    }
-    
-    .batch-info {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 5px;
-    }
-    
-    .batch-actions {
-      flex-direction: column;
-      width: 100%;
-      margin-top: 10px;
-    }
-    
-    .stats {
-      grid-template-columns: 1fr;
-    }
-    
-    .batch-details-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .product-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-    }
-  }
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="container">
-    <i class="fas fa-box"></i> Premium Product Dashboard
-  </div>
-</header>
-
 <div class="container">
-  <div id="status"></div>
-
-  <div class="stats">
-    <div class="stat-box">
-      <h3 id="totalProducts">0</h3>
-      <p>Total Products</p>
-    </div>
-    <div class="stat-box">
-      <h3 id="totalBatches">0</h3>
-      <p>Total Batches</p>
-    </div>
-  </div>
-
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search by Product Name or ID">
-    <button onclick="searchProduct()"><i class="fas fa-search"></i> Search</button>
-    <button onclick="toggleScanner()"><i class="fas fa-camera"></i> Scan</button>
-  </div>
-
-  <div id="reader"></div>
+  <h2>Add Product / Inventory</h2>
+  <div id="status" class="status-message"></div>
+  <div id="loginPrompt" class="error-message">Please login first</div>
   
-  <h3><i class="fas fa-boxes"></i> Products</h3>
-  <div id="productList"></div>
+  <div id="app" style="display:none;">
+    <div class="form-group">
+      <label for="productType" class="field-required">Product Type:</label>
+      <select id="productType" required>
+        <option value="existing">Existing Product</option>
+        <option value="new">New Product</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="productId" class="field-required">Product ID:</label>
+      <div id="buttonsRow">
+        <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
+        <button id="fetchBtn">Fetch</button>
+        <button id="scanBtn">Scan</button>
+      </div>
+      <div id="productIdError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="productName" class="field-required">Product Name:</label>
+      <input type="text" id="productName" required>
+      <div id="productNameError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="details">Details:</label>
+      <textarea id="details"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="price" class="field-required">Price:</label>
+      <input type="number" id="price" min="0" step="0.01" required>
+      <div id="priceError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="count" class="field-required">Count:</label>
+      <input type="number" id="count" min="1" required>
+      <div id="countError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="batchNo" class="field-required">Batch No:</label>
+      <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+      <div id="batchNoError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="expireDate" class="field-required">Expire Date:</label>
+      <input type="date" id="expireDate" required>
+      <div id="expireDateError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="date" class="field-required">Date:</label>
+      <input type="text" id="date" readonly required>
+    </div>
+
+    <div class="form-group">
+      <label for="location" class="field-required">Location:</label>
+      <input type="text" id="location" required>
+      <div id="locationError" class="error-message"></div>
+    </div>
+
+    <button id="addBtn">Add to Inventory</button>
+  </div>
+</div>
+
+<!-- Camera Popup -->
+<div id="cameraContainer">
+  <div id="reader"></div>
+  <button id="switchCameraBtn">Switch Camera</button>
+  <button id="closeCameraBtn">Close</button>
 </div>
 
 <script>
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const USERS_TABLE = 729979;
-const PRODUCTS_TABLE = 734793;
+const BASEROW = "https://api.baserow.io";
+const USER_TABLE = 729979;
+const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
 
-let role = "";
-let shopID = localStorage.getItem("ShopIDTag");
-let mobileTag = localStorage.getItem("MobileTag");
+const MobileTag = localStorage.getItem("MobileTag");
+const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
+
+const app = document.getElementById("app");
+const status = document.getElementById("status");
+const addBtn = document.getElementById("addBtn");
+const scanBtn = document.getElementById("scanBtn");
+const fetchBtn = document.getElementById("fetchBtn");
+const productIdInput = document.getElementById("productId");
+const productType = document.getElementById("productType");
+const dateInput = document.getElementById("date");
+
+const readerContainer = document.getElementById("cameraContainer");
 let html5QrCode;
-let products = [];
-let inventory = [];
+let currentCamera = "environment";
 
-// 🔹 Initialize
-async function init() {
-  if (!mobileTag) {
-    alert("Please login first.");
-    location.href = "login.html";
-    return;
-  }
+dateInput.value = new Date().toISOString().split('T')[0];
 
-  // Fetch Role
-  const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
-  const data = await res.json();
-  const user = data.results.find(u => u.Username === mobileTag);
-  if (!user) {
-    alert("User not found.");
-    return;
-  }
-  role = user.Role;
-  document.getElementById("status").innerHTML = `<i class="fas fa-user"></i> <b>User:</b> ${mobileTag} | <b>Role:</b> ${role}`;
-
-  await loadData();
+// Field validation functions
+function validateBatchNo(batchNo) {
+  const batchNoRegex = /^[0-9]+$/;
+  return batchNoRegex.test(batchNo);
 }
 
-// 🔹 Load Products + Inventory
-async function loadData() {
-  const [pRes, iRes] = await Promise.all([
-    fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, { headers: { Authorization: `Token ${API_KEY}` } }),
-    fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, { headers: { Authorization: `Token ${API_KEY}` } })
-  ]);
-
-  const pData = await pRes.json();
-  const iData = await iRes.json();
-
-  products = pData.results.filter(p => p.ShopID === shopID);
-  inventory = iData.results.filter(i => i.ShopID === shopID);
-
-  document.getElementById("totalProducts").innerText = products.length;
-  document.getElementById("totalBatches").innerText = inventory.length;
-
-  renderProducts(products);
-}
-
-// 🔹 Render Product Cards
-function renderProducts(list) {
-  const container = document.getElementById("productList");
-  container.innerHTML = "";
-  list.forEach(prod => {
-    const batches = inventory.filter(i => i["Product ID"] === prod["Product ID"]);
-    const totalCount = batches.reduce((sum, b) => sum + (Number(b.Count) || 0), 0);
-
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <div class="product-header">
-        <h3 class="product-title" onclick="toggleExpand('${prod["Product ID"]}', this.parentNode.parentNode)">
-          <i class="fas fa-chevron-right"></i> ${prod["Product Name"]} (${prod["Product ID"]})
-        </h3>
-        ${role === "Manager" ? `
-          <button class="btn-small btn-danger" onclick="deleteProduct(${prod.id})">
-            <i class="fas fa-trash"></i> Remove Product
-          </button>
-        ` : ""}
-      </div>
-      <p><i class="fas fa-cubes"></i> <b>Total Count:</b> ${totalCount}</p>
-      <p><i class="fas fa-tag"></i> <b>Price:</b> ₹<span id="price-${prod.id}">${prod.Price || 0}</span> 
-      ${role === "Manager" ? `<button class="btn-small" onclick="togglePriceEdit('${prod.id}', '${prod.Price || 0}')"><i class="fas fa-edit"></i> Edit</button>` : ""}</p>
-      <div id="expand-${prod["Product ID"]}" class="expandable">
-        <div class="batch-list">
-          ${batches.map(b => `
-            <div class="batch-item">
-              <div class="batch-header" onclick="toggleBatchDetails('${b.id}')">
-                <div class="batch-info">
-                  <span><i class="fas fa-layer-group"></i> Batch: ${b["Batch No"]}</span>
-                  <span><i class="fas fa-hashtag"></i> Count: ${b.Count}</span>
-                </div>
-                <i class="fas fa-chevron-down batch-toggle"></i>
-              </div>
-              <div id="batch-details-${b.id}" class="batch-details">
-                <div class="batch-details-grid">
-                  <div class="batch-detail-item">
-                    <label>Count:</label>
-                    <input type="number" id="count-${b.id}" value="${b.Count}" ${role !== "Manager" ? "disabled" : ""}>
-                  </div>
-                  <div class="batch-detail-item">
-                    <label>Expiry Date:</label>
-                    <input type="date" id="exp-${b.id}" value="${b["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}>
-                  </div>
-                  <div class="batch-detail-item">
-                    <label>Location:</label>
-                    <input type="text" id="loc-${b.id}" value="${b.Location || ""}" ${role !== "Manager" ? "disabled" : ""}>
-                  </div>
-                  <div class="batch-detail-item">
-                    <label>Supplier:</label>
-                    <span>${b.Supplier || "N/A"}</span>
-                  </div>
-                  <div class="batch-detail-item">
-                    <label>Created:</label>
-                    <span>${b["Created Date"] || "N/A"}</span>
-                  </div>
-                </div>
-                ${role === "Manager" ? `
-                  <div class="batch-actions" style="margin-top: 15px;">
-                    <button class="btn-small" onclick="updateInventory(${b.id})"><i class="fas fa-save"></i> Save Changes</button>
-                    <button class="btn-small btn-danger" onclick="deleteBatch(${b.id})"><i class="fas fa-trash"></i> Delete Batch</button>
-                  </div>
-                ` : ""}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-// 🔹 Expand / Collapse Product
-function toggleExpand(pid, card) {
-  const section = document.getElementById(`expand-${pid}`);
-  if (section.style.display === "block") {
-    section.style.display = "none";
-    card.classList.remove("expanded");
-  } else {
-    section.style.display = "block";
-    card.classList.add("expanded");
-  }
-}
-
-// 🔹 Toggle Batch Details
-function toggleBatchDetails(batchId) {
-  const details = document.getElementById(`batch-details-${batchId}`);
-  const batchItem = details.parentNode;
-  const toggleIcon = batchItem.querySelector('.batch-toggle');
+function validateForm() {
+  let isValid = true;
   
-  if (details.classList.contains("expanded")) {
-    details.classList.remove("expanded");
-    toggleIcon.classList.remove('fa-chevron-up');
-    toggleIcon.classList.add('fa-chevron-down');
+  // Reset error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Check required fields
+  const requiredFields = [
+    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+  ];
+  
+  requiredFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (!field.value.trim()) {
+      document.getElementById(fieldId + 'Error').textContent = 'This field is required';
+      document.getElementById(fieldId + 'Error').style.display = 'block';
+      isValid = false;
+    }
+  });
+  
+  // Validate batch number
+  const batchNo = document.getElementById('batchNo').value;
+  if (batchNo && !validateBatchNo(batchNo)) {
+    document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
+    document.getElementById('batchNoError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate price
+  const price = document.getElementById('price').value;
+  if (price && parseFloat(price) < 0) {
+    document.getElementById('priceError').textContent = 'Price cannot be negative';
+    document.getElementById('priceError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate count
+  const count = document.getElementById('count').value;
+  if (count && parseInt(count) < 1) {
+    document.getElementById('countError').textContent = 'Count must be at least 1';
+    document.getElementById('countError').style.display = 'block';
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+// Function to clear form fields
+function clearForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
+  
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
+  
+  // Reset product type to existing
+  productType.value = 'existing';
+  
+  // Clear all error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
+// Add real-time validation
+document.getElementById('batchNo').addEventListener('input', function() {
+  const batchNoError = document.getElementById('batchNoError');
+  if (this.value && !validateBatchNo(this.value)) {
+    batchNoError.textContent = 'Batch number should contain only numbers';
+    batchNoError.style.display = 'block';
   } else {
-    details.classList.add("expanded");
-    toggleIcon.classList.remove('fa-chevron-down');
-    toggleIcon.classList.add('fa-chevron-up');
+    batchNoError.style.display = 'none';
+  }
+});
+
+// ✅ 1. Role Validation
+(async function init(){
+  if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
+
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
+    const data = await res.json();
+    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
+    if(!user){ status.textContent="User not found."; return; }
+
+    const role = user.Role || "Staff";
+    status.textContent = `Logged in as ${MobileTag} (${role})`;
+    app.style.display = "block";
+
+    if(role.toLowerCase()!=="manager"){
+      addBtn.disabled = true;
+      Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
+      return;
+    }
+  }catch(e){ console.error(e); status.textContent="Error fetching user."; }
+})();
+
+// ✅ 2. Handle Product Type
+productType.addEventListener("change", ()=>{
+  if(productType.value==="new"){
+    productIdInput.value = "PRD-" + Date.now();
+    document.getElementById("productName").value = "";
+    document.getElementById("details").value = "";
+    document.getElementById("price").value = "";
+  }else{
+    productIdInput.value = "";
+  }
+});
+
+// ✅ 3. Fetch Product Details (manual fetch or scan)
+async function fetchProduct(pid){
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+  
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+      headers:{Authorization:`Token ${API_KEY}`}
+    });
+    const data = await res.json();
+    const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    if(product){
+      document.getElementById("productName").value = product["Product Name"] || "";
+      document.getElementById("details").value = product["Details"] || "";
+      document.getElementById("price").value = product["Price"] || "";
+      
+      // Clear any previous errors
+      document.getElementById("productIdError").style.display = "none";
+      
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = '✅ Product details fetched!';
+      successMsg.style.display = 'block';
+      
+      // Remove any existing success message
+      const existingSuccess = document.querySelector('#productId + .success-message');
+      if (existingSuccess) existingSuccess.remove();
+      
+      // Add success message after product ID input
+      productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    }else{
+      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").style.display = "block";
+    }
+  }catch(err){ 
+    console.error(err); 
+    document.getElementById("productIdError").textContent = "Error fetching product.";
+    document.getElementById("productIdError").style.display = "block";
   }
 }
 
-// 🔹 Search
-function searchProduct() {
-  const val = document.getElementById("searchInput").value.trim().toLowerCase();
-  const filtered = products.filter(p =>
-    p["Product Name"].toLowerCase().includes(val) ||
-    p["Product ID"].toLowerCase().includes(val)
-  );
-  renderProducts(filtered);
-}
+fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
 
-// 🔹 Scanner (rear camera)
-function toggleScanner() {
-  const reader = document.getElementById("reader");
-  if (reader.style.display === "none" || reader.style.display === "") {
-    reader.style.display = "block";
-    startScanner();
-  } else {
-    stopScanner();
-  }
-}
+// ✅ 4. Camera Scanning
+scanBtn.addEventListener("click", ()=>{
+  readerContainer.style.display="flex";
+  startCamera();
+});
 
-function startScanner() {
+document.getElementById("closeCameraBtn").addEventListener("click", ()=>{
+  stopCamera();
+});
+
+document.getElementById("switchCameraBtn").addEventListener("click", ()=>{
+  currentCamera = currentCamera==="environment" ? "user" : "environment";
+  stopCamera();
+  startCamera();
+});
+
+function startCamera(){
   html5QrCode = new Html5Qrcode("reader");
-  Html5QrCode.getCameras().then(devices => {
-    if (devices && devices.length) {
-      // Use rear camera
-      const backCam = devices.find(c => c.label.toLowerCase().includes("back")) || devices[0];
-      html5QrCode.start(
-        backCam.id,
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          stopScanner();
-          document.getElementById("searchInput").value = decodedText;
-          searchProduct();
+  html5QrCode.start({facingMode: currentCamera}, {fps:10, qrbox:250},
+    qrCodeMessage=>{
+      productIdInput.value = qrCodeMessage;
+      stopCamera();
+      fetchProduct(qrCodeMessage);
+    },
+    error=>{}
+  ).catch(err=>console.error("Camera error:", err));
+}
+
+function stopCamera(){
+  if(html5QrCode){
+    html5QrCode.stop().then(()=>{ html5QrCode.clear(); });
+  }
+  readerContainer.style.display="none";
+}
+
+// ✅ 5. Add to Inventory
+addBtn.addEventListener("click", async ()=>{
+  // Validate form before submission
+  if (!validateForm()) {
+    return;
+  }
+  
+  const pid = productIdInput.value.trim();
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+
+  // Disable button to prevent duplicate submissions
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding...';
+
+  try {
+    // Add product if it's new (and not duplicate)
+    if(productType.value==="new"){
+      try{
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+          headers:{Authorization:`Token ${API_KEY}`}
+        });
+        const data = await res.json();
+        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        if(!existing){
+          const body = {
+            "Product ID": pid,
+            "Product Name": document.getElementById("productName").value,
+            "Details": document.getElementById("details").value,
+            "Price": document.getElementById("price").value,
+            "ShopID": ShopID
+          };
+          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+            method:"POST",
+            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+          });
+          alert("✅ Product added to Product Table!");
+        }else{
+          alert("⚠️ Product ID already exists, skipping Product Table insert.");
         }
-      );
+      }catch(e){ console.error(e); alert("Error adding product."); }
     }
-  });
-}
 
-function stopScanner() {
-  const reader = document.getElementById("reader");
-  reader.style.display = "none";
-  if (html5QrCode) html5QrCode.stop().catch(() => {});
-}
+    // Always add inventory record
+    const invBody = {
+      "Product ID": pid,
+      "Count": parseInt(document.getElementById("count").value),
+      "Batch No": document.getElementById("batchNo").value,
+      "Expire Date": document.getElementById("expireDate").value,
+      "Date": dateInput.value,
+      "Location": document.getElementById("location").value,
+      "ShopID": ShopID
+    };
 
-// 🔹 Update Inventory
-async function updateInventory(id) {
-  const count = Number(document.getElementById(`count-${id}`).value);
-  const exp = document.getElementById(`exp-${id}`).value;
-  const loc = document.getElementById(`loc-${id}`).value;
+    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      method:"POST",
+      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+      body:JSON.stringify(invBody)
+    });
 
-  await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
-    method: "PATCH",
-    headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ Count: count, "Expire Date": exp, Location: loc })
-  });
-
-  alert("Inventory updated successfully!");
-  loadData();
-}
-
-// 🔹 Delete Batch
-async function deleteBatch(id) {
-  if (!confirm("Are you sure you want to delete this batch? This action cannot be undone.")) {
-    return;
+    alert("✅ Added to Inventory Successfully!");
+    
+    // Clear form after successful submission
+    clearForm();
+    
+  } catch (error) {
+    console.error("Error during submission:", error);
+    alert("❌ Error adding to inventory. Please try again.");
+  } finally {
+    // Re-enable button after operation is complete
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add to Inventory';
   }
-
-  await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
-    method: "DELETE",
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
-
-  alert("Batch deleted successfully!");
-  loadData();
-}
-
-// 🔹 Delete Product
-async function deleteProduct(id) {
-  if (!confirm("Are you sure you want to delete this product and all its batches? This action cannot be undone.")) {
-    return;
-  }
-
-  // First delete all batches associated with this product
-  const product = products.find(p => p.id === id);
-  if (product) {
-    const batches = inventory.filter(i => i["Product ID"] === product["Product ID"]);
-    for (const batch of batches) {
-      await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${batch.id}/?user_field_names=true`, {
-        method: "DELETE",
-        headers: { Authorization: `Token ${API_KEY}` }
-      });
-    }
-  }
-
-  // Then delete the product
-  await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/${id}/?user_field_names=true`, {
-    method: "DELETE",
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
-
-  alert("Product and all associated batches deleted successfully!");
-  loadData();
-}
-
-// 🔹 Toggle Price Edit
-function togglePriceEdit(id, price) {
-  const span = document.getElementById(`price-${id}`);
-  const newPrice = prompt("Enter new price:", price);
-  if (newPrice !== null && !isNaN(newPrice)) {
-    updateProductPrice(id, Number(newPrice));
-  }
-}
-
-// 🔹 Update Price
-async function updateProductPrice(id, price) {
-  await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/${id}/?user_field_names=true`, {
-    method: "PATCH",
-    headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ Price: Number(price) })
-  });
-  alert("Price updated successfully!");
-  loadData();
-}
-
-init();
+});
 </script>
 </body>
 </html>
