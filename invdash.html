@@ -3,29 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventory Dashboard</title>
+<title>📦 Product Dashboard</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
-  body { font-family: 'Poppins', sans-serif; background:#f2f4f7; margin:0; padding:0; }
-  header { background:#007bff; color:white; padding:15px; text-align:center; font-size:20px; font-weight:bold; }
-  .container { padding:20px; }
-  .card { background:white; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px; padding:15px; }
-  .card h3 { margin:0; color:#007bff; }
-  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px; }
-  .row span { flex:1; }
-  .btn { background:#007bff; color:white; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; }
-  .btn:disabled { background:#ccc; cursor:not-allowed; }
-  input[type='number'], input[type='text'], input[type='date'] { width:100%; padding:5px; border:1px solid #ccc; border-radius:5px; }
+  body { font-family: 'Poppins', sans-serif; background:#f4f6f9; margin:0; padding:0; }
+  header { background:#007bff; color:white; text-align:center; padding:15px; font-size:20px; font-weight:bold; }
+  .container { padding:20px; max-width:900px; margin:auto; }
+  .search-bar { display:flex; gap:10px; margin-bottom:20px; }
+  input[type="text"] { flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; }
+  button { background:#007bff; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+  button:disabled { background:#ccc; cursor:not-allowed; }
+  .card { background:white; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:15px; padding:15px; }
+  .card h3 { margin:0; color:#007bff; cursor:pointer; }
+  .expandable { display:none; margin-top:10px; }
+  .batch-item { border-top:1px solid #eee; padding:10px 0; }
+  .batch-item input { width:100px; padding:4px; border:1px solid #ccc; border-radius:5px; }
+  .btn-small { padding:4px 8px; font-size:12px; margin-top:5px; }
+  #reader { width:100%; height: 350px; margin-top:10px; display:none; }
 </style>
 </head>
 <body>
+<header>📦 Product Dashboard</header>
 
-<header>🧾 Product Dashboard</header>
 <div class="container">
   <div id="status"></div>
-  <h2>Product Summary (by Product ID)</h2>
-  <div id="productSummary"></div>
-  <h2>Batchwise Details</h2>
-  <div id="batchDetails"></div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by Product Name or ID">
+    <button onclick="searchProduct()">Search</button>
+    <button onclick="toggleScanner()">📷 Scan</button>
+  </div>
+
+  <div id="reader"></div>
+  <h3>Products</h3>
+  <div id="productList"></div>
 </div>
 
 <script>
@@ -37,133 +48,146 @@ const INVENTORY_TABLE = 734795;
 let role = "";
 let shopID = localStorage.getItem("ShopIDTag");
 let mobileTag = localStorage.getItem("MobileTag");
+let html5QrCode;
+let products = [];
+let inventory = [];
 
-// 🔹 Step 1: Validate MobileTag
-async function validateUser() {
+async function init() {
   if (!mobileTag) {
-    alert("Please login first. MobileTag not found.");
-    window.location.href = "login.html";
+    alert("Please login first.");
+    location.href = "login.html";
     return;
   }
 
-  const userRes = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
+  // Fetch user role
+  const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
-  const users = await userRes.json();
-
-  const currentUser = users.results.find(u => u.Username === mobileTag);
-  if (!currentUser) {
-    alert("User not found. Please login again.");
-    window.location.href = "login.html";
+  const data = await res.json();
+  const user = data.results.find(u => u.Username === mobileTag);
+  if (!user) {
+    alert("User not found.");
     return;
   }
+  role = user.Role;
+  document.getElementById("status").innerHTML = `<b>User:</b> ${mobileTag} | <b>Role:</b> ${role}`;
 
-  role = currentUser.Role;
-  document.getElementById("status").innerHTML = `<b>Logged in as:</b> ${mobileTag} (${role})`;
-  fetchInventory();
+  await loadData();
 }
 
-// 🔹 Step 2: Fetch all products and inventory
-async function fetchInventory() {
-  try {
-    const productRes = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    const products = await productRes.json();
+async function loadData() {
+  const pRes = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, {
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
+  const iRes = await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
 
-    const invRes = await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    const inventory = await invRes.json();
+  const pData = await pRes.json();
+  const iData = await iRes.json();
 
-    const shopProducts = products.results.filter(p => p.ShopID === shopID);
-    const shopInventory = inventory.results.filter(i => i.ShopID === shopID);
+  products = pData.results.filter(p => p.ShopID === shopID);
+  inventory = iData.results.filter(i => i.ShopID === shopID);
 
-    displaySummary(shopProducts, shopInventory);
-    displayBatchwise(shopInventory);
-  } catch (err) {
-    console.error(err);
-    alert("Error fetching data.");
+  renderProducts(products);
+}
+
+function renderProducts(list) {
+  const container = document.getElementById("productList");
+  container.innerHTML = "";
+  list.forEach(prod => {
+    const batches = inventory.filter(i => i["Product ID"] === prod["Product ID"]);
+    const totalCount = batches.reduce((sum, b) => sum + b.Count, 0);
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <h3 onclick="toggleExpand('${prod["Product ID"]}')">${prod["Product Name"]} (${prod["Product ID"]})</h3>
+      <p><b>Total Count:</b> ${totalCount}</p>
+      <div id="expand-${prod["Product ID"]}" class="expandable">
+        ${batches.map(b => `
+          <div class="batch-item">
+            <p><b>Batch:</b> ${b["Batch No"]} | <b>Count:</b> 
+            <input type="number" id="count-${b.id}" value="${b.Count}" ${role !== "Manager" ? "disabled" : ""}>
+            <b>Expire:</b> <input type="date" id="exp-${b.id}" value="${b["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}>
+            <b>Location:</b> <input type="text" id="loc-${b.id}" value="${b.Location || ""}" ${role !== "Manager" ? "disabled" : ""}></p>
+            ${role === "Manager" ? `<button class="btn-small" onclick="updateInventory(${b.id})">Save</button>` : ""}
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleExpand(pid) {
+  const section = document.getElementById(`expand-${pid}`);
+  section.style.display = section.style.display === "block" ? "none" : "block";
+}
+
+function searchProduct() {
+  const val = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = products.filter(p =>
+    p["Product Name"].toLowerCase().includes(val) ||
+    p["Product ID"].toLowerCase().includes(val)
+  );
+  renderProducts(filtered);
+}
+
+// ---- SCANNER ----
+function toggleScanner() {
+  const reader = document.getElementById("reader");
+  if (reader.style.display === "none" || reader.style.display === "") {
+    reader.style.display = "block";
+    startScanner();
+  } else {
+    stopScanner();
   }
 }
 
-// 🔹 Step 3: Display product summary (Productwise)
-function displaySummary(products, inventory) {
-  const container = document.getElementById("productSummary");
-  container.innerHTML = "";
-
-  const summary = {};
-  inventory.forEach(item => {
-    if (!summary[item["Product ID"]]) summary[item["Product ID"]] = 0;
-    summary[item["Product ID"]] += item.Count;
-  });
-
-  Object.keys(summary).forEach(pid => {
-    const product = products.find(p => p["Product ID"] === pid);
-    if (!product) return;
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <h3>${product["Product Name"]}</h3>
-      <p><b>Product ID:</b> ${pid}</p>
-      <p><b>Total Stock:</b> ${summary[pid]}</p>
-      <p><b>Details:</b> ${product.Details || "N/A"}</p>
-      <p><b>Price:</b> ₹${product.Price || 0}</p>
-    `;
-    container.appendChild(div);
+function startScanner() {
+  html5QrCode = new Html5Qrcode("reader");
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      html5QrCode.start(
+        devices[0].id,
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          stopScanner();
+          document.getElementById("searchInput").value = decodedText;
+          searchProduct();
+        }
+      );
+    }
   });
 }
 
-// 🔹 Step 4: Display Batchwise
-function displayBatchwise(inventory) {
-  const container = document.getElementById("batchDetails");
-  container.innerHTML = "";
-
-  inventory.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <div class="row">
-        <span><b>Product ID:</b> ${item["Product ID"]}</span>
-        <span><b>Batch:</b> ${item["Batch No"]}</span>
-      </div>
-      <div class="row">
-        <span><b>Count:</b> <input type="number" id="count-${item.id}" value="${item.Count}" ${role !== "Manager" ? "disabled" : ""}></span>
-        <span><b>Expire Date:</b> <input type="date" id="exp-${item.id}" value="${item["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}></span>
-      </div>
-      <div class="row">
-        <span><b>Location:</b> <input type="text" id="loc-${item.id}" value="${item.Location || ""}" ${role !== "Manager" ? "disabled" : ""}></span>
-      </div>
-      ${role === "Manager" ? `<button class="btn" onclick="updateInventory(${item.id})">Save</button>` : ""}
-    `;
-    container.appendChild(div);
-  });
+function stopScanner() {
+  const reader = document.getElementById("reader");
+  reader.style.display = "none";
+  if (html5QrCode) html5QrCode.stop().catch(() => {});
 }
 
-// 🔹 Step 5: Update record
+// ---- Update Inventory ----
 async function updateInventory(id) {
-  const count = document.getElementById(`count-${id}`).value;
+  const count = parseInt(document.getElementById(`count-${id}`).value);
   const exp = document.getElementById(`exp-${id}`).value;
   const loc = document.getElementById(`loc-${id}`).value;
 
   await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
     method: "PATCH",
-    headers: {
-      Authorization: `Token ${API_KEY}`,
-      "Content-Type": "application/json"
-    },
+    headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      Count: parseInt(count),
+      Count: count,
       "Expire Date": exp,
       Location: loc
     })
   });
 
   alert("Inventory updated successfully!");
-  fetchInventory();
+  loadData();
 }
 
-validateUser();
+init();
 </script>
 </body>
 </html>
