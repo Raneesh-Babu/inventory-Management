@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📦 Product Dashboard</title>
+<title>📦 Premium Product Dashboard</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -193,6 +193,15 @@
     margin-top: 5px;
   }
 
+  .btn-danger {
+    background: var(--danger);
+  }
+
+  .btn-danger:hover {
+    background: #c82333;
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+  }
+
   .card {
     background: white;
     border-radius: var(--border-radius);
@@ -286,6 +295,12 @@
     color: var(--gray-600);
   }
 
+  .batch-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
   .price-edit {
     margin-top: 10px;
   }
@@ -307,6 +322,42 @@
     font-size: 20px;
   }
 
+  /* Batch Details Styling */
+  .batch-details {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+    display: none;
+  }
+
+  .batch-details.expanded {
+    display: block;
+  }
+
+  .batch-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .batch-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .batch-detail-item label {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 14px;
+  }
+
+  .batch-detail-item span {
+    color: var(--gray-800);
+    font-size: 15px;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .search-bar {
@@ -326,13 +377,21 @@
     .stats {
       grid-template-columns: 1fr;
     }
+    
+    .batch-actions {
+      flex-direction: column;
+    }
+    
+    .batch-details-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 </head>
 <body>
 <header>
   <div class="container">
-    <i class="fas fa-box"></i> Product Dashboard
+    <i class="fas fa-box"></i> Premium Product Dashboard
   </div>
 </header>
 
@@ -440,7 +499,33 @@ function renderProducts(list) {
             <p><i class="fas fa-hashtag"></i> <b>Count:</b> <input type="number" id="count-${b.id}" value="${b.Count}" ${role !== "Manager" ? "disabled" : ""}></p>
             <p><i class="fas fa-calendar-alt"></i> <b>Expire:</b> <input type="date" id="exp-${b.id}" value="${b["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}></p>
             <p><i class="fas fa-map-marker-alt"></i> <b>Location:</b> <input type="text" id="loc-${b.id}" value="${b.Location || ""}" ${role !== "Manager" ? "disabled" : ""}></p>
-            ${role === "Manager" ? `<button class="btn-small" onclick="updateInventory(${b.id})"><i class="fas fa-save"></i> Save</button>` : ""}
+            <div class="batch-actions">
+              ${role === "Manager" ? `
+                <button class="btn-small" onclick="updateInventory(${b.id})"><i class="fas fa-save"></i> Save</button>
+                <button class="btn-small btn-danger" onclick="deleteBatch(${b.id})"><i class="fas fa-trash"></i> Delete</button>
+              ` : ""}
+              <button class="btn-small" onclick="toggleBatchDetails('${b.id}')"><i class="fas fa-info-circle"></i> Details</button>
+            </div>
+            <div id="batch-details-${b.id}" class="batch-details">
+              <div class="batch-details-grid">
+                <div class="batch-detail-item">
+                  <label>Batch ID:</label>
+                  <span>${b.id}</span>
+                </div>
+                <div class="batch-detail-item">
+                  <label>Created:</label>
+                  <span>${b["Created Date"] || "N/A"}</span>
+                </div>
+                <div class="batch-detail-item">
+                  <label>Last Updated:</label>
+                  <span>${b["Last Updated"] || "N/A"}</span>
+                </div>
+                <div class="batch-detail-item">
+                  <label>Supplier:</label>
+                  <span>${b.Supplier || "N/A"}</span>
+                </div>
+              </div>
+            </div>
           </div>
         `).join('')}
       </div>
@@ -449,7 +534,7 @@ function renderProducts(list) {
   });
 }
 
-// 🔹 Expand / Collapse
+// 🔹 Expand / Collapse Product
 function toggleExpand(pid, card) {
   const section = document.getElementById(`expand-${pid}`);
   if (section.style.display === "block") {
@@ -458,6 +543,16 @@ function toggleExpand(pid, card) {
   } else {
     section.style.display = "block";
     card.classList.add("expanded");
+  }
+}
+
+// 🔹 Toggle Batch Details
+function toggleBatchDetails(batchId) {
+  const details = document.getElementById(`batch-details-${batchId}`);
+  if (details.classList.contains("expanded")) {
+    details.classList.remove("expanded");
+  } else {
+    details.classList.add("expanded");
   }
 }
 
@@ -520,6 +615,21 @@ async function updateInventory(id) {
   });
 
   alert("Inventory updated successfully!");
+  loadData();
+}
+
+// 🔹 Delete Batch
+async function deleteBatch(id) {
+  if (!confirm("Are you sure you want to delete this batch? This action cannot be undone.")) {
+    return;
+  }
+
+  await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
+    method: "DELETE",
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
+
+  alert("Batch deleted successfully!");
   loadData();
 }
 
