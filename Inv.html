@@ -4,237 +4,201 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Add Product & Inventory</title>
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <style>
-body { font-family: Poppins, sans-serif; background: #f8fafc; margin:0; padding:20px; }
-.container { max-width:600px; margin:auto; background:white; padding:20px; border-radius:15px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-h2 { text-align:center; color:#333; }
-input, select, button, textarea { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; }
-button { background:#007bff; color:white; border:none; font-weight:bold; cursor:pointer; transition:0.3s; }
-button:hover { background:#0056b3; }
-button:disabled { background:#999; cursor:not-allowed; }
-#cameraContainer { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; }
-#reader { width:100%; height:80%; }
-#switchCameraBtn, #closeCameraBtn { position:absolute; bottom:20px; background:white; color:black; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; }
-#switchCameraBtn { left:20px; }
-#closeCameraBtn { right:20px; }
+  body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
+  .container { max-width:500px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+  input, button { width:100%; padding:10px; margin:6px 0; border-radius:6px; border:1px solid #ccc; }
+  button { background:#007bff; color:white; cursor:pointer; }
+  button:hover { background:#0056b3; }
+  #reader { width:100%; height:400px; display:none; }
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Add Product / Inventory</h2>
-  <div id="status" style="color:#444; font-weight:bold;"></div>
-  <div id="loginPrompt" style="color:red; display:none;">Please login first</div>
-  
-  <div id="app" style="display:none;">
-    <label>Product Type:</label>
-    <select id="productType">
-      <option value="existing">Existing Product</option>
-      <option value="new">New Product</option>
-    </select>
-
-    <label>Product ID:</label>
-    <input type="text" id="productId" placeholder="Scan or Enter Product ID">
-    <button id="scanBtn">Scan Barcode</button>
-
-    <label>Product Name:</label>
-    <input type="text" id="productName">
-
-    <label>Details:</label>
-    <textarea id="details"></textarea>
-
-    <label>Price:</label>
-    <input type="number" id="price">
-
-    <label>Count:</label>
-    <input type="number" id="count">
-
-    <label>Batch No:</label>
-    <input type="text" id="batchNo">
-
-    <label>Expire Date:</label>
-    <input type="date" id="expireDate">
-
-    <label>Date:</label>
-    <input type="text" id="date" readonly>
-
-    <label>Location:</label>
-    <input type="text" id="location">
-
-    <button id="addBtn">Add to Inventory</button>
-  </div>
-</div>
-
-<!-- Camera Popup -->
-<div id="cameraContainer">
+  <button id="scanBtn">📷 Scan Product ID</button>
+  <button id="switchBtn" style="display:none;">🔄 Switch Camera</button>
   <div id="reader"></div>
-  <button id="switchCameraBtn">Switch Camera</button>
-  <button id="closeCameraBtn">Close</button>
+
+  <label>Product ID</label>
+  <input type="text" id="productId" placeholder="Scan or Enter Product ID">
+
+  <label>Product Name</label>
+  <input type="text" id="productName">
+
+  <label>Details</label>
+  <textarea id="details"></textarea>
+
+  <label>Price</label>
+  <input type="number" id="price">
+
+  <label>Count</label>
+  <input type="number" id="count">
+
+  <label>Batch No</label>
+  <input type="number" id="batchNo">
+
+  <label>Expire Date</label>
+  <input type="date" id="expireDate">
+
+  <label>Location</label>
+  <input type="text" id="location">
+
+  <button id="addBtn">Add to Inventory</button>
 </div>
 
 <script>
+const BASEROW_URL = "https://api.baserow.io/api/database/rows/table/";
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const BASEROW = "https://api.baserow.io";
 const USER_TABLE = 729979;
 const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
 
-const MobileTag = localStorage.getItem("MobileTag");
-const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
+let shopIDTag = localStorage.getItem("ShopIDTag");
+let mobileTag = localStorage.getItem("MobileTag");
+let role = "";
+let cameraId = null;
+let html5QrCode = null;
 
-const app = document.getElementById("app");
-const status = document.getElementById("status");
-const addBtn = document.getElementById("addBtn");
-const scanBtn = document.getElementById("scanBtn");
-const productIdInput = document.getElementById("productId");
-const productType = document.getElementById("productType");
-const dateInput = document.getElementById("date");
-
-const readerContainer = document.getElementById("cameraContainer");
-let html5QrCode;
-let currentCamera = "environment";
-
-dateInput.value = new Date().toISOString().split('T')[0];
-
-// ✅ 1. Role Validation
-(async function init(){
-  if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
-
-  try{
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
-    const data = await res.json();
-    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
-    if(!user){ status.textContent="User not found."; return; }
-
-    const role = user.Role || "Staff";
-    status.textContent = `Logged in as ${MobileTag} (${role})`;
-    app.style.display = "block";
-
-    if(role.toLowerCase()!=="manager"){
-      addBtn.disabled = true;
-      Array.from(app.querySelectorAll("input,textarea,select")).forEach(f=>f.disabled=true);
-      return;
-    }
-  }catch(e){ console.error(e); status.textContent="Error fetching user."; }
-})();
-
-// ✅ 2. Product Type Handler
-productType.addEventListener("change", ()=>{
-  if(productType.value==="new"){
-    productIdInput.value = "PRD-" + Date.now();
-    document.getElementById("productName").value = "";
-    document.getElementById("details").value = "";
-    document.getElementById("price").value = "";
-  }else{
-    productIdInput.value = "";
+async function checkRole() {
+  if (!mobileTag) {
+    alert("Please login first!");
+    window.location.href = "login.html";
+    return;
   }
-});
 
-// ✅ 3. Fetch Product Details
-async function fetchProduct(pid){
-  const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-    headers:{Authorization:`Token ${API_KEY}`}
+  const res = await fetch(`${BASEROW_URL}${USER_TABLE}/?user_field_names=true`, {
+    headers: { Authorization: `Token ${API_KEY}` }
   });
   const data = await res.json();
-  const product = data.results.find(p=>String(p["Product ID"])===String(pid));
-  if(product){
-    document.getElementById("productName").value = product["Product Name"] || "";
-    document.getElementById("details").value = product["Details"] || "";
-    document.getElementById("price").value = product["Price"] || "";
-  }else{
-    alert("Product not found in table.");
+  const user = data.results.find(u => u.Username === mobileTag);
+
+  if (!user) { alert("User not found."); return; }
+  role = user.Role;
+  shopIDTag = user.ShopName;
+
+  if (role !== "Manager") {
+    document.querySelectorAll("input, button").forEach(el => el.disabled = true);
+    alert("Access Denied. Only Managers can add stocks!");
+  }
+}
+checkRole();
+
+// Camera Functions
+const reader = document.getElementById("reader");
+const scanBtn = document.getElementById("scanBtn");
+const switchBtn = document.getElementById("switchBtn");
+
+scanBtn.addEventListener("click", async () => {
+  reader.style.display = "block";
+  switchBtn.style.display = "block";
+  if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+  const devices = await Html5Qrcode.getCameras();
+  if (devices.length) {
+    cameraId = devices[0].id;
+    startScanner();
+  }
+});
+
+switchBtn.addEventListener("click", async () => {
+  const devices = await Html5Qrcode.getCameras();
+  if (devices.length > 1) {
+    cameraId = (cameraId === devices[0].id) ? devices[1].id : devices[0].id;
+    await html5QrCode.stop();
+    startScanner();
+  } else {
+    alert("No secondary camera found!");
+  }
+});
+
+function startScanner() {
+  html5QrCode.start(
+    cameraId,
+    { fps: 10, qrbox: 250 },
+    qrCodeMessage => {
+      document.getElementById("productId").value = qrCodeMessage;
+      html5QrCode.stop();
+      reader.style.display = "none";
+      switchBtn.style.display = "none";
+      fetchProductDetails(qrCodeMessage);
+    }
+  ).catch(err => console.error(err));
+}
+
+async function fetchProductDetails(id) {
+  const res = await fetch(`${BASEROW_URL}${PRODUCT_TABLE}/?user_field_names=true`, {
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
+  const data = await res.json();
+  const prod = data.results.find(p => p["Product ID"] === id);
+  if (prod) {
+    document.getElementById("productName").value = prod["Product Name"];
+    document.getElementById("details").value = prod["Details"];
+    document.getElementById("price").value = prod["Price"];
+  } else {
+    alert("New Product! Please fill details.");
   }
 }
 
-// ✅ 4. Camera Scanning
-scanBtn.addEventListener("click", ()=>{
-  readerContainer.style.display="block";
-  startCamera();
-});
-
-document.getElementById("closeCameraBtn").addEventListener("click", ()=>{
-  stopCamera();
-});
-
-document.getElementById("switchCameraBtn").addEventListener("click", ()=>{
-  currentCamera = currentCamera==="environment" ? "user" : "environment";
-  stopCamera();
-  startCamera();
-});
-
-function startCamera(){
-  html5QrCode = new Html5Qrcode("reader");
-  html5QrCode.start({facingMode: currentCamera}, {fps:10, qrbox:250},
-    qrCodeMessage=>{
-      productIdInput.value = qrCodeMessage;
-      stopCamera();
-      fetchProduct(qrCodeMessage);
-    },
-    error=>{}
-  ).catch(err=>console.error("Camera error:", err));
-}
-
-function stopCamera(){
-  if(html5QrCode){
-    html5QrCode.stop().then(()=>{ html5QrCode.clear(); });
-  }
-  readerContainer.style.display="none";
-}
-
-// ✅ 5. Add to Inventory (with duplicate check)
-addBtn.addEventListener("click", async ()=>{
-  const pid = productIdInput.value.trim();
-  if(!pid){ alert("Enter or scan Product ID"); return; }
-
-  const pname = document.getElementById("productName").value.trim();
+document.getElementById("addBtn").addEventListener("click", async () => {
+  const productId = document.getElementById("productId").value.trim();
+  const productName = document.getElementById("productName").value.trim();
   const details = document.getElementById("details").value.trim();
   const price = document.getElementById("price").value.trim();
+  const count = document.getElementById("count").value.trim();
+  const batchNo = document.getElementById("batchNo").value.trim();
+  const expireDate = document.getElementById("expireDate").value;
+  const location = document.getElementById("location").value.trim();
+  const dateNow = new Date().toISOString().split('T')[0];
 
-  // Check if product already exists
-  const prodRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-    headers:{Authorization:`Token ${API_KEY}`}
+  if (!productId || !count) { alert("Product ID and Count required!"); return; }
+
+  // Check if Product ID already exists
+  const res = await fetch(`${BASEROW_URL}${PRODUCT_TABLE}/?user_field_names=true`, {
+    headers: { Authorization: `Token ${API_KEY}` }
   });
-  const prodData = await prodRes.json();
-  const existing = prodData.results.find(p=>String(p["Product ID"])===String(pid));
+  const data = await res.json();
+  const existing = data.results.find(p => p["Product ID"] === productId);
 
-  // If new product and not already in table, add it
-  if(productType.value==="new"){
-    if(existing){
-      alert("Product ID already exists in Product Table. Skipping duplicate addition.");
-    } else {
-      const productBody = {
-        "Product ID": pid,
-        "Product Name": pname,
+  // Add to Product table if new
+  if (!existing) {
+    await fetch(`${BASEROW_URL}${PRODUCT_TABLE}/`, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "Product ID": productId,
+        "Product Name": productName,
         "Details": details,
-        "Price": parseFloat(price)
-      };
-      await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-        method:"POST",
-        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-        body:JSON.stringify(productBody)
-      });
-      alert("✅ New product added successfully.");
-    }
+        "Price": parseFloat(price),
+        "ShopID": shopIDTag
+      })
+    });
   }
 
-  // Always add inventory record
-  const invBody = {
-    "Product ID": pid,
-    "Count": parseInt(document.getElementById("count").value),
-    "Batch No": document.getElementById("batchNo").value,
-    "Expire Date": document.getElementById("expireDate").value,
-    "Date": dateInput.value,
-    "Location": document.getElementById("location").value,
-    "ShopID": ShopID
-  };
-
-  await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-    method:"POST",
-    headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-    body:JSON.stringify(invBody)
+  // Add to Inventory table
+  await fetch(`${BASEROW_URL}${INVENTORY_TABLE}/`, {
+    method: "POST",
+    headers: {
+      Authorization: `Token ${API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "Product ID": productId,
+      "Count": parseInt(count),
+      "Batch No": parseInt(batchNo),
+      "Expire Date": expireDate,
+      "Date": dateNow,
+      "Location": location,
+      "ShopID": shopIDTag
+    })
   });
 
-  alert("✅ Added to Inventory Successfully!");
+  alert("Product Added to Inventory!");
+  document.querySelector("form")?.reset();
 });
 </script>
 </body>
