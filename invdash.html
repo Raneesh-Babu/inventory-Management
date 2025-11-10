@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Dashboard</title>
+<style>
+  body { font-family: 'Poppins', sans-serif; background:#f2f4f7; margin:0; padding:0; }
+  header { background:#007bff; color:white; padding:15px; text-align:center; font-size:20px; font-weight:bold; }
+  .container { padding:20px; }
+  .card { background:white; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:20px; padding:15px; }
+  .card h3 { margin:0; color:#007bff; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px; }
+  .row span { flex:1; }
+  .btn { background:#007bff; color:white; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; }
+  .btn:disabled { background:#ccc; cursor:not-allowed; }
+  input[type='number'], input[type='text'], input[type='date'] { width:100%; padding:5px; border:1px solid #ccc; border-radius:5px; }
+</style>
+</head>
+<body>
+
+<header>🧾 Product Dashboard</header>
+<div class="container">
+  <div id="status"></div>
+  <h2>Product Summary (by Product ID)</h2>
+  <div id="productSummary"></div>
+  <h2>Batchwise Details</h2>
+  <div id="batchDetails"></div>
+</div>
+
+<script>
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const USERS_TABLE = 729979;
+const PRODUCTS_TABLE = 734793;
+const INVENTORY_TABLE = 734795;
+
+let role = "";
+let shopID = localStorage.getItem("ShopIDTag");
+let mobileTag = localStorage.getItem("MobileTag");
+
+// 🔹 Step 1: Validate MobileTag
+async function validateUser() {
+  if (!mobileTag) {
+    alert("Please login first. MobileTag not found.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const userRes = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
+  const users = await userRes.json();
+
+  const currentUser = users.results.find(u => u.Username === mobileTag);
+  if (!currentUser) {
+    alert("User not found. Please login again.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  role = currentUser.Role;
+  document.getElementById("status").innerHTML = `<b>Logged in as:</b> ${mobileTag} (${role})`;
+  fetchInventory();
+}
+
+// 🔹 Step 2: Fetch all products and inventory
+async function fetchInventory() {
+  try {
+    const productRes = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const products = await productRes.json();
+
+    const invRes = await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const inventory = await invRes.json();
+
+    const shopProducts = products.results.filter(p => p.ShopID === shopID);
+    const shopInventory = inventory.results.filter(i => i.ShopID === shopID);
+
+    displaySummary(shopProducts, shopInventory);
+    displayBatchwise(shopInventory);
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching data.");
+  }
+}
+
+// 🔹 Step 3: Display product summary (Productwise)
+function displaySummary(products, inventory) {
+  const container = document.getElementById("productSummary");
+  container.innerHTML = "";
+
+  const summary = {};
+  inventory.forEach(item => {
+    if (!summary[item["Product ID"]]) summary[item["Product ID"]] = 0;
+    summary[item["Product ID"]] += item.Count;
+  });
+
+  Object.keys(summary).forEach(pid => {
+    const product = products.find(p => p["Product ID"] === pid);
+    if (!product) return;
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <h3>${product["Product Name"]}</h3>
+      <p><b>Product ID:</b> ${pid}</p>
+      <p><b>Total Stock:</b> ${summary[pid]}</p>
+      <p><b>Details:</b> ${product.Details || "N/A"}</p>
+      <p><b>Price:</b> ₹${product.Price || 0}</p>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// 🔹 Step 4: Display Batchwise
+function displayBatchwise(inventory) {
+  const container = document.getElementById("batchDetails");
+  container.innerHTML = "";
+
+  inventory.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <div class="row">
+        <span><b>Product ID:</b> ${item["Product ID"]}</span>
+        <span><b>Batch:</b> ${item["Batch No"]}</span>
+      </div>
+      <div class="row">
+        <span><b>Count:</b> <input type="number" id="count-${item.id}" value="${item.Count}" ${role !== "Manager" ? "disabled" : ""}></span>
+        <span><b>Expire Date:</b> <input type="date" id="exp-${item.id}" value="${item["Expire Date"] || ""}" ${role !== "Manager" ? "disabled" : ""}></span>
+      </div>
+      <div class="row">
+        <span><b>Location:</b> <input type="text" id="loc-${item.id}" value="${item.Location || ""}" ${role !== "Manager" ? "disabled" : ""}></span>
+      </div>
+      ${role === "Manager" ? `<button class="btn" onclick="updateInventory(${item.id})">Save</button>` : ""}
+    `;
+    container.appendChild(div);
+  });
+}
+
+// 🔹 Step 5: Update record
+async function updateInventory(id) {
+  const count = document.getElementById(`count-${id}`).value;
+  const exp = document.getElementById(`exp-${id}`).value;
+  const loc = document.getElementById(`loc-${id}`).value;
+
+  await fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/${id}/?user_field_names=true`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Token ${API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      Count: parseInt(count),
+      "Expire Date": exp,
+      Location: loc
+    })
+  });
+
+  alert("Inventory updated successfully!");
+  fetchInventory();
+}
+
+validateUser();
+</script>
+</body>
+</html>
