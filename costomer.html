@@ -72,8 +72,8 @@
 <div class="form-container" id="addForm">
   <h3>Add New Customer</h3>
   <input type="text" id="name" placeholder="Customer Name" required><br>
-  <input type="text" id="mobile" placeholder="Mobile Number" required><br>
-  <input type="text" id="address" placeholder="Address" required><br>
+  <input type="number" id="mobile" placeholder="Mobile Number" required><br>
+  <textarea id="address" placeholder="Address" required></textarea><br>
   <input type="text" id="gst" placeholder="GST (optional)"><br>
   <button onclick="addCustomer()">Add Customer</button>
 </div>
@@ -84,7 +84,7 @@
   <table id="customerTable">
     <thead>
       <tr>
-        <th>Name</th>
+        <th>Customer Name</th>
         <th>Mobile</th>
         <th>Address</th>
         <th>GST</th>
@@ -146,7 +146,7 @@ async function loadCustomers() {
       <td>${c["Costomer Name"]}</td>
       <td>${c["Mobile"]}</td>
       <td>${c["Address"]}</td>
-      <td>${c["GST"] || ""}</td>
+      <td>${c["GST"] || "Nil"}</td>
       <td>${c["Added by"]}</td>
       <td>${c["Date"]}</td>
       ${role.toLowerCase() === "manager" ? `<td><button class="edit-btn" onclick="editCustomer(${c.id})">Edit</button></td>` : ""}
@@ -160,7 +160,7 @@ async function addCustomer() {
   const name = document.getElementById("name").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
   const address = document.getElementById("address").value.trim();
-  const gst = document.getElementById("gst").value.trim();
+  const gst = document.getElementById("gst").value.trim() || "Nil";
 
   if (!name || !mobile || !address) {
     alert("Please fill all required fields!");
@@ -169,13 +169,13 @@ async function addCustomer() {
 
   const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
   const data = await res.json();
-  const existing = data.results.find(c => c.Mobile === mobile && c.ShopID == shopID);
+  const existing = data.results.find(c => c.Mobile == Number(mobile) && c.ShopID == shopID);
   if (existing) {
     alert("Customer with this mobile number already exists in your shop!");
     return;
   }
 
-  const today = new Date().toLocaleDateString();
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
   await fetch(CUSTOMER_API, {
     method: "POST",
@@ -185,7 +185,7 @@ async function addCustomer() {
     },
     body: JSON.stringify({
       "Costomer Name": name,
-      "Mobile": mobile,
+      "Mobile": Number(mobile),
       "Address": address,
       "GST": gst,
       "Added by": addedBy || "Unknown",
