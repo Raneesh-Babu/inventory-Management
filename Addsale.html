@@ -419,28 +419,6 @@
             cursor: not-allowed;
         }
         
-        .search-options {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .search-option {
-            flex: 1;
-            text-align: center;
-            padding: 8px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 1px solid #ddd;
-        }
-        
-        .search-option.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
         .suggestions-container {
             display: none;
             position: absolute;
@@ -562,6 +540,12 @@
             border-radius: 4px;
             font-size: 14px;
         }
+        
+        .search-info {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -611,6 +595,7 @@
                             <label for="customer-search">Search Customer (Mobile or Name)</label>
                             <input type="text" id="customer-search" placeholder="Enter mobile number or customer name">
                             <div id="customer-suggestions" class="suggestions-container"></div>
+                            <div class="search-info">Start typing to search customers</div>
                         </div>
                     </div>
                     
@@ -645,16 +630,12 @@
                     <button class="btn btn-primary" id="open-qr-scanner">QR Scanner</button>
                 </div>
                 <div class="card-body">
-                    <div class="search-options">
-                        <div class="search-option active" id="search-by-name">Search by Name</div>
-                        <div class="search-option" id="search-by-id">Search by ID</div>
-                    </div>
-                    
                     <div class="flex-row">
                         <div class="form-group flex-1">
-                            <label for="product-search" id="product-search-label">Search Product by Name</label>
-                            <input type="text" id="product-search" placeholder="Enter product name">
+                            <label for="product-search">Search Product (ID or Name)</label>
+                            <input type="text" id="product-search" placeholder="Enter Product ID or Product Name">
                             <div id="product-suggestions" class="suggestions-container"></div>
+                            <div class="search-info">Search by Product ID or Product Name</div>
                         </div>
                         <div class="form-group flex-1">
                             <label for="batch-no">Batch Number</label>
@@ -808,7 +789,6 @@
         let currentProductId = null;
         let currentProductName = null;
         let html5QrCode = null;
-        let searchBy = 'name'; // 'name' or 'id'
         let selectedBatch = null;
 
         // DOM Elements
@@ -828,7 +808,6 @@
         const customerAddressEl = document.getElementById('customer-address');
         const customerGstEl = document.getElementById('customer-gst');
         const productSearchEl = document.getElementById('product-search');
-        const productSearchLabel = document.getElementById('product-search-label');
         const productSuggestionsEl = document.getElementById('product-suggestions');
         const productNameEl = document.getElementById('product-name');
         const productPriceEl = document.getElementById('product-price');
@@ -853,8 +832,6 @@
         const invoicePreviewContent = document.getElementById('invoice-preview-content');
         const printInvoiceBtn = document.getElementById('print-invoice');
         const notificationEl = document.getElementById('notification');
-        const searchByNameBtn = document.getElementById('search-by-name');
-        const searchByIdBtn = document.getElementById('search-by-id');
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1003,15 +980,6 @@
                     handleLogin();
                 }
             });
-            
-            // Search options
-            searchByNameBtn.addEventListener('click', function() {
-                setSearchMode('name');
-            });
-            
-            searchByIdBtn.addEventListener('click', function() {
-                setSearchMode('id');
-            });
 
             // Click outside to close suggestions
             document.addEventListener('click', function(e) {
@@ -1026,29 +994,6 @@
             document.querySelectorAll('.suggestions-container').forEach(el => {
                 el.style.display = 'none';
             });
-        }
-
-        // Set search mode (name or ID)
-        function setSearchMode(mode) {
-            searchBy = mode;
-            
-            // Update UI
-            if (mode === 'name') {
-                searchByNameBtn.classList.add('active');
-                searchByIdBtn.classList.remove('active');
-                productSearchLabel.textContent = 'Search Product by Name';
-                productSearchEl.placeholder = 'Enter product name (min 2 letters)';
-            } else {
-                searchByNameBtn.classList.remove('active');
-                searchByIdBtn.classList.add('active');
-                productSearchLabel.textContent = 'Search Product by ID';
-                productSearchEl.placeholder = 'Enter product ID';
-            }
-            
-            // Clear current search
-            productSearchEl.value = '';
-            hideAllSuggestions();
-            resetProductFields();
         }
 
         // Handle login
@@ -1177,35 +1122,27 @@
             customerSearchEl.value = '';
         }
 
-        // Handle product search
+        // Handle product search - Search by both Product ID and Product Name
         function handleProductSearch() {
             const searchTerm = productSearchEl.value.trim();
             
-            if (searchBy === 'name' && searchTerm.length < 2) {
+            if (searchTerm.length < 2) {
                 productSuggestionsEl.style.display = 'none';
                 return;
             }
             
-            if (searchBy === 'id' && searchTerm.length < 1) {
-                productSuggestionsEl.style.display = 'none';
-                return;
-            }
-            
-            let filteredProducts = [];
-            
-            if (searchBy === 'name') {
-                // Search by product name
-                filteredProducts = products.filter(product => {
-                    const name = product.Name || '';
-                    return name.toLowerCase().includes(searchTerm.toLowerCase());
-                });
-            } else {
-                // Search by product ID
-                filteredProducts = products.filter(product => {
-                    const id = product.id.toString();
-                    return id.includes(searchTerm);
-                });
-            }
+            // Search in both Product ID and Product Name fields
+            const filteredProducts = products.filter(product => {
+                const productId = product['Product ID'] || product.id || '';
+                const productName = product['Product Name'] || product.Name || '';
+                
+                // Convert both to string and lowercase for comparison
+                const idStr = productId.toString().toLowerCase();
+                const nameStr = productName.toString().toLowerCase();
+                const searchStr = searchTerm.toLowerCase();
+                
+                return idStr.includes(searchStr) || nameStr.includes(searchStr);
+            });
             
             displayProductSuggestions(filteredProducts);
         }
@@ -1224,11 +1161,11 @@
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
                 
-                if (searchBy === 'name') {
-                    div.textContent = `${product.Name} - ₹${product.Price || 0}`;
-                } else {
-                    div.textContent = `ID: ${product.id} - ${product.Name} - ₹${product.Price || 0}`;
-                }
+                const productId = product['Product ID'] || product.id || 'N/A';
+                const productName = product['Product Name'] || product.Name || 'N/A';
+                const price = product.Price || 0;
+                
+                div.textContent = `ID: ${productId} - ${productName} - ₹${price}`;
                 
                 div.addEventListener('click', function() {
                     selectProduct(product);
@@ -1244,9 +1181,11 @@
         // Select a product
         function selectProduct(product) {
             currentProductId = product.id;
-            currentProductName = product.Name || '';
+            currentProductName = product['Product Name'] || product.Name || '';
+            const productPrice = product.Price || 0;
+            
             productNameEl.value = currentProductName;
-            productPriceEl.value = product.Price || 0;
+            productPriceEl.value = productPrice;
             productSearchEl.value = '';
             
             // Load available batches for this product
@@ -1317,10 +1256,10 @@
                 const batchItem = document.createElement('div');
                 batchItem.className = 'batch-item';
                 
-                // Extract batch details - handle different field name possibilities
+                // Extract batch details from Inventory table
                 const batchNo = batch['Batch No'] || batch.BatchNo || batch['Batch Number'] || 'N/A';
                 const count = batch.Count || batch.Quantity || 0;
-                const expiryDate = batch['Expiry Date'] || batch.ExpiryDate || 'N/A';
+                const expiryDate = batch['Expire Date'] || batch['Expiry Date'] || batch.ExpiryDate || 'N/A';
                 
                 // Check expiry status
                 const expiryStatus = getExpiryStatus(expiryDate);
@@ -1547,7 +1486,7 @@
                 const salesperson = currentUser.name;
                 const date = new Date().toISOString().split('T')[0];
                 
-                // Save to Ledger Table - Updated to use "Costomer Name"
+                // Save to Ledger Table
                 const ledgerData = {
                     "Costomer Name": customerName,
                     "Mobile": customerMobile,
