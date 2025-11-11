@@ -36,20 +36,17 @@
     line-height: 1.6;
     padding: 20px;
     min-height: 100vh;
+    width: 100%;
   }
 
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
+  /* Responsive text scaling */
   h2 {
     text-align: center;
     color: var(--primary);
     margin-bottom: 30px;
-    font-size: 2.2rem;
     font-weight: 700;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
   }
 
   .card {
@@ -57,38 +54,40 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     transition: var(--transition);
+    width: 100%;
   }
 
   .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
   }
 
   .card-header {
     background: linear-gradient(to right, var(--primary), var(--primary-light));
     color: white;
-    padding: 15px 20px;
+    padding: clamp(12px, 3vw, 18px) clamp(15px, 4vw, 25px);
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 4vw, 1.3rem);
   }
 
   .card-body {
-    padding: 20px;
+    padding: clamp(15px, 4vw, 25px);
   }
 
   .btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: clamp(8px, 2vw, 12px) clamp(15px, 3vw, 20px);
     border-radius: 8px;
     border: none;
     cursor: pointer;
     font-weight: 600;
     transition: var(--transition);
     text-align: center;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
   }
 
   .btn-primary {
@@ -132,12 +131,12 @@
   }
 
   .btn-sm {
-    padding: 8px 15px;
-    font-size: 0.85rem;
+    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 15px);
+    font-size: clamp(0.75rem, 2vw, 0.85rem);
   }
 
   .form-group {
-    margin-bottom: 15px;
+    margin-bottom: clamp(10px, 3vw, 15px);
   }
 
   label {
@@ -145,14 +144,15 @@
     margin-bottom: 5px;
     font-weight: 500;
     color: var(--dark);
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
   }
 
   input, textarea, select {
     width: 100%;
-    padding: 12px 15px;
+    padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 15px);
     border: 1px solid var(--gray-light);
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
     transition: var(--transition);
   }
 
@@ -163,35 +163,36 @@
   }
 
   textarea {
-    min-height: 100px;
+    min-height: clamp(80px, 20vw, 100px);
     resize: vertical;
   }
 
   .search-container {
     display: flex;
-    gap: 15px;
+    gap: clamp(10px, 3vw, 15px);
     margin-bottom: 20px;
     flex-wrap: wrap;
   }
 
   .search-box {
     flex: 1;
-    min-width: 250px;
+    min-width: 200px;
   }
 
   .date-filter {
     display: flex;
-    gap: 10px;
+    gap: clamp(5px, 2vw, 10px);
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .date-input {
-    min-width: 150px;
+    min-width: clamp(120px, 25vw, 150px);
   }
 
   .action-buttons {
     display: flex;
-    gap: 10px;
+    gap: clamp(5px, 2vw, 10px);
     flex-wrap: wrap;
     margin-top: 15px;
   }
@@ -225,6 +226,7 @@
     overflow: hidden;
     transition: var(--transition);
     cursor: pointer;
+    width: 100%;
   }
 
   .customer-card:hover {
@@ -233,7 +235,7 @@
   }
 
   .customer-header {
-    padding: 18px 20px;
+    padding: clamp(15px, 4vw, 20px);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -250,21 +252,23 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    flex: 1;
   }
 
   .customer-name {
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 3.5vw, 1.2rem);
   }
 
   .customer-mobile {
-    font-size: 0.95rem;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
     opacity: 0.9;
   }
 
   .expand-icon {
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 3vw, 1.2rem);
     transition: var(--transition);
+    margin-left: 10px;
   }
 
   .customer-details {
@@ -276,7 +280,7 @@
   }
 
   .customer-card.expanded .customer-details {
-    padding: 20px;
+    padding: clamp(15px, 4vw, 20px);
     max-height: 500px;
   }
 
@@ -286,15 +290,16 @@
 
   .detail-row {
     display: flex;
-    margin-bottom: 12px;
+    margin-bottom: clamp(8px, 2vw, 12px);
     align-items: flex-start;
   }
 
   .detail-icon {
-    width: 24px;
-    margin-right: 10px;
+    width: clamp(20px, 5vw, 24px);
+    margin-right: clamp(8px, 2vw, 10px);
     text-align: center;
     color: var(--primary);
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
   }
 
   .detail-content {
@@ -304,12 +309,14 @@
   .detail-label {
     font-weight: 600;
     color: var(--dark);
-    font-size: 0.9rem;
+    font-size: clamp(0.85rem, 2.5vw, 0.95rem);
   }
 
   .detail-value {
     color: var(--gray);
     margin-top: 2px;
+    font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+    word-break: break-word;
   }
 
   /* Modal Styles */
@@ -324,7 +331,7 @@
     z-index: 1000;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: clamp(10px, 3vw, 20px);
   }
 
   .modal-content {
@@ -345,14 +352,14 @@
   .modal-header {
     background: linear-gradient(to right, var(--primary), var(--primary-light));
     color: white;
-    padding: 15px 20px;
+    padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 20px);
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
   .modal-title {
-    font-size: 1.3rem;
+    font-size: clamp(1.1rem, 4vw, 1.3rem);
     font-weight: 600;
   }
 
@@ -360,7 +367,7 @@
     background: none;
     border: none;
     color: white;
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
     cursor: pointer;
     transition: var(--transition);
   }
@@ -370,11 +377,11 @@
   }
 
   .modal-body {
-    padding: 20px;
+    padding: clamp(15px, 4vw, 20px);
   }
 
   .modal-footer {
-    padding: 15px 20px;
+    padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 20px);
     background: var(--light);
     display: flex;
     justify-content: flex-end;
@@ -387,7 +394,11 @@
   }
 
   /* Responsive */
-  @media (max-width: 768px) {
+  @media (max-width: 480px) {
+    body {
+      padding: 10px;
+    }
+    
     .search-container {
       flex-direction: column;
     }
@@ -395,6 +406,11 @@
     .date-filter {
       flex-direction: column;
       align-items: flex-start;
+      width: 100%;
+    }
+    
+    .date-input {
+      width: 100%;
     }
     
     .action-buttons {
@@ -413,20 +429,30 @@
 
   .empty-state {
     text-align: center;
-    padding: 40px 20px;
+    padding: clamp(30px, 8vw, 50px) clamp(15px, 4vw, 25px);
     color: var(--gray);
   }
 
   .empty-state i {
-    font-size: 3rem;
+    font-size: clamp(2rem, 10vw, 3.5rem);
     margin-bottom: 15px;
     color: var(--gray-light);
+  }
+
+  .empty-state div {
+    font-size: clamp(1rem, 4vw, 1.2rem);
+    margin-bottom: 10px;
+  }
+
+  .empty-state small {
+    font-size: clamp(0.8rem, 3vw, 0.9rem);
   }
 
   .loading {
     text-align: center;
     padding: 20px;
     color: var(--gray);
+    font-size: clamp(0.9rem, 3vw, 1rem);
   }
 
   .fade-in {
@@ -441,43 +467,41 @@
 </head>
 <body>
 
-<div class="container">
-  <h2><i class="fas fa-users"></i> Customer Database</h2>
+<h2><i class="fas fa-users"></i> Customer Database</h2>
 
-  <div class="card" id="addForm">
-    <div class="card-header">
-      <i class="fas fa-user-plus"></i> Add New Customer
-    </div>
-    <div class="card-body">
-      <button class="btn btn-primary" onclick="openModal()">
-        <i class="fas fa-plus-circle"></i> Add New Customer
-      </button>
-    </div>
+<div class="card" id="addForm">
+  <div class="card-header">
+    <i class="fas fa-user-plus"></i> Add New Customer
   </div>
+  <div class="card-body">
+    <button class="btn btn-primary" onclick="openModal()">
+      <i class="fas fa-plus-circle"></i> Add New Customer
+    </button>
+  </div>
+</div>
 
-  <div class="card">
-    <div class="card-header">
-      <i class="fas fa-list"></i> Customer List
-    </div>
-    <div class="card-body">
-      <div class="search-container">
-        <div class="search-box">
-          <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
-        </div>
-        <div class="date-filter">
-          <input type="date" id="fromDate" class="date-input" onchange="filterList()">
-          <span>to</span>
-          <input type="date" id="toDate" class="date-input" onchange="filterList()">
-          <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">
-            <i class="fas fa-times"></i> Clear
-          </button>
-        </div>
+<div class="card">
+  <div class="card-header">
+    <i class="fas fa-list"></i> Customer List
+  </div>
+  <div class="card-body">
+    <div class="search-container">
+      <div class="search-box">
+        <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
       </div>
-      
-      <div id="customerListContainer">
-        <div class="loading">
-          <i class="fas fa-spinner fa-spin"></i> Loading customers...
-        </div>
+      <div class="date-filter">
+        <input type="date" id="fromDate" class="date-input" onchange="filterList()">
+        <span>to</span>
+        <input type="date" id="toDate" class="date-input" onchange="filterList()">
+        <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">
+          <i class="fas fa-times"></i> Clear
+        </button>
+      </div>
+    </div>
+    
+    <div id="customerListContainer">
+      <div class="loading">
+        <i class="fas fa-spinner fa-spin"></i> Loading customers...
       </div>
     </div>
   </div>
@@ -566,6 +590,16 @@ const mobileTag = localStorage.getItem("MobileTag");
 let role = "Staff"; // default
 let allCustomers = [];
 let currentEditId = null;
+
+// Set default date range to last 30 days
+function setDefaultDateRange() {
+  const today = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+  
+  document.getElementById('fromDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+  document.getElementById('toDate').value = today.toISOString().split('T')[0];
+}
 
 // 🔹 Step 1: Get Role from Users Table
 async function getUserRole() {
@@ -864,8 +898,7 @@ function filterList() {
 
 // Clear date filter
 function clearDateFilter() {
-  document.getElementById("fromDate").value = "";
-  document.getElementById("toDate").value = "";
+  setDefaultDateRange();
   filterList();
 }
 
@@ -904,6 +937,7 @@ function whatsappCustomer(mobile) {
 // Run
 (async () => {
   await getUserRole();
+  setDefaultDateRange();
   await loadCustomers();
 })();
 </script>
