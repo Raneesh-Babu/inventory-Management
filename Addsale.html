@@ -97,6 +97,7 @@
         
         .form-group {
             margin-bottom: 15px;
+            position: relative;
         }
         
         label {
@@ -440,6 +441,37 @@
             border-color: var(--primary);
         }
         
+        .suggestions-container {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
         .batch-item {
             padding: 15px;
             border: 1px solid #ddd;
@@ -522,6 +554,14 @@
             background: var(--warning);
             color: white;
         }
+        
+        .shop-info {
+            background: var(--primary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -533,6 +573,10 @@
                 <div class="form-group">
                     <label for="mobile-input">Mobile Number</label>
                     <input type="text" id="mobile-input" placeholder="Enter your mobile number">
+                </div>
+                <div class="form-group">
+                    <label for="shopid-input">Shop ID</label>
+                    <input type="text" id="shopid-input" placeholder="Enter your Shop ID">
                 </div>
                 <button class="login-btn" id="login-btn">Login</button>
                 <div id="login-message" style="margin-top: 15px; text-align: center;"></div>
@@ -548,6 +592,7 @@
                     <div class="logo">Invoice Creation System</div>
                     <div class="user-info">
                         <span id="user-display">User: Loading...</span>
+                        <div class="shop-info">Shop: <span id="shop-display"></span></div>
                         <button class="logout-btn" id="logout-btn">Logout</button>
                     </div>
                 </div>
@@ -565,7 +610,7 @@
                         <div class="form-group flex-1">
                             <label for="customer-search">Search Customer (Mobile or Name)</label>
                             <input type="text" id="customer-search" placeholder="Enter mobile number or customer name">
-                            <div id="customer-suggestions" style="display: none; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; position: absolute; background: white; width: 100%; z-index: 100;"></div>
+                            <div id="customer-suggestions" class="suggestions-container"></div>
                         </div>
                     </div>
                     
@@ -609,7 +654,7 @@
                         <div class="form-group flex-1">
                             <label for="product-search" id="product-search-label">Search Product by Name</label>
                             <input type="text" id="product-search" placeholder="Enter product name">
-                            <div id="product-suggestions" style="display: none; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; position: absolute; background: white; width: 100%; z-index: 100;"></div>
+                            <div id="product-suggestions" class="suggestions-container"></div>
                         </div>
                         <div class="form-group flex-1">
                             <label for="batch-no">Batch Number</label>
@@ -756,6 +801,7 @@
 
         // Global variables
         let currentUser = null;
+        let currentShopId = null;
         let customers = [];
         let products = [];
         let invoiceItems = [];
@@ -769,9 +815,11 @@
         const loginPageEl = document.getElementById('login-page');
         const mainAppEl = document.getElementById('main-app');
         const mobileInputEl = document.getElementById('mobile-input');
+        const shopIdInputEl = document.getElementById('shopid-input');
         const loginBtn = document.getElementById('login-btn');
         const loginMessageEl = document.getElementById('login-message');
         const userDisplayEl = document.getElementById('user-display');
+        const shopDisplayEl = document.getElementById('shop-display');
         const logoutBtn = document.getElementById('logout-btn');
         const customerSearchEl = document.getElementById('customer-search');
         const customerSuggestionsEl = document.getElementById('customer-suggestions');
@@ -814,17 +862,18 @@
             setupEventListeners();
         });
 
-        // Check if user is authenticated via MobileTag
+        // Check if user is authenticated via MobileTag and ShopIDTag
         function checkAuthentication() {
             const mobileTag = localStorage.getItem('MobileTag');
+            const shopIdTag = localStorage.getItem('ShopIDTag');
             
-            if (!mobileTag) {
+            if (!mobileTag || !shopIdTag) {
                 showLoginPage();
                 return;
             }
             
-            // Verify user exists in Baserow Users table
-            verifyUser(mobileTag);
+            // Verify user exists in Baserow Users table with correct ShopID
+            verifyUser(mobileTag, shopIdTag);
         }
 
         // Show login page
@@ -840,13 +889,13 @@
             generateInvoiceNumber();
         }
 
-        // Verify user with Baserow - Only check MobileTag against Username column
-        async function verifyUser(mobileTag) {
+        // Verify user with Baserow - Check MobileTag against Username column and ShopID
+        async function verifyUser(mobileTag, shopIdTag) {
             try {
                 showNotification('Verifying user...', 'warning');
                 
                 const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.users}/?user_field_names=true&filter__field_0=Username&filter__type_0=contains&filter__value_0=${mobileTag}`,
+                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.users}/?user_field_names=true&filter__field_0=Username&filter__type_0=contains&filter__value_0=${mobileTag}&filter__field_1=ShopID&filter__type_1=contains&filter__value_1=${shopIdTag}`,
                     {
                         headers: {
                             'Authorization': `Token ${BASEROW_CONFIG.token}`
@@ -863,31 +912,34 @@
                 if (data.results && data.results.length > 0) {
                     currentUser = {
                         username: mobileTag,
-                        // Get additional user details if available
-                        name: data.results[0].Name || mobileTag,
-                        shopId: data.results[0].ShopID || 'Default'
+                        shopId: shopIdTag,
+                        name: data.results[0].Name || mobileTag
                     };
+                    currentShopId = shopIdTag;
                     
                     userDisplayEl.textContent = `User: ${mobileTag}`;
+                    shopDisplayEl.textContent = shopIdTag;
                     showMainApp();
                     
-                    // Load initial data
+                    // Load initial data filtered by ShopID
                     loadCustomers();
                     loadProducts();
                     
                     showNotification('User verified successfully', 'success');
                 } else {
                     showLoginPage();
-                    showNotification('User not found in system', 'error');
-                    // Clear invalid MobileTag
+                    showNotification('User not found in system or ShopID mismatch', 'error');
+                    // Clear invalid credentials
                     localStorage.removeItem('MobileTag');
+                    localStorage.removeItem('ShopIDTag');
                 }
             } catch (error) {
                 console.error('Error verifying user:', error);
                 showNotification('Error verifying user', 'error');
                 showLoginPage();
-                // Clear potentially invalid MobileTag on error
+                // Clear potentially invalid credentials on error
                 localStorage.removeItem('MobileTag');
+                localStorage.removeItem('ShopIDTag');
             }
         }
 
@@ -899,6 +951,7 @@
             // Logout button
             logoutBtn.addEventListener('click', function() {
                 localStorage.removeItem('MobileTag');
+                localStorage.removeItem('ShopIDTag');
                 showLoginPage();
                 showNotification('Logged out successfully', 'success');
             });
@@ -945,6 +998,12 @@
                 }
             });
             
+            shopIdInputEl.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
+            
             // Search options
             searchByNameBtn.addEventListener('click', function() {
                 setSearchMode('name');
@@ -952,6 +1011,20 @@
             
             searchByIdBtn.addEventListener('click', function() {
                 setSearchMode('id');
+            });
+
+            // Click outside to close suggestions
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.form-group')) {
+                    hideAllSuggestions();
+                }
+            });
+        }
+
+        // Hide all suggestion dropdowns
+        function hideAllSuggestions() {
+            document.querySelectorAll('.suggestions-container').forEach(el => {
+                el.style.display = 'none';
             });
         }
 
@@ -964,7 +1037,7 @@
                 searchByNameBtn.classList.add('active');
                 searchByIdBtn.classList.remove('active');
                 productSearchLabel.textContent = 'Search Product by Name';
-                productSearchEl.placeholder = 'Enter product name';
+                productSearchEl.placeholder = 'Enter product name (min 2 letters)';
             } else {
                 searchByNameBtn.classList.remove('active');
                 searchByIdBtn.classList.add('active');
@@ -974,22 +1047,24 @@
             
             // Clear current search
             productSearchEl.value = '';
-            productSuggestionsEl.style.display = 'none';
+            hideAllSuggestions();
             resetProductFields();
         }
 
         // Handle login
         function handleLogin() {
             const mobile = mobileInputEl.value.trim();
+            const shopId = shopIdInputEl.value.trim();
             
-            if (!mobile) {
-                showLoginMessage('Please enter a mobile number', 'error');
+            if (!mobile || !shopId) {
+                showLoginMessage('Please enter both mobile number and Shop ID', 'error');
                 return;
             }
             
-            // Set MobileTag and verify
+            // Set MobileTag and ShopIDTag then verify
             localStorage.setItem('MobileTag', mobile);
-            verifyUser(mobile);
+            localStorage.setItem('ShopIDTag', shopId);
+            verifyUser(mobile, shopId);
         }
 
         // Show login message
@@ -998,11 +1073,11 @@
             loginMessageEl.style.color = type === 'error' ? 'red' : 'green';
         }
 
-        // Load customers from Baserow
+        // Load customers from Baserow filtered by ShopID
         async function loadCustomers() {
             try {
                 const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.customers}/?user_field_names=true`,
+                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.customers}/?user_field_names=true&filter__field_0=ShopID&filter__type_0=contains&filter__value_0=${currentShopId}`,
                     {
                         headers: {
                             'Authorization': `Token ${BASEROW_CONFIG.token}`
@@ -1016,17 +1091,18 @@
                 
                 const data = await response.json();
                 customers = data.results;
+                console.log('Loaded customers:', customers.length);
             } catch (error) {
                 console.error('Error loading customers:', error);
                 showNotification('Error loading customers', 'error');
             }
         }
 
-        // Load products from Baserow
+        // Load products from Baserow filtered by ShopID
         async function loadProducts() {
             try {
                 const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.products}/?user_field_names=true`,
+                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.products}/?user_field_names=true&filter__field_0=ShopID&filter__type_0=contains&filter__value_0=${currentShopId}`,
                     {
                         headers: {
                             'Authorization': `Token ${BASEROW_CONFIG.token}`
@@ -1040,6 +1116,7 @@
                 
                 const data = await response.json();
                 products = data.results;
+                console.log('Loaded products:', products.length);
             } catch (error) {
                 console.error('Error loading products:', error);
                 showNotification('Error loading products', 'error');
@@ -1057,7 +1134,7 @@
             
             const filteredCustomers = customers.filter(customer => {
                 const mobile = customer.Mobile || '';
-                const name = customer['Costomer Name'] || ''; // Updated to match "Costomer Name"
+                const name = customer['Costomer Name'] || '';
                 return mobile.toLowerCase().includes(searchTerm) || 
                        name.toLowerCase().includes(searchTerm);
             });
@@ -1070,16 +1147,15 @@
             customerSuggestionsEl.innerHTML = '';
             
             if (customers.length === 0) {
-                customerSuggestionsEl.style.display = 'none';
+                customerSuggestionsEl.innerHTML = '<div class="suggestion-item">No customers found</div>';
+                customerSuggestionsEl.style.display = 'block';
                 return;
             }
             
             customers.forEach(customer => {
                 const div = document.createElement('div');
-                div.style.padding = '10px';
-                div.style.cursor = 'pointer';
-                div.style.borderBottom = '1px solid #eee';
-                div.textContent = `${customer['Costomer Name']} - ${customer.Mobile}`; // Updated to match "Costomer Name"
+                div.className = 'suggestion-item';
+                div.textContent = `${customer['Costomer Name']} - ${customer.Mobile}`;
                 
                 div.addEventListener('click', function() {
                     selectCustomer(customer);
@@ -1094,7 +1170,7 @@
 
         // Select a customer
         function selectCustomer(customer) {
-            customerNameEl.value = customer['Costomer Name'] || ''; // Updated to match "Costomer Name"
+            customerNameEl.value = customer['Costomer Name'] || '';
             customerMobileEl.value = customer.Mobile || '';
             customerAddressEl.value = customer.Address || '';
             customerGstEl.value = customer.GST || '';
@@ -1105,7 +1181,12 @@
         function handleProductSearch() {
             const searchTerm = productSearchEl.value.trim();
             
-            if (searchTerm.length < 1) {
+            if (searchBy === 'name' && searchTerm.length < 2) {
+                productSuggestionsEl.style.display = 'none';
+                return;
+            }
+            
+            if (searchBy === 'id' && searchTerm.length < 1) {
                 productSuggestionsEl.style.display = 'none';
                 return;
             }
@@ -1134,15 +1215,14 @@
             productSuggestionsEl.innerHTML = '';
             
             if (products.length === 0) {
-                productSuggestionsEl.style.display = 'none';
+                productSuggestionsEl.innerHTML = '<div class="suggestion-item">No products found</div>';
+                productSuggestionsEl.style.display = 'block';
                 return;
             }
             
             products.forEach(product => {
                 const div = document.createElement('div');
-                div.style.padding = '10px';
-                div.style.cursor = 'pointer';
-                div.style.borderBottom = '1px solid #eee';
+                div.className = 'suggestion-item';
                 
                 if (searchBy === 'name') {
                     div.textContent = `${product.Name} - ₹${product.Price || 0}`;
@@ -1173,14 +1253,14 @@
             loadProductBatches(product.id);
         }
 
-        // Load product batches from inventory using Product ID
+        // Load product batches from inventory using Product ID and filtered by ShopID
         async function loadProductBatches(productId) {
             try {
                 showNotification('Loading batches...', 'warning');
                 
-                // Fetch batches for this product from Inventory table
+                // Fetch batches for this product from Inventory table filtered by ShopID
                 const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true&filter__field_0=Product&filter__type_0=contains&filter__value_0=${productId}`,
+                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true&filter__field_0=Product&filter__type_0=contains&filter__value_0=${productId}&filter__field_1=ShopID&filter__type_1=contains&filter__value_1=${currentShopId}`,
                     {
                         headers: {
                             'Authorization': `Token ${BASEROW_CONFIG.token}`
@@ -1469,7 +1549,7 @@
                 
                 // Save to Ledger Table - Updated to use "Costomer Name"
                 const ledgerData = {
-                    "Costomer Name": customerName, // Updated field name
+                    "Costomer Name": customerName,
                     "Mobile": customerMobile,
                     "Date": date,
                     "Invoice Number": invoiceNumber,
