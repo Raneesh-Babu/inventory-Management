@@ -5,98 +5,441 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Customer Database</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f6fa;
-    padding: 20px;
+  :root {
+    --primary: #4361ee;
+    --primary-light: #4895ef;
+    --secondary: #3f37c9;
+    --success: #4cc9f0;
+    --danger: #f72585;
+    --warning: #f8961e;
+    --info: #4cc9f0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
   }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: var(--dark);
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
   h2 {
     text-align: center;
-    color: #2f3640;
+    color: var(--primary);
+    margin-bottom: 30px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  .form-container, .list-container {
+
+  .card {
     background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    margin-bottom: 25px;
+    transition: var(--transition);
   }
-  input, button {
-    padding: 10px;
-    margin: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   }
-  button {
-    background: #0984e3;
+
+  .card-header {
+    background: linear-gradient(to right, var(--primary), var(--primary-light));
     color: white;
+    padding: 15px 20px;
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
     cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    text-align: center;
   }
-  button:hover {
-    background: #74b9ff;
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
   }
+
+  .btn-primary:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #3aabd5;
+    transform: translateY(-2px);
+  }
+
+  .btn-warning {
+    background: var(--warning);
+    color: white;
+  }
+
+  .btn-warning:hover {
+    background: #e07c0c;
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #e1156d;
+    transform: translateY(-2px);
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--dark);
+  }
+
+  input, textarea, select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--gray-light);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
   }
+
   th, td {
-    border: 1px solid #dcdde1;
-    padding: 8px;
+    padding: 12px 15px;
     text-align: left;
+    border-bottom: 1px solid var(--gray-light);
   }
+
   th {
-    background: #f1f2f6;
+    background: var(--light);
+    font-weight: 600;
+    color: var(--dark);
+    position: sticky;
+    top: 0;
   }
-  #search {
+
+  tr:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+  }
+
+  .search-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .date-filter {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .date-input {
+    min-width: 150px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .call-btn {
+    background: #25D366;
+    color: white;
+  }
+
+  .call-btn:hover {
+    background: #1da851;
+    transform: translateY(-2px);
+  }
+
+  .whatsapp-btn {
+    background: #25D366;
+    color: white;
+  }
+
+  .whatsapp-btn:hover {
+    background: #1da851;
+    transform: translateY(-2px);
+  }
+
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin-bottom: 10px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
   }
-  .edit-btn {
-    background: #00b894;
-    padding: 5px 10px;
+
+  .modal-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+  }
+
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-header {
+    background: linear-gradient(to right, var(--primary), var(--primary-light));
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .close-btn {
+    background: none;
     border: none;
     color: white;
-    border-radius: 5px;
+    font-size: 1.5rem;
     cursor: pointer;
+    transition: var(--transition);
   }
-  .edit-btn:hover {
-    background: #55efc4;
+
+  .close-btn:hover {
+    transform: scale(1.2);
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    padding: 15px 20px;
+    background: var(--light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .search-container {
+      flex-direction: column;
+    }
+    
+    .date-filter {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+    
+    .action-buttons {
+      flex-direction: column;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray);
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: var(--gray-light);
+  }
+
+  .loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray);
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 </style>
 </head>
 <body>
 
-<h2>Customer Database</h2>
+<div class="container">
+  <h2>Customer Database</h2>
 
-<div class="form-container" id="addForm">
-  <h3>Add New Customer</h3>
-  <input type="text" id="name" placeholder="Customer Name" required><br>
-  <input type="number" id="mobile" placeholder="Mobile Number" required><br>
-  <textarea id="address" placeholder="Address" required></textarea><br>
-  <input type="text" id="gst" placeholder="GST (optional)"><br>
-  <button onclick="addCustomer()">Add Customer</button>
+  <div class="card" id="addForm">
+    <div class="card-header">
+      Add New Customer
+    </div>
+    <div class="card-body">
+      <button class="btn btn-primary" onclick="openModal()">+ Add New Customer</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      Customer List
+    </div>
+    <div class="card-body">
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
+        </div>
+        <div class="date-filter">
+          <input type="date" id="fromDate" class="date-input" onchange="filterList()">
+          <span>to</span>
+          <input type="date" id="toDate" class="date-input" onchange="filterList()">
+          <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">Clear</button>
+        </div>
+      </div>
+      
+      <table id="customerTable">
+        <thead>
+          <tr>
+            <th>Customer Name</th>
+            <th>Mobile</th>
+            <th>Address</th>
+            <th>GST</th>
+            <th>Added By</th>
+            <th>Date</th>
+            <th id="actionsHeader">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="customerList">
+          <tr><td colspan="7" class="loading">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
-<div class="list-container">
-  <h3>Customer List</h3>
-  <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
-  <table id="customerTable">
-    <thead>
-      <tr>
-        <th>Customer Name</th>
-        <th>Mobile</th>
-        <th>Address</th>
-        <th>GST</th>
-        <th>Added By</th>
-        <th>Date</th>
-        <th id="actionsHeader">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="customerList">
-      <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
-    </tbody>
-  </table>
+<!-- Add Customer Modal -->
+<div id="customerModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Add New Customer</h3>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="name">Customer Name *</label>
+        <input type="text" id="name" placeholder="Enter customer name" required>
+      </div>
+      <div class="form-group">
+        <label for="mobile">Mobile Number *</label>
+        <input type="number" id="mobile" placeholder="Enter mobile number" required>
+      </div>
+      <div class="form-group">
+        <label for="address">Address *</label>
+        <textarea id="address" placeholder="Enter customer address" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="gst">GST (optional)</label>
+        <input type="text" id="gst" placeholder="Enter GST number">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" onclick="addCustomer()">Add Customer</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -108,6 +451,7 @@ const shopID = localStorage.getItem("ShopIDTag");
 const addedBy = localStorage.getItem("NameTag");
 const mobileTag = localStorage.getItem("MobileTag");
 let role = "Staff"; // default
+let allCustomers = [];
 
 // 🔹 Step 1: Get Role from Users Table
 async function getUserRole() {
@@ -129,27 +473,51 @@ async function getUserRole() {
 
 // 🔹 Step 2: Load Customers
 async function loadCustomers() {
-  const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
-  const data = await res.json();
-  const customers = data.results.filter(c => c.ShopID == shopID);
-  const list = document.getElementById("customerList");
-  list.innerHTML = "";
+  try {
+    const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
+    const data = await res.json();
+    allCustomers = data.results.filter(c => c.ShopID == shopID);
+    renderCustomerList(allCustomers);
+  } catch (error) {
+    console.error("Error loading customers:", error);
+    document.getElementById("customerList").innerHTML = `<tr><td colspan="7" class="empty-state">Error loading customers. Please try again.</td></tr>`;
+  }
+}
 
+// Render customer list
+function renderCustomerList(customers) {
+  const list = document.getElementById("customerList");
+  
   if (customers.length === 0) {
-    list.innerHTML = `<tr><td colspan="7" style="text-align:center;">No customers found for your shop.</td></tr>`;
+    list.innerHTML = `<tr><td colspan="7" class="empty-state">
+      <div>No customers found</div>
+      <small>Try adjusting your search or add a new customer</small>
+    </td></tr>`;
     return;
   }
 
+  list.innerHTML = "";
+  
   customers.forEach(c => {
     const row = document.createElement("tr");
+    row.className = "fade-in";
+    
+    // Format date as DD/MM/YYYY
+    const date = new Date(c["Date"]);
+    const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    
     row.innerHTML = `
       <td>${c["Costomer Name"]}</td>
       <td>${c["Mobile"]}</td>
       <td>${c["Address"]}</td>
       <td>${c["GST"] || "Nil"}</td>
       <td>${c["Added by"]}</td>
-      <td>${c["Date"]}</td>
-      ${role.toLowerCase() === "manager" ? `<td><button class="edit-btn" onclick="editCustomer(${c.id})">Edit</button></td>` : ""}
+      <td>${formattedDate}</td>
+      <td class="action-buttons">
+        ${role.toLowerCase() === "manager" ? `<button class="btn btn-warning btn-sm btn-icon" onclick="editCustomer(${c.id})">✏️ Edit</button>` : ""}
+        <button class="btn btn-primary btn-sm btn-icon call-btn" onclick="callCustomer('${c["Mobile"]}')">📞 Call</button>
+        <button class="btn btn-success btn-sm btn-icon whatsapp-btn" onclick="whatsappCustomer('${c["Mobile"]}')">💬 WhatsApp</button>
+      </td>
     `;
     list.appendChild(row);
   });
@@ -167,39 +535,41 @@ async function addCustomer() {
     return;
   }
 
-  const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
-  const data = await res.json();
-  const existing = data.results.find(c => c.Mobile == Number(mobile) && c.ShopID == shopID);
-  if (existing) {
-    alert("Customer with this mobile number already exists in your shop!");
-    return;
+  try {
+    const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
+    const data = await res.json();
+    const existing = data.results.find(c => c.Mobile == Number(mobile) && c.ShopID == shopID);
+    if (existing) {
+      alert("Customer with this mobile number already exists in your shop!");
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    await fetch(CUSTOMER_API, {
+      method: "POST",
+      headers: {
+        "Authorization": `Token ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "Costomer Name": name,
+        "Mobile": Number(mobile),
+        "Address": address,
+        "GST": gst,
+        "Added by": addedBy || "Unknown",
+        "Date": today,
+        "ShopID": shopID
+      })
+    });
+
+    alert("Customer added successfully!");
+    closeModal();
+    loadCustomers();
+  } catch (error) {
+    console.error("Error adding customer:", error);
+    alert("Error adding customer. Please try again.");
   }
-
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-
-  await fetch(CUSTOMER_API, {
-    method: "POST",
-    headers: {
-      "Authorization": `Token ${API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      "Costomer Name": name,
-      "Mobile": Number(mobile),
-      "Address": address,
-      "GST": gst,
-      "Added by": addedBy || "Unknown",
-      "Date": today,
-      "ShopID": shopID
-    })
-  });
-
-  alert("Customer added successfully!");
-  document.getElementById("name").value = "";
-  document.getElementById("mobile").value = "";
-  document.getElementById("address").value = "";
-  document.getElementById("gst").value = "";
-  loadCustomers();
 }
 
 // 🔹 Step 4: Edit Customer
@@ -207,27 +577,81 @@ async function editCustomer(id) {
   const newAddress = prompt("Enter new address:");
   if (!newAddress) return;
 
-  await fetch(`https://api.baserow.io/api/database/rows/table/736204/${id}/?user_field_names=true`, {
-    method: "PATCH",
-    headers: {
-      "Authorization": `Token ${API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ "Address": newAddress })
-  });
-  alert("Customer updated successfully!");
-  loadCustomers();
+  try {
+    await fetch(`https://api.baserow.io/api/database/rows/table/736204/${id}/?user_field_names=true`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Token ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ "Address": newAddress })
+    });
+    alert("Customer updated successfully!");
+    loadCustomers();
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    alert("Error updating customer. Please try again.");
+  }
 }
 
 // 🔹 Step 5: Search Filter
 function filterList() {
-  const input = document.getElementById("search").value.toLowerCase();
-  const rows = document.querySelectorAll("#customerList tr");
-  rows.forEach(row => {
-    const name = row.children[0].textContent.toLowerCase();
-    const mobile = row.children[1].textContent.toLowerCase();
-    row.style.display = name.includes(input) || mobile.includes(input) ? "" : "none";
-  });
+  const searchInput = document.getElementById("search").value.toLowerCase();
+  const fromDate = document.getElementById("fromDate").value;
+  const toDate = document.getElementById("toDate").value;
+  
+  let filteredCustomers = allCustomers;
+  
+  // Text search filter
+  if (searchInput) {
+    filteredCustomers = filteredCustomers.filter(c => 
+      c["Costomer Name"].toLowerCase().includes(searchInput) || 
+      c["Mobile"].toString().includes(searchInput)
+    );
+  }
+  
+  // Date range filter
+  if (fromDate || toDate) {
+    filteredCustomers = filteredCustomers.filter(c => {
+      const customerDate = new Date(c["Date"]);
+      const from = fromDate ? new Date(fromDate) : new Date(0);
+      const to = toDate ? new Date(toDate) : new Date();
+      
+      return customerDate >= from && customerDate <= to;
+    });
+  }
+  
+  renderCustomerList(filteredCustomers);
+}
+
+// Clear date filter
+function clearDateFilter() {
+  document.getElementById("fromDate").value = "";
+  document.getElementById("toDate").value = "";
+  filterList();
+}
+
+// Modal functions
+function openModal() {
+  document.getElementById("customerModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("customerModal").style.display = "none";
+  // Clear form fields
+  document.getElementById("name").value = "";
+  document.getElementById("mobile").value = "";
+  document.getElementById("address").value = "";
+  document.getElementById("gst").value = "";
+}
+
+// Contact functions
+function callCustomer(mobile) {
+  window.open(`tel:${mobile}`, '_self');
+}
+
+function whatsappCustomer(mobile) {
+  window.open(`https://wa.me/${mobile}`, '_blank');
 }
 
 // Run
