@@ -546,6 +546,14 @@
             color: var(--gray);
             margin-top: 5px;
         }
+        
+        .product-id-display {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -638,8 +646,8 @@
                             <div class="search-info">Search by Product ID or Product Name</div>
                         </div>
                         <div class="form-group flex-1">
-                            <label for="batch-no">Batch Number</label>
-                            <input type="text" id="batch-no" readonly>
+                            <label for="selected-product-id">Selected Product ID</label>
+                            <div class="product-id-display" id="selected-product-id">-</div>
                         </div>
                     </div>
                     
@@ -656,8 +664,8 @@
                     
                     <div class="flex-row">
                         <div class="form-group flex-1">
-                            <label for="quantity">Quantity</label>
-                            <input type="number" id="quantity" min="1" value="1">
+                            <label for="batch-no">Batch Number</label>
+                            <input type="text" id="batch-no" readonly>
                         </div>
                         <div class="form-group flex-1">
                             <label for="available-quantity">Available Quantity</label>
@@ -666,6 +674,10 @@
                     </div>
                     
                     <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label for="quantity">Quantity</label>
+                            <input type="number" id="quantity" min="1" value="1">
+                        </div>
                         <div class="form-group flex-1">
                             <label for="expiry-date">Expiry Date</label>
                             <input type="text" id="expiry-date" readonly>
@@ -691,6 +703,7 @@
                             <thead>
                                 <tr>
                                     <th>Product Name</th>
+                                    <th>Product ID</th>
                                     <th>Batch No</th>
                                     <th>Quantity</th>
                                     <th>Price</th>
@@ -704,7 +717,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
-                                    <td colspan="5" style="text-align: right;">Total:</td>
+                                    <td colspan="6" style="text-align: right;">Total:</td>
                                     <td id="invoice-total">0.00</td>
                                     <td></td>
                                 </tr>
@@ -740,6 +753,9 @@
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Select Batch for <span id="batch-product-name"></span></h2>
+            <div class="product-info" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                <strong>Product ID:</strong> <span id="batch-product-id"></span>
+            </div>
             <div id="batch-list">
                 <!-- Batch items will be populated here -->
             </div>
@@ -788,6 +804,7 @@
         let invoiceItems = [];
         let currentProductId = null;
         let currentProductName = null;
+        let currentProductDisplayId = null;
         let html5QrCode = null;
         let selectedBatch = null;
 
@@ -809,6 +826,7 @@
         const customerGstEl = document.getElementById('customer-gst');
         const productSearchEl = document.getElementById('product-search');
         const productSuggestionsEl = document.getElementById('product-suggestions');
+        const selectedProductIdEl = document.getElementById('selected-product-id');
         const productNameEl = document.getElementById('product-name');
         const productPriceEl = document.getElementById('product-price');
         const batchNoEl = document.getElementById('batch-no');
@@ -827,6 +845,7 @@
         const batchModal = document.getElementById('batch-modal');
         const batchListEl = document.getElementById('batch-list');
         const batchProductNameEl = document.getElementById('batch-product-name');
+        const batchProductIdEl = document.getElementById('batch-product-id');
         const noBatchesMessageEl = document.getElementById('no-batches-message');
         const invoicePreviewModal = document.getElementById('invoice-preview-modal');
         const invoicePreviewContent = document.getElementById('invoice-preview-content');
@@ -1182,22 +1201,25 @@
         function selectProduct(product) {
             currentProductId = product.id;
             currentProductName = product['Product Name'] || product.Name || '';
+            currentProductDisplayId = product['Product ID'] || product.id || '';
             const productPrice = product.Price || 0;
             
             productNameEl.value = currentProductName;
             productPriceEl.value = productPrice;
+            selectedProductIdEl.textContent = currentProductDisplayId;
             productSearchEl.value = '';
             
-            // Load available batches for this product
-            loadProductBatches(product.id);
+            // Load available batches for this specific product
+            loadProductBatches(currentProductDisplayId);
         }
 
-        // Load product batches from inventory using Product ID and filtered by ShopID
+        // Load product batches from inventory using exact Product ID match
         async function loadProductBatches(productId) {
             try {
-                showNotification('Loading batches...', 'warning');
+                showNotification('Loading batches for Product ID: ' + productId, 'warning');
                 
-                // Fetch batches for this product from Inventory table filtered by ShopID
+                // Fetch batches for this specific product from Inventory table
+                // Using exact match for Product ID
                 const response = await fetch(
                     `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true&filter__field_0=Product&filter__type_0=contains&filter__value_0=${productId}&filter__field_1=ShopID&filter__type_1=contains&filter__value_1=${currentShopId}`,
                     {
@@ -1212,17 +1234,18 @@
                 }
                 
                 const data = await response.json();
+                console.log('Batches loaded for Product ID:', productId, data.results);
                 
                 if (data.results && data.results.length > 0) {
                     // Show batch selection modal
                     showBatchSelection(data.results);
                 } else {
-                    showNotification('No batches available for this product', 'warning');
+                    showNotification('No batches available for Product ID: ' + productId, 'warning');
                     resetProductFields();
                 }
             } catch (error) {
                 console.error('Error loading product batches:', error);
-                showNotification('Error loading product batches', 'error');
+                showNotification('Error loading product batches for Product ID: ' + productId, 'error');
                 resetProductFields();
             }
         }
@@ -1249,6 +1272,7 @@
         function showBatchSelection(batches) {
             batchListEl.innerHTML = '';
             batchProductNameEl.textContent = currentProductName;
+            batchProductIdEl.textContent = currentProductDisplayId;
             selectedBatch = null;
             
             // Show batches in modal
@@ -1367,6 +1391,7 @@
             // Add to invoice items
             invoiceItems.push({
                 productId: currentProductId,
+                productDisplayId: currentProductDisplayId,
                 productName: productName,
                 batchNo: batchNo,
                 quantity: quantity,
@@ -1397,6 +1422,9 @@
                 const nameCell = document.createElement('td');
                 nameCell.textContent = item.productName;
                 
+                const idCell = document.createElement('td');
+                idCell.textContent = item.productDisplayId;
+                
                 const batchCell = document.createElement('td');
                 batchCell.textContent = item.batchNo;
                 
@@ -1424,6 +1452,7 @@
                 actionsCell.appendChild(deleteBtn);
                 
                 row.appendChild(nameCell);
+                row.appendChild(idCell);
                 row.appendChild(batchCell);
                 row.appendChild(quantityCell);
                 row.appendChild(priceCell);
@@ -1443,8 +1472,10 @@
         function resetProductFields() {
             currentProductId = null;
             currentProductName = null;
+            currentProductDisplayId = null;
             productNameEl.value = '';
             productPriceEl.value = '';
+            selectedProductIdEl.textContent = '-';
             batchNoEl.value = '';
             availableQuantityEl.value = '';
             quantityEl.value = '1';
@@ -1517,6 +1548,7 @@
                 for (const item of invoiceItems) {
                     const salesData = {
                         "Product": item.productId,
+                        "Product ID": item.productDisplayId,
                         "Batch No": item.batchNo,
                         "Quantity": item.quantity,
                         "Price": item.price,
@@ -1588,6 +1620,7 @@
                     <thead>
                         <tr>
                             <th>Product Name</th>
+                            <th>Product ID</th>
                             <th>Batch No</th>
                             <th>Quantity</th>
                             <th>Price</th>
@@ -1599,6 +1632,7 @@
                         ${invoiceItems.map(item => `
                             <tr>
                                 <td>${item.productName}</td>
+                                <td>${item.productDisplayId}</td>
                                 <td>${item.batchNo}</td>
                                 <td>${item.quantity}</td>
                                 <td>₹${item.price.toFixed(2)}</td>
@@ -1609,7 +1643,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="4" style="text-align: right;"><strong>Grand Total:</strong></td>
+                            <td colspan="5" style="text-align: right;"><strong>Grand Total:</strong></td>
                             <td><strong>₹${totalValue.toFixed(2)}</strong></td>
                             <td></td>
                         </tr>
@@ -1680,15 +1714,18 @@
 
         function onQrCodeSuccess(decodedText) {
             // Assume QR code contains product ID
-            const productId = parseInt(decodedText);
+            const productId = decodedText.trim();
             
-            if (isNaN(productId)) {
+            if (!productId) {
                 showNotification('Invalid QR code format', 'error');
                 return;
             }
             
-            // Find product by ID
-            const product = products.find(p => p.id === productId);
+            // Find product by ID (exact match)
+            const product = products.find(p => {
+                const productIdField = p['Product ID'] || p.id || '';
+                return productIdField.toString() === productId;
+            });
             
             if (product) {
                 selectProduct(product);
@@ -1696,7 +1733,7 @@
                 stopQrScanner();
                 showNotification('Product scanned successfully', 'success');
             } else {
-                showNotification('Product not found', 'error');
+                showNotification('Product not found with ID: ' + productId, 'error');
             }
         }
 
