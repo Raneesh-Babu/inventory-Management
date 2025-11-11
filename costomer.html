@@ -56,13 +56,13 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
     transition: var(--transition);
   }
 
   .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
   }
 
   .card-header {
@@ -170,34 +170,6 @@
     resize: vertical;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-
-  th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--gray-light);
-  }
-
-  th {
-    background: var(--light);
-    font-weight: 600;
-    color: var(--dark);
-    position: sticky;
-    top: 0;
-  }
-
-  tr {
-    transition: var(--transition);
-  }
-
-  tr:hover {
-    background-color: rgba(67, 97, 238, 0.05);
-  }
-
   .search-container {
     display: flex;
     gap: 15px;
@@ -224,6 +196,7 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    margin-top: 15px;
   }
 
   .call-btn {
@@ -244,6 +217,87 @@
   .whatsapp-btn:hover {
     background: #0e6e5e;
     transform: translateY(-2px);
+  }
+
+  /* Customer Card Styles */
+  .customer-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .customer-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  .customer-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border-bottom: 1px solid var(--gray-light);
+  }
+
+  .customer-main-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .customer-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--dark);
+  }
+
+  .customer-mobile {
+    color: var(--gray);
+    font-size: 0.95rem;
+  }
+
+  .expand-icon {
+    font-size: 1.2rem;
+    color: var(--gray);
+    transition: var(--transition);
+  }
+
+  .customer-details {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: var(--transition);
+    background: var(--light);
+  }
+
+  .customer-card.expanded .customer-details {
+    padding: 20px;
+    max-height: 500px;
+  }
+
+  .customer-card.expanded .expand-icon {
+    transform: rotate(180deg);
+  }
+
+  .detail-row {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .detail-label {
+    font-weight: 600;
+    min-width: 100px;
+    color: var(--dark);
+  }
+
+  .detail-value {
+    flex: 1;
+    color: var(--gray);
   }
 
   /* Modal Styles */
@@ -331,13 +385,17 @@
       align-items: flex-start;
     }
     
-    table {
-      display: block;
-      overflow-x: auto;
-    }
-    
     .action-buttons {
       flex-direction: column;
+    }
+    
+    .detail-row {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .detail-label {
+      min-width: auto;
     }
   }
 
@@ -400,22 +458,9 @@
         </div>
       </div>
       
-      <table id="customerTable">
-        <thead>
-          <tr>
-            <th>Customer Name</th>
-            <th>Mobile</th>
-            <th>Address</th>
-            <th>GST</th>
-            <th>Added By</th>
-            <th>Date</th>
-            <th id="actionsHeader">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="customerList">
-          <tr><td colspan="7" class="loading">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div id="customerListContainer">
+        <div class="loading">Loading customers...</div>
+      </div>
     </div>
   </div>
 </div>
@@ -507,7 +552,6 @@ async function getUserRole() {
     }
     if (role.toLowerCase() !== "manager") {
       document.getElementById("addForm").style.display = "none";
-      document.getElementById("actionsHeader").style.display = "none";
     }
   } catch (err) {
     console.error("Error fetching role:", err);
@@ -523,50 +567,82 @@ async function loadCustomers() {
     renderCustomerList(allCustomers);
   } catch (error) {
     console.error("Error loading customers:", error);
-    document.getElementById("customerList").innerHTML = `<tr><td colspan="7" class="empty-state">Error loading customers. Please try again.</td></tr>`;
+    document.getElementById("customerListContainer").innerHTML = `<div class="empty-state">Error loading customers. Please try again.</div>`;
   }
 }
 
-// Render customer list
+// Render customer list as expandable cards
 function renderCustomerList(customers) {
-  const list = document.getElementById("customerList");
+  const container = document.getElementById("customerListContainer");
   
   if (customers.length === 0) {
-    list.innerHTML = `<tr><td colspan="7" class="empty-state">
+    container.innerHTML = `<div class="empty-state">
       <div>No customers found</div>
       <small>Try adjusting your search or add a new customer</small>
-    </td></tr>`;
+    </div>`;
     return;
   }
 
-  list.innerHTML = "";
+  container.innerHTML = "";
   
   customers.forEach(c => {
-    const row = document.createElement("tr");
-    row.className = "fade-in";
+    const card = document.createElement("div");
+    card.className = "customer-card fade-in";
     
     // Format date as DD/MM/YYYY
     const date = new Date(c["Date"]);
     const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
     
-    row.innerHTML = `
-      <td>${c["Costomer Name"]}</td>
-      <td>${c["Mobile"]}</td>
-      <td>${c["Address"]}</td>
-      <td>${c["GST"] || "Nil"}</td>
-      <td>${c["Added by"]}</td>
-      <td>${formattedDate}</td>
-      <td class="action-buttons">
-        ${role.toLowerCase() === "manager" ? `
-          <button class="btn btn-warning btn-sm btn-icon" onclick="editCustomer(${c.id})">✏️ Edit</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCustomer(${c.id})">🗑️ Delete</button>
-        ` : ""}
-        <button class="btn btn-primary btn-sm btn-icon call-btn" onclick="callCustomer('${c["Mobile"]}')">📞 Call</button>
-        <button class="btn btn-success btn-sm btn-icon whatsapp-btn" onclick="whatsappCustomer('${c["Mobile"]}')">💬 WhatsApp</button>
-      </td>
+    card.innerHTML = `
+      <div class="customer-header" onclick="toggleCustomerCard(this.parentNode)">
+        <div class="customer-main-info">
+          <div class="customer-name">${c["Costomer Name"]}</div>
+          <div class="customer-mobile">${c["Mobile"]}</div>
+        </div>
+        <div class="expand-icon">▼</div>
+      </div>
+      <div class="customer-details">
+        <div class="detail-row">
+          <div class="detail-label">Address:</div>
+          <div class="detail-value">${c["Address"]}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">GST:</div>
+          <div class="detail-value">${c["GST"] || "Nil"}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Added By:</div>
+          <div class="detail-value">${c["Added by"]}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Date:</div>
+          <div class="detail-value">${formattedDate}</div>
+        </div>
+        <div class="action-buttons">
+          ${role.toLowerCase() === "manager" ? `
+            <button class="btn btn-warning btn-sm btn-icon" onclick="event.stopPropagation(); editCustomer(${c.id})">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="event.stopPropagation(); deleteCustomer(${c.id})">🗑️ Delete</button>
+          ` : ""}
+          <button class="btn btn-primary btn-sm btn-icon call-btn" onclick="event.stopPropagation(); callCustomer('${c["Mobile"]}')">📞 Call</button>
+          <button class="btn btn-success btn-sm btn-icon whatsapp-btn" onclick="event.stopPropagation(); whatsappCustomer('${c["Mobile"]}')">💬 WhatsApp</button>
+        </div>
+      </div>
     `;
-    list.appendChild(row);
+    container.appendChild(card);
   });
+}
+
+// Toggle customer card expansion
+function toggleCustomerCard(card) {
+  // Close all other expanded cards
+  document.querySelectorAll('.customer-card.expanded').forEach(expandedCard => {
+    if (expandedCard !== card) {
+      expandedCard.classList.remove('expanded');
+    }
+  });
+  
+  // Toggle current card
+  card.classList.toggle('expanded');
 }
 
 // 🔹 Step 3: Add New Customer
@@ -779,8 +855,6 @@ function whatsappCustomer(mobile) {
 (async () => {
   await getUserRole();
   await loadCustomers();
-  // Remove the auto-refresh to prevent blinking
-  // setInterval(loadCustomers, 5000);
 })();
 </script>
 
