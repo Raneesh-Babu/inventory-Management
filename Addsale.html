@@ -554,6 +554,19 @@
             font-family: monospace;
             border: 1px solid #ddd;
         }
+        
+        .filter-info {
+            background: #e8f4fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .filter-label {
+            font-weight: bold;
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -752,15 +765,19 @@
     <div class="modal" id="batch-modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2>Select Batch for <span id="batch-product-name"></span></h2>
-            <div class="product-info" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                <strong>Product ID:</strong> <span id="batch-product-id"></span>
+            <h2>Select Batch</h2>
+            
+            <div class="filter-info">
+                <div><span class="filter-label">Shop ID:</span> <span id="filter-shop-id"></span></div>
+                <div><span class="filter-label">Product ID:</span> <span id="filter-product-id"></span></div>
+                <div><span class="filter-label">Product Name:</span> <span id="filter-product-name"></span></div>
             </div>
+            
             <div id="batch-list">
                 <!-- Batch items will be populated here -->
             </div>
             <div id="no-batches-message" style="display: none; text-align: center; padding: 20px;">
-                <p>No batches available for this product</p>
+                <p>No batches available for this product in your shop</p>
             </div>
         </div>
     </div>
@@ -844,8 +861,9 @@
         const stopScannerBtn = document.getElementById('stop-scanner');
         const batchModal = document.getElementById('batch-modal');
         const batchListEl = document.getElementById('batch-list');
-        const batchProductNameEl = document.getElementById('batch-product-name');
-        const batchProductIdEl = document.getElementById('batch-product-id');
+        const filterShopIdEl = document.getElementById('filter-shop-id');
+        const filterProductIdEl = document.getElementById('filter-product-id');
+        const filterProductNameEl = document.getElementById('filter-product-name');
         const noBatchesMessageEl = document.getElementById('no-batches-message');
         const invoicePreviewModal = document.getElementById('invoice-preview-modal');
         const invoicePreviewContent = document.getElementById('invoice-preview-content');
@@ -1209,43 +1227,47 @@
             selectedProductIdEl.textContent = currentProductDisplayId;
             productSearchEl.value = '';
             
-            // Load available batches for this specific product
+            // Load available batches for this specific product with ShopID filter
             loadProductBatches(currentProductDisplayId);
         }
 
-        // Load product batches from inventory using exact Product ID match
+        // Load product batches from inventory using exact Product ID and ShopID match
         async function loadProductBatches(productId) {
             try {
-                showNotification('Loading batches for Product ID: ' + productId, 'warning');
+                showNotification(`Loading batches for Product ID: ${productId} in Shop: ${currentShopId}`, 'warning');
                 
-                // Fetch batches for this specific product from Inventory table
-                // Using exact match for Product ID
-                const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true&filter__field_0=Product&filter__type_0=contains&filter__value_0=${productId}&filter__field_1=ShopID&filter__type_1=contains&filter__value_1=${currentShopId}`,
-                    {
-                        headers: {
-                            'Authorization': `Token ${BASEROW_CONFIG.token}`
-                        }
+                // Build the API URL with proper filtering for both Product ID and ShopID
+                let apiUrl = `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true`;
+                
+                // Add filters for Product ID and ShopID
+                apiUrl += `&filter__field_0=Product&filter__type_0=contains&filter__value_0=${encodeURIComponent(productId)}`;
+                apiUrl += `&filter__field_1=ShopID&filter__type_1=contains&filter__value_1=${encodeURIComponent(currentShopId)}`;
+                
+                console.log('Fetching batches from:', apiUrl);
+                
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `Token ${BASEROW_CONFIG.token}`
                     }
-                );
+                });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to load product batches');
+                    throw new Error(`Failed to load product batches: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
-                console.log('Batches loaded for Product ID:', productId, data.results);
+                console.log('Batches loaded for Product ID:', productId, 'Shop ID:', currentShopId, data.results);
                 
                 if (data.results && data.results.length > 0) {
                     // Show batch selection modal
                     showBatchSelection(data.results);
                 } else {
-                    showNotification('No batches available for Product ID: ' + productId, 'warning');
+                    showNotification(`No batches available for Product ID: ${productId} in your shop`, 'warning');
                     resetProductFields();
                 }
             } catch (error) {
                 console.error('Error loading product batches:', error);
-                showNotification('Error loading product batches for Product ID: ' + productId, 'error');
+                showNotification(`Error loading batches for Product ID: ${productId}`, 'error');
                 resetProductFields();
             }
         }
@@ -1271,9 +1293,12 @@
         // Show batch selection modal
         function showBatchSelection(batches) {
             batchListEl.innerHTML = '';
-            batchProductNameEl.textContent = currentProductName;
-            batchProductIdEl.textContent = currentProductDisplayId;
+            filterShopIdEl.textContent = currentShopId;
+            filterProductIdEl.textContent = currentProductDisplayId;
+            filterProductNameEl.textContent = currentProductName;
             selectedBatch = null;
+            
+            console.log('Displaying batches:', batches);
             
             // Show batches in modal
             batches.forEach(batch => {
