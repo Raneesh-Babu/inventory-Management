@@ -1,1486 +1,477 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Creation System</title>
-    <style>
-        :root {
-            --primary: #3498db;
-            --secondary: #2c3e50;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
-            --gray: #95a5a6;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background-color: var(--secondary);
-            color: white;
-            padding: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logout-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .logout-btn:hover {
-            background: #c0392b;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .card-header {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .card-title {
-            font-size: 20px;
-            color: var(--secondary);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #219955;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-        
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-        
-        .btn-warning:hover {
-            background: #e67e22;
-        }
-        
-        .flex-row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .flex-1 {
-            flex: 1;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-        
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .action-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .action-edit {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .action-delete {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .total-row {
-            font-weight: bold;
-            background-color: #f8f9fa;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 20px;
-            position: relative;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--gray);
-        }
-        
-        .qr-scanner-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        #qr-reader {
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        
-        .scanner-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .invoice-preview {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .invoice-header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-        }
-        
-        .invoice-details {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-        }
-        
-        .invoice-table {
-            width: 100%;
-            margin-bottom: 30px;
-        }
-        
-        .invoice-total {
-            text-align: right;
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        
-        .print-btn {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .invoice-preview, .invoice-preview * {
-                visibility: visible;
-            }
-            .invoice-preview {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                box-shadow: none;
-            }
-            .print-btn {
-                display: none;
-            }
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 4px;
-            color: white;
-            z-index: 1100;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .notification.show {
-            opacity: 1;
-        }
-        
-        .notification.success {
-            background: var(--success);
-        }
-        
-        .notification.error {
-            background: var(--danger);
-        }
-        
-        .notification.warning {
-            background: var(--warning);
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .login-container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .login-title {
-            text-align: center;
-            margin-bottom: 20px;
-            color: var(--secondary);
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        
-        .login-btn:hover {
-            background: #2980b9;
-        }
-        
-        .login-btn:disabled {
-            background: var(--gray);
-            cursor: not-allowed;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sales Invoice — Single Page (Baserow)</title>
+  <style>
+    :root{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
+    body{margin:0;padding:18px;background:#f6f8fa;color:#111}
+    .container{max-width:1100px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(11,15,30,0.06)}
+    header{display:flex;justify-content:space-between;align-items:center}
+    h1{font-size:20px;margin:0}
+    .flex{display:flex;gap:12px;align-items:center}
+    .row{display:flex;gap:12px;margin-top:12px}
+    input,select,button,textarea{padding:8px;border-radius:6px;border:1px solid #d6dbe0;font-size:14px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    .actions{display:flex;gap:8px}
+    .btn{cursor:pointer;background:#0b69ff;color:#fff;border:none;padding:8px 10px;border-radius:6px}
+    .btn.ghost{background:#fff;border:1px solid #cbd5e1;color:#111}
+    .small{font-size:13px;padding:6px 8px}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center}
+    .modal .card{background:#fff;padding:18px;border-radius:8px;min-width:320px}
+    #scanner{width:320px;height:240px;background:#000}
+    .invoice{margin-top:18px;padding:12px;border:1px dashed #cbd5e1;border-radius:8px;background:#fcfeff}
+    .print-hide{display:inline-block}
+    @media print{.print-hide{display:none} body{background:#fff}}
+  </style>
+  <!-- html5-qrcode CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <!-- Login Page -->
-    <div id="login-page" style="display: none;">
-        <div class="container">
-            <div class="login-container">
-                <h2 class="login-title">Invoice System Login</h2>
-                <div class="form-group">
-                    <label for="mobile-input">Mobile Number</label>
-                    <input type="text" id="mobile-input" placeholder="Enter your mobile number">
-                </div>
-                <button class="login-btn" id="login-btn">Login</button>
-                <div id="login-message" style="margin-top: 15px; text-align: center;"></div>
-            </div>
-        </div>
+  <div class="container">
+    <header>
+      <h1>Sales Invoice — Single Page</h1>
+      <div class="flex">
+        <div id="status">Checking session...</div>
+        <button id="logout" class="btn ghost small">Logout</button>
+      </div>
+    </header><!-- Customer / Product Controls -->
+<div class="row">
+  <div style="flex:1">
+    <label>Customer Mobile (from localStorage MobileTag)</label><br>
+    <input id="mobileTagInput" placeholder="Detected from localStorage" />
+  </div>
+  <div style="width:220px">
+    <label>Search Customer by Mobile</label><br>
+    <div class="flex">
+      <input id="customerSearch" placeholder="Enter mobile to search" style="flex:1" />
+      <button id="btnSearchCustomer" class="btn small">Search</button>
+    </div>
+  </div>
+  <div style="width:160px">
+    <label>Date</label><br>
+    <input id="dateField" readonly />
+  </div>
+</div>
+
+<div class="row" style="margin-top:8px;align-items:flex-start">
+  <div style="flex:1">
+    <label>Customer Name</label><br>
+    <input id="custName" />
+    <label style="display:block;margin-top:6px">Address</label>
+    <textarea id="custAddress" rows="2"></textarea>
+    <label style="display:block;margin-top:6px">GST (optional)</label>
+    <input id="custGst" />
+  </div>
+
+  <div style="width:380px">
+    <label>Product ID (scan or enter)</label>
+    <div class="flex" style="margin-top:6px">
+      <input id="productId" placeholder="Scan QR or enter Product ID manually" />
+      <button id="startScan" class="btn small">Camera On</button>
+      <button id="stopScan" class="btn small ghost">Camera Off</button>
     </div>
 
-    <!-- Main Application -->
-    <div id="main-app" style="display: none;">
-        <header>
-            <div class="container">
-                <div class="header-content">
-                    <div class="logo">Invoice Creation System</div>
-                    <div class="user-info">
-                        <span id="user-display">User: Loading...</span>
-                        <button class="logout-btn" id="logout-btn">Logout</button>
-                    </div>
-                </div>
-            </div>
-        </header>
+    <div id="scannerHolder" style="margin-top:8px"></div>
 
-        <div class="container">
-            <!-- Customer Details -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Customer Details</h2>
-                </div>
-                <div class="card-body">
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label for="customer-search">Search Customer (Mobile or Name)</label>
-                            <input type="text" id="customer-search" placeholder="Enter mobile number or customer name">
-                            <div id="customer-suggestions" style="display: none; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; position: absolute; background: white; width: 100%; z-index: 100;"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label for="customer-name">Customer Name</label>
-                            <input type="text" id="customer-name" readonly>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="customer-mobile">Mobile Number</label>
-                            <input type="text" id="customer-mobile" readonly>
-                        </div>
-                    </div>
-                    
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label for="customer-address">Address</label>
-                            <input type="text" id="customer-address" readonly>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="customer-gst">GST Number</label>
-                            <input type="text" id="customer-gst" readonly>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <label style="display:block;margin-top:8px">Product Name</label>
+    <input id="productName" readonly />
+    <label style="display:block;margin-top:6px">Price</label>
+    <input id="productPrice" readonly />
 
-            <!-- Product Details -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Product Details</h2>
-                    <button class="btn btn-primary" id="open-qr-scanner">QR Scanner</button>
-                </div>
-                <div class="card-body">
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label for="product-search">Search Product</label>
-                            <input type="text" id="product-search" placeholder="Enter product name">
-                            <div id="product-suggestions" style="display: none; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; position: absolute; background: white; width: 100%; z-index: 100;"></div>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="batch-no">Batch Number</label>
-                            <input type="text" id="batch-no" readonly>
-                        </div>
-                    </div>
-                    
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label for="product-name">Product Name</label>
-                            <input type="text" id="product-name" readonly>
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="product-price">Price</label>
-                            <input type="number" id="product-price" readonly>
-                        </div>
-                    </div>
-                    
-                    <div class="flex-row">
-                        <div class="form-group flex-1">
-                            <label for="quantity">Quantity</label>
-                            <input type="number" id="quantity" min="1" value="1">
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="available-quantity">Available Quantity</label>
-                            <input type="number" id="available-quantity" readonly>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-success" id="add-product">Add Product to Invoice</button>
-                </div>
-            </div>
-
-            <!-- Invoice Items -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Invoice Items</h2>
-                    <div>
-                        <span>Invoice Number: </span>
-                        <span id="invoice-number">INV-20230515-0001</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-container">
-                        <table id="invoice-items">
-                            <thead>
-                                <tr>
-                                    <th>Product Name</th>
-                                    <th>Batch No</th>
-                                    <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>Total</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Invoice items will be added here dynamically -->
-                            </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td colspan="4" style="text-align: right;">Total:</td>
-                                    <td id="invoice-total">0.00</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    
-                    <div style="margin-top: 20px; text-align: right;">
-                        <button class="btn btn-success" id="save-invoice">Save Invoice</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div style="margin-top:8px" class="flex">
+      <button id="btnOpenBatches" class="btn small">Choose Batch</button>
+      <button id="btnAddItem" class="btn small">Add to Invoice</button>
     </div>
 
-    <!-- QR Scanner Modal -->
-    <div class="modal" id="qr-scanner-modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>QR Code Scanner</h2>
-            <div class="qr-scanner-container">
-                <div id="qr-reader"></div>
-                <div class="scanner-controls">
-                    <button class="btn btn-primary" id="start-scanner">Start Scanner</button>
-                    <button class="btn btn-danger" id="stop-scanner" style="display: none;">Stop Scanner</button>
-                </div>
-            </div>
-        </div>
+  </div>
+</div>
+
+<table id="invoiceTable">
+  <thead>
+    <tr><th>Product ID</th><th>Item</th><th>Batch No</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+  <div>
+    <label>Tag</label>
+    <select id="tagField"><option>Order Confirmed</option><option>Return</option><option>Warranty</option></select>
+  </div>
+  <div style="text-align:right">
+    <div>Total: <strong id="grandTotal">0.00</strong></div>
+    <div style="margin-top:8px">
+      <button id="btnSave" class="btn">Save Invoice</button>
+      <button id="btnPrint" class="btn ghost">Print</button>
     </div>
+  </div>
+</div>
 
-    <!-- Batch Selection Modal -->
-    <div class="modal" id="batch-modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Select Batch</h2>
-            <div class="table-container">
-                <table id="batch-table">
-                    <thead>
-                        <tr>
-                            <th>Batch Number</th>
-                            <th>Available Quantity</th>
-                            <th>Expiry Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Batch data will be populated here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<div class="invoice" id="invoicePreview" style="display:none"></div>
+
+  </div>  <!-- Modal: Batch selection -->  <div id="modalBatch" class="modal">
+    <div class="card">
+      <h3>Select Batch</h3>
+      <div id="batchList"></div>
+      <div style="margin-top:12px;text-align:right">
+        <button id="closeBatch" class="btn ghost">Close</button>
+      </div>
     </div>
+  </div>  <script>
+  /* ----------------------------- Configuration ---------------------------- */
+  const BASEROW_API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+  const BASEROW_BASE = 'https://api.baserow.io/api/database/rows/table';
 
-    <!-- Invoice Preview Modal -->
-    <div class="modal" id="invoice-preview-modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <div class="invoice-preview" id="invoice-preview-content">
-                <!-- Invoice preview will be generated here -->
-            </div>
-            <button class="print-btn" id="print-invoice">Print Invoice</button>
-        </div>
-    </div>
+  const TABLE_USERS = 729979;      // Users table (check Username)
+  const TABLE_CUSTOMER = 736204;   // Customer table (736204) - user said earlier 7362024 but recent list has 736204; using 736204 from user message
+  const TABLE_PRODUCT = 734793;    // Product table
+  const TABLE_INVENTORY = 734795;  // Inventory table (batches and counts)
+  const TABLE_SALES = 736209;      // Sales table to save each product row
+  const TABLE_LEDGER = 736207;     // Ledger table for invoice summary
 
-    <!-- Notification -->
-    <div class="notification" id="notification"></div>
+  // NOTE: If your real customer table ID is different (you mentioned 7362024 earlier), update TABLE_CUSTOMER constant.
 
-    <!-- Scripts -->
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <script>
-        // Baserow Configuration
-        const BASEROW_CONFIG = {
-            token: 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw', // Replace with your actual token
-            baseUrl: 'https://api.baserow.io/api',
-            tables: {
-                users: 729979,
-                customers: 736204,
-                products: 734793,
-                inventory: 734795,
-                ledger: 736207,
-                sales: 736209
-            }
+  /* ----------------------------- Helpers ---------------------------- */
+  function apiUrl(tableId){
+    return `${BASEROW_BASE}/${tableId}/?user_field_names=true`;
+  }
+
+  function headers(){
+    return { 'Content-Type':'application/json', 'Authorization': `Token ${BASEROW_API_KEY}` };
+  }
+
+  async function fetchAllRows(tableId){
+    // Simple approach: fetch all rows (paginated). We'll fetch multiple pages until done.
+    const pageSize = 100;
+    let all = [];
+    let page = 1;
+    while(true){
+      const url = `${BASEROW_BASE}/${tableId}/?user_field_names=true&page=${page}&page_size=${pageSize}`;
+      const res = await fetch(url, { headers: headers() });
+      if(!res.ok) throw new Error('Failed to fetch rows: ' + res.status);
+      const data = await res.json();
+      if(Array.isArray(data.results)){
+        all = all.concat(data.results);
+        if(!data.next) break;
+        page++;
+      } else {
+        // older API may return array directly
+        all = all.concat(data);
+        break;
+      }
+    }
+    return all;
+  }
+
+  async function postRow(tableId, payload){
+    const url = `${BASEROW_BASE}/${tableId}/?user_field_names=true`;
+    const res = await fetch(url, { method:'POST', headers: headers(), body: JSON.stringify(payload) });
+    if(!res.ok){
+      const txt = await res.text();
+      throw new Error('Upload failed: ' + res.status + ' ' + txt);
+    }
+    return res.json();
+  }
+
+  /* ----------------------------- Session & Init ---------------------------- */
+  const statusEl = document.getElementById('status');
+  const mobileTagInput = document.getElementById('mobileTagInput');
+  const dateField = document.getElementById('dateField');
+  const logoutBtn = document.getElementById('logout');
+
+  function formatDateISO(d=new Date()){
+    const pad=(n)=>n.toString().padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+  function formatDateHuman(d=new Date()){
+    return d.toLocaleString();
+  }
+
+  // invoice state
+  const invoiceItems = [];
+  let selectedBatch = null; // {batch_no, count}
+
+  function updateGrandTotal(){
+    const gt = invoiceItems.reduce((s,i)=>s + (i.qty * i.price),0);
+    document.getElementById('grandTotal').innerText = gt.toFixed(2);
+  }
+
+  function renderInvoiceTable(){
+    const tbody = document.querySelector('#invoiceTable tbody');
+    tbody.innerHTML = '';
+    invoiceItems.forEach((it, idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${it.product_id}</td><td>${it.name}</td><td>${it.batch_no || ''}</td><td>${it.qty}</td><td>${it.price}</td><td>${(it.qty*it.price).toFixed(2)}</td><td><button data-i="${idx}" class="btn ghost small">Remove</button></td>`;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('button').forEach(b=>b.addEventListener('click', (e)=>{
+      const i = +e.currentTarget.dataset.i;
+      invoiceItems.splice(i,1);
+      renderInvoiceTable(); updateGrandTotal();
+    }));
+  }
+
+  async function init(){
+    // Setup date
+    dateField.value = formatDateISO();
+
+    // get mobile tag from localStorage
+    const mobileTag = localStorage.getItem('MobileTag') || localStorage.getItem('mobileTag') || localStorage.getItem('Mobile') || '';
+    mobileTagInput.value = mobileTag || '';
+
+    // get shopid and salesperson
+    const shopIdTag = localStorage.getItem('ShopIDTag') || '';
+    const nameTag = localStorage.getItem('NameTag') || '';
+    // show in status
+    statusEl.innerText = `Shop: ${shopIdTag || '-'} | Sales: ${nameTag || '-'}`;
+
+    // validation: check mobileTag in users table
+    if(!mobileTag){
+      statusEl.innerText = 'No MobileTag found — redirecting to login...';
+      setTimeout(()=>{ window.location.href = '/login.html'; },1200);
+      return;
+    }
+
+    try{
+      statusEl.innerText = 'Validating user...';
+      const users = await fetchAllRows(TABLE_USERS);
+      const found = users.find(u=> (u.Username && (u.Username+"") === mobileTag) || (u.username && (u.username+"")===mobileTag) );
+      if(!found){
+        statusEl.innerText = 'MobileTag not found in Users — redirecting to login...';
+        setTimeout(()=>{ window.location.href = '/login.html'; },1200);
+        return;
+      }
+      statusEl.innerText = `User validated (${mobileTag})`;
+    }catch(err){
+      console.error(err); statusEl.innerText = 'Error validating user: ' + err.message;
+    }
+  }
+
+  init();
+
+  logoutBtn.addEventListener('click', ()=>{
+    localStorage.removeItem('MobileTag');
+    localStorage.removeItem('NameTag');
+    localStorage.removeItem('ShopIDTag');
+    window.location.href = '/login.html';
+  });
+
+  /* ----------------------------- Customer Search & Fill ---------------------------- */
+  document.getElementById('btnSearchCustomer').addEventListener('click', async ()=>{
+    const q = document.getElementById('customerSearch').value.trim();
+    if(!q){ alert('Enter mobile to search'); return; }
+    try{
+      const rows = await fetchAllRows(TABLE_CUSTOMER);
+      // Search by Mobile or Customer Name
+      const found = rows.find(r => (r.Mobile && String(r.Mobile) === q) || (r['Mobile'] && String(r['Mobile'])===q) || (r['Costomer Name'] && r['Costomer Name']===q));
+      if(!found){ alert('Customer not found — you can add new customer by entering details'); return; }
+      document.getElementById('custName').value = found['Costomer Name'] || found['Customer Name'] || '';
+      document.getElementById('custAddress').value = found.Address || found['Address'] || '';
+      document.getElementById('custGst').value = (found.GST || found['GST'] || '') || '';
+    }catch(err){ alert('Error searching customer: '+err.message); }
+  });
+
+  /* ----------------------------- Product fetch & batches ---------------------------- */
+  async function fetchProductById(pid){
+    if(!pid) return null;
+    try{
+      const all = await fetchAllRows(TABLE_PRODUCT);
+      const found = all.find(r => (r['Product ID'] && String(r['Product ID']) === String(pid)) || (r.id && String(r.id)===String(pid)) || (r.product_id && String(r.product_id)===String(pid)));
+      return found || null;
+    }catch(err){ console.error(err); return null; }
+  }
+
+  async function fetchBatchesForProduct(pid){
+    if(!pid) return [];
+    try{
+      const all = await fetchAllRows(TABLE_INVENTORY);
+      // inventory rows should have Product ID, Batch No and Count
+      return all.filter(r=> (r['Product ID'] && String(r['Product ID'])===String(pid)) || (r.product_id && String(r.product_id)===String(pid)));
+    }catch(err){ console.error(err); return []; }
+  }
+
+  document.getElementById('productId').addEventListener('change', async (e)=>{
+    const pid = e.currentTarget.value.trim();
+    if(!pid) return;
+    const p = await fetchProductById(pid);
+    if(!p){ alert('Product not found'); document.getElementById('productName').value=''; document.getElementById('productPrice').value=''; return; }
+    document.getElementById('productName').value = p['Item Name'] || p['Item'] || p['Name'] || p.item_name || p.name || '';
+    document.getElementById('productPrice').value = p['Price'] || p.price || 0;
+  });
+
+  document.getElementById('btnOpenBatches').addEventListener('click', async ()=>{
+    const pid = document.getElementById('productId').value.trim();
+    if(!pid){ alert('Enter Product ID first'); return; }
+    const batches = await fetchBatchesForProduct(pid);
+    const container = document.getElementById('batchList'); container.innerHTML = '';
+    if(batches.length===0){ container.innerHTML = '<div>No batches found for this product in inventory.</div>'; }
+    batches.forEach(b=>{
+      const div = document.createElement('div');
+      const batchNo = b['Batch No'] || b.batch_no || b['BatchNo'] || b.batch || 'N/A';
+      const count = b['Count'] || b.count || b['Quantity'] || 0;
+      div.innerHTML = `<div style="padding:8px;border-bottom:1px solid #eee"><strong>Batch:</strong> ${batchNo} &nbsp; <strong>Count:</strong> ${count} <div style="margin-top:6px"><input placeholder="Qty to pick" type="number" min="1" id="qty_${batchNo}" style="width:100px;padding:6px;border-radius:6px;border:1px solid #ddd" /> <button data-batch='${batchNo}' data-count='${count}' class="btn small chooseBatch">Select</button></div></div>`;
+      container.appendChild(div);
+    });
+    document.getElementById('modalBatch').style.display = 'flex';
+    container.querySelectorAll('.chooseBatch').forEach(btn=>{
+      btn.addEventListener('click',(ev)=>{
+        const batch_no = ev.currentTarget.dataset.batch;
+        const count = +ev.currentTarget.dataset.count;
+        const qtyInput = document.getElementById('qty_'+batch_no);
+        const qty = qtyInput ? (+qtyInput.value || 1) : 1;
+        if(qty > count){ alert('Quantity exceeds available count'); return; }
+        selectedBatch = { batch_no, count };
+        alert(`Selected batch ${batch_no} (available ${count}). Qty chosen: ${qty}`);
+        // store chosen qty temporarily on selectedBatch
+        selectedBatch.chosenQty = qty;
+        document.getElementById('modalBatch').style.display='none';
+      });
+    });
+  });
+  document.getElementById('closeBatch').addEventListener('click', ()=>{ document.getElementById('modalBatch').style.display='none'; });
+
+  document.getElementById('btnAddItem').addEventListener('click', ()=>{
+    const pid = document.getElementById('productId').value.trim();
+    if(!pid){ alert('Product ID required'); return; }
+    const name = document.getElementById('productName').value || 'Unknown';
+    const price = parseFloat(document.getElementById('productPrice').value) || 0;
+    const qty = (selectedBatch && selectedBatch.chosenQty) ? selectedBatch.chosenQty : 1;
+    if(selectedBatch && qty > selectedBatch.count){ alert('Qty exceeds available'); return; }
+    invoiceItems.push({ product_id: pid, name, batch_no: selectedBatch?selectedBatch.batch_no:'', qty, price });
+    // reset selection
+    selectedBatch = null;
+    renderInvoiceTable(); updateGrandTotal();
+  });
+
+  /* ----------------------------- Save Invoice ---------------------------- */
+  document.getElementById('btnSave').addEventListener('click', async ()=>{
+    if(invoiceItems.length===0){ alert('Add items to invoice first'); return; }
+    // prepare invoice summary
+    const invoiceNumber = generateInvoiceNumber();
+    const custName = document.getElementById('custName').value || '';
+    const custMobile = document.getElementById('customerSearch').value || mobileTagInput.value || '';
+    const shopIdTag = localStorage.getItem('ShopIDTag') || '';
+    const salesPerson = localStorage.getItem('NameTag') || '';
+    const date = dateField.value;
+    const totalValue = invoiceItems.reduce((s,i)=>s + (i.qty * i.price),0);
+    const tag = document.getElementById('tagField').value;
+
+    try{
+      // 1) Save each product row to Sales table
+      for(const it of invoiceItems){
+        const payload = {
+          'Costomer Name': custName,
+          'Mobile': custMobile,
+          'Date': date,
+          'Invoice Number': invoiceNumber,
+          'Product ID': it.product_id,
+          'Item Name': it.name,
+          'Batch No': it.batch_no,
+          'Quantity': it.qty,
+          'Price': it.price,
+          'Total': (it.qty * it.price),
+          'Tag': tag,
+          'ShopID': shopIdTag,
+          'Sales Person': salesPerson
         };
+        await postRow(TABLE_SALES, payload);
+      }
 
-        // Global variables
-        let currentUser = null;
-        let customers = [];
-        let products = [];
-        let invoiceItems = [];
-        let currentProductId = null;
-        let html5QrCode = null;
+      // 2) Save summary to Ledger
+      const ledgerPayload = {
+        'Costomer Name': custName,
+        'Mobile': custMobile,
+        'Date': date,
+        'Invoice Number': invoiceNumber,
+        'Total Invoice Value': totalValue,
+        'ShopID': shopIdTag
+      };
+      await postRow(TABLE_LEDGER, ledgerPayload);
 
-        // DOM Elements
-        const loginPageEl = document.getElementById('login-page');
-        const mainAppEl = document.getElementById('main-app');
-        const mobileInputEl = document.getElementById('mobile-input');
-        const loginBtn = document.getElementById('login-btn');
-        const loginMessageEl = document.getElementById('login-message');
-        const userDisplayEl = document.getElementById('user-display');
-        const logoutBtn = document.getElementById('logout-btn');
-        const customerSearchEl = document.getElementById('customer-search');
-        const customerSuggestionsEl = document.getElementById('customer-suggestions');
-        const customerNameEl = document.getElementById('customer-name');
-        const customerMobileEl = document.getElementById('customer-mobile');
-        const customerAddressEl = document.getElementById('customer-address');
-        const customerGstEl = document.getElementById('customer-gst');
-        const productSearchEl = document.getElementById('product-search');
-        const productSuggestionsEl = document.getElementById('product-suggestions');
-        const productNameEl = document.getElementById('product-name');
-        const productPriceEl = document.getElementById('product-price');
-        const batchNoEl = document.getElementById('batch-no');
-        const quantityEl = document.getElementById('quantity');
-        const availableQuantityEl = document.getElementById('available-quantity');
-        const addProductBtn = document.getElementById('add-product');
-        const invoiceItemsEl = document.getElementById('invoice-items');
-        const invoiceTotalEl = document.getElementById('invoice-total');
-        const invoiceNumberEl = document.getElementById('invoice-number');
-        const saveInvoiceBtn = document.getElementById('save-invoice');
-        const openQrScannerBtn = document.getElementById('open-qr-scanner');
-        const qrScannerModal = document.getElementById('qr-scanner-modal');
-        const startScannerBtn = document.getElementById('start-scanner');
-        const stopScannerBtn = document.getElementById('stop-scanner');
-        const batchModal = document.getElementById('batch-modal');
-        const batchTableEl = document.getElementById('batch-table');
-        const invoicePreviewModal = document.getElementById('invoice-preview-modal');
-        const invoicePreviewContent = document.getElementById('invoice-preview-content');
-        const printInvoiceBtn = document.getElementById('print-invoice');
-        const notificationEl = document.getElementById('notification');
+      alert('Invoice saved successfully');
+      showInvoicePreview({invoiceNumber,custName,custMobile,date,totalValue,items:invoiceItems,shopIdTag,salesPerson,tag});
+      // Optionally clear invoice items for new invoice
+      invoiceItems.length = 0; renderInvoiceTable(); updateGrandTotal();
+    }catch(err){ alert('Save failed: '+err.message); console.error(err); }
+  });
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthentication();
-            setupEventListeners();
-        });
+  function generateInvoiceNumber(){
+    const d = new Date();
+    const pad=(n)=>n.toString().padStart(2,'0');
+    return `INV-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
 
-        // Check if user is authenticated via MobileTag
-        function checkAuthentication() {
-            const mobileTag = localStorage.getItem('MobileTag');
-            
-            if (!mobileTag) {
-                showLoginPage();
-                return;
-            }
-            
-            // Verify user exists in Baserow Users table
-            verifyUser(mobileTag);
-        }
+  function showInvoicePreview(data){
+    const div = document.getElementById('invoicePreview');
+    div.style.display='block';
+    let html = `<h3>Invoice ${data.invoiceNumber}</h3>`;
+    html += `<div><strong>Date:</strong> ${data.date} &nbsp; <strong>Shop:</strong> ${data.shopIdTag} &nbsp; <strong>Sales:</strong> ${data.salesPerson}</div>`;
+    html += `<div style="margin-top:8px"><strong>Customer:</strong> ${data.custName} &nbsp; <strong>Mobile:</strong> ${data.custMobile}</div>`;
+    html += `<table style="margin-top:8px;width:100%"><thead><tr><th>Item</th><th>Batch</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>`;
+    data.items.forEach(it=>{
+      html += `<tr><td>${it.name}</td><td>${it.batch_no}</td><td>${it.qty}</td><td>${it.price}</td><td>${(it.qty*it.price).toFixed(2)}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    html += `<div style="text-align:right;margin-top:8px"><strong>Grand Total: ${data.totalValue.toFixed(2)}</strong></div>`;
+    div.innerHTML = html + '<div style="margin-top:8px"><button onclick="window.print()" class="btn">Print</button></div>';
+  }
 
-        // Show login page
-        function showLoginPage() {
-            loginPageEl.style.display = 'block';
-            mainAppEl.style.display = 'none';
-        }
+  document.getElementById('btnPrint').addEventListener('click', ()=>{ window.print(); });
 
-        // Show main application
-        function showMainApp() {
-            loginPageEl.style.display = 'none';
-            mainAppEl.style.display = 'block';
-            generateInvoiceNumber();
-        }
+  /* ----------------------------- QR Scanner ---------------------------- */
+  let html5QrCode = null;
+  let cameraId = null;
+  const scannerHolder = document.getElementById('scannerHolder');
+  document.getElementById('startScan').addEventListener('click', async ()=>{
+    if(html5QrCode) return;
+    try{
+      const devices = await Html5Qrcode.getCameras();
+      // pick back camera if possible (favors device with 'back' label)
+      const back = devices.find(d=>/back|rear|environment/i.test(d.label)) || devices[0];
+      cameraId = back ? back.id : (devices[0] && devices[0].id);
+      html5QrCode = new Html5Qrcode("scannerHolder");
+      await html5QrCode.start(cameraId, { fps: 10, qrbox: { width: 300, height: 200 } }, (decodedText, decodedResult) => {
+        // success callback
+        document.getElementById('productId').value = decodedText;
+        // trigger change to fetch product
+        const ev = new Event('change'); document.getElementById('productId').dispatchEvent(ev);
+        // optionally stop scanning right after detection
+        stopScanner();
+      });
+    }catch(err){ alert('Unable to start camera: ' + err); }
+  });
 
-        // Verify user with Baserow - Only check MobileTag against Username column
-        async function verifyUser(mobileTag) {
-            try {
-                showNotification('Verifying user...', 'warning');
-                
-                const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.users}/?user_field_names=true&filter__field_0=Username&filter__type_0=contains&filter__value_0=${mobileTag}`,
-                    {
-                        headers: {
-                            'Authorization': `Token ${BASEROW_CONFIG.token}`
-                        }
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Failed to verify user');
-                }
-                
-                const data = await response.json();
-                
-                if (data.results && data.results.length > 0) {
-                    currentUser = {
-                        username: mobileTag,
-                        // Get additional user details if available
-                        name: data.results[0].Name || mobileTag,
-                        shopId: data.results[0].ShopID || 'Default'
-                    };
-                    
-                    userDisplayEl.textContent = `User: ${mobileTag}`;
-                    showMainApp();
-                    
-                    // Load initial data
-                    loadCustomers();
-                    loadProducts();
-                    
-                    showNotification('User verified successfully', 'success');
-                } else {
-                    showLoginPage();
-                    showNotification('User not found in system', 'error');
-                    // Clear invalid MobileTag
-                    localStorage.removeItem('MobileTag');
-                }
-            } catch (error) {
-                console.error('Error verifying user:', error);
-                showNotification('Error verifying user', 'error');
-                showLoginPage();
-                // Clear potentially invalid MobileTag on error
-                localStorage.removeItem('MobileTag');
-            }
-        }
+  async function stopScanner(){
+    if(html5QrCode){
+      try{ await html5QrCode.stop(); }catch(e){}
+      html5QrCode.clear(); html5QrCode = null; scannerHolder.innerHTML = '';
+    }
+  }
+  document.getElementById('stopScan').addEventListener('click', stopScanner);
 
-        // Setup event listeners
-        function setupEventListeners() {
-            // Login button
-            loginBtn.addEventListener('click', handleLogin);
-            
-            // Logout button
-            logoutBtn.addEventListener('click', function() {
-                localStorage.removeItem('MobileTag');
-                showLoginPage();
-                showNotification('Logged out successfully', 'success');
-            });
-            
-            // Customer search
-            customerSearchEl.addEventListener('input', debounce(handleCustomerSearch, 300));
-            
-            // Product search
-            productSearchEl.addEventListener('input', debounce(handleProductSearch, 300));
-            
-            // Add product to invoice
-            addProductBtn.addEventListener('click', addProductToInvoice);
-            
-            // Save invoice
-            saveInvoiceBtn.addEventListener('click', saveInvoice);
-            
-            // QR Scanner
-            openQrScannerBtn.addEventListener('click', openQrScannerModal);
-            startScannerBtn.addEventListener('click', startQrScanner);
-            stopScannerBtn.addEventListener('click', stopQrScanner);
-            
-            // Close modals
-            document.querySelectorAll('.close-modal').forEach(closeBtn => {
-                closeBtn.addEventListener('click', function() {
-                    this.closest('.modal').style.display = 'none';
-                    if (html5QrCode && html5QrCode.isScanning) {
-                        stopQrScanner();
-                    }
-                });
-            });
-            
-            // Print invoice
-            printInvoiceBtn.addEventListener('click', function() {
-                window.print();
-            });
-            
-            // Quantity validation
-            quantityEl.addEventListener('change', validateQuantity);
-            
-            // Enter key for login
-            mobileInputEl.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
-        }
+  /* ----------------------------- Utility: quick product search on Enter ---------------------------- */
+  document.getElementById('productId').addEventListener('keydown', async (e)=>{
+    if(e.key === 'Enter'){
+      const pid = e.currentTarget.value.trim();
+      if(pid){
+        const p = await fetchProductById(pid);
+        if(p){ document.getElementById('productName').value = p['Item Name'] || p['Name'] || '';
+                   document.getElementById('productPrice').value = p['Price'] || p.price || 0; }
+        else alert('Product not found');
+      }
+    }
+  });
 
-        // Handle login
-        function handleLogin() {
-            const mobile = mobileInputEl.value.trim();
-            
-            if (!mobile) {
-                showLoginMessage('Please enter a mobile number', 'error');
-                return;
-            }
-            
-            // Set MobileTag and verify
-            localStorage.setItem('MobileTag', mobile);
-            verifyUser(mobile);
-        }
+  /* ----------------------------- Notes ---------------------------- */
+  // IMPORTANT:
+  // - This implementation fetches all rows from tables and filters client-side. For large tables, replace fetchAllRows with server-side filtering using Baserow filter/query parameters.
+  // - Make sure the field names used in payloads (like 'Costomer Name', 'Mobile', 'Invoice Number') match your Baserow column names exactly.
+  // - Browser must be served over HTTPS for camera access (or localhost).
+  // - If you prefer the app to auto-redirect after save or to clear certain values, adjust accordingly.
 
-        // Show login message
-        function showLoginMessage(message, type) {
-            loginMessageEl.textContent = message;
-            loginMessageEl.style.color = type === 'error' ? 'red' : 'green';
-        }
-
-        // Load customers from Baserow
-        async function loadCustomers() {
-            try {
-                const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.customers}/?user_field_names=true`,
-                    {
-                        headers: {
-                            'Authorization': `Token ${BASEROW_CONFIG.token}`
-                        }
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load customers');
-                }
-                
-                const data = await response.json();
-                customers = data.results;
-            } catch (error) {
-                console.error('Error loading customers:', error);
-                showNotification('Error loading customers', 'error');
-            }
-        }
-
-        // Load products from Baserow
-        async function loadProducts() {
-            try {
-                const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.products}/?user_field_names=true`,
-                    {
-                        headers: {
-                            'Authorization': `Token ${BASEROW_CONFIG.token}`
-                        }
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load products');
-                }
-                
-                const data = await response.json();
-                products = data.results;
-            } catch (error) {
-                console.error('Error loading products:', error);
-                showNotification('Error loading products', 'error');
-            }
-        }
-
-        // Handle customer search
-        function handleCustomerSearch() {
-            const searchTerm = customerSearchEl.value.trim().toLowerCase();
-            
-            if (searchTerm.length < 2) {
-                customerSuggestionsEl.style.display = 'none';
-                return;
-            }
-            
-            const filteredCustomers = customers.filter(customer => {
-                const mobile = customer.Mobile || '';
-                const name = customer.Name || '';
-                return mobile.toLowerCase().includes(searchTerm) || 
-                       name.toLowerCase().includes(searchTerm);
-            });
-            
-            displayCustomerSuggestions(filteredCustomers);
-        }
-
-        // Display customer suggestions
-        function displayCustomerSuggestions(customers) {
-            customerSuggestionsEl.innerHTML = '';
-            
-            if (customers.length === 0) {
-                customerSuggestionsEl.style.display = 'none';
-                return;
-            }
-            
-            customers.forEach(customer => {
-                const div = document.createElement('div');
-                div.style.padding = '10px';
-                div.style.cursor = 'pointer';
-                div.style.borderBottom = '1px solid #eee';
-                div.textContent = `${customer.Name} - ${customer.Mobile}`;
-                
-                div.addEventListener('click', function() {
-                    selectCustomer(customer);
-                    customerSuggestionsEl.style.display = 'none';
-                });
-                
-                customerSuggestionsEl.appendChild(div);
-            });
-            
-            customerSuggestionsEl.style.display = 'block';
-        }
-
-        // Select a customer
-        function selectCustomer(customer) {
-            customerNameEl.value = customer.Name || '';
-            customerMobileEl.value = customer.Mobile || '';
-            customerAddressEl.value = customer.Address || '';
-            customerGstEl.value = customer.GST || '';
-            customerSearchEl.value = '';
-        }
-
-        // Handle product search
-        function handleProductSearch() {
-            const searchTerm = productSearchEl.value.trim().toLowerCase();
-            
-            if (searchTerm.length < 2) {
-                productSuggestionsEl.style.display = 'none';
-                return;
-            }
-            
-            const filteredProducts = products.filter(product => {
-                const name = product.Name || '';
-                return name.toLowerCase().includes(searchTerm);
-            });
-            
-            displayProductSuggestions(filteredProducts);
-        }
-
-        // Display product suggestions
-        function displayProductSuggestions(products) {
-            productSuggestionsEl.innerHTML = '';
-            
-            if (products.length === 0) {
-                productSuggestionsEl.style.display = 'none';
-                return;
-            }
-            
-            products.forEach(product => {
-                const div = document.createElement('div');
-                div.style.padding = '10px';
-                div.style.cursor = 'pointer';
-                div.style.borderBottom = '1px solid #eee';
-                div.textContent = `${product.Name} - ₹${product.Price || 0}`;
-                
-                div.addEventListener('click', function() {
-                    selectProduct(product);
-                    productSuggestionsEl.style.display = 'none';
-                });
-                
-                productSuggestionsEl.appendChild(div);
-            });
-            
-            productSuggestionsEl.style.display = 'block';
-        }
-
-        // Select a product
-        function selectProduct(product) {
-            currentProductId = product.id;
-            productNameEl.value = product.Name || '';
-            productPriceEl.value = product.Price || 0;
-            productSearchEl.value = '';
-            
-            // Load available batches for this product
-            loadProductBatches(product.id);
-        }
-
-        // Load product batches from inventory
-        async function loadProductBatches(productId) {
-            try {
-                const response = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true&filter__field_0=Product&filter__type_0=contains&filter__value_0=${productId}`,
-                    {
-                        headers: {
-                            'Authorization': `Token ${BASEROW_CONFIG.token}`
-                        }
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load product batches');
-                }
-                
-                const data = await response.json();
-                
-                if (data.results && data.results.length > 0) {
-                    if (data.results.length === 1) {
-                        // If only one batch, auto-select it
-                        selectBatch(data.results[0]);
-                    } else {
-                        // Show batch selection modal
-                        showBatchSelection(data.results);
-                    }
-                } else {
-                    showNotification('No batches available for this product', 'warning');
-                    resetProductFields();
-                }
-            } catch (error) {
-                console.error('Error loading product batches:', error);
-                showNotification('Error loading product batches', 'error');
-                resetProductFields();
-            }
-        }
-
-        // Show batch selection modal
-        function showBatchSelection(batches) {
-            batchTableEl.querySelector('tbody').innerHTML = '';
-            
-            batches.forEach(batch => {
-                const row = document.createElement('tr');
-                
-                const batchCell = document.createElement('td');
-                batchCell.textContent = batch.BatchNo || 'N/A';
-                
-                const quantityCell = document.createElement('td');
-                quantityCell.textContent = batch.Quantity || 0;
-                
-                const expiryCell = document.createElement('td');
-                expiryCell.textContent = batch.ExpiryDate || 'N/A';
-                
-                const actionCell = document.createElement('td');
-                const selectBtn = document.createElement('button');
-                selectBtn.textContent = 'Select';
-                selectBtn.className = 'btn btn-primary';
-                selectBtn.addEventListener('click', function() {
-                    selectBatch(batch);
-                    batchModal.style.display = 'none';
-                });
-                
-                actionCell.appendChild(selectBtn);
-                
-                row.appendChild(batchCell);
-                row.appendChild(quantityCell);
-                row.appendChild(expiryCell);
-                row.appendChild(actionCell);
-                
-                batchTableEl.querySelector('tbody').appendChild(row);
-            });
-            
-            batchModal.style.display = 'flex';
-        }
-
-        // Select a batch
-        function selectBatch(batch) {
-            batchNoEl.value = batch.BatchNo || '';
-            availableQuantityEl.value = batch.Quantity || 0;
-            quantityEl.max = batch.Quantity || 1;
-            quantityEl.value = 1;
-        }
-
-        // Validate quantity
-        function validateQuantity() {
-            const available = parseInt(availableQuantityEl.value) || 0;
-            const requested = parseInt(quantityEl.value) || 0;
-            
-            if (requested > available) {
-                showNotification(`Only ${available} items available in this batch`, 'warning');
-                quantityEl.value = available;
-            }
-        }
-
-        // Add product to invoice
-        function addProductToInvoice() {
-            if (!currentProductId) {
-                showNotification('Please select a product first', 'warning');
-                return;
-            }
-            
-            if (!batchNoEl.value) {
-                showNotification('Please select a batch first', 'warning');
-                return;
-            }
-            
-            const quantity = parseInt(quantityEl.value) || 0;
-            const available = parseInt(availableQuantityEl.value) || 0;
-            
-            if (quantity <= 0) {
-                showNotification('Please enter a valid quantity', 'warning');
-                return;
-            }
-            
-            if (quantity > available) {
-                showNotification(`Only ${available} items available in this batch`, 'warning');
-                return;
-            }
-            
-            const productName = productNameEl.value;
-            const price = parseFloat(productPriceEl.value) || 0;
-            const batchNo = batchNoEl.value;
-            const total = price * quantity;
-            
-            // Add to invoice items
-            invoiceItems.push({
-                productId: currentProductId,
-                productName: productName,
-                batchNo: batchNo,
-                quantity: quantity,
-                price: price,
-                total: total
-            });
-            
-            // Update invoice table
-            updateInvoiceTable();
-            
-            // Reset product fields
-            resetProductFields();
-            
-            showNotification('Product added to invoice', 'success');
-        }
-
-        // Update invoice table
-        function updateInvoiceTable() {
-            const tbody = invoiceItemsEl.querySelector('tbody');
-            tbody.innerHTML = '';
-            
-            let grandTotal = 0;
-            
-            invoiceItems.forEach((item, index) => {
-                const row = document.createElement('tr');
-                
-                const nameCell = document.createElement('td');
-                nameCell.textContent = item.productName;
-                
-                const batchCell = document.createElement('td');
-                batchCell.textContent = item.batchNo;
-                
-                const quantityCell = document.createElement('td');
-                quantityCell.textContent = item.quantity;
-                
-                const priceCell = document.createElement('td');
-                priceCell.textContent = `₹${item.price.toFixed(2)}`;
-                
-                const totalCell = document.createElement('td');
-                totalCell.textContent = `₹${item.total.toFixed(2)}`;
-                
-                const actionsCell = document.createElement('td');
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.className = 'action-btn action-delete';
-                deleteBtn.addEventListener('click', function() {
-                    invoiceItems.splice(index, 1);
-                    updateInvoiceTable();
-                });
-                
-                actionsCell.appendChild(deleteBtn);
-                
-                row.appendChild(nameCell);
-                row.appendChild(batchCell);
-                row.appendChild(quantityCell);
-                row.appendChild(priceCell);
-                row.appendChild(totalCell);
-                row.appendChild(actionsCell);
-                
-                tbody.appendChild(row);
-                
-                grandTotal += item.total;
-            });
-            
-            invoiceTotalEl.textContent = `₹${grandTotal.toFixed(2)}`;
-        }
-
-        // Reset product fields
-        function resetProductFields() {
-            currentProductId = null;
-            productNameEl.value = '';
-            productPriceEl.value = '';
-            batchNoEl.value = '';
-            availableQuantityEl.value = '';
-            quantityEl.value = '1';
-            productSearchEl.value = '';
-        }
-
-        // Generate invoice number
-        function generateInvoiceNumber() {
-            const now = new Date();
-            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            const invoiceNumber = `INV-${dateStr}-${randomNum}`;
-            invoiceNumberEl.textContent = invoiceNumber;
-            return invoiceNumber;
-        }
-
-        // Save invoice to Baserow
-        async function saveInvoice() {
-            if (invoiceItems.length === 0) {
-                showNotification('Please add at least one product to the invoice', 'warning');
-                return;
-            }
-            
-            if (!customerNameEl.value) {
-                showNotification('Please select a customer', 'warning');
-                return;
-            }
-            
-            try {
-                showNotification('Saving invoice...', 'warning');
-                
-                const invoiceNumber = invoiceNumberEl.textContent;
-                const customerName = customerNameEl.value;
-                const customerMobile = customerMobileEl.value;
-                const totalValue = parseFloat(invoiceTotalEl.textContent.replace('₹', ''));
-                const shopId = currentUser.shopId;
-                const salesperson = currentUser.name;
-                const date = new Date().toISOString().split('T')[0];
-                
-                // Save to Ledger Table
-                const ledgerData = {
-                    "Customer Name": customerName,
-                    "Mobile": customerMobile,
-                    "Date": date,
-                    "Invoice Number": invoiceNumber,
-                    "Total Value": totalValue,
-                    "ShopID": shopId,
-                    "Tag": "Order Confirmed"
-                };
-                
-                const ledgerResponse = await fetch(
-                    `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.ledger}/?user_field_names=true`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Token ${BASEROW_CONFIG.token}`
-                        },
-                        body: JSON.stringify(ledgerData)
-                    }
-                );
-                
-                if (!ledgerResponse.ok) {
-                    throw new Error('Failed to save to ledger');
-                }
-                
-                // Save each item to Sales Table
-                for (const item of invoiceItems) {
-                    const salesData = {
-                        "Product": item.productId,
-                        "Batch No": item.batchNo,
-                        "Quantity": item.quantity,
-                        "Price": item.price,
-                        "Total": item.total,
-                        "Invoice Number": invoiceNumber,
-                        "Customer Mobile": customerMobile,
-                        "Date": date,
-                        "ShopID": shopId,
-                        "Salesperson": salesperson,
-                        "Tag": "Order Confirmed"
-                    };
-                    
-                    const salesResponse = await fetch(
-                        `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.sales}/?user_field_names=true`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Token ${BASEROW_CONFIG.token}`
-                            },
-                            body: JSON.stringify(salesData)
-                        }
-                    );
-                    
-                    if (!salesResponse.ok) {
-                        throw new Error('Failed to save sales item');
-                    }
-                }
-                
-                showNotification('Invoice saved successfully!', 'success');
-                
-                // Show invoice preview
-                showInvoicePreview(invoiceNumber, customerName, customerMobile, date, totalValue);
-                
-                // Reset form for next invoice
-                resetInvoiceForm();
-                
-            } catch (error) {
-                console.error('Error saving invoice:', error);
-                showNotification('Error saving invoice', 'error');
-            }
-        }
-
-        // Show invoice preview
-        function showInvoicePreview(invoiceNumber, customerName, customerMobile, date, totalValue) {
-            invoicePreviewContent.innerHTML = `
-                <div class="invoice-header">
-                    <h1>INVOICE</h1>
-                    <p>Invoice Number: ${invoiceNumber}</p>
-                    <p>Date: ${date}</p>
-                </div>
-                
-                <div class="invoice-details">
-                    <div>
-                        <h3>Bill To:</h3>
-                        <p>${customerName}</p>
-                        <p>${customerMobile}</p>
-                        <p>${customerAddressEl.value}</p>
-                        <p>GST: ${customerGstEl.value}</p>
-                    </div>
-                    <div>
-                        <h3>Sold By:</h3>
-                        <p>${currentUser.name}</p>
-                        <p>Shop ID: ${currentUser.shopId}</p>
-                    </div>
-                </div>
-                
-                <table class="invoice-table">
-                    <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Batch No</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${invoiceItems.map(item => `
-                            <tr>
-                                <td>${item.productName}</td>
-                                <td>${item.batchNo}</td>
-                                <td>${item.quantity}</td>
-                                <td>₹${item.price.toFixed(2)}</td>
-                                <td>₹${item.total.toFixed(2)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="4" style="text-align: right;"><strong>Grand Total:</strong></td>
-                            <td><strong>₹${totalValue.toFixed(2)}</strong></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                
-                <div style="margin-top: 30px; text-align: center;">
-                    <p>Thank you for your business!</p>
-                    <p>Tag: Order Confirmed</p>
-                </div>
-            `;
-            
-            invoicePreviewModal.style.display = 'flex';
-        }
-
-        // Reset invoice form
-        function resetInvoiceForm() {
-            invoiceItems = [];
-            updateInvoiceTable();
-            generateInvoiceNumber();
-            
-            // Reset customer fields
-            customerNameEl.value = '';
-            customerMobileEl.value = '';
-            customerAddressEl.value = '';
-            customerGstEl.value = '';
-            customerSearchEl.value = '';
-            
-            // Reset product fields
-            resetProductFields();
-        }
-
-        // QR Scanner Functions
-        function openQrScannerModal() {
-            qrScannerModal.style.display = 'flex';
-        }
-
-        function startQrScanner() {
-            html5QrCode = new Html5Qrcode("qr-reader");
-            
-            html5QrCode.start(
-                { facingMode: "environment" },
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 }
-                },
-                onQrCodeSuccess,
-                onQrCodeError
-            ).then(() => {
-                startScannerBtn.style.display = 'none';
-                stopScannerBtn.style.display = 'inline-block';
-            }).catch(err => {
-                console.error('Error starting QR scanner:', err);
-                showNotification('Error starting QR scanner', 'error');
-            });
-        }
-
-        function stopQrScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    startScannerBtn.style.display = 'inline-block';
-                    stopScannerBtn.style.display = 'none';
-                }).catch(err => {
-                    console.error('Error stopping QR scanner:', err);
-                });
-            }
-        }
-
-        function onQrCodeSuccess(decodedText) {
-            // Assume QR code contains product ID
-            const productId = parseInt(decodedText);
-            
-            if (isNaN(productId)) {
-                showNotification('Invalid QR code format', 'error');
-                return;
-            }
-            
-            // Find product by ID
-            const product = products.find(p => p.id === productId);
-            
-            if (product) {
-                selectProduct(product);
-                qrScannerModal.style.display = 'none';
-                stopQrScanner();
-                showNotification('Product scanned successfully', 'success');
-            } else {
-                showNotification('Product not found', 'error');
-            }
-        }
-
-        function onQrCodeError(error) {
-            // Error handling is optional, as the scanner will keep trying
-        }
-
-        // Utility Functions
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        function showNotification(message, type) {
-            notificationEl.textContent = message;
-            notificationEl.className = `notification ${type}`;
-            notificationEl.classList.add('show');
-            
-            setTimeout(() => {
-                notificationEl.classList.remove('show');
-            }, 3000);
-        }
-    </script>
-</body>
+  </script></body>
 </html>
