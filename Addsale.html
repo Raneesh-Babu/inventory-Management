@@ -241,7 +241,7 @@
             background: white;
             border-radius: 8px;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 20px;
@@ -439,6 +439,89 @@
             color: white;
             border-color: var(--primary);
         }
+        
+        .batch-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .batch-item:hover {
+            background-color: #f8f9fa;
+            border-color: var(--primary);
+        }
+        
+        .batch-item.selected {
+            background-color: #e3f2fd;
+            border-color: var(--primary);
+        }
+        
+        .batch-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .batch-details {
+            flex: 1;
+        }
+        
+        .batch-no {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .batch-count {
+            color: var(--success);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .batch-expiry {
+            color: var(--warning);
+            font-size: 14px;
+        }
+        
+        .expiry-warning {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        
+        .select-batch-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .expiry-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+        }
+        
+        .expiry-valid {
+            background: var(--success);
+            color: white;
+        }
+        
+        .expiry-expired {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .expiry-soon {
+            background: var(--warning);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -556,6 +639,13 @@
                         </div>
                     </div>
                     
+                    <div class="flex-row">
+                        <div class="form-group flex-1">
+                            <label for="expiry-date">Expiry Date</label>
+                            <input type="text" id="expiry-date" readonly>
+                        </div>
+                    </div>
+                    
                     <button class="btn btn-success" id="add-product">Add Product to Invoice</button>
                 </div>
             </div>
@@ -579,6 +669,7 @@
                                     <th>Quantity</th>
                                     <th>Price</th>
                                     <th>Total</th>
+                                    <th>Expiry Date</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -587,7 +678,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
-                                    <td colspan="4" style="text-align: right;">Total:</td>
+                                    <td colspan="5" style="text-align: right;">Total:</td>
                                     <td id="invoice-total">0.00</td>
                                     <td></td>
                                 </tr>
@@ -622,21 +713,12 @@
     <div class="modal" id="batch-modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2>Select Batch</h2>
-            <div class="table-container">
-                <table id="batch-table">
-                    <thead>
-                        <tr>
-                            <th>Batch Number</th>
-                            <th>Available Quantity</th>
-                            <th>Expiry Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Batch data will be populated here -->
-                    </tbody>
-                </table>
+            <h2>Select Batch for <span id="batch-product-name"></span></h2>
+            <div id="batch-list">
+                <!-- Batch items will be populated here -->
+            </div>
+            <div id="no-batches-message" style="display: none; text-align: center; padding: 20px;">
+                <p>No batches available for this product</p>
             </div>
         </div>
     </div>
@@ -660,7 +742,7 @@
     <script>
         // Baserow Configuration
         const BASEROW_CONFIG = {
-            token: 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw', // Replace with your actual token
+            token: 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw',
             baseUrl: 'https://api.baserow.io/api',
             tables: {
                 users: 729979,
@@ -678,8 +760,10 @@
         let products = [];
         let invoiceItems = [];
         let currentProductId = null;
+        let currentProductName = null;
         let html5QrCode = null;
         let searchBy = 'name'; // 'name' or 'id'
+        let selectedBatch = null;
 
         // DOM Elements
         const loginPageEl = document.getElementById('login-page');
@@ -703,6 +787,7 @@
         const batchNoEl = document.getElementById('batch-no');
         const quantityEl = document.getElementById('quantity');
         const availableQuantityEl = document.getElementById('available-quantity');
+        const expiryDateEl = document.getElementById('expiry-date');
         const addProductBtn = document.getElementById('add-product');
         const invoiceItemsEl = document.getElementById('invoice-items');
         const invoiceTotalEl = document.getElementById('invoice-total');
@@ -713,7 +798,9 @@
         const startScannerBtn = document.getElementById('start-scanner');
         const stopScannerBtn = document.getElementById('stop-scanner');
         const batchModal = document.getElementById('batch-modal');
-        const batchTableEl = document.getElementById('batch-table');
+        const batchListEl = document.getElementById('batch-list');
+        const batchProductNameEl = document.getElementById('batch-product-name');
+        const noBatchesMessageEl = document.getElementById('no-batches-message');
         const invoicePreviewModal = document.getElementById('invoice-preview-modal');
         const invoicePreviewContent = document.getElementById('invoice-preview-content');
         const printInvoiceBtn = document.getElementById('print-invoice');
@@ -1077,7 +1164,8 @@
         // Select a product
         function selectProduct(product) {
             currentProductId = product.id;
-            productNameEl.value = product.Name || '';
+            currentProductName = product.Name || '';
+            productNameEl.value = currentProductName;
             productPriceEl.value = product.Price || 0;
             productSearchEl.value = '';
             
@@ -1085,9 +1173,12 @@
             loadProductBatches(product.id);
         }
 
-        // Load product batches from inventory
+        // Load product batches from inventory using Product ID
         async function loadProductBatches(productId) {
             try {
+                showNotification('Loading batches...', 'warning');
+                
+                // Fetch batches for this product from Inventory table
                 const response = await fetch(
                     `${BASEROW_CONFIG.baseUrl}/database/rows/table/${BASEROW_CONFIG.tables.inventory}/?user_field_names=true&filter__field_0=Product&filter__type_0=contains&filter__value_0=${productId}`,
                     {
@@ -1104,13 +1195,8 @@
                 const data = await response.json();
                 
                 if (data.results && data.results.length > 0) {
-                    if (data.results.length === 1) {
-                        // If only one batch, auto-select it
-                        selectBatch(data.results[0]);
-                    } else {
-                        // Show batch selection modal
-                        showBatchSelection(data.results);
-                    }
+                    // Show batch selection modal
+                    showBatchSelection(data.results);
                 } else {
                     showNotification('No batches available for this product', 'warning');
                     resetProductFields();
@@ -1122,50 +1208,99 @@
             }
         }
 
+        // Check expiry status
+        function getExpiryStatus(expiryDate) {
+            if (!expiryDate) return { status: 'unknown', text: 'Unknown' };
+            
+            const today = new Date();
+            const expiry = new Date(expiryDate);
+            const diffTime = expiry - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return { status: 'expired', text: 'Expired' };
+            } else if (diffDays <= 30) {
+                return { status: 'soon', text: 'Expires Soon' };
+            } else {
+                return { status: 'valid', text: 'Valid' };
+            }
+        }
+
         // Show batch selection modal
         function showBatchSelection(batches) {
-            batchTableEl.querySelector('tbody').innerHTML = '';
+            batchListEl.innerHTML = '';
+            batchProductNameEl.textContent = currentProductName;
+            selectedBatch = null;
             
+            // Show batches in modal
             batches.forEach(batch => {
-                const row = document.createElement('tr');
+                const batchItem = document.createElement('div');
+                batchItem.className = 'batch-item';
                 
-                const batchCell = document.createElement('td');
-                batchCell.textContent = batch['Batch Number'] || batch.BatchNo || 'N/A';
+                // Extract batch details - handle different field name possibilities
+                const batchNo = batch['Batch No'] || batch.BatchNo || batch['Batch Number'] || 'N/A';
+                const count = batch.Count || batch.Quantity || 0;
+                const expiryDate = batch['Expiry Date'] || batch.ExpiryDate || 'N/A';
                 
-                const quantityCell = document.createElement('td');
-                quantityCell.textContent = batch.Quantity || batch.Count || 0;
+                // Check expiry status
+                const expiryStatus = getExpiryStatus(expiryDate);
                 
-                const expiryCell = document.createElement('td');
-                expiryCell.textContent = batch.ExpiryDate || 'N/A';
+                batchItem.innerHTML = `
+                    <div class="batch-info">
+                        <div class="batch-details">
+                            <div class="batch-no">Batch: ${batchNo}</div>
+                            <div class="batch-count">Available: ${count}</div>
+                            <div class="batch-expiry ${expiryStatus.status === 'expired' ? 'expiry-warning' : ''}">
+                                Expiry: ${expiryDate}
+                                <span class="expiry-status ${'expiry-' + expiryStatus.status}">${expiryStatus.text}</span>
+                            </div>
+                        </div>
+                        <button class="select-batch-btn" 
+                                data-batch-no="${batchNo}" 
+                                data-count="${count}"
+                                data-expiry-date="${expiryDate}"
+                                ${expiryStatus.status === 'expired' ? 'style="background: var(--danger)"' : ''}>
+                            ${expiryStatus.status === 'expired' ? 'Expired' : 'Select'}
+                        </button>
+                    </div>
+                `;
                 
-                const actionCell = document.createElement('td');
-                const selectBtn = document.createElement('button');
-                selectBtn.textContent = 'Select';
-                selectBtn.className = 'btn btn-primary';
+                batchListEl.appendChild(batchItem);
+                
+                // Add event listener to select button
+                const selectBtn = batchItem.querySelector('.select-batch-btn');
                 selectBtn.addEventListener('click', function() {
-                    selectBatch(batch);
-                    batchModal.style.display = 'none';
+                    if (expiryStatus.status === 'expired') {
+                        showNotification('Cannot select expired batch', 'error');
+                        return;
+                    }
+                    selectBatchFromModal(batchNo, count, expiryDate);
                 });
-                
-                actionCell.appendChild(selectBtn);
-                
-                row.appendChild(batchCell);
-                row.appendChild(quantityCell);
-                row.appendChild(expiryCell);
-                row.appendChild(actionCell);
-                
-                batchTableEl.querySelector('tbody').appendChild(row);
             });
+            
+            // Show appropriate message
+            if (batches.length > 0) {
+                batchListEl.style.display = 'block';
+                noBatchesMessageEl.style.display = 'none';
+            } else {
+                batchListEl.style.display = 'none';
+                noBatchesMessageEl.style.display = 'block';
+            }
             
             batchModal.style.display = 'flex';
         }
 
-        // Select a batch
-        function selectBatch(batch) {
-            batchNoEl.value = batch['Batch Number'] || batch.BatchNo || '';
-            availableQuantityEl.value = batch.Quantity || batch.Count || 0;
-            quantityEl.max = batch.Quantity || batch.Count || 1;
+        // Select a batch from the modal
+        function selectBatchFromModal(batchNo, count, expiryDate) {
+            batchNoEl.value = batchNo;
+            availableQuantityEl.value = count;
+            quantityEl.max = count;
             quantityEl.value = 1;
+            expiryDateEl.value = expiryDate;
+            selectedBatch = { batchNo, count, expiryDate };
+            
+            batchModal.style.display = 'none';
+            showNotification('Batch selected successfully', 'success');
         }
 
         // Validate quantity
@@ -1207,6 +1342,7 @@
             const productName = productNameEl.value;
             const price = parseFloat(productPriceEl.value) || 0;
             const batchNo = batchNoEl.value;
+            const expiryDate = expiryDateEl.value;
             const total = price * quantity;
             
             // Add to invoice items
@@ -1216,7 +1352,8 @@
                 batchNo: batchNo,
                 quantity: quantity,
                 price: price,
-                total: total
+                total: total,
+                expiryDate: expiryDate
             });
             
             // Update invoice table
@@ -1253,6 +1390,9 @@
                 const totalCell = document.createElement('td');
                 totalCell.textContent = `₹${item.total.toFixed(2)}`;
                 
+                const expiryCell = document.createElement('td');
+                expiryCell.textContent = item.expiryDate;
+                
                 const actionsCell = document.createElement('td');
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Delete';
@@ -1269,6 +1409,7 @@
                 row.appendChild(quantityCell);
                 row.appendChild(priceCell);
                 row.appendChild(totalCell);
+                row.appendChild(expiryCell);
                 row.appendChild(actionsCell);
                 
                 tbody.appendChild(row);
@@ -1282,12 +1423,15 @@
         // Reset product fields
         function resetProductFields() {
             currentProductId = null;
+            currentProductName = null;
             productNameEl.value = '';
             productPriceEl.value = '';
             batchNoEl.value = '';
             availableQuantityEl.value = '';
             quantityEl.value = '1';
+            expiryDateEl.value = '';
             productSearchEl.value = '';
+            selectedBatch = null;
         }
 
         // Generate invoice number
@@ -1429,6 +1573,7 @@
                             <th>Quantity</th>
                             <th>Price</th>
                             <th>Total</th>
+                            <th>Expiry Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1439,6 +1584,7 @@
                                 <td>${item.quantity}</td>
                                 <td>₹${item.price.toFixed(2)}</td>
                                 <td>₹${item.total.toFixed(2)}</td>
+                                <td>${item.expiryDate}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1446,6 +1592,7 @@
                         <tr>
                             <td colspan="4" style="text-align: right;"><strong>Grand Total:</strong></td>
                             <td><strong>₹${totalValue.toFixed(2)}</strong></td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
