@@ -54,6 +54,11 @@
   }
   .edit-btn {
     background: #00b894;
+    padding: 5px 10px;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
   }
   .edit-btn:hover {
     background: #55efc4;
@@ -64,15 +69,13 @@
 
 <h2>Customer Database</h2>
 
-<div class="form-container" id="formContainer">
-  <h3>Add / Edit Customer</h3>
-  <input type="hidden" id="editId">
+<div class="form-container" id="addForm">
+  <h3>Add New Customer</h3>
   <input type="text" id="name" placeholder="Customer Name" required><br>
   <input type="text" id="mobile" placeholder="Mobile Number" required><br>
   <input type="text" id="address" placeholder="Address" required><br>
   <input type="text" id="gst" placeholder="GST (optional)"><br>
-  <button id="saveBtn" onclick="addCustomer()">Add Customer</button>
-  <button id="updateBtn" style="display:none;" onclick="updateCustomer()">Update</button>
+  <button onclick="addCustomer()">Add Customer</button>
 </div>
 
 <div class="list-container">
@@ -87,7 +90,7 @@
         <th>GST</th>
         <th>Added By</th>
         <th>Date</th>
-        <th>Action</th>
+        <th id="actionsHeader">Actions</th>
       </tr>
     </thead>
     <tbody id="customerList">
@@ -104,40 +107,36 @@ const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const shopID = localStorage.getItem("ShopIDTag");
 const addedBy = localStorage.getItem("NameTag");
 const mobileTag = localStorage.getItem("MobileTag");
+let role = "Staff"; // default
 
-let userRole = "Staff"; // default view-only
-
-async function checkUserRole() {
+// 🔹 Step 1: Get Role from Users Table
+async function getUserRole() {
   try {
-    const res = await fetch(USERS_API, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
+    const res = await fetch(USERS_API, { headers: { Authorization: `Token ${API_KEY}` } });
     const data = await res.json();
-    const user = data.results.find(u => u.User == mobileTag);
-    if (user && user.Role === "Manager") {
-      userRole = "Manager";
-    } else {
-      userRole = "Staff";
-      document.getElementById("formContainer").style.display = "none";
+    const user = data.results.find(u => u.Username == mobileTag);
+    if (user && user.Role) {
+      role = user.Role;
     }
-    loadCustomers();
-  } catch (e) {
-    console.error("Error checking user role:", e);
+    if (role.toLowerCase() !== "manager") {
+      document.getElementById("addForm").style.display = "none";
+      document.getElementById("actionsHeader").style.display = "none";
+    }
+  } catch (err) {
+    console.error("Error fetching role:", err);
   }
 }
 
+// 🔹 Step 2: Load Customers
 async function loadCustomers() {
-  const res = await fetch(CUSTOMER_API, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
+  const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
   const data = await res.json();
   const customers = data.results.filter(c => c.ShopID == shopID);
-  
   const list = document.getElementById("customerList");
   list.innerHTML = "";
 
   if (customers.length === 0) {
-    list.innerHTML = `<tr><td colspan="7" style="text-align:center;">No customers found.</td></tr>`;
+    list.innerHTML = `<tr><td colspan="7" style="text-align:center;">No customers found for your shop.</td></tr>`;
     return;
   }
 
@@ -150,16 +149,13 @@ async function loadCustomers() {
       <td>${c["GST"] || ""}</td>
       <td>${c["Added by"]}</td>
       <td>${c["Date"]}</td>
-      <td>${
-        userRole === "Manager" 
-        ? `<button class="edit-btn" onclick="editCustomer(${c.id}, '${c["Costomer Name"]}', '${c["Mobile"]}', '${c["Address"]}', '${c["GST"] || ""}')">Edit</button>` 
-        : "-"
-      }</td>
+      ${role.toLowerCase() === "manager" ? `<td><button class="edit-btn" onclick="editCustomer(${c.id})">Edit</button></td>` : ""}
     `;
     list.appendChild(row);
   });
 }
 
+// 🔹 Step 3: Add New Customer
 async function addCustomer() {
   const name = document.getElementById("name").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
@@ -171,13 +167,11 @@ async function addCustomer() {
     return;
   }
 
-  const res = await fetch(CUSTOMER_API, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
+  const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
   const data = await res.json();
   const existing = data.results.find(c => c.Mobile === mobile && c.ShopID == shopID);
   if (existing) {
-    alert("Customer with this mobile number already exists!");
+    alert("Customer with this mobile number already exists in your shop!");
     return;
   }
 
@@ -201,31 +195,17 @@ async function addCustomer() {
   });
 
   alert("Customer added successfully!");
-  resetForm();
+  document.getElementById("name").value = "";
+  document.getElementById("mobile").value = "";
+  document.getElementById("address").value = "";
+  document.getElementById("gst").value = "";
   loadCustomers();
 }
 
-function editCustomer(id, name, mobile, address, gst) {
-  document.getElementById("editId").value = id;
-  document.getElementById("name").value = name;
-  document.getElementById("mobile").value = mobile;
-  document.getElementById("address").value = address;
-  document.getElementById("gst").value = gst;
-  document.getElementById("saveBtn").style.display = "none";
-  document.getElementById("updateBtn").style.display = "inline-block";
-}
-
-async function updateCustomer() {
-  const id = document.getElementById("editId").value;
-  const name = document.getElementById("name").value.trim();
-  const mobile = document.getElementById("mobile").value.trim();
-  const address = document.getElementById("address").value.trim();
-  const gst = document.getElementById("gst").value.trim();
-
-  if (!name || !mobile || !address) {
-    alert("Please fill all required fields!");
-    return;
-  }
+// 🔹 Step 4: Edit Customer
+async function editCustomer(id) {
+  const newAddress = prompt("Enter new address:");
+  if (!newAddress) return;
 
   await fetch(`https://api.baserow.io/api/database/rows/table/736204/${id}/?user_field_names=true`, {
     method: "PATCH",
@@ -233,29 +213,13 @@ async function updateCustomer() {
       "Authorization": `Token ${API_KEY}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      "Costomer Name": name,
-      "Mobile": mobile,
-      "Address": address,
-      "GST": gst
-    })
+    body: JSON.stringify({ "Address": newAddress })
   });
-
   alert("Customer updated successfully!");
-  resetForm();
   loadCustomers();
 }
 
-function resetForm() {
-  document.getElementById("editId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("mobile").value = "";
-  document.getElementById("address").value = "";
-  document.getElementById("gst").value = "";
-  document.getElementById("saveBtn").style.display = "inline-block";
-  document.getElementById("updateBtn").style.display = "none";
-}
-
+// 🔹 Step 5: Search Filter
 function filterList() {
   const input = document.getElementById("search").value.toLowerCase();
   const rows = document.querySelectorAll("#customerList tr");
@@ -266,8 +230,12 @@ function filterList() {
   });
 }
 
-setInterval(loadCustomers, 5000);
-checkUserRole();
+// Run
+(async () => {
+  await getUserRole();
+  await loadCustomers();
+  setInterval(loadCustomers, 5000);
+})();
 </script>
 
 </body>
