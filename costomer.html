@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Database</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f6fa;
+    padding: 20px;
+  }
+  h2 {
+    text-align: center;
+    color: #2f3640;
+  }
+  .form-container, .list-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  input, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  button {
+    background: #0984e3;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #74b9ff;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #dcdde1;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background: #f1f2f6;
+  }
+  #search {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .edit-btn {
+    background: #00b894;
+  }
+  .edit-btn:hover {
+    background: #55efc4;
+  }
+</style>
+</head>
+<body>
+
+<h2>Customer Database</h2>
+
+<div class="form-container" id="formContainer">
+  <h3>Add / Edit Customer</h3>
+  <input type="hidden" id="editId">
+  <input type="text" id="name" placeholder="Customer Name" required><br>
+  <input type="text" id="mobile" placeholder="Mobile Number" required><br>
+  <input type="text" id="address" placeholder="Address" required><br>
+  <input type="text" id="gst" placeholder="GST (optional)"><br>
+  <button id="saveBtn" onclick="addCustomer()">Add Customer</button>
+  <button id="updateBtn" style="display:none;" onclick="updateCustomer()">Update</button>
+</div>
+
+<div class="list-container">
+  <h3>Customer List</h3>
+  <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
+  <table id="customerTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Address</th>
+        <th>GST</th>
+        <th>Added By</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="customerList">
+      <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+const CUSTOMER_API = "https://api.baserow.io/api/database/rows/table/736204/?user_field_names=true";
+const USERS_API = "https://api.baserow.io/api/database/rows/table/729979/?user_field_names=true";
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+
+const shopID = localStorage.getItem("ShopIDTag");
+const addedBy = localStorage.getItem("NameTag");
+const mobileTag = localStorage.getItem("MobileTag");
+
+let userRole = "Staff"; // default view-only
+
+async function checkUserRole() {
+  try {
+    const res = await fetch(USERS_API, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const data = await res.json();
+    const user = data.results.find(u => u.User == mobileTag);
+    if (user && user.Role === "Manager") {
+      userRole = "Manager";
+    } else {
+      userRole = "Staff";
+      document.getElementById("formContainer").style.display = "none";
+    }
+    loadCustomers();
+  } catch (e) {
+    console.error("Error checking user role:", e);
+  }
+}
+
+async function loadCustomers() {
+  const res = await fetch(CUSTOMER_API, {
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
+  const data = await res.json();
+  const customers = data.results.filter(c => c.ShopID == shopID);
+  
+  const list = document.getElementById("customerList");
+  list.innerHTML = "";
+
+  if (customers.length === 0) {
+    list.innerHTML = `<tr><td colspan="7" style="text-align:center;">No customers found.</td></tr>`;
+    return;
+  }
+
+  customers.forEach(c => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${c["Costomer Name"]}</td>
+      <td>${c["Mobile"]}</td>
+      <td>${c["Address"]}</td>
+      <td>${c["GST"] || ""}</td>
+      <td>${c["Added by"]}</td>
+      <td>${c["Date"]}</td>
+      <td>${
+        userRole === "Manager" 
+        ? `<button class="edit-btn" onclick="editCustomer(${c.id}, '${c["Costomer Name"]}', '${c["Mobile"]}', '${c["Address"]}', '${c["GST"] || ""}')">Edit</button>` 
+        : "-"
+      }</td>
+    `;
+    list.appendChild(row);
+  });
+}
+
+async function addCustomer() {
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const gst = document.getElementById("gst").value.trim();
+
+  if (!name || !mobile || !address) {
+    alert("Please fill all required fields!");
+    return;
+  }
+
+  const res = await fetch(CUSTOMER_API, {
+    headers: { Authorization: `Token ${API_KEY}` }
+  });
+  const data = await res.json();
+  const existing = data.results.find(c => c.Mobile === mobile && c.ShopID == shopID);
+  if (existing) {
+    alert("Customer with this mobile number already exists!");
+    return;
+  }
+
+  const today = new Date().toLocaleDateString();
+
+  await fetch(CUSTOMER_API, {
+    method: "POST",
+    headers: {
+      "Authorization": `Token ${API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "Costomer Name": name,
+      "Mobile": mobile,
+      "Address": address,
+      "GST": gst,
+      "Added by": addedBy || "Unknown",
+      "Date": today,
+      "ShopID": shopID
+    })
+  });
+
+  alert("Customer added successfully!");
+  resetForm();
+  loadCustomers();
+}
+
+function editCustomer(id, name, mobile, address, gst) {
+  document.getElementById("editId").value = id;
+  document.getElementById("name").value = name;
+  document.getElementById("mobile").value = mobile;
+  document.getElementById("address").value = address;
+  document.getElementById("gst").value = gst;
+  document.getElementById("saveBtn").style.display = "none";
+  document.getElementById("updateBtn").style.display = "inline-block";
+}
+
+async function updateCustomer() {
+  const id = document.getElementById("editId").value;
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const gst = document.getElementById("gst").value.trim();
+
+  if (!name || !mobile || !address) {
+    alert("Please fill all required fields!");
+    return;
+  }
+
+  await fetch(`https://api.baserow.io/api/database/rows/table/736204/${id}/?user_field_names=true`, {
+    method: "PATCH",
+    headers: {
+      "Authorization": `Token ${API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "Costomer Name": name,
+      "Mobile": mobile,
+      "Address": address,
+      "GST": gst
+    })
+  });
+
+  alert("Customer updated successfully!");
+  resetForm();
+  loadCustomers();
+}
+
+function resetForm() {
+  document.getElementById("editId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("mobile").value = "";
+  document.getElementById("address").value = "";
+  document.getElementById("gst").value = "";
+  document.getElementById("saveBtn").style.display = "inline-block";
+  document.getElementById("updateBtn").style.display = "none";
+}
+
+function filterList() {
+  const input = document.getElementById("search").value.toLowerCase();
+  const rows = document.querySelectorAll("#customerList tr");
+  rows.forEach(row => {
+    const name = row.children[0].textContent.toLowerCase();
+    const mobile = row.children[1].textContent.toLowerCase();
+    row.style.display = name.includes(input) || mobile.includes(input) ? "" : "none";
+  });
+}
+
+setInterval(loadCustomers, 5000);
+checkUserRole();
+</script>
+
+</body>
+</html>
