@@ -39,6 +39,69 @@
     width: 100%;
   }
 
+  /* Login Redirect Overlay */
+  .login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+  }
+
+  .login-message {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 40px 30px;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .login-message i {
+    font-size: 4rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+  }
+
+  .login-message h2 {
+    color: var(--dark);
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+  }
+
+  .login-message p {
+    color: var(--gray);
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+  }
+
+  .login-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .login-btn:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+  }
+
   /* Responsive text scaling */
   h2 {
     text-align: center;
@@ -487,42 +550,57 @@
 </head>
 <body>
 
-<h2><i class="fas fa-users"></i> Customer Database</h2>
-
-<div class="card" id="addForm">
-  <div class="card-header">
-    <i class="fas fa-user-plus"></i> Add New Customer
-    <span class="role-badge role-staff" id="userRoleBadge">Staff</span>
-  </div>
-  <div class="card-body">
-    <button class="btn btn-primary" onclick="openModal()">
-      <i class="fas fa-plus-circle"></i> Add New Customer
+<!-- Login Redirect Overlay -->
+<div id="loginOverlay" class="login-overlay" style="display: none;">
+  <div class="login-message">
+    <i class="fas fa-exclamation-circle"></i>
+    <h2>Authentication Required</h2>
+    <p>You need to be logged in to access the Customer Database. Please log in to continue.</p>
+    <button class="login-btn" onclick="redirectToLogin()">
+      <i class="fas fa-sign-in-alt"></i>
+      Go to Login
     </button>
   </div>
 </div>
 
-<div class="card">
-  <div class="card-header">
-    <i class="fas fa-list"></i> Customer List
-  </div>
-  <div class="card-body">
-    <div class="search-container">
-      <div class="search-box">
-        <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
-      </div>
-      <div class="date-filter">
-        <input type="date" id="fromDate" class="date-input" onchange="filterList()">
-        <span>to</span>
-        <input type="date" id="toDate" class="date-input" onchange="filterList()">
-        <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">
-          <i class="fas fa-times"></i> Clear
-        </button>
-      </div>
+<div id="mainContent">
+  <h2><i class="fas fa-users"></i> Customer Database</h2>
+
+  <div class="card" id="addForm">
+    <div class="card-header">
+      <i class="fas fa-user-plus"></i> Add New Customer
+      <span class="role-badge role-staff" id="userRoleBadge">Staff</span>
     </div>
-    
-    <div id="customerListContainer">
-      <div class="loading">
-        <i class="fas fa-spinner fa-spin"></i> Loading customers...
+    <div class="card-body">
+      <button class="btn btn-primary" onclick="openModal()">
+        <i class="fas fa-plus-circle"></i> Add New Customer
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="fas fa-list"></i> Customer List
+    </div>
+    <div class="card-body">
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" id="search" placeholder="Search by Name or Mobile..." onkeyup="filterList()">
+        </div>
+        <div class="date-filter">
+          <input type="date" id="fromDate" class="date-input" onchange="filterList()">
+          <span>to</span>
+          <input type="date" id="toDate" class="date-input" onchange="filterList()">
+          <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">
+            <i class="fas fa-times"></i> Clear
+          </button>
+        </div>
+      </div>
+      
+      <div id="customerListContainer">
+        <div class="loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading customers...
+        </div>
       </div>
     </div>
   </div>
@@ -612,6 +690,30 @@ let role = "Staff"; // default
 let allCustomers = [];
 let currentEditId = null;
 
+// Check if user is logged in
+function checkAuthentication() {
+  const shopID = localStorage.getItem("ShopIDTag");
+  const nameTag = localStorage.getItem("NameTag");
+  const mobileTag = localStorage.getItem("MobileTag");
+  
+  if (!shopID || !nameTag || !mobileTag) {
+    // Show login overlay and hide main content
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+    return false;
+  }
+  
+  // Hide login overlay and show main content
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  return true;
+}
+
+// Redirect to login page
+function redirectToLogin() {
+  window.location.href = 'login.html';
+}
+
 // Set default date range to last 30 days
 function setDefaultDateRange() {
   const today = new Date();
@@ -624,6 +726,11 @@ function setDefaultDateRange() {
 
 // 🔹 Step 1: Get Role from Users Table
 async function getUserRole() {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+
   try {
     const res = await fetch(USERS_API, { headers: { Authorization: `Token ${API_KEY}` } });
     const data = await res.json();
@@ -637,8 +744,6 @@ async function getUserRole() {
     roleBadge.textContent = role;
     roleBadge.className = `role-badge role-${role.toLowerCase()}`;
     
-    // Staff can add customers but not edit/delete
-    // No need to hide the add form for staff
   } catch (err) {
     console.error("Error fetching role:", err);
   }
@@ -646,6 +751,11 @@ async function getUserRole() {
 
 // 🔹 Step 2: Load Customers
 async function loadCustomers() {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+
   try {
     const res = await fetch(CUSTOMER_API, { headers: { Authorization: `Token ${API_KEY}` } });
     const data = await res.json();
@@ -757,6 +867,11 @@ function toggleCustomerCard(card) {
 
 // 🔹 Step 3: Add New Customer
 async function addCustomer() {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+
   const name = document.getElementById("name").value.trim();
   const mobile = document.getElementById("mobile").value.trim();
   const address = document.getElementById("address").value.trim();
@@ -806,6 +921,11 @@ async function addCustomer() {
 
 // 🔹 Step 4: Edit Customer (Manager only)
 function editCustomer(id) {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+
   // Only managers can edit
   if (role.toLowerCase() !== "manager") {
     alert("Only managers can edit customer information.");
@@ -826,6 +946,11 @@ function editCustomer(id) {
 
 // Save edited customer (Manager only)
 async function saveCustomer() {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+
   // Only managers can save edits
   if (role.toLowerCase() !== "manager") {
     alert("Only managers can edit customer information.");
@@ -885,6 +1010,11 @@ async function saveCustomer() {
 
 // 🔹 Delete Customer (Manager only)
 async function deleteCustomer(id) {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+
   // Only managers can delete
   if (role.toLowerCase() !== "manager") {
     alert("Only managers can delete customers.");
@@ -949,6 +1079,11 @@ function clearDateFilter() {
 
 // Modal functions
 function openModal() {
+  // Check authentication first
+  if (!checkAuthentication()) {
+    return;
+  }
+  
   document.getElementById("customerModal").style.display = "flex";
 }
 
@@ -981,6 +1116,11 @@ function whatsappCustomer(mobile) {
 
 // Run
 (async () => {
+  // Check authentication on page load
+  if (!checkAuthentication()) {
+    return;
+  }
+  
   await getUserRole();
   setDefaultDateRange();
   await loadCustomers();
