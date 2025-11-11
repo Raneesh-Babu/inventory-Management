@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Customer Database</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
     --primary: #4361ee;
@@ -17,7 +18,7 @@
     --dark: #212529;
     --gray: #6c757d;
     --gray-light: #e9ecef;
-    --border-radius: 10px;
+    --border-radius: 12px;
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
   }
@@ -56,13 +57,13 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     overflow: hidden;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
     transition: var(--transition);
   }
 
   .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   }
 
   .card-header {
@@ -78,9 +79,11 @@
   }
 
   .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
     font-weight: 600;
@@ -129,14 +132,8 @@
   }
 
   .btn-sm {
-    padding: 6px 12px;
+    padding: 8px 15px;
     font-size: 0.85rem;
-  }
-
-  .btn-icon {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
   }
 
   .form-group {
@@ -194,7 +191,7 @@
 
   .action-buttons {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
     margin-top: 15px;
   }
@@ -236,12 +233,17 @@
   }
 
   .customer-header {
-    padding: 15px 20px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: white;
-    border-bottom: 1px solid var(--gray-light);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: var(--transition);
+  }
+
+  .customer-card.expanded .customer-header {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
   }
 
   .customer-main-info {
@@ -253,17 +255,15 @@
   .customer-name {
     font-weight: 600;
     font-size: 1.1rem;
-    color: var(--dark);
   }
 
   .customer-mobile {
-    color: var(--gray);
     font-size: 0.95rem;
+    opacity: 0.9;
   }
 
   .expand-icon {
     font-size: 1.2rem;
-    color: var(--gray);
     transition: var(--transition);
   }
 
@@ -272,7 +272,7 @@
     max-height: 0;
     overflow: hidden;
     transition: var(--transition);
-    background: var(--light);
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
   }
 
   .customer-card.expanded .customer-details {
@@ -286,18 +286,30 @@
 
   .detail-row {
     display: flex;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+
+  .detail-icon {
+    width: 24px;
+    margin-right: 10px;
+    text-align: center;
+    color: var(--primary);
+  }
+
+  .detail-content {
+    flex: 1;
   }
 
   .detail-label {
     font-weight: 600;
-    min-width: 100px;
     color: var(--dark);
+    font-size: 0.9rem;
   }
 
   .detail-value {
-    flex: 1;
     color: var(--gray);
+    margin-top: 2px;
   }
 
   /* Modal Styles */
@@ -394,8 +406,8 @@
       gap: 5px;
     }
     
-    .detail-label {
-      min-width: auto;
+    .detail-icon {
+      margin-right: 0;
     }
   }
 
@@ -430,20 +442,22 @@
 <body>
 
 <div class="container">
-  <h2>Customer Database</h2>
+  <h2><i class="fas fa-users"></i> Customer Database</h2>
 
   <div class="card" id="addForm">
     <div class="card-header">
-      Add New Customer
+      <i class="fas fa-user-plus"></i> Add New Customer
     </div>
     <div class="card-body">
-      <button class="btn btn-primary" onclick="openModal()">+ Add New Customer</button>
+      <button class="btn btn-primary" onclick="openModal()">
+        <i class="fas fa-plus-circle"></i> Add New Customer
+      </button>
     </div>
   </div>
 
   <div class="card">
     <div class="card-header">
-      Customer List
+      <i class="fas fa-list"></i> Customer List
     </div>
     <div class="card-body">
       <div class="search-container">
@@ -454,12 +468,16 @@
           <input type="date" id="fromDate" class="date-input" onchange="filterList()">
           <span>to</span>
           <input type="date" id="toDate" class="date-input" onchange="filterList()">
-          <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">Clear</button>
+          <button class="btn btn-primary btn-sm" onclick="clearDateFilter()">
+            <i class="fas fa-times"></i> Clear
+          </button>
         </div>
       </div>
       
       <div id="customerListContainer">
-        <div class="loading">Loading customers...</div>
+        <div class="loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading customers...
+        </div>
       </div>
     </div>
   </div>
@@ -469,30 +487,34 @@
 <div id="customerModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 class="modal-title">Add New Customer</h3>
+      <h3 class="modal-title"><i class="fas fa-user-plus"></i> Add New Customer</h3>
       <button class="close-btn" onclick="closeModal()">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label for="name">Customer Name *</label>
+        <label for="name"><i class="fas fa-user"></i> Customer Name *</label>
         <input type="text" id="name" placeholder="Enter customer name" required>
       </div>
       <div class="form-group">
-        <label for="mobile">Mobile Number *</label>
+        <label for="mobile"><i class="fas fa-mobile-alt"></i> Mobile Number *</label>
         <input type="number" id="mobile" placeholder="Enter mobile number" required>
       </div>
       <div class="form-group">
-        <label for="address">Address *</label>
+        <label for="address"><i class="fas fa-map-marker-alt"></i> Address *</label>
         <textarea id="address" placeholder="Enter customer address" required></textarea>
       </div>
       <div class="form-group">
-        <label for="gst">GST (optional)</label>
+        <label for="gst"><i class="fas fa-file-invoice"></i> GST (optional)</label>
         <input type="text" id="gst" placeholder="Enter GST number">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-success" onclick="addCustomer()">Add Customer</button>
+      <button class="btn btn-danger" onclick="closeModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button class="btn btn-success" onclick="addCustomer()">
+        <i class="fas fa-check"></i> Add Customer
+      </button>
     </div>
   </div>
 </div>
@@ -501,30 +523,34 @@
 <div id="editModal" class="modal">
   <div class="modal-content edit-modal-content">
     <div class="modal-header">
-      <h3 class="modal-title">Edit Customer</h3>
+      <h3 class="modal-title"><i class="fas fa-edit"></i> Edit Customer</h3>
       <button class="close-btn" onclick="closeEditModal()">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label for="editName">Customer Name *</label>
+        <label for="editName"><i class="fas fa-user"></i> Customer Name *</label>
         <input type="text" id="editName" required>
       </div>
       <div class="form-group">
-        <label for="editMobile">Mobile Number *</label>
+        <label for="editMobile"><i class="fas fa-mobile-alt"></i> Mobile Number *</label>
         <input type="number" id="editMobile" required>
       </div>
       <div class="form-group">
-        <label for="editAddress">Address *</label>
+        <label for="editAddress"><i class="fas fa-map-marker-alt"></i> Address *</label>
         <textarea id="editAddress" required></textarea>
       </div>
       <div class="form-group">
-        <label for="editGst">GST</label>
+        <label for="editGst"><i class="fas fa-file-invoice"></i> GST</label>
         <input type="text" id="editGst">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger" onclick="closeEditModal()">Cancel</button>
-      <button class="btn btn-success" onclick="saveCustomer()">Save Changes</button>
+      <button class="btn btn-danger" onclick="closeEditModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button class="btn btn-success" onclick="saveCustomer()">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
     </div>
   </div>
 </div>
@@ -567,7 +593,10 @@ async function loadCustomers() {
     renderCustomerList(allCustomers);
   } catch (error) {
     console.error("Error loading customers:", error);
-    document.getElementById("customerListContainer").innerHTML = `<div class="empty-state">Error loading customers. Please try again.</div>`;
+    document.getElementById("customerListContainer").innerHTML = `<div class="empty-state">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>Error loading customers. Please try again.</div>
+    </div>`;
   }
 }
 
@@ -577,6 +606,7 @@ function renderCustomerList(customers) {
   
   if (customers.length === 0) {
     container.innerHTML = `<div class="empty-state">
+      <i class="fas fa-user-slash"></i>
       <div>No customers found</div>
       <small>Try adjusting your search or add a new customer</small>
     </div>`;
@@ -599,32 +629,52 @@ function renderCustomerList(customers) {
           <div class="customer-name">${c["Costomer Name"]}</div>
           <div class="customer-mobile">${c["Mobile"]}</div>
         </div>
-        <div class="expand-icon">▼</div>
+        <div class="expand-icon"><i class="fas fa-chevron-down"></i></div>
       </div>
       <div class="customer-details">
         <div class="detail-row">
-          <div class="detail-label">Address:</div>
-          <div class="detail-value">${c["Address"]}</div>
+          <div class="detail-icon"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="detail-content">
+            <div class="detail-label">Address</div>
+            <div class="detail-value">${c["Address"]}</div>
+          </div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">GST:</div>
-          <div class="detail-value">${c["GST"] || "Nil"}</div>
+          <div class="detail-icon"><i class="fas fa-file-invoice"></i></div>
+          <div class="detail-content">
+            <div class="detail-label">GST</div>
+            <div class="detail-value">${c["GST"] || "Nil"}</div>
+          </div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">Added By:</div>
-          <div class="detail-value">${c["Added by"]}</div>
+          <div class="detail-icon"><i class="fas fa-user-plus"></i></div>
+          <div class="detail-content">
+            <div class="detail-label">Added By</div>
+            <div class="detail-value">${c["Added by"]}</div>
+          </div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">Date:</div>
-          <div class="detail-value">${formattedDate}</div>
+          <div class="detail-icon"><i class="fas fa-calendar-alt"></i></div>
+          <div class="detail-content">
+            <div class="detail-label">Date</div>
+            <div class="detail-value">${formattedDate}</div>
+          </div>
         </div>
         <div class="action-buttons">
           ${role.toLowerCase() === "manager" ? `
-            <button class="btn btn-warning btn-sm btn-icon" onclick="event.stopPropagation(); editCustomer(${c.id})">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm btn-icon" onclick="event.stopPropagation(); deleteCustomer(${c.id})">🗑️ Delete</button>
+            <button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); editCustomer(${c.id})">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteCustomer(${c.id})">
+              <i class="fas fa-trash-alt"></i> Delete
+            </button>
           ` : ""}
-          <button class="btn btn-primary btn-sm btn-icon call-btn" onclick="event.stopPropagation(); callCustomer('${c["Mobile"]}')">📞 Call</button>
-          <button class="btn btn-success btn-sm btn-icon whatsapp-btn" onclick="event.stopPropagation(); whatsappCustomer('${c["Mobile"]}')">💬 WhatsApp</button>
+          <button class="btn btn-primary btn-sm call-btn" onclick="event.stopPropagation(); callCustomer('${c["Mobile"]}')">
+            <i class="fas fa-phone-alt"></i> Call
+          </button>
+          <button class="btn btn-success btn-sm whatsapp-btn" onclick="event.stopPropagation(); whatsappCustomer('${c["Mobile"]}')">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </button>
         </div>
       </div>
     `;
