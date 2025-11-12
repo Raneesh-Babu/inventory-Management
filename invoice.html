@@ -198,26 +198,25 @@ window.onload = () => {
   }
 };
 
-// Load invoice function
+// Load invoice function with ShopIDTag validation
 async function loadInvoice() {
   const inv = document.getElementById("invoiceInput").value.trim();
   if (!inv) return alert("Enter Invoice Number");
 
-  currentInvoice = inv;
   const shopIdTag = localStorage.getItem("ShopIDTag");
   if (!shopIdTag) return alert("ShopIDTag not found in localStorage");
 
-  // Fetch Sales Table rows for this invoice
+  // Fetch invoice rows from Sales Table
   const salesResp = await fetch(`https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/?user_field_names=true&filter__field=Invoice Number__equal=${inv}`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
   const salesData = await salesResp.json();
   if (!salesData.results.length) return alert("Invoice not found");
 
-  // Get ShopID from the first row
+  // Take ShopID from Sales Table and compare
   const shopIdFromSales = salesData.results[0].ShopID;
   if (shopIdTag !== shopIdFromSales) {
-    return alert("Access denied: ShopID does not match local ShopIDTag");
+    return alert(`Access denied! ShopIDTag (${shopIdTag}) does not match ShopID (${shopIdFromSales}) in Sales Table.`);
   }
 
   // Populate invoice header & customer info
