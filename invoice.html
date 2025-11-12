@@ -381,11 +381,11 @@
 
     function loadShopInfo() {
       const shopIDTag = localStorage.getItem("ShopIDTag");
-      const shopName = localStorage.getItem("ShopName") || "Your Shop";
+      const shopTag = localStorage.getItem("ShopTag") || "Your Shop";
       
       if (shopIDTag) {
         document.getElementById('shopTag').textContent = shopIDTag;
-        document.getElementById('shopName').textContent = shopName;
+        document.getElementById('shopName').textContent = shopTag;
       } else {
         document.getElementById('shopTag').textContent = "Not Set";
         document.getElementById('shopName').textContent = "Please Set Shop Information";
@@ -562,7 +562,7 @@
     // Demo function to set shop info (for testing)
     function setDemoShopInfo() {
       localStorage.setItem("ShopIDTag", "SHOP001");
-      localStorage.setItem("ShopName", "Premium Electronics Store");
+      localStorage.setItem("ShopTag", "Premium Electronics Store");
       loadShopInfo();
       document.getElementById("successMsg").innerText = "✅ Demo shop information set!";
     }
