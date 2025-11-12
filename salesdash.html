@@ -497,6 +497,19 @@
       border-bottom: none;
     }
     
+    .invoice-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .invoice-link:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+    
     .expand-icon {
       transition: transform 0.3s ease;
       margin-right: 8px;
@@ -603,16 +616,27 @@
       animation: modalFadeIn 0.3s ease;
     }
     
+    .invoice-modal-content {
+      width: 95%;
+      max-width: 1000px;
+      height: 90vh;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    
     @keyframes modalFadeIn {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
     }
     
     .modal-header {
+      padding: 18px 22px;
+      background: var(--light);
+      border-bottom: 1px solid var(--gray-light);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
     }
     
     .modal-title {
@@ -632,6 +656,19 @@
     
     .close-btn:hover {
       color: var(--dark);
+    }
+    
+    .modal-body {
+      flex: 1;
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    .invoice-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
     }
     
     .form-group {
@@ -771,6 +808,11 @@
       .modal-content {
         width: 95%;
         padding: 20px;
+      }
+      
+      .invoice-modal-content {
+        width: 98%;
+        height: 85vh;
       }
     }
   </style>
@@ -975,6 +1017,19 @@
     </div>
   </div>
 
+  <!-- Invoice View Modal -->
+  <div class="modal" id="invoiceModal">
+    <div class="modal-content invoice-modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="invoiceModalTitle">Invoice Details</div>
+        <button class="close-btn" id="closeInvoiceModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="invoiceIframe" class="invoice-iframe" src=""></iframe>
+      </div>
+    </div>
+  </div>
+
   <script>
     const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
     const salesTableId = 736209;
@@ -1007,6 +1062,9 @@
       document.getElementById('closeModal').addEventListener('click', closeModal);
       document.getElementById('cancelEdit').addEventListener('click', closeModal);
       document.getElementById('saveTag').addEventListener('click', updateInvoiceTag);
+      
+      // Invoice modal event listeners
+      document.getElementById('closeInvoiceModal').addEventListener('click', closeInvoiceModal);
     });
 
     function setDefaultDateRange() {
@@ -1363,7 +1421,7 @@
           <td>${formatCurrency(invoice.total)}</td>
           <td><span class="tag ${getTagClass(invoice.tag)}">${getTagDisplayName(invoice.tag)}</span></td>
           <td>
-            <button class="view-btn" onclick="viewInvoice('${invoice.invoiceNumber}')">View</button>
+            <button class="view-btn" onclick="viewInvoiceInModal('${invoice.invoiceNumber}')">View</button>
             <button class="edit-btn" onclick="openEditModal('${invoice.invoiceNumber}')">Edit Tag</button>
           </td>
         `;
@@ -1451,6 +1509,7 @@
                   <th>Quantity</th>
                   <th>Price</th>
                   <th>Total</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -1462,11 +1521,20 @@
         sortedInvoices.forEach(invoice => {
           html += `
             <tr>
-              <td>${invoice.invoiceNumber}</td>
+              <td>
+                <span class="invoice-link" onclick="viewInvoiceInModal('${invoice.invoiceNumber}')">
+                  ${invoice.invoiceNumber}
+                </span>
+              </td>
               <td>${formatDate(invoice.date)}</td>
               <td>${invoice.quantity}</td>
               <td>${formatCurrency(invoice.price)}</td>
               <td>${formatCurrency(invoice.total)}</td>
+              <td>
+                <button class="view-btn" onclick="viewInvoiceInModal('${invoice.invoiceNumber}')">
+                  <i class="fas fa-eye"></i> View
+                </button>
+              </td>
             </tr>
           `;
         });
@@ -1479,6 +1547,7 @@
                   <td>${batch.quantity}</td>
                   <td></td>
                   <td>${formatCurrency(batch.total)}</td>
+                  <td></td>
                 </tr>
               </tfoot>
             </table>
@@ -1565,13 +1634,25 @@
         return;
       }
       
-      // Redirect to invoice.html with the invoice number as a parameter
-      window.open(`invoice.html?invoice=${invoiceNumber}`, '_blank');
+      viewInvoiceInModal(invoiceNumber);
     }
 
-    function viewInvoice(invoiceNumber) {
-      // Redirect to invoice.html with the invoice number as a parameter
-      window.open(`invoice.html?invoice=${invoiceNumber}`, '_blank');
+    function viewInvoiceInModal(invoiceNumber) {
+      // Set modal title
+      document.getElementById('invoiceModalTitle').textContent = `Invoice: ${invoiceNumber}`;
+      
+      // Set iframe source
+      const iframe = document.getElementById('invoiceIframe');
+      iframe.src = `invoice.html?invoice=${invoiceNumber}`;
+      
+      // Show modal
+      document.getElementById('invoiceModal').style.display = 'flex';
+    }
+
+    function closeInvoiceModal() {
+      document.getElementById('invoiceModal').style.display = 'none';
+      const iframe = document.getElementById('invoiceIframe');
+      iframe.src = '';
     }
 
     function openEditModal(invoiceNumber) {
