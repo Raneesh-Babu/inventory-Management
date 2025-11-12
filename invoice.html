@@ -11,7 +11,7 @@
       padding: 20px;
     }
     .invoice-container {
-      max-width: 800px;
+      max-width: 900px;
       background: white;
       margin: 30px auto;
       padding: 25px;
@@ -27,7 +27,7 @@
       margin-bottom: 20px;
     }
     input[type="text"] {
-      width: 250px;
+      width: 300px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
@@ -44,10 +44,24 @@
     button:hover {
       background-color: #0056b3;
     }
-    .details {
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-top: 20px;
-      border-top: 2px solid #007bff;
-      padding-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+    .summary {
+      text-align: right;
+      margin-top: 15px;
+      font-weight: bold;
     }
     .details div {
       margin-bottom: 8px;
@@ -64,6 +78,25 @@
       text-align: center;
       margin-top: 10px;
     }
+    .print-btn {
+      display: block;
+      margin: 20px auto;
+      background-color: #28a745;
+    }
+    .print-btn:hover {
+      background-color: #1e7e34;
+    }
+    @media print {
+      .input-group, .print-btn {
+        display: none;
+      }
+      body {
+        background: white;
+      }
+      .invoice-container {
+        box-shadow: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -78,21 +111,35 @@
 
     <div id="errorMsg" class="error"></div>
     <div id="invoiceDetails" class="details"></div>
+
+    <div id="itemsTable"></div>
+    <div id="totalAmount" class="summary"></div>
+
+    <button id="printBtn" class="print-btn" style="display:none;" onclick="window.print()">🖨 Print / Save PDF</button>
   </div>
 
   <script>
     const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-    const tableId = 736209;
-    const apiUrl = `https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true`;
+    const salesTableId = 736209;
+    const productTableId = 734793;
+
+    const salesUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/?user_field_names=true`;
+    const productUrl = `https://api.baserow.io/api/database/rows/table/${productTableId}/?user_field_names=true`;
 
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
       const detailsDiv = document.getElementById("invoiceDetails");
       const errorDiv = document.getElementById("errorMsg");
+      const itemsDiv = document.getElementById("itemsTable");
+      const totalDiv = document.getElementById("totalAmount");
+      const printBtn = document.getElementById("printBtn");
 
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
+      itemsDiv.innerHTML = "";
+      totalDiv.innerText = "";
+      printBtn.style.display = "none";
 
       if (!invoiceNumber) {
         errorDiv.innerText = "⚠️ Please enter an invoice number.";
@@ -105,19 +152,31 @@
       }
 
       try {
-        const response = await fetch(apiUrl, {
+        // Fetch Product Table for mapping
+        const productResponse = await fetch(productUrl, {
           headers: { Authorization: `Token ${apiKey}` }
         });
-        const data = await response.json();
-        const rows = data.results;
+        const productData = await productResponse.json();
 
-        const invoice = rows.find(row => row["Invoice Number"] === invoiceNumber && row["ShopID"] === shopIDTag);
+        // Fetch Sales Table
+        const salesResponse = await fetch(salesUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const salesData = await salesResponse.json();
 
-        if (!invoice) {
+        const invoiceRows = salesData.results.filter(
+          row => row["Invoice Number"] === invoiceNumber && row["ShopID"] === shopIDTag
+        );
+
+        if (invoiceRows.length === 0) {
           errorDiv.innerText = "❌ No invoice found for this number or invalid ShopID.";
           return;
         }
 
+        // Basic customer info from first row
+        const invoice = invoiceRows[0];
+
+        // Customer Details
         detailsDiv.innerHTML = `
           <div><span class="label">Invoice Number:</span> <span class="value">${invoice["Invoice Number"]}</span></div>
           <div><span class="label">Customer Name:</span> <span class="value">${invoice["Costomer Name"]}</span></div>
@@ -125,14 +184,52 @@
           <div><span class="label">Address:</span> <span class="value">${invoice["Address"]}</span></div>
           <div><span class="label">GST:</span> <span class="value">${invoice["GST"] || "Nil"}</span></div>
           <div><span class="label">Date:</span> <span class="value">${invoice["Date"]}</span></div>
-          <div><span class="label">Product ID:</span> <span class="value">${invoice["Product ID"]}</span></div>
-          <div><span class="label">Item Name:</span> <span class="value">${invoice["Item Name"]}</span></div>
-          <div><span class="label">Batch No:</span> <span class="value">${invoice["Batch No"]}</span></div>
-          <div><span class="label">Quantity:</span> <span class="value">${invoice["Quantity"]}</span></div>
-          <div><span class="label">Price:</span> <span class="value">${invoice["Price"]}</span></div>
-          <div><span class="label">Tag:</span> <span class="value">${invoice["Tag"]}</span></div>
           <div><span class="label">Sales Person:</span> <span class="value">${invoice["Sales Person"]}</span></div>
         `;
+
+        // Table Header
+        let tableHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Sl. No</th>
+                <th>Product ID</th>
+                <th>Item Name</th>
+                <th>Batch No</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        let grandTotal = 0;
+        invoiceRows.forEach((row, index) => {
+          const product = productData.results.find(
+            p => p["Product ID"] === row["Product ID"]
+          );
+          const productName = product ? product["Product Name"] : "Not Found";
+          const total = (Number(row["Quantity"]) || 0) * (Number(row["Price"]) || 0);
+          grandTotal += total;
+
+          tableHTML += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${row["Product ID"]}</td>
+              <td>${productName}</td>
+              <td>${row["Batch No"]}</td>
+              <td>${row["Quantity"]}</td>
+              <td>${row["Price"]}</td>
+              <td>${total.toFixed(2)}</td>
+            </tr>
+          `;
+        });
+
+        tableHTML += `</tbody></table>`;
+        itemsDiv.innerHTML = tableHTML;
+        totalDiv.innerText = `Grand Total: ₹${grandTotal.toFixed(2)}`;
+        printBtn.style.display = "block";
       } catch (error) {
         console.error(error);
         errorDiv.innerText = "⚠️ Error fetching data. Please try again.";
