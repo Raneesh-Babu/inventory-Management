@@ -329,7 +329,7 @@
         </div>
         <div class="shop-info">
           <div class="shop-name" id="shopName">Loading Shop Name...</div>
-          <div class="shop-tag">Shop Tag: <span id="shopTag">Loading...</span></div>
+          <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
         </div>
       </div>
       <h2>Professional Invoice Viewer</h2>
@@ -360,15 +360,13 @@
     const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
     const salesTableId = 736209;
     const productTableId = 734793;
-    const shopTableId = 734790; // Assuming there's a shop table
 
     const salesUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/?user_field_names=true`;
     const productUrl = `https://api.baserow.io/api/database/rows/table/${productTableId}/?user_field_names=true`;
-    const shopUrl = `https://api.baserow.io/api/database/rows/table/${shopTableId}/?user_field_names=true`;
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
-      // Load shop information from localStorage and API
+      // Load shop information from localStorage
       loadShopInfo();
       
       // Check for invoice parameter in URL
@@ -381,42 +379,22 @@
       }
     });
 
-    async function loadShopInfo() {
-      const shopTag = localStorage.getItem("ShopTag");
+    function loadShopInfo() {
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const shopName = localStorage.getItem("ShopName") || "Your Shop";
       
-      if (!shopTag) {
+      if (shopIDTag) {
+        document.getElementById('shopTag').textContent = shopIDTag;
+        document.getElementById('shopName').textContent = shopName;
+      } else {
         document.getElementById('shopTag').textContent = "Not Set";
-        document.getElementById('shopName').textContent = "Please Set Shop Tag";
-        return;
-      }
-
-      document.getElementById('shopTag').textContent = shopTag;
-      document.getElementById('shopName').textContent = "Loading...";
-
-      try {
-        // Fetch shop information from API using ShopTag
-        const shopResponse = await fetch(shopUrl, {
-          headers: { Authorization: `Token ${apiKey}` }
-        });
-        const shopData = await shopResponse.json();
-
-        // Find the shop with matching ShopTag
-        const shop = shopData.results.find(s => s.ShopTag === shopTag);
-        
-        if (shop) {
-          document.getElementById('shopName').textContent = shop.ShopName || "Shop Name Not Found";
-        } else {
-          document.getElementById('shopName').textContent = "Shop Not Found";
-        }
-      } catch (error) {
-        console.error("Error fetching shop data:", error);
-        document.getElementById('shopName').textContent = "Error Loading Shop";
+        document.getElementById('shopName').textContent = "Please Set Shop Information";
       }
     }
 
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
-      const shopTag = localStorage.getItem("ShopTag");
+      const shopIDTag = localStorage.getItem("ShopIDTag");
       const detailsDiv = document.getElementById("invoiceDetails");
       const errorDiv = document.getElementById("errorMsg");
       const successDiv = document.getElementById("successMsg");
@@ -444,8 +422,8 @@
         return;
       }
 
-      if (!shopTag) {
-        errorDiv.innerText = "⚠️ ShopTag not found in local storage. Please log in first.";
+      if (!shopIDTag) {
+        errorDiv.innerText = "⚠️ ShopIDTag not found in local storage. Please log in first.";
         searchBtn.disabled = false;
         btnText.textContent = "Search Invoice";
         return;
@@ -465,11 +443,11 @@
         const salesData = await salesResponse.json();
 
         const invoiceRows = salesData.results.filter(
-          row => row["Invoice Number"] === invoiceNumber && row["ShopID"] === shopTag
+          row => row["Invoice Number"] === invoiceNumber && row["ShopID"] === shopIDTag
         );
 
         if (invoiceRows.length === 0) {
-          errorDiv.innerText = "❌ No invoice found for this number or invalid Shop Tag.";
+          errorDiv.innerText = "❌ No invoice found for this number or invalid ShopID.";
           searchBtn.disabled = false;
           btnText.textContent = "Search Invoice";
           return;
@@ -583,7 +561,8 @@
     
     // Demo function to set shop info (for testing)
     function setDemoShopInfo() {
-      localStorage.setItem("ShopTag", "SHOP001");
+      localStorage.setItem("ShopIDTag", "SHOP001");
+      localStorage.setItem("ShopName", "Premium Electronics Store");
       loadShopInfo();
       document.getElementById("successMsg").innerText = "✅ Demo shop information set!";
     }
@@ -592,11 +571,8 @@
   <!-- Demo button for testing (remove in production) -->
   <div style="text-align: center; margin-top: 20px;">
     <button onclick="setDemoShopInfo()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-      Set Demo Shop Tag (for testing)
+      Set Demo Shop Info (for testing)
     </button>
-    <p style="margin-top: 10px; color: #6c757d; font-size: 14px;">
-      Note: This sets a demo ShopTag. In production, this would be set during login.
-    </p>
   </div>
 
 </body>
