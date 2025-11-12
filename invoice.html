@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invoice Viewer</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     :root {
       --primary: #4361ee;
@@ -221,62 +220,9 @@
       background-color: rgba(67, 97, 238, 0.05);
     }
     
-    .summary-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 25px;
-      gap: 30px;
-    }
-    
-    .qr-section {
-      flex: 1;
-      max-width: 200px;
-      text-align: center;
-    }
-    
-    .qr-container {
-      background: white;
-      padding: 15px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      margin-bottom: 15px;
-      border: 1px solid var(--gray-light);
-    }
-    
-    #qrCode {
-      width: 150px;
-      height: 150px;
-      margin: 0 auto;
-      display: block;
-    }
-    
-    .copy-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: var(--border-radius);
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 2px 6px rgba(67, 97, 238, 0.3);
-      width: 100%;
-    }
-    
-    .copy-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(67, 97, 238, 0.4);
-    }
-    
-    .copy-btn.copied {
-      background: linear-gradient(135deg, #4cc9f0 0%, #28a745 100%);
-    }
-    
-    .total-section {
-      flex: 1;
+    .summary {
       text-align: right;
+      margin-top: 25px;
       padding: 20px;
       background: var(--light);
       border-radius: var(--border-radius);
@@ -313,7 +259,7 @@
     }
     
     @media print {
-      .search-section, .print-btn, .qr-section {
+      .search-section, .print-btn {
         display: none;
       }
       body {
@@ -358,23 +304,6 @@
         display: block;
         overflow-x: auto;
       }
-      
-      .summary-section {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-      }
-      
-      .qr-section {
-        max-width: 100%;
-        order: 2;
-      }
-      
-      .total-section {
-        order: 1;
-        text-align: center;
-        width: 100%;
-      }
     }
     
     .fade-in {
@@ -399,27 +328,6 @@
     
     @keyframes spin {
       to { transform: rotate(360deg); }
-    }
-    
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--primary);
-      color: white;
-      padding: 12px 20px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      font-weight: 500;
-      z-index: 1000;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.3s ease;
-    }
-    
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
     }
   </style>
 </head>
@@ -454,26 +362,11 @@
       <div id="invoiceDetails" class="invoice-details"></div>
 
       <div id="itemsTable"></div>
-      
-      <div class="summary-section" id="summarySection" style="display: none;">
-        <div class="qr-section">
-          <div class="qr-container">
-            <canvas id="qrCode"></canvas>
-          </div>
-          <button class="copy-btn" id="copyBtn" onclick="copyInvoiceUrl()">
-            📋 Copy Invoice Link
-          </button>
-        </div>
-        <div class="total-section">
-          <div id="totalAmount" class="total-amount"></div>
-        </div>
-      </div>
+      <div id="totalAmount" class="summary"></div>
 
       <button id="printBtn" class="print-btn" style="display:none;" onclick="window.print()">🖨 Print / Save PDF</button>
     </div>
   </div>
-
-  <div class="toast" id="toast">Link copied to clipboard!</div>
 
   <script>
     const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
@@ -580,57 +473,6 @@
       }
     }
 
-    function generateQRCode(url) {
-      const canvas = document.getElementById('qrCode');
-      QRCode.toCanvas(canvas, url, {
-        width: 150,
-        height: 150,
-        margin: 1,
-        color: {
-          dark: '#4361ee',
-          light: '#ffffff'
-        }
-      }, function(error) {
-        if (error) {
-          console.error('QR Code generation error:', error);
-          canvas.getContext('2d').fillText('QR Error', 10, 75);
-        }
-      });
-    }
-
-    function copyInvoiceUrl() {
-      const currentUrl = window.location.href;
-      const copyBtn = document.getElementById('copyBtn');
-      
-      navigator.clipboard.writeText(currentUrl).then(() => {
-        // Show success feedback
-        copyBtn.innerHTML = '✅ Copied!';
-        copyBtn.classList.add('copied');
-        
-        // Show toast notification
-        showToast('Invoice link copied to clipboard!');
-        
-        // Reset button after 2 seconds
-        setTimeout(() => {
-          copyBtn.innerHTML = '📋 Copy Invoice Link';
-          copyBtn.classList.remove('copied');
-        }, 2000);
-      }).catch(err => {
-        console.error('Failed to copy: ', err);
-        showToast('Failed to copy link');
-      });
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
-
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
@@ -642,7 +484,6 @@
       const searchBtn = document.getElementById("searchBtn");
       const btnText = document.getElementById("btnText");
       const invoiceTag = document.getElementById("invoiceTag");
-      const summarySection = document.getElementById("summarySection");
 
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
@@ -650,7 +491,6 @@
       totalDiv.innerText = "";
       printBtn.style.display = "none";
       invoiceTag.style.display = "none";
-      summarySection.style.display = "none";
 
       // Show loading state
       searchBtn.disabled = true;
@@ -776,17 +616,13 @@
 
         tableHTML += `</tbody></table>`;
         itemsDiv.innerHTML = tableHTML;
-        totalDiv.innerHTML = `Grand Total: ₹${grandTotal.toFixed(2)}`;
+        totalDiv.innerHTML = `<div class="total-amount">Grand Total: ₹${grandTotal.toFixed(2)}</div>`;
         printBtn.style.display = "block";
-        summarySection.style.display = "flex";
-        
-        // Generate QR Code for current URL
-        generateQRCode(window.location.href);
         
         // Add fade-in animation
         detailsDiv.classList.add('fade-in');
         itemsDiv.classList.add('fade-in');
-        summarySection.classList.add('fade-in');
+        totalDiv.classList.add('fade-in');
         
         // Update URL without page reload
         const newUrl = new URL(window.location);
