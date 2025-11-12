@@ -64,8 +64,8 @@
     <input id="Costomer Name" />
   </div>
   <div>
-    <label>Mobile-Number</label>
-    <input id="Mobile-Number" />
+    <label>Mobile</label>
+    <input id="Mobile" />
   </div>
 </div>
 <div style="margin-top:8px">
@@ -125,7 +125,7 @@
   // Tables
   const TABLES = {
     USERS: 729979, // user table (not directly used here)
-    CUSTOMER: 736204, // costomer table
+    CUSTOMER: 7362024, // costomer table
     PRODUCTS: 734793,
     INVENTORY: 734795,
     SALES: 736209,
@@ -194,12 +194,12 @@
       const rows = data.results.filter(r=>{
         const shop = (r['ShopID']||r['shopid']||'').toString();
         const name = (r['Costomer Name']||'').toString().toLowerCase();
-        const mobile = (r['Mobile-Number']||'').toString().toLowerCase();
+        const mobile = (r['Mobile']||'').toString().toLowerCase();
         return shop===ShopID && (name.includes(q) || mobile.includes(q));
       });
       if(rows.length===0) $('custList').innerHTML='No matching costomer for this shop';
       else{
-        $('custList').innerHTML = rows.map(r=>`<div style="padding:6px;border-bottom:1px solid #eee;cursor:pointer" data-row='${r.id}' onclick="selectCustomer(${r.id})"><strong>${escapeHtml(r['Costomer Name']||'')}</strong><div class='muted'>${escapeHtml(r['Mobile-Number']||'')}</div></div>`).join('');
+        $('custList').innerHTML = rows.map(r=>`<div style="padding:6px;border-bottom:1px solid #eee;cursor:pointer" data-row='${r.id}' onclick="selectCustomer(${r.id})"><strong>${escapeHtml(r['Costomer Name']||'')}</strong><div class='muted'>${escapeHtml(r['Mobile']||'')}</div></div>`).join('');
         // store rows for selection
         window._custRows = rows.reduce((acc,r)=>{acc[r.id]=r;return acc},{})
       }
@@ -210,7 +210,7 @@
     const r = window._custRows && window._custRows[id];
     if(!r) return;
     $('Costomer Name').value = r['Costomer Name']||'';
-    $('Mobile-Number').value = r['Mobile-Number']||'';
+    $('Mobile').value = r['Mobile']||'';
     $('Address').value = r['Address']||'';
     $('GST').value = r['GST']||'';
     $('custList').innerHTML = '';
@@ -219,11 +219,11 @@
   $('newCustBtn').addEventListener('click', async ()=>{
     // Quick create a costomer row if ShopID present
     const name = $('Costomer Name').value.trim();
-    const mobile = $('Mobile-Number').value.trim();
+    const mobile = $('Mobile').value.trim();
     const address = $('Address').value.trim();
     const gst = $('GST').value.trim();
     if(!name||!mobile){alert('Costomer Name and Mobile required');return}
-    const body = {"Costomer Name":name,"Mobile-Number":mobile,"Address":address,"GST":gst,"ShopID":ShopID};
+    const body = {"Costomer Name":name,"Mobile":mobile,"Address":address,"GST":gst,"ShopID":ShopID};
     try{
       const res = await fetch(`${API_BASE}/${TABLES.CUSTOMER}/?user_field_names=true`,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
       if(!res.ok) throw new Error('Failed to create costomer');
@@ -336,14 +336,14 @@
   $('saveInvoice').addEventListener('click', saveInvoice);
   async function saveInvoice(){
     if(!ShopID){alert('Missing ShopIDTag');return}
-    if(!$('Costomer Name').value.trim() || !$('Mobile-Number').value.trim()){alert('Customer name & mobile required');return}
+    if(!$('Costomer Name').value.trim() || !$('Mobile').value.trim()){alert('Customer name & mobile required');return}
     if(cart.length===0){alert('Add at least one product');return}
     // generate invoice header
     const invoiceNo = generateInvoiceNumber();
     const total = Number(document.getElementById('totalVal').innerText||0);
     const salesPayload = {
       'Costomer Name': $('Costomer Name').value.trim(),
-      'Mobile-Number': $('Mobile-Number').value.trim(),
+      'Mobile': $('Mobile').value.trim(),
       'Date': $('Date').value || formatDateInput(),
       'Invoice Number': invoiceNo,
       'Total Invoice Value': total,
@@ -391,7 +391,7 @@
       if(!res.ok) throw new Error('Failed to fetch sales');
       const data = await res.json();
       const row = data.results.find(r=> r['Invoice Number']===invoiceNo);
-      const html = [`<h3>Invoice ${escapeHtml(invoiceNo)}</h3>`,`<div>Costomer: ${escapeHtml(row['Costomer Name']||'')}</div>`,`<div>Mobile: ${escapeHtml(row['Mobile-Number']||'')}</div>`,`<div>Date: ${escapeHtml(row['Date']||'')}</div>`];
+      const html = [`<h3>Invoice ${escapeHtml(invoiceNo)}</h3>`,`<div>Costomer: ${escapeHtml(row['Costomer Name']||'')}</div>`,`<div>Mobile: ${escapeHtml(row['Mobile']||'')}</div>`,`<div>Date: ${escapeHtml(row['Date']||'')}</div>`];
       // line items are local (we cleared cart) — we will not reconstruct line items from sales table because it's not saved per-line in our example
       html.push(`<div class='muted'>Invoice saved. (To include line items, create a Sales Details table and save per-line rows.)</div>`);
       $('invoicePreview').innerHTML = html.join('\n');
