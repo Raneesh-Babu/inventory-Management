@@ -5,17 +5,259 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sales Invoice</title>
 <style>
-  body { font-family: Arial; margin: 20px; background: #f4f6f8; }
-  h2 { color: #333; }
-  .section { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-  input, select, textarea, button { width: 100%; margin: 5px 0; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
-  button { background: #007bff; color: white; border: none; cursor: pointer; }
-  button:hover { background: #0056b3; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-  #productList div, #customerList div { padding: 5px; border-bottom: 1px solid #ddd; cursor: pointer; }
-  #productList div:hover, #customerList div:hover { background: #f0f0f0; }
-  #cameraView { display: none; width: 100%; height: 300px; background: #000; }
+  :root {
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #7209b7;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --success: #4cc9f0;
+    --danger: #f72585;
+    --warning: #f8961e;
+    --info: #4895ef;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    color: var(--dark);
+    line-height: 1.6;
+  }
+  
+  h2 {
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+    font-size: 2rem;
+    position: relative;
+    padding-bottom: 15px;
+  }
+  
+  h2:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    border-radius: 2px;
+  }
+  
+  h3 {
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 600;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  h3:before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 20px;
+    background: var(--primary);
+    margin-right: 10px;
+    border-radius: 3px;
+  }
+  
+  .section {
+    background: white;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    border-left: 4px solid var(--primary);
+  }
+  
+  .section:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+  
+  input, select, textarea, button {
+    width: 100%;
+    margin: 8px 0;
+    padding: 12px 15px;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+  
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+  }
+  
+  button {
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: var(--transition);
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  th, td {
+    border: 1px solid var(--gray-light);
+    padding: 12px 15px;
+    text-align: center;
+  }
+  
+  th {
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+  
+  tr:hover {
+    background-color: #e9f7fe;
+  }
+  
+  #productList, #customerList {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    margin-top: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  #productList div, #customerList div {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--gray-light);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  #productList div:hover, #customerList div:hover {
+    background: var(--primary);
+    color: white;
+  }
+  
+  #cameraView {
+    display: none;
+    width: 100%;
+    height: 300px;
+    background: #000;
+    border-radius: var(--border-radius);
+    margin: 15px 0;
+    overflow: hidden;
+  }
+  
+  .invoice-summary {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .invoice-summary p {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  
+  .invoice-summary p b {
+    color: var(--primary);
+  }
+  
+  #grandTotal {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  
+  .save-btn {
+    background: linear-gradient(to right, var(--success), #2a9d8f);
+    padding: 15px 30px;
+    font-size: 1.1rem;
+  }
+  
+  .scan-btn {
+    background: linear-gradient(to right, var(--warning), #e76f51);
+    margin-bottom: 15px;
+  }
+  
+  .remove-btn {
+    background: linear-gradient(to right, var(--danger), #b5179e);
+    padding: 8px 12px;
+    width: auto;
+    font-size: 0.9rem;
+  }
+  
+  @media (max-width: 768px) {
+    body {
+      padding: 15px;
+    }
+    
+    .section {
+      padding: 20px;
+    }
+    
+    .invoice-summary {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    th, td {
+      padding: 10px 8px;
+      font-size: 0.9rem;
+    }
+  }
 </style>
 </head>
 <body>
@@ -24,17 +266,17 @@
 
 <div class="section" id="customerSection">
   <h3>Customer Details</h3>
-  <input type="text" id="customerSearch" placeholder="Search by Costomer Name or Mobile">
+  <input type="text" id="customerSearch" placeholder="Search by Customer Name or Mobile">
   <div id="customerList"></div>
-  <input type="text" id="CostomerName" placeholder="Costomer Name">
+  <input type="text" id="CostomerName" placeholder="Customer Name">
   <input type="text" id="Mobile" placeholder="Mobile Number">
-  <textarea id="Address" placeholder="Address"></textarea>
+  <textarea id="Address" placeholder="Address" rows="3"></textarea>
   <input type="text" id="GST" placeholder="GST (optional)">
 </div>
 
 <div class="section" id="productSection">
   <h3>Product Details</h3>
-  <button onclick="toggleCamera()">📷 Scan Product ID</button>
+  <button class="scan-btn" onclick="toggleCamera()">📷 Scan Product ID</button>
   <video id="cameraView" autoplay></video>
   <input type="text" id="productSearch" placeholder="Search Product Name or Product ID">
   <div id="productList"></div>
@@ -46,9 +288,13 @@
 
 <div class="section">
   <h3>Invoice Summary</h3>
-  <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
-  <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
-  <button onclick="saveInvoice()">💾 Save Invoice</button>
+  <div class="invoice-summary">
+    <div>
+      <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
+      <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
+    </div>
+    <button class="save-btn" onclick="saveInvoice()">💾 Save Invoice</button>
+  </div>
 </div>
 
 <script>
@@ -145,7 +391,7 @@ async function selectProduct(p) {
     <td>${qty}</td>
     <td>${p["Price"]}</td>
     <td>${total}</td>
-    <td><button onclick="this.closest('tr').remove();updateTotal()">❌</button></td>
+    <td><button class="remove-btn" onclick="this.closest('tr').remove();updateTotal()">❌</button></td>
   `;
   document.querySelector("#productTable tbody").appendChild(row);
   updateTotal();
