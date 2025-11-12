@@ -33,6 +33,7 @@
     background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
     color: var(--dark);
     line-height: 1.6;
+    font-size: 16px;
   }
   
   h2 {
@@ -239,9 +240,29 @@
     font-size: 0.9rem;
   }
   
-  @media (max-width: 768px) {
+  /* Responsive Design */
+  
+  /* Large screens (desktops) */
+  @media (min-width: 1200px) {
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+  }
+  
+  /* Medium screens (tablets) */
+  @media (max-width: 992px) {
     body {
       padding: 15px;
+      font-size: 15px;
+    }
+    
+    h2 {
+      font-size: 1.8rem;
+    }
+    
+    h3 {
+      font-size: 1.3rem;
     }
     
     .section {
@@ -253,47 +274,209 @@
       align-items: flex-start;
     }
     
+    .invoice-summary p {
+      font-size: 1rem;
+    }
+    
+    #grandTotal {
+      font-size: 1.6rem;
+    }
+    
+    .save-btn {
+      width: 100%;
+      margin-top: 10px;
+    }
+  }
+  
+  /* Small screens (large phones) */
+  @media (max-width: 768px) {
+    body {
+      padding: 12px;
+      font-size: 14px;
+    }
+    
+    h2 {
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+    }
+    
+    h3 {
+      font-size: 1.2rem;
+    }
+    
+    .section {
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    input, select, textarea, button {
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+    
     th, td {
       padding: 10px 8px;
+      font-size: 0.85rem;
+    }
+    
+    .invoice-summary {
+      padding: 15px;
+    }
+    
+    .invoice-summary p {
+      font-size: 0.95rem;
+    }
+    
+    #grandTotal {
+      font-size: 1.4rem;
+    }
+    
+    .save-btn {
+      padding: 12px 20px;
+      font-size: 1rem;
+    }
+  }
+  
+  /* Extra small screens (phones) */
+  @media (max-width: 576px) {
+    body {
+      padding: 10px;
+      font-size: 13px;
+    }
+    
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+    }
+    
+    h3 {
+      font-size: 1.1rem;
+    }
+    
+    .section {
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    
+    input, select, textarea, button {
+      padding: 8px 10px;
       font-size: 0.9rem;
+    }
+    
+    th, td {
+      padding: 8px 6px;
+      font-size: 0.8rem;
+    }
+    
+    /* Make table horizontally scrollable on small screens */
+    .table-container {
+      overflow-x: auto;
+      margin: 0 -10px;
+      padding: 0 10px;
+    }
+    
+    #productTable {
+      min-width: 600px;
+    }
+    
+    .invoice-summary {
+      padding: 12px;
+    }
+    
+    .invoice-summary p {
+      font-size: 0.9rem;
+    }
+    
+    #grandTotal {
+      font-size: 1.3rem;
+    }
+    
+    .save-btn {
+      padding: 10px 15px;
+      font-size: 0.95rem;
+    }
+    
+    #cameraView {
+      height: 250px;
+    }
+  }
+  
+  /* Very small screens */
+  @media (max-width: 400px) {
+    body {
+      font-size: 12px;
+    }
+    
+    h2 {
+      font-size: 1.3rem;
+    }
+    
+    h3 {
+      font-size: 1rem;
+    }
+    
+    .section {
+      padding: 10px;
+    }
+    
+    input, select, textarea, button {
+      padding: 7px 9px;
+      font-size: 0.85rem;
+    }
+    
+    th, td {
+      padding: 6px 4px;
+      font-size: 0.75rem;
+    }
+    
+    .invoice-summary p {
+      font-size: 0.85rem;
+    }
+    
+    #grandTotal {
+      font-size: 1.2rem;
     }
   }
 </style>
 </head>
 <body>
 
-<h2>Sales Invoice Form</h2>
+<div class="container">
+  <h2>Sales Invoice Form</h2>
 
-<div class="section" id="customerSection">
-  <h3>Customer Details</h3>
-  <input type="text" id="customerSearch" placeholder="Search by Customer Name or Mobile">
-  <div id="customerList"></div>
-  <input type="text" id="CostomerName" placeholder="Customer Name">
-  <input type="text" id="Mobile" placeholder="Mobile Number">
-  <textarea id="Address" placeholder="Address" rows="3"></textarea>
-  <input type="text" id="GST" placeholder="GST (optional)">
-</div>
+  <div class="section" id="customerSection">
+    <h3>Customer Details</h3>
+    <input type="text" id="customerSearch" placeholder="Search by Customer Name or Mobile">
+    <div id="customerList"></div>
+    <input type="text" id="CostomerName" placeholder="Customer Name">
+    <input type="text" id="Mobile" placeholder="Mobile Number">
+    <textarea id="Address" placeholder="Address" rows="3"></textarea>
+    <input type="text" id="GST" placeholder="GST (optional)">
+  </div>
 
-<div class="section" id="productSection">
-  <h3>Product Details</h3>
-  <button class="scan-btn" onclick="toggleCamera()">📷 Scan Product ID</button>
-  <video id="cameraView" autoplay></video>
-  <input type="text" id="productSearch" placeholder="Search Product Name or Product ID">
-  <div id="productList"></div>
-  <table id="productTable">
-    <thead><tr><th>Product ID</th><th>Item Name</th><th>Batch No</th><th>Qty</th><th>Price</th><th>Total</th><th>Remove</th></tr></thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<div class="section">
-  <h3>Invoice Summary</h3>
-  <div class="invoice-summary">
-    <div>
-      <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
-      <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
+  <div class="section" id="productSection">
+    <h3>Product Details</h3>
+    <button class="scan-btn" onclick="toggleCamera()">📷 Scan Product ID</button>
+    <video id="cameraView" autoplay></video>
+    <input type="text" id="productSearch" placeholder="Search Product Name or Product ID">
+    <div id="productList"></div>
+    <div class="table-container">
+      <table id="productTable">
+        <thead><tr><th>Product ID</th><th>Item Name</th><th>Batch No</th><th>Qty</th><th>Price</th><th>Total</th><th>Remove</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
-    <button class="save-btn" onclick="saveInvoice()">💾 Save Invoice</button>
+  </div>
+
+  <div class="section">
+    <h3>Invoice Summary</h3>
+    <div class="invoice-summary">
+      <div>
+        <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
+        <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
+      </div>
+      <button class="save-btn" onclick="saveInvoice()">💾 Save Invoice</button>
+    </div>
   </div>
 </div>
 
