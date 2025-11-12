@@ -1,242 +1,453 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales Invoice</title>
-<style>
-body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f4f6f8; }
-.container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-h2 { text-align: center; color: #333; }
-.section { border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-label { display: block; margin-top: 10px; }
-input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; margin-top: 5px; }
-button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
-button:hover { background: #0056b3; }
-#productTable th, #productTable td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-#productTable { width: 100%; border-collapse: collapse; margin-top: 15px; }
-.modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-.modal-content { background: white; margin: 15% auto; padding: 20px; width: 80%; border-radius: 10px; }
-#cameraView { width: 100%; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sales Invoice - Single Page</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:1100px;margin:16px auto;padding:12px}
+    h1{font-size:20px;margin-bottom:6px}
+    .grid{display:grid;gap:8px}
+    .two{grid-template-columns:1fr 1fr}
+    label{font-size:12px;display:block;margin-bottom:4px}
+    input,select,textarea,button{padding:8px;border-radius:6px;border:1px solid #ddd;width:100%;box-sizing:border-box}
+    .section{border:1px solid #eee;padding:10px;border-radius:8px;margin-bottom:12px;background:#fafafa}
+    .list{max-height:180px;overflow:auto;border:1px solid #eee;padding:6px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:6px;border:1px solid #eee;text-align:left}
+    .muted{color:#666;font-size:13px}
+    .actions{display:flex;gap:8px}
+    .btn{cursor:pointer}
+    .camera-container{position:relative}
+    video{max-width:100%;border-radius:6px}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center}
+    .modal .card{background:white;padding:12px;border-radius:8px;max-height:80vh;overflow:auto;width:600px}
+  </style>
 </head>
 <body>
-
-<div class="container">
-<h2>Sales Invoice Form</h2>
-
-<!-- Customer Section -->
-<div class="section">
-<h3>Customer Details</h3>
-<input type="text" id="customerSearch" placeholder="Search by Costomer Name or Mobile">
-<div id="customerResults"></div>
-
-<label>Costomer Name</label>
-<input id="custName">
-
-<label>Mobile</label>
-<input id="custMobile">
-
-<label>Address</label>
-<textarea id="custAddress"></textarea>
-
-<label>GST</label>
-<input id="custGST">
+  <h1>Sales Invoice (single page)</h1>
+  <div class="muted">Make sure you have localStorage keys: <code>ShopIDTag</code>, <code>NameTag</code>, <code>MobileTag</code>. If missing a quick login box will appear.</div>  <div id="loginBox" class="section" style="display:none">
+    <h3>Local login / shop info</h3>
+    <div class="grid two">
+      <div>
+        <label>ShopIDTag</label>
+        <input id="loginShopID" />
+      </div>
+      <div>
+        <label>NameTag (Sales Person)</label>
+        <input id="loginName" />
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <label>MobileTag</label>
+      <input id="loginMobile" />
+    </div>
+    <div style="margin-top:8px" class="actions">
+      <button id="saveLogin" class="btn">Save</button>
+    </div>
+  </div>  <!-- Customer section -->  <div class="section">
+    <h3>Customer (Costomer) details</h3>
+    <div class="grid two">
+      <div>
+        <label>Search Costomer Name or Mobile</label>
+        <input id="custSearch" placeholder="type name or mobile then press Search" />
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button id="custSearchBtn">Search</button>
+        <button id="newCustBtn">New Costomer</button>
+      </div>
+    </div>
+    <div class="list" id="custList"></div><div style="margin-top:8px" class="grid two">
+  <div>
+    <label>Costomer Name</label>
+    <input id="Costomer Name" />
+  </div>
+  <div>
+    <label>Mobile-Number</label>
+    <input id="Mobile-Number" />
+  </div>
 </div>
-
-<!-- Product Section -->
-<div class="section">
-<h3>Add Products</h3>
-<input type="text" id="productSearch" placeholder="Search Product by Name or ID">
-<div id="productResults"></div>
-<table id="productTable">
-<thead>
-<tr><th>Product ID</th><th>Name</th><th>Batch</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-</thead>
-<tbody id="productList"></tbody>
-</table>
+<div style="margin-top:8px">
+  <label>Address</label>
+  <textarea id="Address" rows="2"></textarea>
 </div>
-
-<!-- Camera Scanner -->
-<div class="section">
-<h3>Scanner</h3>
-<button onclick="startCamera()">Camera On</button>
-<button onclick="stopCamera()">Camera Off</button>
-<video id="cameraView" autoplay></video>
-</div>
-
-<!-- Save -->
-<div class="section">
-<button onclick="saveInvoice()">Save Invoice</button>
-<div id="message"></div>
-</div>
-</div>
-
-<!-- Batch Modal -->
-<div id="batchModal" class="modal">
-  <div class="modal-content">
-    <h3>Select Batch</h3>
-    <div id="batchList"></div>
-    <button onclick="closeModal()">Close</button>
+<div style="margin-top:8px" class="grid two">
+  <div>
+    <label>GST- (optional)</label>
+    <input id="GST" />
+  </div>
+  <div>
+    <label>Date</label>
+    <input id="Date" type="date" />
   </div>
 </div>
 
-<script>
-const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const API_URL = "https://api.baserow.io/api/database/rows/table/";
-const salesTable = 736209;
-const ledgerTable = 736207;
-const customerTable = 7362024;
-const productTableId = 734793;
-const inventoryTableId = 734795;
+  </div>  <!-- Product add section -->  <div class="section">
+    <h3>Add Products</h3>
+    <div class="grid two">
+      <div>
+        <label>Search Product Name or Product ID</label>
+        <input id="prodSearch" placeholder="type product name or id" />
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button id="prodSearchBtn">Search</button>
+      </div>
+    </div>
+    <div id="prodList" class="list"></div><div id="inventoryModal" style="display:none" class="modal">
+  <div class="card">
+    <h4>Choose batch</h4>
+    <div id="batchList"></div>
+    <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
+      <button id="closeBatch">Close</button>
+    </div>
+  </div>
+</div>
 
-let ShopID = localStorage.getItem("ShopIDTag");
-let SalesPerson = localStorage.getItem("NameTag");
-let MobileTag = localStorage.getItem("MobileTag");
-let invoiceNo = "INV-" + Date.now();
-let currentStream = null;
-let productList = [];
+<table id="cartTable">
+  <thead><tr><th>Product ID</th><th>Item Name</th><th>Batch</th><th>Qty</th><th>Price</th><th>Line Total</th><th></th></tr></thead>
+  <tbody></tbody>
+</table>
+<div style="text-align:right;margin-top:8px"><strong>Total: ₹ <span id="totalVal">0</span></strong></div>
 
-if(!ShopID || !MobileTag) {
-  alert("Please login first");
-  window.location.href = "login.html";
-}
+  </div>  <div class="actions">
+    <button id="scanToggle" class="btn">Open Camera Scanner</button>
+    <button id="saveInvoice" class="btn">Save Invoice</button>
+    <button id="printInvoice" class="btn">Print Invoice</button>
+  </div>  <div id="cameraArea" style="margin-top:12px;display:none" class="camera-container">
+    <video id="video" autoplay muted playsinline style="width:100%;height:240px;background:#000"></video>
+    <div style="display:flex;gap:8px;margin-top:6px"><button id="camOn">Camera On</button><button id="camOff">Camera Off</button></div>
+  </div>  <div id="invoicePreview" style="display:none;margin-top:12px;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff"></div>  <script>
+  // ------------------ CONFIG (change only if needed) ------------------
+  const API_BASE = 'https://api.baserow.io/api/database/rows/table';
+  const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw'; // provided by user
 
-// --- Customer Search ---
-document.getElementById("customerSearch").addEventListener("input", async (e)=>{
-  let q = e.target.value.trim();
-  if(q.length < 2) return;
-  const res = await fetch(`${API_URL}${customerTable}/?user_field_names=true`, { headers:{ Authorization:`Token ${API_KEY}` }});
-  const data = await res.json();
-  const results = data.results.filter(c=> 
-    c["ShopID"] == ShopID && 
-    ((c["Costomer Name"] && c["Costomer Name"].toLowerCase().includes(q.toLowerCase())) || 
-     (c["Mobile"] && c["Mobile"].toString().includes(q)))
-  );
-  document.getElementById("customerResults").innerHTML = 
-    results.length ? 
-    results.map(c=>`<div onclick='selectCustomer(${JSON.stringify(c)})'>${c["Costomer Name"]} - ${c["Mobile"]}</div>`).join("") 
-    : "<small>No matching customers found</small>";
-});
+  // Tables
+  const TABLES = {
+    USERS: 729979, // user table (not directly used here)
+    CUSTOMER: 736204, // costomer table
+    PRODUCTS: 734793,
+    INVENTORY: 734795,
+    SALES: 736209,
+    LEDGER: 736207
+  };
 
-function selectCustomer(c){
-  document.getElementById("custName").value = c["Costomer Name"] || "";
-  document.getElementById("custMobile").value = c["Mobile"] || "";
-  document.getElementById("custAddress").value = c["Address"] || "";
-  document.getElementById("custGST").value = c["GST"] || "";
-  document.getElementById("customerResults").innerHTML="";
-}
-
-// --- Product Search ---
-document.getElementById("productSearch").addEventListener("input", async (e)=>{
-  let q = e.target.value.trim();
-  if(q.length < 2) return;
-  const res = await fetch(`${API_URL}${productTableId}/?user_field_names=true`, { headers:{ Authorization:`Token ${API_KEY}` }});
-  const data = await res.json();
-  const results = data.results.filter(p=> 
-    p["ShopID"]==ShopID && 
-    ((p["Product Name"] && p["Product Name"].toLowerCase().includes(q.toLowerCase())) || 
-     (p["Product ID"] && p["Product ID"].toLowerCase().includes(q.toLowerCase())))
-  );
-  document.getElementById("productResults").innerHTML = 
-    results.length ? 
-    results.map(p=>`<div onclick='selectProduct(${JSON.stringify(p)})'>${p["Product Name"]} (${p["Product ID"]})</div>`).join("") 
-    : "<small>No products found</small>";
-});
-
-async function selectProduct(p){
-  document.getElementById("productResults").innerHTML="";
-  const inv = await fetch(`${API_URL}${inventoryTableId}/?user_field_names=true`, { headers:{ Authorization:`Token ${API_KEY}` }});
-  const data = await inv.json();
-  const batches = data.results.filter(b=> b["Product ID"]==p["Product ID"]);
-  if(!batches.length){
-    document.getElementById("batchList").innerHTML = "<small>No batches found for this product.</small>";
-  } else {
-    document.getElementById("batchList").innerHTML = 
-      batches.map(b=>`<div onclick='addProduct(${JSON.stringify(p)},${JSON.stringify(b)})'>
-        Batch: ${b["Batch No"]} | Count: ${b["Count"]} | Exp: ${b["Expire Date"]}
-      </div>`).join("");
-  }
-  document.getElementById("batchModal").style.display = "block";
-}
-
-function addProduct(p,b){
-  closeModal();
-  let qty = prompt("Enter Quantity (Available: "+b["Count"]+")");
-  qty = parseInt(qty);
-  if(!qty || qty <= 0 || qty > b["Count"]) return alert("Invalid Quantity");
-  let total = qty * p["Price"];
-  productList.push({ id:p["Product ID"], name:p["Product Name"], batch:b["Batch No"], qty, price:p["Price"], total });
-  renderProducts();
-}
-
-function renderProducts(){
-  document.getElementById("productList").innerHTML = 
-    productList.map(p=>`<tr>
-      <td>${p.id}</td><td>${p.name}</td><td>${p.batch}</td><td>${p.qty}</td><td>${p.price}</td><td>${p.total}</td>
-    </tr>`).join("");
-}
-
-function closeModal(){ document.getElementById("batchModal").style.display="none"; }
-
-// --- Camera ---
-async function startCamera(){
-  stopCamera();
-  currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
-  document.getElementById("cameraView").srcObject = currentStream;
-}
-function stopCamera(){
-  if(currentStream){ currentStream.getTracks().forEach(t=>t.stop()); }
-  document.getElementById("cameraView").srcObject = null;
-}
-
-// --- Save Invoice ---
-async function saveInvoice(){
-  if(!productList.length) return alert("Add at least one product");
-  let custName = document.getElementById("custName").value;
-  let custMobile = document.getElementById("custMobile").value;
-  let totalVal = productList.reduce((a,b)=>a+b.total,0);
-  
-  // Save to Sales Table
-  for(let p of productList){
-    await fetch(`${API_URL}${salesTable}/?user_field_names=true`, {
-      method:"POST",
-      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-      body:JSON.stringify({
-        "Costomer Name": custName,
-        "Mobile": custMobile,
-        "Address": document.getElementById("custAddress").value,
-        "GST": document.getElementById("custGST").value,
-        "Date": new Date().toISOString().split('T')[0],
-        "Product ID": p.id,
-        "Item Name": p.name,
-        "Batch No": p.batch,
-        "Quantity": p.qty,
-        "Price": p.price,
-        "Invoice Number": invoiceNo,
-        "Tag": "Order Confirmed",
-        "ShopID": ShopID,
-        "Sales Person": SalesPerson
-      })
-    });
+  // ------------------ Utilities ------------------
+  function authHeaders(){
+    return { 'Content-Type':'application/json','Authorization': 'Token ' + API_KEY };
   }
 
-  // Save to Ledger Table
-  await fetch(`${API_URL}${ledgerTable}/?user_field_names=true`, {
-    method:"POST",
-    headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-    body:JSON.stringify({
-      "Costomer Name": custName,
-      "Mobile": custMobile,
-      "Date": new Date().toISOString().split('T')[0],
-      "Invoice Number": invoiceNo,
-      "Total Invoice Value": totalVal,
-      "ShopID": ShopID
-    })
+  function $(id){return document.getElementById(id)}
+
+  function formatDateInput(d){
+    const dt = new Date(d || Date.now());
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth()+1).padStart(2,'0');
+    const dd = String(dt.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function generateInvoiceNumber(){
+    return 'INV-' + Date.now().toString().slice(-8) + '-' + Math.floor(Math.random()*900+100);
+  }
+
+  // ------------------ Local storage (Shop & Sales person) ------------------
+  let ShopID = localStorage.getItem('ShopIDTag');
+  let SalesPerson = localStorage.getItem('NameTag');
+  let MobileTag = localStorage.getItem('MobileTag');
+
+  function ensureLoginBox(){
+    if(!ShopID || !SalesPerson || !MobileTag){
+      $('loginBox').style.display='block';
+      $('Date').value = formatDateInput();
+    } else {
+      $('loginBox').style.display='none';
+      $('Date').value = formatDateInput();
+    }
+  }
+  $('saveLogin').addEventListener('click', ()=>{
+    const s = $('loginShopID').value.trim();
+    const n = $('loginName').value.trim();
+    const m = $('loginMobile').value.trim();
+    if(!s||!n||!m){alert('Please fill all fields');return}
+    localStorage.setItem('ShopIDTag', s);
+    localStorage.setItem('NameTag', n);
+    localStorage.setItem('MobileTag', m);
+    ShopID = s; SalesPerson = n; MobileTag = m;
+    ensureLoginBox();
+    alert('Saved to localStorage');
   });
-  
-  document.getElementById("message").innerText = `✅ Invoice Saved Successfully! Invoice No: ${invoiceNo}`;
-}
-</script>
-</body>
+
+  ensureLoginBox();
+
+  // ------------------ Customer Search and selection ------------------
+  $('custSearchBtn').addEventListener('click', searchCustomers);
+  async function searchCustomers(){
+    const q = $('custSearch').value.trim().toLowerCase();
+    if(!q){alert('Enter name or mobile to search');return}
+    if(!ShopID){alert('Missing ShopIDTag in localStorage');return}
+    $('custList').innerHTML = 'Searching...';
+    try{
+      const res = await fetch(`${API_BASE}/${TABLES.CUSTOMER}/?user_field_names=true`,{headers:authHeaders()});
+      if(!res.ok) throw new Error('Failed to fetch customers')
+      const data = await res.json();
+      const rows = data.results.filter(r=>{
+        const shop = (r['ShopID']||r['shopid']||'').toString();
+        const name = (r['Costomer Name']||'').toString().toLowerCase();
+        const mobile = (r['Mobile-Number']||'').toString().toLowerCase();
+        return shop===ShopID && (name.includes(q) || mobile.includes(q));
+      });
+      if(rows.length===0) $('custList').innerHTML='No matching costomer for this shop';
+      else{
+        $('custList').innerHTML = rows.map(r=>`<div style="padding:6px;border-bottom:1px solid #eee;cursor:pointer" data-row='${r.id}' onclick="selectCustomer(${r.id})"><strong>${escapeHtml(r['Costomer Name']||'')}</strong><div class='muted'>${escapeHtml(r['Mobile-Number']||'')}</div></div>`).join('');
+        // store rows for selection
+        window._custRows = rows.reduce((acc,r)=>{acc[r.id]=r;return acc},{})
+      }
+    }catch(err){console.error(err);$('custList').innerHTML='Error fetching customers'}
+  }
+
+  window.selectCustomer = function(id){
+    const r = window._custRows && window._custRows[id];
+    if(!r) return;
+    $('Costomer Name').value = r['Costomer Name']||'';
+    $('Mobile-Number').value = r['Mobile-Number']||'';
+    $('Address').value = r['Address']||'';
+    $('GST').value = r['GST']||'';
+    $('custList').innerHTML = '';
+  }
+
+  $('newCustBtn').addEventListener('click', async ()=>{
+    // Quick create a costomer row if ShopID present
+    const name = $('Costomer Name').value.trim();
+    const mobile = $('Mobile-Number').value.trim();
+    const address = $('Address').value.trim();
+    const gst = $('GST').value.trim();
+    if(!name||!mobile){alert('Costomer Name and Mobile required');return}
+    const body = {"Costomer Name":name,"Mobile-Number":mobile,"Address":address,"GST":gst,"ShopID":ShopID};
+    try{
+      const res = await fetch(`${API_BASE}/${TABLES.CUSTOMER}/?user_field_names=true`,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
+      if(!res.ok) throw new Error('Failed to create costomer');
+      const d = await res.json();
+      alert('Costomer created');
+    }catch(err){alert('Error creating costomer');console.error(err)}
+  });
+
+  // ------------------ Product search and batch selection ------------------
+  $('prodSearchBtn').addEventListener('click', searchProducts);
+  async function searchProducts(){
+    const q = $('prodSearch').value.trim().toLowerCase();
+    if(!q){alert('Type product name or id');return}
+    if(!ShopID){alert('Missing ShopIDTag');return}
+    $('prodList').innerHTML='Searching...';
+    try{
+      const res = await fetch(`${API_BASE}/${TABLES.PRODUCTS}/?user_field_names=true`,{headers:authHeaders()});
+      if(!res.ok) throw new Error('Failed to fetch products')
+      const data = await res.json();
+      const rows = data.results.filter(r=>{
+        const shop = (r['ShopID']||'').toString();
+        const id = (r['Product ID']||'').toString().toLowerCase();
+        const name = (r['Product Name']||'').toString().toLowerCase();
+        return shop===ShopID && (id.includes(q) || name.includes(q));
+      });
+      if(rows.length===0) $('prodList').innerHTML='No product found for this shop';
+      else{
+        $('prodList').innerHTML = rows.map(r=>`<div style="padding:6px;border-bottom:1px solid #eee;cursor:pointer" onclick="selectProduct(${encodeURIComponent(JSON.stringify(r)).replaceAll("'","\'" )})"><strong>${escapeHtml(r['Product Name']||'')}</strong><div class='muted'>${escapeHtml(r['Product ID']||'')} — Price: ${r['Price']||0}</div></div>`).join('');
+        window._prodRows = rows.reduce((acc,r)=>{acc[r['Product ID']]=r;return acc},{})
+      }
+    }catch(err){console.error(err);$('prodList').innerHTML='Error fetching products'}
+  }
+
+  // Because we couldn't pass objects easily through onclick in a safe single-file, we'll implement selection via click handler delegation
+  document.getElementById('prodList').addEventListener('click', async (e)=>{
+    const el = e.target.closest('div[onclick]') || e.target.closest('div');
+    if(!el) return;
+    // try to read product id from innerText
+    const inner = el.innerText || '';
+    const pidMatch = inner.match(/[A-Za-z0-9\-]+/);
+    // find product by name or ID from stored rows
+    // simpler: find first product whose name included in text
+    const candidate = window._prodRows && Object.values(window._prodRows).find(r=>inner.includes(r['Product Name']) || inner.includes(r['Product ID']));
+    if(!candidate) return;
+    // fetch inventory for this product
+    await showBatchesForProduct(candidate);
+  });
+
+  async function showBatchesForProduct(product){
+    $('inventoryModal').style.display='flex';
+    $('batchList').innerHTML = 'Loading batches...';
+    try{
+      const res = await fetch(`${API_BASE}/${TABLES.INVENTORY}/?user_field_names=true`,{headers:authHeaders()});
+      if(!res.ok) throw new Error('Failed to fetch inventory')
+      const data = await res.json();
+      let inv = data.results.filter(r=> (r['Product ID']||'').toString() === (product['Product ID']||'').toString());
+      // if inventory contains ShopID, filter by ShopID too
+      if(inv.length && inv[0]['ShopID']!==undefined){ inv = inv.filter(r=> (r['ShopID']||'')==ShopID); }
+      if(inv.length===0){ $('batchList').innerHTML='No batches available for this product'; return }
+      // show each batch
+      $('batchList').innerHTML = inv.map(r=>`<div style="padding:8px;border-bottom:1px solid #eee"><strong>Batch: ${escapeHtml(r['Batch No']||'')}</strong><div class='muted'>Count: ${r['Count']||0} — Exp: ${r['Expire Date']||''}</div><div style='margin-top:6px'><label>Qty to add</label><input data-rowid='${r.id}' data-pid='${escapeHtml(product['Product ID'])}' data-price='${product['Price']||0}' data-name='${escapeHtml(product['Product Name']||'')}' class='batchQty' placeholder='qty' /></div><div style='margin-top:6px'><button data-add='${r.id}'>Add to invoice</button></div></div>`).join('');
+
+      // attach handlers
+      document.querySelectorAll('#batchList button[data-add]').forEach(btn=>{
+        btn.addEventListener('click', (ev)=>{
+          const rowid = ev.target.getAttribute('data-add');
+          const input = document.querySelector(`#batchList input[data-rowid='${rowid}']`);
+          const qty = Number(input.value || 0);
+          if(!qty || qty<=0){alert('Enter quantity >0');return}
+          const pid = input.getAttribute('data-pid');
+          const price = Number(input.getAttribute('data-price')||0);
+          const name = input.getAttribute('data-name')||'';
+          const batchNo = inv.find(x=>x.id==rowid)['Batch No'];
+          const available = Number(inv.find(x=>x.id==rowid)['Count']||0);
+          if(qty>available){alert('Quantity exceeds available count');return}
+          addToCart({product_id:pid, name, batchId:rowid, batchNo, qty, price});
+          $('inventoryModal').style.display='none';
+        })
+      })
+
+    }catch(err){console.error(err);$('batchList').innerHTML='Error fetching inventory'}
+  }
+
+  $('closeBatch').addEventListener('click', ()=>{$('inventoryModal').style.display='none'})
+
+  // ------------------ Cart management ------------------
+  const cart = [];
+  function addToCart(item){
+    // if same product + batch exists, increment
+    const existing = cart.find(c=>c.product_id===item.product_id && c.batchId==item.batchId);
+    if(existing){ existing.qty += item.qty; existing.lineTotal = existing.qty * existing.price; }
+    else { item.lineTotal = item.qty * item.price; cart.push(item); }
+    renderCart();
+  }
+
+  function renderCart(){
+    const tb = document.querySelector('#cartTable tbody'); tb.innerHTML='';
+    let total = 0;
+    cart.forEach((c,idx)=>{
+      total += c.lineTotal;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(c.product_id)}</td><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.batchNo)}</td><td>${c.qty}</td><td>₹ ${c.price}</td><td>₹ ${c.lineTotal}</td><td><button data-idx='${idx}'>Remove</button></td>`;
+      tb.appendChild(tr);
+    });
+    document.querySelectorAll('#cartTable button[data-idx]').forEach(b=>b.addEventListener('click', e=>{ const i=Number(e.target.getAttribute('data-idx')); cart.splice(i,1); renderCart(); }));
+    $('totalVal').innerText = total.toFixed(2);
+  }
+
+  // ------------------ Save Invoice ------------------
+  $('saveInvoice').addEventListener('click', saveInvoice);
+  async function saveInvoice(){
+    if(!ShopID){alert('Missing ShopIDTag');return}
+    if(!$('Costomer Name').value.trim() || !$('Mobile-Number').value.trim()){alert('Customer name & mobile required');return}
+    if(cart.length===0){alert('Add at least one product');return}
+    // generate invoice header
+    const invoiceNo = generateInvoiceNumber();
+    const total = Number(document.getElementById('totalVal').innerText||0);
+    const salesPayload = {
+      'Costomer Name': $('Costomer Name').value.trim(),
+      'Mobile-Number': $('Mobile-Number').value.trim(),
+      'Date': $('Date').value || formatDateInput(),
+      'Invoice Number': invoiceNo,
+      'Total Invoice Value': total,
+      'ShopID': ShopID
+    };
+    try{
+      // create sales row
+      const resSales = await fetch(`${API_BASE}/${TABLES.SALES}/?user_field_names=true`,{method:'POST',headers:authHeaders(),body:JSON.stringify(salesPayload)});
+      if(!resSales.ok) throw new Error('Failed to create sales row');
+      const salesRow = await resSales.json();
+
+      // create ledger row (simple schema: Invoice, Date, Amount, ShopID, Costomer)
+      const ledgerPayload = {'Invoice Number': invoiceNo,'Date': $('Date').value||formatDateInput(),'Amount': total,'ShopID':ShopID,'Costomer Name': $('Costomer Name').value.trim() };
+      await fetch(`${API_BASE}/${TABLES.LEDGER}/?user_field_names=true`,{method:'POST',headers:authHeaders(),body:JSON.stringify(ledgerPayload)});
+
+      // For each cart item, decrement inventory Count in INVENTORY table
+      for(const line of cart){
+        // fetch existing inventory row to get current Count (to avoid race conditions we re-fetch that row)
+        const invRowRes = await fetch(`${API_BASE}/${TABLES.INVENTORY}/${line.batchId}/?user_field_names=true`,{headers:authHeaders()});
+        if(!invRowRes.ok) { console.warn('Could not fetch inventory row', line.batchId); continue }
+        const invRow = await invRowRes.json();
+        const cur = Number(invRow['Count']||0);
+        const newCount = cur - Number(line.qty || 0);
+        if(newCount < 0){ alert('Inventory would go negative for batch ' + line.batchNo + '. Aborting.'); return }
+        // update
+        await fetch(`${API_BASE}/${TABLES.INVENTORY}/${line.batchId}/?user_field_names=true`,{method:'PATCH',headers:authHeaders(),body:JSON.stringify({'Count': newCount})});
+      }
+
+      // Optionally add sales details rows — skipped (depends on table design)
+
+      // show invoice preview
+      showInvoicePreview(invoiceNo);
+      alert('Invoice saved successfully. Invoice #: ' + invoiceNo);
+      // clear cart
+      cart.splice(0,cart.length);
+      renderCart();
+
+    }catch(err){console.error(err);alert('Error saving invoice: '+err.message)}
+  }
+
+  async function showInvoicePreview(invoiceNo){
+    // fetch the sales row for invoiceNo
+    try{
+      const res = await fetch(`${API_BASE}/${TABLES.SALES}/?user_field_names=true`,{headers:authHeaders()});
+      if(!res.ok) throw new Error('Failed to fetch sales');
+      const data = await res.json();
+      const row = data.results.find(r=> r['Invoice Number']===invoiceNo);
+      const html = [`<h3>Invoice ${escapeHtml(invoiceNo)}</h3>`,`<div>Costomer: ${escapeHtml(row['Costomer Name']||'')}</div>`,`<div>Mobile: ${escapeHtml(row['Mobile-Number']||'')}</div>`,`<div>Date: ${escapeHtml(row['Date']||'')}</div>`];
+      // line items are local (we cleared cart) — we will not reconstruct line items from sales table because it's not saved per-line in our example
+      html.push(`<div class='muted'>Invoice saved. (To include line items, create a Sales Details table and save per-line rows.)</div>`);
+      $('invoicePreview').innerHTML = html.join('\n');
+      $('invoicePreview').style.display='block';
+    }catch(err){console.error(err)}
+  }
+
+  // ------------------ Camera / Barcode scanner (simple) ------------------
+  let stream = null;
+  $('scanToggle').addEventListener('click', ()=>{
+    const area = $('cameraArea'); area.style.display = area.style.display==='none'?'block':'none';
+  });
+  $('camOn').addEventListener('click', async ()=>{
+    if(!('BarcodeDetector' in window)){
+      // still open camera for manual scanning via barcode library (not included) — we open camera but do not decode
+    }
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      $('video').srcObject = stream;
+      // try using BarcodeDetector
+      if(window.BarcodeDetector){
+        const formats = ['qr_code','ean_13','code_128','code_39','ean_8'];
+        const detector = new BarcodeDetector({formats});
+        const scanLoop = async ()=>{
+          if(!stream) return;
+          try{
+            const detections = await detector.detect(document.querySelector('video'));
+            if(detections && detections.length){
+              const text = detections[0].rawValue || detections[0].rawData || '';
+              if(text){
+                // populate product search with detected text
+                $('prodSearch').value = text;
+                await searchProducts();
+                // keep camera open if you want
+              }
+            }
+          }catch(e){/*ignore*/}
+          setTimeout(scanLoop,500);
+        };
+        scanLoop();
+      }
+    }catch(err){alert('Camera access denied or error');console.error(err)}
+  });
+  $('camOff').addEventListener('click', ()=>{ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; $('video').srcObject=null } });
+
+  // ------------------ Print invoice (simple) ------------------
+  $('printInvoice').addEventListener('click', ()=>{
+    const content = $('invoicePreview').innerHTML || '<div>No invoice to print</div>';
+    const w = window.open('','_blank');
+    w.document.write('<html><head><title>Invoice</title></head><body>'+content+'</body></html>');
+    w.document.close();
+    w.print();
+  });
+
+  // ------------------ Helpers ------------------
+  function escapeHtml(s){ if(!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+  </script></body>
 </html>
