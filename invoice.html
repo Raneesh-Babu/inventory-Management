@@ -1,191 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Professional Invoice</title>
-<style>
-body { font-family: "Segoe UI", sans-serif; background: #f8f9fb; margin: 0; padding: 0; }
-.invoice-container { max-width: 900px; margin: 40px auto; background: white; box-shadow: 0 0 15px rgba(0,0,0,0.1); padding: 30px; border-radius: 12px; }
-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-.shop-name { font-size: 26px; font-weight: bold; color: #333; }
-.invoice-meta { text-align: right; }
-.invoice-meta div { color: #555; }
-h2 { text-align: center; margin: 20px 0; color: #444; }
-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-th, td { border-bottom: 1px solid #ddd; text-align: left; padding: 10px; }
-th { background: #f3f4f6; }
-.total { text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold; }
-.total-words { color: #666; font-style: italic; }
-.info { margin-top: 20px; color: #333; }
-.btns { display: flex; justify-content: space-between; margin-top: 25px; }
-button { background: #0078d7; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; }
-button:hover { background: #005fa3; }
-input { padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 250px; }
-.search-section { text-align: center; margin-bottom: 20px; }
-.editable { background: #f9f9f9; border: 1px dashed #ccc; padding: 4px; border-radius: 6px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      padding: 20px;
+    }
+    .invoice-container {
+      max-width: 800px;
+      background: white;
+      margin: 30px auto;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .input-group {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 250px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 18px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .details {
+      margin-top: 20px;
+      border-top: 2px solid #007bff;
+      padding-top: 15px;
+    }
+    .details div {
+      margin-bottom: 8px;
+    }
+    .label {
+      font-weight: bold;
+      color: #333;
+    }
+    .value {
+      color: #555;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<div class="invoice-container">
-  <div class="search-section">
-    <input type="text" id="invoiceInput" placeholder="Enter Invoice Number">
-    <button onclick="loadInvoice()">Search Invoice</button>
-  </div>
+  <div class="invoice-container">
+    <h2>Invoice Viewer</h2>
 
-  <header>
-    <div class="shop-name" id="shopName">Shop Name</div>
-    <div class="invoice-meta">
-      <div><strong>Invoice:</strong> <span id="invoiceNumber"></span></div>
-      <div><strong>Date:</strong> <span id="invoiceDate"></span></div>
-      <div><strong>Sales Person:</strong> <span id="salesPerson"></span></div>
+    <div class="input-group">
+      <input type="text" id="invoiceNumber" placeholder="Enter Invoice Number (e.g. INV1762933901829)">
+      <button onclick="fetchInvoice()">Search</button>
     </div>
-  </header>
 
-  <div class="info">
-    <strong>Customer Name:</strong> <span id="custName"></span><br>
-    <strong>Mobile:</strong> <span id="custMobile"></span><br>
-    <strong>Address:</strong> <span id="custAddress"></span><br>
-    <strong>GST:</strong> <span id="custGST"></span><br>
-    <strong>Tag:</strong> 
-    <span id="tagField" class="editable" contenteditable="true" onblur="updateTag()"></span>
+    <div id="errorMsg" class="error"></div>
+    <div id="invoiceDetails" class="details"></div>
   </div>
 
-  <h2>Invoice Details</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Product ID</th>
-        <th>Item Name</th>
-        <th>Batch No</th>
-        <th>Qty</th>
-        <th>Price (₹)</th>
-        <th>Subtotal (₹)</th>
-      </tr>
-    </thead>
-    <tbody id="itemTable"></tbody>
-  </table>
+  <script>
+    const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+    const salesTableId = 736209;
+    const productTableId = 734793;
 
-  <div class="total">
-    Total: ₹<span id="totalAmount">0.00</span><br>
-    <span class="total-words" id="amountWords"></span>
-  </div>
+    const salesUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/?user_field_names=true`;
+    const productUrl = `https://api.baserow.io/api/database/rows/table/${productTableId}/?user_field_names=true`;
 
-  <div class="btns">
-    <button onclick="window.print()">🖨 Print Invoice</button>
-  </div>
-</div>
+    async function fetchInvoice() {
+      const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const detailsDiv = document.getElementById("invoiceDetails");
+      const errorDiv = document.getElementById("errorMsg");
 
-<script>
-const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const SALES_TABLE = 736209;
-const PRODUCT_TABLE = 734793;
-let currentRowId = null;
+      detailsDiv.innerHTML = "";
+      errorDiv.innerText = "";
 
-// Convert number to words
-function inWords(num) {
-  const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-  const b=['','', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  if((num=num.toString()).length>9) return 'Overflow';
-  let n=('000000000'+num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-  if(!n) return; let str='';
-  str += (n[1]!=0)?(a[Number(n[1])]||b[n[1][0]]+' '+a[n[1][1]])+'Crore ':'';
-  str += (n[2]!=0)?(a[Number(n[2])]||b[n[2][0]]+' '+a[n[2][1]])+'Lakh ':'';
-  str += (n[3]!=0)?(a[Number(n[3])]||b[n[3][0]]+' '+a[n[3][1]])+'Thousand ':'';
-  str += (n[4]!=0)?(a[Number(n[4])]||b[n[4][0]]+' '+a[n[4][1]])+'Hundred ':'';
-  str += (n[5]!=0)?((str!='')?'and ':'')+(a[Number(n[5])]||b[n[5][0]]+' '+a[n[5][1]])+'Rupees Only':'';
-  return str;
-}
+      if (!invoiceNumber) {
+        errorDiv.innerText = "⚠️ Please enter an invoice number.";
+        return;
+      }
 
-// On page load
-window.onload = () => {
-  document.getElementById("shopName").textContent = localStorage.getItem("ShopTag") || "Shop Name";
-};
+      if (!shopIDTag) {
+        errorDiv.innerText = "⚠️ ShopIDTag not found in local storage. Please log in first.";
+        return;
+      }
 
-// Load invoice
-async function loadInvoice() {
-  const inv = document.getElementById("invoiceInput").value.trim();
-  if(!inv) return alert("Enter Invoice Number");
+      try {
+        // Fetch Sales Data
+        const salesResponse = await fetch(salesUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const salesData = await salesResponse.json();
 
-  const shopIdTag = localStorage.getItem("ShopIDTag");
-  if(!shopIdTag) return alert("ShopIDTag not found");
+        const invoice = salesData.results.find(
+          row => row["Invoice Number"] === invoiceNumber && row["ShopID"] === shopIDTag
+        );
 
-  // Correct Baserow filter URL
-  const url = `https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/?user_field_names=true&filter__field=Invoice%20Number__equal=${encodeURIComponent(inv)}`;
-  const salesResp = await fetch(url, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
+        if (!invoice) {
+          errorDiv.innerText = "❌ No invoice found for this number or invalid ShopID.";
+          return;
+        }
 
-  const salesData = await salesResp.json();
-  console.log("Sales API Response:", salesData);
+        // Fetch Product Name using Product ID
+        let productName = "Not Found";
+        if (invoice["Product ID"]) {
+          const productResponse = await fetch(productUrl, {
+            headers: { Authorization: `Token ${apiKey}` }
+          });
+          const productData = await productResponse.json();
 
-  if(!salesData.results || salesData.results.length === 0) return alert("Invoice not found");
+          const product = productData.results.find(
+            p => p["Product ID"] === invoice["Product ID"]
+          );
 
-  // Validate ShopID
-  const row = salesData.results[0];
-  const shopIdFromSales = row.ShopID;
+          if (product && product["Product Name"]) {
+            productName = product["Product Name"];
+          }
+        }
 
-  if(shopIdTag.toString() !== shopIdFromSales.toString()) {
-    return alert(`Access denied! ShopIDTag (${shopIdTag}) does not match ShopID (${shopIdFromSales})`);
-  }
+        // Display Invoice
+        detailsDiv.innerHTML = `
+          <div><span class="label">Invoice Number:</span> <span class="value">${invoice["Invoice Number"]}</span></div>
+          <div><span class="label">Customer Name:</span> <span class="value">${invoice["Costomer Name"]}</span></div>
+          <div><span class="label">Mobile:</span> <span class="value">${invoice["Mobile"]}</span></div>
+          <div><span class="label">Address:</span> <span class="value">${invoice["Address"]}</span></div>
+          <div><span class="label">GST:</span> <span class="value">${invoice["GST"] || "Nil"}</span></div>
+          <div><span class="label">Date:</span> <span class="value">${invoice["Date"]}</span></div>
+          <div><span class="label">Product ID:</span> <span class="value">${invoice["Product ID"]}</span></div>
+          <div><span class="label">Item Name:</span> <span class="value">${productName}</span></div>
+          <div><span class="label">Batch No:</span> <span class="value">${invoice["Batch No"]}</span></div>
+          <div><span class="label">Quantity:</span> <span class="value">${invoice["Quantity"]}</span></div>
+          <div><span class="label">Price:</span> <span class="value">${invoice["Price"]}</span></div>
+          <div><span class="label">Tag:</span> <span class="value">${invoice["Tag"]}</span></div>
+          <div><span class="label">Sales Person:</span> <span class="value">${invoice["Sales Person"]}</span></div>
+        `;
+      } catch (error) {
+        console.error(error);
+        errorDiv.innerText = "⚠️ Error fetching data. Please try again.";
+      }
+    }
+  </script>
 
-  currentRowId = row.id;
-  document.getElementById("invoiceNumber").textContent = row["Invoice Number"];
-  document.getElementById("invoiceDate").textContent = row.Date;
-  document.getElementById("custName").textContent = row["Costomer Name"];
-  document.getElementById("custMobile").textContent = row["Mobile-number"];
-  document.getElementById("custAddress").textContent = row.Address;
-  document.getElementById("custGST").textContent = row.GST || "Nil";
-  document.getElementById("salesPerson").textContent = row["Sales Person"];
-  document.getElementById("tagField").textContent = row.Tag || "";
-
-  // Build invoice items
-  let total = 0;
-  let tableHTML = "";
-  for(const r of salesData.results) {
-    const pid = r["Product ID"];
-    const pname = r["Item Name"] || await getProductName(pid);
-    const qty = parseFloat(r.Quantity || 0);
-    const price = parseFloat(r.Price || 0);
-    const subtotal = qty * price;
-    total += subtotal;
-
-    tableHTML += `<tr>
-      <td>${pid}</td>
-      <td>${pname}</td>
-      <td>${r["Batch No"]}</td>
-      <td>${qty}</td>
-      <td>${price.toFixed(2)}</td>
-      <td>${subtotal.toFixed(2)}</td>
-    </tr>`;
-  }
-
-  document.getElementById("itemTable").innerHTML = tableHTML;
-  document.getElementById("totalAmount").textContent = total.toFixed(2);
-  document.getElementById("amountWords").textContent = inWords(Math.round(total));
-}
-
-// Fetch Product Name from Product Table
-async function getProductName(pid) {
-  const resp = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filter__field=Product%20ID__equal=${encodeURIComponent(pid)}`, {
-    headers: { Authorization: `Token ${API_KEY}` }
-  });
-  const data = await resp.json();
-  return data.results[0]?.["Product Name"] || "N/A";
-}
-
-// Update Tag field
-async function updateTag() {
-  const newTag = document.getElementById("tagField").textContent.trim();
-  if(!currentRowId) return;
-  await fetch(`https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/${currentRowId}/?user_field_names=true`, {
-    method: "PATCH",
-    headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ Tag: newTag })
-  });
-  alert("Tag updated successfully!");
-}
-</script>
 </body>
 </html>
