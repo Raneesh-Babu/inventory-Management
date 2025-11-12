@@ -48,19 +48,35 @@
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
       padding: 25px 30px;
-      text-align: center;
+    }
+    
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .shop-info {
+      text-align: right;
+    }
+    
+    .shop-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .shop-tag {
+      font-size: 14px;
+      opacity: 0.9;
     }
     
     .invoice-header h2 {
       font-size: 28px;
       font-weight: 700;
-      margin-bottom: 5px;
+      text-align: center;
       letter-spacing: 0.5px;
-    }
-    
-    .invoice-header p {
-      opacity: 0.9;
-      font-size: 16px;
     }
     
     .search-section {
@@ -120,6 +136,16 @@
       margin: 15px 0;
       padding: 12px;
       background: rgba(247, 37, 133, 0.08);
+      border-radius: var(--border-radius);
+      font-weight: 500;
+    }
+    
+    .success {
+      color: var(--primary);
+      text-align: center;
+      margin: 15px 0;
+      padding: 12px;
+      background: rgba(67, 97, 238, 0.08);
       border-radius: var(--border-radius);
       font-weight: 500;
     }
@@ -244,6 +270,16 @@
         margin: 15px;
       }
       
+      .header-top {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .shop-info {
+        text-align: center;
+      }
+      
       .search-container {
         flex-direction: column;
       }
@@ -266,25 +302,51 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
 
   <div class="invoice-container">
     <div class="invoice-header">
+      <div class="header-top">
+        <div class="logo">
+          <h3>InvoicePro</h3>
+        </div>
+        <div class="shop-info">
+          <div class="shop-name" id="shopName">Loading Shop Name...</div>
+          <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
+        </div>
+      </div>
       <h2>Professional Invoice Viewer</h2>
-      <p>View and manage your invoices with ease</p>
     </div>
 
     <div class="search-section">
       <div class="search-container">
         <input type="text" id="invoiceNumber" class="search-input" placeholder="Enter Invoice Number (e.g. INV1762933901829)">
-        <button class="search-btn" onclick="fetchInvoice()">Search Invoice</button>
+        <button class="search-btn" id="searchBtn" onclick="fetchInvoice()">
+          <span id="btnText">Search Invoice</span>
+        </button>
       </div>
     </div>
 
     <div class="invoice-body">
       <div id="errorMsg" class="error"></div>
+      <div id="successMsg" class="success"></div>
       <div id="invoiceDetails" class="invoice-details"></div>
 
       <div id="itemsTable"></div>
@@ -302,28 +364,68 @@
     const salesUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/?user_field_names=true`;
     const productUrl = `https://api.baserow.io/api/database/rows/table/${productTableId}/?user_field_names=true`;
 
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load shop information from localStorage
+      loadShopInfo();
+      
+      // Check for invoice parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const invoiceParam = urlParams.get('invoice');
+      
+      if (invoiceParam) {
+        document.getElementById('invoiceNumber').value = invoiceParam;
+        fetchInvoice();
+      }
+    });
+
+    function loadShopInfo() {
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const shopName = localStorage.getItem("ShopName") || "Your Shop";
+      
+      if (shopIDTag) {
+        document.getElementById('shopTag').textContent = shopIDTag;
+        document.getElementById('shopName').textContent = shopName;
+      } else {
+        document.getElementById('shopTag').textContent = "Not Set";
+        document.getElementById('shopName').textContent = "Please Set Shop Information";
+      }
+    }
+
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
       const detailsDiv = document.getElementById("invoiceDetails");
       const errorDiv = document.getElementById("errorMsg");
+      const successDiv = document.getElementById("successMsg");
       const itemsDiv = document.getElementById("itemsTable");
       const totalDiv = document.getElementById("totalAmount");
       const printBtn = document.getElementById("printBtn");
+      const searchBtn = document.getElementById("searchBtn");
+      const btnText = document.getElementById("btnText");
 
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
+      successDiv.innerText = "";
       itemsDiv.innerHTML = "";
       totalDiv.innerText = "";
       printBtn.style.display = "none";
 
+      // Show loading state
+      searchBtn.disabled = true;
+      btnText.innerHTML = '<span class="loading"></span> Searching...';
+
       if (!invoiceNumber) {
         errorDiv.innerText = "⚠️ Please enter an invoice number.";
+        searchBtn.disabled = false;
+        btnText.textContent = "Search Invoice";
         return;
       }
 
       if (!shopIDTag) {
         errorDiv.innerText = "⚠️ ShopIDTag not found in local storage. Please log in first.";
+        searchBtn.disabled = false;
+        btnText.textContent = "Search Invoice";
         return;
       }
 
@@ -346,6 +448,8 @@
 
         if (invoiceRows.length === 0) {
           errorDiv.innerText = "❌ No invoice found for this number or invalid ShopID.";
+          searchBtn.disabled = false;
+          btnText.textContent = "Search Invoice";
           return;
         }
 
@@ -427,14 +531,24 @@
         itemsDiv.innerHTML = tableHTML;
         totalDiv.innerHTML = `<div class="total-amount">Grand Total: ₹${grandTotal.toFixed(2)}</div>`;
         printBtn.style.display = "block";
+        successDiv.innerText = "✅ Invoice loaded successfully!";
         
         // Add fade-in animation
         detailsDiv.classList.add('fade-in');
         itemsDiv.classList.add('fade-in');
         totalDiv.classList.add('fade-in');
+        
+        // Update URL without page reload
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('invoice', invoiceNumber);
+        window.history.pushState({}, '', newUrl);
+        
       } catch (error) {
         console.error(error);
         errorDiv.innerText = "⚠️ Error fetching data. Please try again.";
+      } finally {
+        searchBtn.disabled = false;
+        btnText.textContent = "Search Invoice";
       }
     }
     
@@ -444,7 +558,22 @@
         fetchInvoice();
       }
     });
+    
+    // Demo function to set shop info (for testing)
+    function setDemoShopInfo() {
+      localStorage.setItem("ShopIDTag", "SHOP001");
+      localStorage.setItem("ShopName", "Premium Electronics Store");
+      loadShopInfo();
+      document.getElementById("successMsg").innerText = "✅ Demo shop information set!";
+    }
   </script>
+
+  <!-- Demo button for testing (remove in production) -->
+  <div style="text-align: center; margin-top: 20px;">
+    <button onclick="setDemoShopInfo()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      Set Demo Shop Info (for testing)
+    </button>
+  </div>
 
 </body>
 </html>
