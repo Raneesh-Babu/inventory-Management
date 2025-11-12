@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Professional Invoice Viewer</title>
+  <title>Invoice Viewer</title>
   <style>
     :root {
       --primary: #4361ee;
@@ -48,35 +48,19 @@
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
       padding: 25px 30px;
-    }
-    
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    
-    .shop-info {
-      text-align: right;
+      text-align: center;
     }
     
     .shop-name {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 28px;
+      font-weight: 700;
       margin-bottom: 5px;
+      letter-spacing: 0.5px;
     }
     
     .shop-tag {
-      font-size: 14px;
+      font-size: 16px;
       opacity: 0.9;
-    }
-    
-    .invoice-header h2 {
-      font-size: 28px;
-      font-weight: 700;
-      text-align: center;
-      letter-spacing: 0.5px;
     }
     
     .search-section {
@@ -136,16 +120,6 @@
       margin: 15px 0;
       padding: 12px;
       background: rgba(247, 37, 133, 0.08);
-      border-radius: var(--border-radius);
-      font-weight: 500;
-    }
-    
-    .success {
-      color: var(--primary);
-      text-align: center;
-      margin: 15px 0;
-      padding: 12px;
-      background: rgba(67, 97, 238, 0.08);
       border-radius: var(--border-radius);
       font-weight: 500;
     }
@@ -270,16 +244,6 @@
         margin: 15px;
       }
       
-      .header-top {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-      }
-      
-      .shop-info {
-        text-align: center;
-      }
-      
       .search-container {
         flex-direction: column;
       }
@@ -323,19 +287,11 @@
 
   <div class="invoice-container">
     <div class="invoice-header">
-      <div class="header-top">
-        <div class="logo">
-          <h3>InvoicePro</h3>
-        </div>
-        <div class="shop-info">
-          <div class="shop-name" id="shopName">Loading Shop Name...</div>
-          <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
-        </div>
-      </div>
-      <h2>Professional Invoice Viewer</h2>
+      <div class="shop-name" id="shopName">Loading Shop Name...</div>
+      <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
     </div>
 
-    <div class="search-section">
+    <div class="search-section" id="searchSection">
       <div class="search-container">
         <input type="text" id="invoiceNumber" class="search-input" placeholder="Enter Invoice Number (e.g. INV1762933901829)">
         <button class="search-btn" id="searchBtn" onclick="fetchInvoice()">
@@ -346,7 +302,6 @@
 
     <div class="invoice-body">
       <div id="errorMsg" class="error"></div>
-      <div id="successMsg" class="success"></div>
       <div id="invoiceDetails" class="invoice-details"></div>
 
       <div id="itemsTable"></div>
@@ -374,6 +329,8 @@
       const invoiceParam = urlParams.get('invoice');
       
       if (invoiceParam) {
+        // Hide search section if invoice parameter is present
+        document.getElementById('searchSection').style.display = 'none';
         document.getElementById('invoiceNumber').value = invoiceParam;
         fetchInvoice();
       }
@@ -397,7 +354,6 @@
       const shopIDTag = localStorage.getItem("ShopIDTag");
       const detailsDiv = document.getElementById("invoiceDetails");
       const errorDiv = document.getElementById("errorMsg");
-      const successDiv = document.getElementById("successMsg");
       const itemsDiv = document.getElementById("itemsTable");
       const totalDiv = document.getElementById("totalAmount");
       const printBtn = document.getElementById("printBtn");
@@ -406,7 +362,6 @@
 
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
-      successDiv.innerText = "";
       itemsDiv.innerHTML = "";
       totalDiv.innerText = "";
       printBtn.style.display = "none";
@@ -531,7 +486,6 @@
         itemsDiv.innerHTML = tableHTML;
         totalDiv.innerHTML = `<div class="total-amount">Grand Total: ₹${grandTotal.toFixed(2)}</div>`;
         printBtn.style.display = "block";
-        successDiv.innerText = "✅ Invoice loaded successfully!";
         
         // Add fade-in animation
         detailsDiv.classList.add('fade-in');
@@ -558,22 +512,7 @@
         fetchInvoice();
       }
     });
-    
-    // Demo function to set shop info (for testing)
-    function setDemoShopInfo() {
-      localStorage.setItem("ShopIDTag", "SHOP001");
-      localStorage.setItem("ShopTag", "Premium Electronics Store");
-      loadShopInfo();
-      document.getElementById("successMsg").innerText = "✅ Demo shop information set!";
-    }
   </script>
-
-  <!-- Demo button for testing (remove in production) -->
-  <div style="text-align: center; margin-top: 20px;">
-    <button onclick="setDemoShopInfo()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-      Set Demo Shop Info (for testing)
-    </button>
-  </div>
 
 </body>
 </html>
