@@ -54,7 +54,7 @@
     .header-content {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       flex-wrap: wrap;
     }
     
@@ -65,13 +65,25 @@
     .shop-name {
       font-size: 28px;
       font-weight: 700;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
       letter-spacing: 0.5px;
     }
     
-    .shop-tag {
-      font-size: 16px;
+    .shop-details {
+      font-size: 14px;
       opacity: 0.9;
+      line-height: 1.4;
+    }
+    
+    .shop-address, .shop-phone {
+      margin-bottom: 4px;
+    }
+    
+    .shop-id {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 8px;
+      font-weight: 500;
     }
     
     .invoice-tag {
@@ -271,8 +283,13 @@
         gap: 15px;
       }
       
+      .shop-info {
+        text-align: center;
+      }
+      
       .invoice-tag {
         margin-top: 10px;
+        align-self: center;
       }
       
       .search-container {
@@ -321,7 +338,11 @@
       <div class="header-content">
         <div class="shop-info">
           <div class="shop-name" id="shopName">Loading Shop Name...</div>
-          <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
+          <div class="shop-details">
+            <div class="shop-address" id="shopAddress">Loading address...</div>
+            <div class="shop-phone" id="shopPhone">Loading phone...</div>
+          </div>
+          <div class="shop-id">Shop ID: <span id="shopTag">Loading...</span></div>
         </div>
         <div class="invoice-tag" id="invoiceTag" style="display: none;"></div>
       </div>
@@ -372,16 +393,59 @@
       }
     });
 
+    function parseShopTag(shopTag) {
+      // Expected format: ShopName-Address/PhoneNumber
+      let shopName = "Your Shop";
+      let address = "Address not available";
+      let phone = "Phone not available";
+      
+      if (shopTag) {
+        // Split by '-' to separate shop name from address/phone
+        const firstSplit = shopTag.split('-');
+        
+        if (firstSplit.length > 1) {
+          shopName = firstSplit[0].trim();
+          
+          // Split the remaining part by '/' to separate address and phone
+          const secondSplit = firstSplit[1].split('/');
+          
+          if (secondSplit.length > 1) {
+            address = secondSplit[0].trim();
+            phone = secondSplit[1].trim();
+          } else {
+            // If no '/' found, treat the whole remaining part as address
+            address = firstSplit[1].trim();
+          }
+        } else {
+          // If no '-' found, use the whole string as shop name
+          shopName = shopTag.trim();
+        }
+      }
+      
+      return {
+        shopName,
+        address,
+        phone
+      };
+    }
+
     function loadShopInfo() {
       const shopIDTag = localStorage.getItem("ShopIDTag");
-      const shopTag = localStorage.getItem("ShopTag") || "Your Shop";
+      const shopTagValue = localStorage.getItem("ShopTag") || "Your Shop";
+      
+      // Parse the ShopTag value
+      const shopInfo = parseShopTag(shopTagValue);
       
       if (shopIDTag) {
         document.getElementById('shopTag').textContent = shopIDTag;
-        document.getElementById('shopName').textContent = shopTag;
+        document.getElementById('shopName').textContent = shopInfo.shopName;
+        document.getElementById('shopAddress').textContent = shopInfo.address;
+        document.getElementById('shopPhone').textContent = shopInfo.phone;
       } else {
         document.getElementById('shopTag').textContent = "Not Set";
         document.getElementById('shopName').textContent = "Please Set Shop Information";
+        document.getElementById('shopAddress').textContent = "Please set ShopTag in localStorage";
+        document.getElementById('shopPhone').textContent = "Please set ShopTag in localStorage";
       }
     }
 
