@@ -472,6 +472,30 @@
       padding: 15px;
     }
     
+    .batch-container {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
+    .batch-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .batch-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    .batch-container::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    
+    .batch-container::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
     .batch-table {
       width: 100%;
       border-collapse: collapse;
@@ -485,6 +509,8 @@
       font-weight: 600;
       font-size: 12px;
       color: var(--gray);
+      position: sticky;
+      top: 0;
     }
     
     .batch-table td {
@@ -813,6 +839,10 @@
       .invoice-modal-content {
         width: 98%;
         height: 85vh;
+      }
+      
+      .batch-container {
+        max-height: 300px;
       }
     }
   </style>
@@ -1489,7 +1519,10 @@
     }
 
     function generateBatchDetailsHTML(product, batches) {
-      let html = `<h4 style="margin-bottom: 15px; color: var(--primary);">Batch-wise Report for ${product.productName}</h4>`;
+      let html = `
+        <h4 style="margin-bottom: 15px; color: var(--primary);">Batch-wise Report for ${product.productName}</h4>
+        <div class="batch-container">
+      `;
       
       // Sort batches by total value (descending)
       const sortedBatches = Object.values(batches).sort((a, b) => b.total - a.total);
@@ -1554,6 +1587,8 @@
           </div>
         `;
       });
+      
+      html += `</div>`; // Close batch-container
       
       return html;
     }
