@@ -107,11 +107,13 @@
 <body>
 
 <div class="invoice-container">
+  <!-- Search Section -->
   <div class="search-section">
     <input type="text" id="invoiceInput" placeholder="Enter Invoice Number">
     <button onclick="loadInvoice()">Search Invoice</button>
   </div>
 
+  <!-- Invoice Header -->
   <header>
     <div class="shop-name" id="shopName">Shop Name</div>
     <div class="invoice-meta">
@@ -121,6 +123,7 @@
     </div>
   </header>
 
+  <!-- Customer Info -->
   <div class="info">
     <strong>Customer Name:</strong> <span id="custName"></span><br>
     <strong>Mobile:</strong> <span id="custMobile"></span><br>
@@ -130,6 +133,7 @@
     <span id="tagField" class="editable" contenteditable="true" onblur="updateTag()"></span>
   </div>
 
+  <!-- Invoice Table -->
   <h2>Invoice Details</h2>
   <table>
     <thead>
@@ -145,11 +149,13 @@
     <tbody id="itemTable"></tbody>
   </table>
 
+  <!-- Total Section -->
   <div class="total">
     Total: ₹<span id="totalAmount">0.00</span><br>
     <span class="total-words" id="amountWords"></span>
   </div>
 
+  <!-- Print Button -->
   <div class="btns">
     <button onclick="window.print()">🖨 Print Invoice</button>
   </div>
@@ -181,7 +187,7 @@ function inWords(num) {
   return str;
 }
 
-// Load invoice on start if ?inv= present
+// On page load: set shop name and auto-load invoice if URL has ?inv=
 window.onload = () => {
   document.getElementById("shopName").textContent = localStorage.getItem("ShopTag") || "Shop Name";
   const urlParams = new URLSearchParams(window.location.search);
@@ -192,22 +198,30 @@ window.onload = () => {
   }
 };
 
+// Load invoice function
 async function loadInvoice() {
   const inv = document.getElementById("invoiceInput").value.trim();
   if (!inv) return alert("Enter Invoice Number");
 
   currentInvoice = inv;
-  const shopId = localStorage.getItem("ShopIDTag");
+  const shopIdTag = localStorage.getItem("ShopIDTag");
+  if (!shopIdTag) return alert("ShopIDTag not found in localStorage");
 
+  // Fetch Sales Table rows for this invoice
   const salesResp = await fetch(`https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/?user_field_names=true&filter__field=Invoice Number__equal=${inv}`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
   const salesData = await salesResp.json();
   if (!salesData.results.length) return alert("Invoice not found");
 
-  const row = salesData.results[0];
-  if (row.ShopID != shopId) return alert("Access denied: ShopID mismatch");
+  // Get ShopID from the first row
+  const shopIdFromSales = salesData.results[0].ShopID;
+  if (shopIdTag !== shopIdFromSales) {
+    return alert("Access denied: ShopID does not match local ShopIDTag");
+  }
 
+  // Populate invoice header & customer info
+  const row = salesData.results[0];
   document.getElementById("invoiceNumber").textContent = row["Invoice Number"];
   document.getElementById("invoiceDate").textContent = row.Date;
   document.getElementById("custName").textContent = row["Costomer Name"];
@@ -216,12 +230,11 @@ async function loadInvoice() {
   document.getElementById("custGST").textContent = row.GST || "Nil";
   document.getElementById("salesPerson").textContent = row["Sales Person"];
   document.getElementById("tagField").textContent = row.Tag || "";
-  
   currentRowId = row.id;
 
+  // Build items table
   let total = 0;
   let tableHTML = "";
-
   for (const r of salesData.results) {
     const pid = r["Product ID"];
     const pname = await getProductName(pid);
@@ -240,12 +253,12 @@ async function loadInvoice() {
         <td>${subtotal.toFixed(2)}</td>
       </tr>`;
   }
-
   document.getElementById("itemTable").innerHTML = tableHTML;
   document.getElementById("totalAmount").textContent = total.toFixed(2);
   document.getElementById("amountWords").textContent = inWords(Math.round(total));
 }
 
+// Fetch product name from Product Table
 async function getProductName(pid) {
   const resp = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filter__field=Product ID__equal=${pid}`, {
     headers: { Authorization: `Token ${API_KEY}` }
@@ -254,6 +267,7 @@ async function getProductName(pid) {
   return data.results[0]?.["Product Name"] || "N/A";
 }
 
+// Update Tag field to Baserow
 async function updateTag() {
   const newTag = document.getElementById("tagField").textContent.trim();
   if (!currentRowId) return;
