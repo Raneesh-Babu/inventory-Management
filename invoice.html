@@ -187,7 +187,7 @@ function inWords(num) {
   return str;
 }
 
-// On page load: set shop name and auto-load invoice if URL has ?inv=
+// On page load
 window.onload = () => {
   document.getElementById("shopName").textContent = localStorage.getItem("ShopTag") || "Shop Name";
   const urlParams = new URLSearchParams(window.location.search);
@@ -198,7 +198,7 @@ window.onload = () => {
   }
 };
 
-// Load invoice function with ShopIDTag validation
+// Load invoice function
 async function loadInvoice() {
   const inv = document.getElementById("invoiceInput").value.trim();
   if (!inv) return alert("Enter Invoice Number");
@@ -213,13 +213,13 @@ async function loadInvoice() {
   const salesData = await salesResp.json();
   if (!salesData.results.length) return alert("Invoice not found");
 
-  // Take ShopID from Sales Table and compare
+  // Get ShopID from Sales Table row and compare
   const shopIdFromSales = salesData.results[0].ShopID;
   if (shopIdTag !== shopIdFromSales) {
     return alert(`Access denied! ShopIDTag (${shopIdTag}) does not match ShopID (${shopIdFromSales}) in Sales Table.`);
   }
 
-  // Populate invoice header & customer info
+  // Populate header & customer info
   const row = salesData.results[0];
   document.getElementById("invoiceNumber").textContent = row["Invoice Number"];
   document.getElementById("invoiceDate").textContent = row.Date;
@@ -257,7 +257,7 @@ async function loadInvoice() {
   document.getElementById("amountWords").textContent = inWords(Math.round(total));
 }
 
-// Fetch product name from Product Table
+// Fetch product name
 async function getProductName(pid) {
   const resp = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filter__field=Product ID__equal=${pid}`, {
     headers: { Authorization: `Token ${API_KEY}` }
@@ -266,7 +266,7 @@ async function getProductName(pid) {
   return data.results[0]?.["Product Name"] || "N/A";
 }
 
-// Update Tag field to Baserow
+// Update Tag
 async function updateTag() {
   const newTag = document.getElementById("tagField").textContent.trim();
   if (!currentRowId) return;
