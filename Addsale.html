@@ -1,983 +1,499 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Management System</title>
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 20px;
-        }
-        
-        .login-warning {
-            background-color: #e74c3c;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .form-section {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .section-title {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        .search-container {
-            position: relative;
-        }
-        
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-        }
-        
-        .search-result-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-        }
-        
-        .search-result-item:hover {
-            background-color: #f5f7fa;
-        }
-        
-        .product-list {
-            margin-top: 20px;
-        }
-        
-        .product-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            align-items: center;
-        }
-        
-        .product-item:last-child {
-            border-bottom: none;
-        }
-        
-        .product-details {
-            flex-grow: 1;
-        }
-        
-        .product-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-success {
-            background-color: #2ecc71;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #27ae60;
-        }
-        
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .btn-warning {
-            background-color: #f39c12;
-            color: white;
-        }
-        
-        .btn-warning:hover {
-            background-color: #d35400;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-        }
-        
-        .batch-item {
-            padding: 10px;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .batch-item:hover {
-            background-color: #f5f7fa;
-        }
-        
-        .batch-item.selected {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .camera-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        #scanner-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            position: relative;
-        }
-        
-        #interactive {
-            width: 100%;
-            height: 300px;
-            background-color: #000;
-        }
-        
-        .camera-controls {
-            margin-top: 10px;
-        }
-        
-        .invoice-summary {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .invoice-total {
-            font-size: 20px;
-            font-weight: bold;
-            text-align: right;
-            margin-top: 10px;
-        }
-        
-        .action-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .product-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .product-actions {
-                margin-top: 10px;
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .action-buttons .btn {
-                width: 100%;
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sales Invoice - Single Page</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;padding:16px;background:#f5f7fb}
+    .container{max-width:1100px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(20,20,50,0.06)}
+    h1{margin:0 0 12px;font-size:20px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .card{background:#fbfdff;padding:12px;border-radius:8px;border:1px solid #e6eef8;flex:1 1 300px}
+    label{display:block;font-size:13px;margin-bottom:6px}
+    input[type=text], input[type=number], input[type=date], select, textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #d6e6f5}
+    button{padding:8px 12px;border-radius:8px;border:0;background:#0b63d1;color:#fff;cursor:pointer}
+    .muted{color:#666;font-size:13px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    .actions{display:flex;gap:8px}
+    .scanner{position:relative}
+    #video{width:100%;border-radius:8px;background:#000}
+    .modal{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)}
+    .modal > .modal-inner{background:#fff;padding:12px;border-radius:8px;width:90%;max-width:720px}
+    .hidden{display:none}
+    .print-area{background:#fff;padding:18px;border-radius:8px}
+    .danger{background:#ef4444}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Invoice Management System</h1>
-        </header>
-        
-        <div class="login-warning" id="loginWarning">
-            Please login to continue. ShopID or MobileTag is missing.
-        </div>
-        
-        <div class="form-section">
-            <h2 class="section-title">Customer Information</h2>
-            
-            <div class="form-group">
-                <label for="customerSearch">Search Customer (Name or Mobile)</label>
-                <div class="search-container">
-                    <input type="text" id="customerSearch" placeholder="Enter customer name or mobile number">
-                    <div class="search-results" id="customerResults"></div>
-                </div>
-            </div>
-            
-            <div class="form-row" style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="Costomer Name">Costomer Name</label>
-                    <input type="text" id="Costomer Name" readonly>
-                </div>
-                
-                <div class="form-group" style="flex: 1;">
-                    <label for="Mobile">Mobile</label>
-                    <input type="text" id="Mobile" readonly>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="Address">Address</label>
-                <textarea id="Address" rows="3" readonly></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="GST">GST (Optional)</label>
-                <input type="text" id="GST">
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h2 class="section-title">Product Information</h2>
-            
-            <div class="form-group">
-                <label for="productSearch">Search Product (Name or ID)</label>
-                <div class="search-container">
-                    <input type="text" id="productSearch" placeholder="Enter product name or ID">
-                    <div class="search-results" id="productResults"></div>
-                </div>
-            </div>
-            
-            <div class="camera-container">
-                <button id="scanBtn" class="btn btn-primary">Scan Barcode</button>
-                <div id="scanner-container" style="display: none;">
-                    <div id="interactive"></div>
-                    <div class="camera-controls">
-                        <button id="cameraOnBtn" class="btn btn-success">Camera On</button>
-                        <button id="cameraOffBtn" class="btn btn-danger">Camera Off</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="product-list" id="productList">
-                <!-- Product items will be added here dynamically -->
-            </div>
-            
-            <div class="invoice-summary">
-                <div class="invoice-total">
-                    Total: ₹<span id="invoiceTotal">0.00</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h2 class="section-title">Invoice Details</h2>
-            
-            <div class="form-row" style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="Date">Date</label>
-                    <input type="date" id="Date">
-                </div>
-                
-                <div class="form-group" style="flex: 1;">
-                    <label for="Invoice Number">Invoice Number</label>
-                    <input type="text" id="Invoice Number" readonly>
-                </div>
-            </div>
-            
-            <div class="form-row" style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="ShopID">Shop ID</label>
-                    <input type="text" id="ShopID" readonly>
-                </div>
-                
-                <div class="form-group" style="flex: 1;">
-                    <label for="Sales Person">Sales Person</label>
-                    <input type="text" id="Sales Person" readonly>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="Tag">Tag</label>
-                <select id="Tag">
-                    <option value="Order Confirmed">Order Confirmed</option>
-                    <option value="Return">Return</option>
-                    <option value="Warranty">Warranty</option>
-                </select>
-            </div>
-            
-            <div class="action-buttons">
-                <button id="saveBtn" class="btn btn-success">Save Invoice</button>
-                <button id="resetBtn" class="btn btn-warning">Reset Form</button>
-            </div>
-        </div>
+  <div class="container">
+    <h1>Sales Invoice — Single Page</h1>
+    <div id="loginWarning" class="muted"></div><div class="row">
+  <div class="card" style="flex:1 1 420px;">
+    <h3>Customer (Costomer) details</h3>
+    <div style="margin-bottom:8px">
+      <label>Search Costomer (Costomer Name or Mobile)</label>
+      <input id="custSearch" placeholder="type name or mobile to search" />
     </div>
-    
-    <!-- Batch Selection Modal -->
-    <div class="modal" id="batchModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Select Batch</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div id="batchList">
-                <!-- Batch items will be added here dynamically -->
-            </div>
-        </div>
+    <div style="margin-bottom:8px">
+      <label>Costomer Name</label>
+      <input id="Costomer Name" />
     </div>
-    
-    <script>
-        // API Configuration
-        const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
-        const BASE_URL = 'https://api.airtable.com/v0/appj0LcDk4dJhHEn9';
-        
-        // Table IDs
-        const CUSTOMER_TABLE = '736204';
-        const PRODUCTS_TABLE = '734793';
-        const INVENTORY_TABLE = '734795';
-        const SALES_TABLE = '736209';
-        const LEDGER_TABLE = '736207';
-        const USER_TABLE = '729979';
-        
-        // Global variables
-        let selectedCustomer = null;
-        let selectedProduct = null;
-        let products = [];
-        let isCameraActive = false;
-        
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupEventListeners();
-            generateInvoiceNumber();
-            setCurrentDate();
-        });
-        
-        function initializeApp() {
-            // Check if user is logged in
-            const shopID = localStorage.getItem('ShopIDTag');
-            const salesPerson = localStorage.getItem('NameTag');
-            const mobileTag = localStorage.getItem('MobileTag');
-            
-            if (!shopID || !mobileTag) {
-                document.getElementById('loginWarning').style.display = 'block';
-                disableForm();
-            } else {
-                document.getElementById('ShopID').value = shopID;
-                document.getElementById('Sales Person').value = salesPerson;
+    <div style="margin-bottom:8px">
+      <label>Mobile-Number</label>
+      <input id="Mobile-Number" />
+    </div>
+    <div style="margin-bottom:8px">
+      <label>Address -long Text</label>
+      <textarea id="Address-Long-Text"></textarea>
+    </div>
+    <div style="margin-bottom:8px">
+      <label>GST- (optional)</label>
+      <input id="GST" />
+    </div>
+  </div>
+
+  <div class="card" style="flex:1 1 520px;">
+    <h3>Add Product</h3>
+    <div>
+      <label>Search Product (Product Name or Product ID)</label>
+      <input id="prodSearch" placeholder="search product" />
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button id="openScanner">Open Scanner (Back Camera)</button>
+      <button id="stopScanner" class="hidden">Camera Off</button>
+    </div>
+
+    <div id="scannerModal" class="modal hidden">
+      <div class="modal-inner">
+        <h4>Scanner</h4>
+        <div class="scanner">
+          <video id="video" autoplay playsinline></video>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
+          <button id="captureFallback">Use captured value</button>
+          <button id="closeScanner">Close</button>
+        </div>
+        <p class="muted">This uses the browser <code>BarcodeDetector</code> if available; otherwise use manual entry.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <button id="showMatches">Show matching products</button>
+    </div>
+
+    <div id="productMatches" style="margin-top:12px"></div>
+
+    <h4 style="margin-top:12px">Selected Items</h4>
+    <table id="itemsTable">
+      <thead><tr><th>Product ID</th><th>Item Name</th><th>Batch No</th><th>Qty</th><th>Price</th><th>Subtotal</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+  <div class="muted">Invoice Number: <strong id="invoiceNumber"></strong></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="muted">Tag:</div>
+    <div><input id="Tag" value="Order Confirmed" /></div>
+    <button id="saveInvoice">Save Invoice</button>
+    <button id="printInvoice">Print</button>
+  </div>
+</div>
+
+<div style="margin-top:12px">
+  <div class="card">
+    <h3>Preview / Summary</h3>
+    <div class="muted">ShopID: <span id="shopIdDisplay"></span> &nbsp; Sales Person: <span id="salesPersonDisplay"></span></div>
+    <table id="summaryTable">
+      <tbody>
+        <tr><td>Total Items</td><td id="totalItems">0</td></tr>
+        <tr><td>Total Value</td><td id="totalValue">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="printView" class="hidden">
+  <div class="print-area" id="invoicePrintArea"></div>
+</div>
+
+  </div>  <script>
+  // CONFIG - use the API key and table ids provided by you
+  const BASEROW_API_TOKEN = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+  const API_BASE = 'https://api.baserow.io/api/database/rows/table';
+
+  // Table IDs (as provided)
+  const TABLES = {
+    COSTOMER: 736204, // Costomer table
+    PRODUCTS: 734793,
+    INVENTORY: 734795,
+    SALES: 736209,
+    LEDGER: 736207
+  };
+
+  // In-memory caches
+  let customers = [];
+  let products = [];
+  let inventory = [];
+  let invoiceItems = [];
+
+  // Local storage keys
+  const LOCAL_KEYS = { ShopIDTag: 'ShopIDTag', MobileTag: 'MobileTag', NameTag: 'NameTag' };
+
+  // Helpers for Baserow
+  function baserowFetch(url, options={}){
+    options.headers = Object.assign({'Authorization': 'Token '+BASEROW_API_TOKEN,'Content-Type':'application/json'}, options.headers || {});
+    return fetch(url, options).then(r=>{ if(!r.ok) return r.json().then(j=>{throw j}); return r.json() });
+  }
+
+  async function fetchAllTable(tableId){
+    const url = `${API_BASE}/${tableId}/?user_field_names=true&page_size=10000`;
+    return baserowFetch(url);
+  }
+
+  async function patchRow(tableId, rowId, body){
+    const url = `${API_BASE}/${tableId}/${rowId}/?user_field_names=true`;
+    return baserowFetch(url, {method:'PATCH', body: JSON.stringify(body)});
+  }
+
+  async function postRow(tableId, body){
+    const url = `${API_BASE}/${tableId}/?user_field_names=true`;
+    return baserowFetch(url, {method:'POST', body: JSON.stringify(body)});
+  }
+
+  // Init
+  document.addEventListener('DOMContentLoaded', init);
+
+  async function init(){
+    // Check local storage
+    let shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
+    let mobileTag = localStorage.getItem(LOCAL_KEYS.MobileTag);
+    let nameTag = localStorage.getItem(LOCAL_KEYS.NameTag);
+
+    const loginWarning = document.getElementById('loginWarning');
+    if(!shopID || !mobileTag || !nameTag){
+      loginWarning.innerHTML = 'Missing ShopID / Mobile or Name in localStorage. Please login. <button id="doLogin">Login</button>';
+      document.getElementById('doLogin').addEventListener('click', askLogin);
+    } else {
+      loginWarning.innerHTML = '';
+    }
+
+    document.getElementById('shopIdDisplay').innerText = shopID || '';
+    document.getElementById('salesPersonDisplay').innerText = nameTag || '';
+
+    // Generate invoice number
+    document.getElementById('invoiceNumber').innerText = genInvoiceNum();
+
+    // Wire up UI
+    document.getElementById('custSearch').addEventListener('input', renderCustomerMatches);
+    document.getElementById('prodSearch').addEventListener('input', ()=>{});
+    document.getElementById('showMatches').addEventListener('click', showProductMatches);
+    document.getElementById('saveInvoice').addEventListener('click', saveInvoice);
+    document.getElementById('printInvoice').addEventListener('click', printInvoice);
+
+    // Scanner
+    document.getElementById('openScanner').addEventListener('click', openScanner);
+    document.getElementById('closeScanner').addEventListener('click', closeScanner);
+    document.getElementById('stopScanner').addEventListener('click', stopCamera);
+    document.getElementById('captureFallback').addEventListener('click', () => {
+      const manual = prompt('Enter scanned Product ID or value:');
+      if(manual) document.getElementById('prodSearch').value = manual;
+      closeScanner();
+    });
+
+    // Load data from baserow
+    try{
+      const [c,p,i] = await Promise.all([fetchAllTable(TABLES.COSTOMER), fetchAllTable(TABLES.PRODUCTS), fetchAllTable(TABLES.INVENTORY)]);
+      customers = c.results || c;
+      products = p.results || p;
+      inventory = i.results || i;
+    }catch(err){
+      console.error('Failed to load from Baserow', err);
+      alert('Failed to load required data from Baserow. Check API token and network.');
+      return;
+    }
+
+    // render initial
+    renderCustomerMatches();
+    renderItems();
+  }
+
+  function askLogin(){
+    const shop = prompt('Enter ShopID (ShopIDTag)');
+    const mobile = prompt('Enter MobileTag');
+    const name = prompt('Enter NameTag (Sales person)');
+    if(shop && mobile && name){
+      localStorage.setItem(LOCAL_KEYS.ShopIDTag, shop);
+      localStorage.setItem(LOCAL_KEYS.MobileTag, mobile);
+      localStorage.setItem(LOCAL_KEYS.NameTag, name);
+      location.reload();
+    } else alert('Login cancelled or incomplete.');
+  }
+
+  function renderCustomerMatches(){
+    const q = document.getElementById('custSearch').value.trim().toLowerCase();
+    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
+    const matches = customers.filter(r=>{
+      if(!r.fields) return false;
+      if(String((r.fields.ShopID||'')).trim() !== String(shopID).trim()) return false;
+      const name = (r.fields['Costomer Name']||'').toString().toLowerCase();
+      const mobile = (r.fields['Mobile-Number']||'').toString().toLowerCase();
+      return (!q) || name.includes(q) || mobile.includes(q);
+    });
+    const out = matches.slice(0,20).map(r=>`<div style="padding:8px;border-bottom:1px solid #eee;cursor:pointer" data-id="${r.id}"><strong>${escapeHtml(r.fields['Costomer Name']||'')}</strong> — ${escapeHtml(r.fields['Mobile-Number']||'')}</div>`).join('');
+    const container = document.getElementById('productMatches');
+    // show customers above products if search box used
+    if(document.getElementById('custSearch').value.trim()){
+      container.innerHTML = `<div><h4>Matching Costomers</h4>${out || '<div class="muted">No matches</div>'}</div>`;
+      container.querySelectorAll('div[data-id]').forEach(el=>el.addEventListener('click', ()=>{
+        const row = customers.find(c=>c.id==el.dataset.id);
+        fillCustomer(row.fields);
+      }));
+    }
+  }
+
+  function fillCustomer(fields){
+    document.getElementById('Costomer Name').value = fields['Costomer Name'] || '';
+    document.getElementById('Mobile-Number').value = fields['Mobile-Number'] || '';
+    document.getElementById('Address-Long-Text').value = fields['Address-Long-Text'] || '';
+    document.getElementById('GST').value = fields['GST'] || '';
+  }
+
+  function showProductMatches(){
+    const q = document.getElementById('prodSearch').value.trim().toLowerCase();
+    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
+    const matches = products.filter(r=>{
+      if(!r.fields) return false;
+      if(String((r.fields.ShopID||'')).trim() !== String(shopID).trim()) return false;
+      const name = (r.fields['Product Name']||'').toString().toLowerCase();
+      const pid = (r.fields['Product ID']||'').toString().toLowerCase();
+      return (!q) || name.includes(q) || pid.includes(q);
+    });
+    const out = matches.slice(0,30).map(r=>`<div style="padding:8px;border-bottom:1px solid #eee;cursor:pointer" data-id="${r.id}"><strong>${escapeHtml(r.fields['Product Name']||'')}</strong> — ${escapeHtml(r.fields['Product ID']||'')} — Price: ${r.fields.Price||0}</div>`).join('');
+    const container = document.getElementById('productMatches');
+    container.innerHTML = `<div><h4>Matching Products</h4>${out || '<div class="muted">No matches</div>'}</div>`;
+    container.querySelectorAll('div[data-id]').forEach(el=>el.addEventListener('click', ()=>{
+      const prod = products.find(p=>p.id==el.dataset.id);
+      openInventorySelector(prod.fields['Product ID'], prod.fields['Product Name'], prod.fields.Price);
+    }));
+  }
+
+  function openInventorySelector(productId, productName, price){
+    // find inventory rows for this product and same ShopID
+    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
+    const rows = inventory.filter(r=>{
+      if(!r.fields) return false;
+      if(String((r.fields['Product ID']||'')).trim() !== String(productId).trim()) return false;
+      if(String((r.fields['ShopID']||'')).trim() && String((r.fields['ShopID']||'')).trim() !== String(shopID).trim()) return false;
+      return true;
+    });
+
+    // build modal content
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `<div class="modal-inner">
+      <h4>Choose Batch for ${escapeHtml(productName)} (${escapeHtml(productId)})</h4>
+      <div id="batchList">${rows.map(r=>`<div style="padding:8px;border-bottom:1px solid #eee"><strong>Batch No:</strong> ${r.fields['Batch No']||''} &nbsp; <strong>Count:</strong> ${r.fields.Count||0} &nbsp; <strong>Expire:</strong> ${r.fields['Expire Date']||''} <br/><button data-rowid="${r.id}">Select</button></div>`).join('') || '<div class="muted">No batches found for this product in inventory</div>'}</div>
+      <div style="margin-top:8px;text-align:right"><button id="closeInvModal">Close</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.querySelectorAll('button[data-rowid]').forEach(btn=>btn.addEventListener('click', ()=>{
+      const rowId = btn.dataset.rowid;
+      const invRow = inventory.find(it=>it.id==rowId);
+      const max = Number(invRow.fields.Count||0);
+      const qty = Number(prompt(`Enter quantity to sell (available: ${max})`, 1));
+      if(!qty || qty<=0) return alert('Invalid qty');
+      if(qty>max) return alert('Quantity greater than available count');
+      addInvoiceItem({
+        productId: productId,
+        itemName: productName,
+        batchNo: invRow.fields['Batch No']||'',
+        inventoryRowId: invRow.id,
+        qty: qty,
+        price: Number(price||0)
+      });
+      document.body.removeChild(modal);
+    }));
+    modal.querySelector('#closeInvModal').addEventListener('click', ()=>document.body.removeChild(modal));
+  }
+
+  function addInvoiceItem(it){
+    invoiceItems.push(it);
+    renderItems();
+  }
+
+  function renderItems(){
+    const tbody = document.querySelector('#itemsTable tbody');
+    tbody.innerHTML = invoiceItems.map((it, idx)=>`<tr data-idx="${idx}"><td>${escapeHtml(it.productId)}</td><td>${escapeHtml(it.itemName)}</td><td>${escapeHtml(it.batchNo)}</td><td>${it.qty}</td><td>${it.price}</td><td>${(it.qty*it.price).toFixed(2)}</td><td><button data-remove="${idx}">Remove</button></td></tr>`).join('');
+    tbody.querySelectorAll('button[data-remove]').forEach(b=>b.addEventListener('click', ()=>{invoiceItems.splice(Number(b.dataset.remove),1);renderItems();}));
+    // summary
+    const totalItems = invoiceItems.reduce((s,i)=>s+i.qty,0);
+    const totalValue = invoiceItems.reduce((s,i)=>s + i.qty*i.price,0);
+    document.getElementById('totalItems').innerText = totalItems;
+    document.getElementById('totalValue').innerText = totalValue.toFixed(2);
+  }
+
+  function genInvoiceNum(){
+    const t = Date.now();
+    const r = Math.floor(Math.random()*9000)+1000;
+    return `INV-${t}-${r}`;
+  }
+
+  async function saveInvoice(){
+    if(invoiceItems.length===0) return alert('Add at least one product');
+    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
+    if(!shopID) return alert('Missing ShopID. Please login.');
+
+    // prepare sales row
+    const costomerName = document.getElementById('Costomer Name').value.trim();
+    const mobile = document.getElementById('Mobile-Number').value.trim();
+    const invoiceNumber = document.getElementById('invoiceNumber').innerText || genInvoiceNum();
+    const totalValue = invoiceItems.reduce((s,i)=>s + i.qty*i.price,0);
+
+    const salesBody = {
+      'Costomer Name': costomerName,
+      'Mobile-Number': mobile,
+      'Date': (new Date()).toISOString().split('T')[0],
+      'Invoice Number': invoiceNumber,
+      'Total Invoice Value': totalValue,
+      'ShopID': shopID
+    };
+
+    try{
+      // create sales row
+      const salesResp = await postRow(TABLES.SALES, salesBody);
+
+      // create ledger row (best-effort; field names may vary)
+      const ledgerBody = {
+        'Costomer Name': costomerName,
+        'Invoice Number': invoiceNumber,
+        'Amount': totalValue,
+        'Date': (new Date()).toISOString().split('T')[0],
+        'ShopID': shopID
+      };
+      try{ await postRow(TABLES.LEDGER, ledgerBody); } catch(e){ console.warn('Ledger insert failed', e); }
+
+      // reduce inventory counts
+      for(const it of invoiceItems){
+        // find inventory row by id
+        const inv = inventory.find(x=>x.id==it.inventoryRowId);
+        if(!inv) continue;
+        const current = Number(inv.fields.Count||0);
+        const newCount = current - Number(it.qty);
+        if(newCount < 0) { alert(`Not enough stock in batch ${inv.fields['Batch No']} for product ${it.productId}`); continue; }
+        await patchRow(TABLES.INVENTORY, inv.id, {'Count': newCount});
+        // update local cache
+        inv.fields.Count = newCount;
+      }
+
+      // success
+      alert('Invoice saved successfully.');
+      // show printable invoice
+      showPrintableInvoice({sales: salesResp, items: invoiceItems});
+      // reset
+      invoiceItems = [];
+      renderItems();
+      document.getElementById('invoiceNumber').innerText = genInvoiceNum();
+    }catch(err){
+      console.error('Save failed', err);
+      alert('Failed to save invoice. Check console.');
+    }
+  }
+
+  function showPrintableInvoice({sales, items}){
+    const area = document.getElementById('invoicePrintArea');
+    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
+    const nameTag = localStorage.getItem(LOCAL_KEYS.NameTag);
+    const html = `
+      <div>
+        <h2>Invoice: ${escapeHtml(sales.fields['Invoice Number']||'')}</h2>
+        <div>ShopID: ${escapeHtml(shopID||'')}</div>
+        <div>Sales Person: ${escapeHtml(nameTag||'')}</div>
+        <div>Costomer: ${escapeHtml(sales.fields['Costomer Name']||'')} — ${escapeHtml(sales.fields['Mobile-Number']||'')}</div>
+        <table style="width:100%;margin-top:12px;border-collapse:collapse">
+          <thead><tr><th>Product ID</th><th>Item</th><th>Batch</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
+          <tbody>
+            ${items.map(it=>`<tr><td>${escapeHtml(it.productId)}</td><td>${escapeHtml(it.itemName)}</td><td>${escapeHtml(it.batchNo)}</td><td>${it.qty}</td><td>${it.price}</td><td>${(it.qty*it.price).toFixed(2)}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:12px">Total: ${items.reduce((s,i)=>s+i.qty*i.price,0).toFixed(2)}</div>
+        <div style="margin-top:12px">Generated at: ${new Date().toLocaleString()}</div>
+      </div>
+    `;
+    area.innerHTML = html;
+    document.getElementById('printView').classList.remove('hidden');
+    // open print dialog
+    const w = window.open('','_blank');
+    w.document.write('<html><head><title>Invoice</title></head><body>'+html+'</body></html>');
+    w.document.close();
+    w.print();
+  }
+
+  // Scanner implementation using BarcodeDetector if available
+  let streamRef = null; let detector = null;
+  async function openScanner(){
+    const modal = document.getElementById('scannerModal');
+    modal.classList.remove('hidden');
+    const video = document.getElementById('video');
+    try{
+      const constraints = { video: { facingMode: { exact: 'environment' } } };
+      // fallback to any camera
+      let stream;
+      try{ stream = await navigator.mediaDevices.getUserMedia(constraints); }
+      catch(e){ stream = await navigator.mediaDevices.getUserMedia({video:true}); }
+      streamRef = stream;
+      video.srcObject = stream;
+      document.getElementById('stopScanner').classList.remove('hidden');
+
+      if('BarcodeDetector' in window){
+        const formats = await BarcodeDetector.getSupportedFormats();
+        detector = new BarcodeDetector({formats});
+        const loop = async ()=>{
+          try{
+            const barcodes = await detector.detect(video);
+            if(barcodes && barcodes.length){
+              const raw = barcodes[0].rawValue;
+              document.getElementById('prodSearch').value = raw;
+              closeScanner();
+              return;
             }
-        }
-        
-        function disableForm() {
-            const inputs = document.querySelectorAll('input, select, textarea, button');
-            inputs.forEach(input => {
-                if (input.id !== 'scanBtn' && input.id !== 'cameraOnBtn' && input.id !== 'cameraOffBtn') {
-                    input.disabled = true;
-                }
-            });
-        }
-        
-        function setupEventListeners() {
-            // Customer search
-            document.getElementById('customerSearch').addEventListener('input', handleCustomerSearch);
-            
-            // Product search
-            document.getElementById('productSearch').addEventListener('input', handleProductSearch);
-            
-            // Camera controls
-            document.getElementById('scanBtn').addEventListener('click', toggleScanner);
-            document.getElementById('cameraOnBtn').addEventListener('click', startCamera);
-            document.getElementById('cameraOffBtn').addEventListener('click', stopCamera);
-            
-            // Modal controls
-            document.querySelector('.close-modal').addEventListener('click', closeBatchModal);
-            
-            // Form actions
-            document.getElementById('saveBtn').addEventListener('click', saveInvoice);
-            document.getElementById('resetBtn').addEventListener('click', resetForm);
-            
-            // Close modal when clicking outside
-            document.getElementById('batchModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeBatchModal();
-                }
-            });
-        }
-        
-        function generateInvoiceNumber() {
-            const timestamp = new Date().getTime();
-            const random = Math.floor(Math.random() * 1000);
-            const invoiceNumber = `INV-${timestamp}-${random}`;
-            document.getElementById('Invoice Number').value = invoiceNumber;
-        }
-        
-        function setCurrentDate() {
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            document.getElementById('Date').value = formattedDate;
-        }
-        
-        async function handleCustomerSearch(e) {
-            const query = e.target.value.trim();
-            const resultsContainer = document.getElementById('customerResults');
-            
-            if (query.length < 2) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-            
-            try {
-                const shopID = localStorage.getItem('ShopIDTag');
-                const response = await fetch(
-                    `${BASE_URL}/${CUSTOMER_TABLE}?filterByFormula=AND(OR(SEARCH("${query}", {Costomer Name}), SEARCH("${query}", {Mobile})), {ShopID}="${shopID}")`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${API_KEY}`
-                        }
-                    }
-                );
-                
-                const data = await response.json();
-                displayCustomerResults(data.records);
-            } catch (error) {
-                console.error('Error searching customers:', error);
-            }
-        }
-        
-        function displayCustomerResults(customers) {
-            const resultsContainer = document.getElementById('customerResults');
-            resultsContainer.innerHTML = '';
-            
-            if (customers.length === 0) {
-                resultsContainer.innerHTML = '<div class="search-result-item">No customers found</div>';
-            } else {
-                customers.forEach(customer => {
-                    const item = document.createElement('div');
-                    item.className = 'search-result-item';
-                    item.textContent = `${customer.fields['Costomer Name']} - ${customer.fields.Mobile}`;
-                    item.addEventListener('click', () => selectCustomer(customer));
-                    resultsContainer.appendChild(item);
-                });
-            }
-            
-            resultsContainer.style.display = 'block';
-        }
-        
-        function selectCustomer(customer) {
-            selectedCustomer = customer;
-            document.getElementById('Costomer Name').value = customer.fields['Costomer Name'] || '';
-            document.getElementById('Mobile').value = customer.fields.Mobile || '';
-            document.getElementById('Address').value = customer.fields.Address || '';
-            document.getElementById('GST').value = customer.fields.GST || '';
-            document.getElementById('customerSearch').value = '';
-            document.getElementById('customerResults').style.display = 'none';
-        }
-        
-        async function handleProductSearch(e) {
-            const query = e.target.value.trim();
-            const resultsContainer = document.getElementById('productResults');
-            
-            if (query.length < 2) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-            
-            try {
-                const shopID = localStorage.getItem('ShopIDTag');
-                const response = await fetch(
-                    `${BASE_URL}/${PRODUCTS_TABLE}?filterByFormula=AND(OR(SEARCH("${query}", {Product Name}), SEARCH("${query}", {Product ID})), {ShopID}="${shopID}")`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${API_KEY}`
-                        }
-                    }
-                );
-                
-                const data = await response.json();
-                displayProductResults(data.records);
-            } catch (error) {
-                console.error('Error searching products:', error);
-            }
-        }
-        
-        function displayProductResults(products) {
-            const resultsContainer = document.getElementById('productResults');
-            resultsContainer.innerHTML = '';
-            
-            if (products.length === 0) {
-                resultsContainer.innerHTML = '<div class="search-result-item">No products found</div>';
-            } else {
-                products.forEach(product => {
-                    const item = document.createElement('div');
-                    item.className = 'search-result-item';
-                    item.textContent = `${product.fields['Product Name']} - ${product.fields['Product ID']}`;
-                    item.addEventListener('click', () => selectProduct(product));
-                    resultsContainer.appendChild(item);
-                });
-            }
-            
-            resultsContainer.style.display = 'block';
-        }
-        
-        async function selectProduct(product) {
-            selectedProduct = product;
-            
-            try {
-                const response = await fetch(
-                    `${BASE_URL}/${INVENTORY_TABLE}?filterByFormula={Product ID}="${product.fields['Product ID']}"`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${API_KEY}`
-                        }
-                    }
-                );
-                
-                const data = await response.json();
-                
-                if (data.records.length > 0) {
-                    displayBatchSelection(data.records);
-                } else {
-                    alert('No inventory found for this product');
-                }
-            } catch (error) {
-                console.error('Error fetching inventory:', error);
-            }
-            
-            document.getElementById('productSearch').value = '';
-            document.getElementById('productResults').style.display = 'none';
-        }
-        
-        function displayBatchSelection(batches) {
-            const batchList = document.getElementById('batchList');
-            batchList.innerHTML = '';
-            
-            batches.forEach(batch => {
-                const batchItem = document.createElement('div');
-                batchItem.className = 'batch-item';
-                batchItem.innerHTML = `
-                    <p><strong>Batch No:</strong> ${batch.fields['Batch No']}</p>
-                    <p><strong>Count:</strong> ${batch.fields.Count}</p>
-                    <p><strong>Expire Date:</strong> ${batch.fields['Expire Date'] || 'N/A'}</p>
-                `;
-                
-                batchItem.addEventListener('click', () => {
-                    // Remove selected class from all batch items
-                    document.querySelectorAll('.batch-item').forEach(item => {
-                        item.classList.remove('selected');
-                    });
-                    
-                    // Add selected class to clicked batch item
-                    batchItem.classList.add('selected');
-                    
-                    // Add product to the list after a short delay
-                    setTimeout(() => {
-                        addProductToInvoice(selectedProduct, batch);
-                        closeBatchModal();
-                    }, 300);
-                });
-                
-                batchList.appendChild(batchItem);
-            });
-            
-            document.getElementById('batchModal').style.display = 'flex';
-        }
-        
-        function closeBatchModal() {
-            document.getElementById('batchModal').style.display = 'none';
-            selectedProduct = null;
-        }
-        
-        function addProductToInvoice(product, batch) {
-            const productItem = {
-                id: Date.now().toString(),
-                productId: product.fields['Product ID'],
-                productName: product.fields['Product Name'],
-                batchNo: batch.fields['Batch No'],
-                price: product.fields.Price,
-                quantity: 1,
-                maxQuantity: batch.fields.Count
-            };
-            
-            products.push(productItem);
-            renderProductList();
-            updateInvoiceTotal();
-        }
-        
-        function renderProductList() {
-            const productList = document.getElementById('productList');
-            productList.innerHTML = '';
-            
-            if (products.length === 0) {
-                productList.innerHTML = '<p>No products added to invoice</p>';
-                return;
-            }
-            
-            products.forEach(product => {
-                const productItem = document.createElement('div');
-                productItem.className = 'product-item';
-                productItem.innerHTML = `
-                    <div class="product-details">
-                        <h4>${product.productName}</h4>
-                        <p>Product ID: ${product.productId} | Batch: ${product.batchNo} | Price: ₹${product.price}</p>
-                    </div>
-                    <div class="product-actions">
-                        <input type="number" 
-                               value="${product.quantity}" 
-                               min="1" 
-                               max="${product.maxQuantity}"
-                               data-id="${product.id}"
-                               class="quantity-input"
-                               style="width: 70px;">
-                        <button class="btn btn-danger remove-product" data-id="${product.id}">Remove</button>
-                    </div>
-                `;
-                
-                productList.appendChild(productItem);
-            });
-            
-            // Add event listeners for quantity changes and remove buttons
-            document.querySelectorAll('.quantity-input').forEach(input => {
-                input.addEventListener('change', handleQuantityChange);
-            });
-            
-            document.querySelectorAll('.remove-product').forEach(button => {
-                button.addEventListener('click', handleRemoveProduct);
-            });
-        }
-        
-        function handleQuantityChange(e) {
-            const productId = e.target.getAttribute('data-id');
-            const newQuantity = parseInt(e.target.value);
-            
-            const product = products.find(p => p.id === productId);
-            if (product) {
-                if (newQuantity > product.maxQuantity) {
-                    alert(`Cannot exceed available quantity of ${product.maxQuantity}`);
-                    e.target.value = product.maxQuantity;
-                    product.quantity = product.maxQuantity;
-                } else if (newQuantity < 1) {
-                    e.target.value = 1;
-                    product.quantity = 1;
-                } else {
-                    product.quantity = newQuantity;
-                }
-                
-                updateInvoiceTotal();
-            }
-        }
-        
-        function handleRemoveProduct(e) {
-            const productId = e.target.getAttribute('data-id');
-            products = products.filter(p => p.id !== productId);
-            renderProductList();
-            updateInvoiceTotal();
-        }
-        
-        function updateInvoiceTotal() {
-            let total = 0;
-            products.forEach(product => {
-                total += product.price * product.quantity;
-            });
-            
-            document.getElementById('invoiceTotal').textContent = total.toFixed(2);
-        }
-        
-        function toggleScanner() {
-            const scannerContainer = document.getElementById('scanner-container');
-            if (scannerContainer.style.display === 'none') {
-                scannerContainer.style.display = 'block';
-                startCamera();
-            } else {
-                scannerContainer.style.display = 'none';
-                stopCamera();
-            }
-        }
-        
-        function startCamera() {
-            if (isCameraActive) return;
-            
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: document.querySelector('#interactive'),
-                    constraints: {
-                        facingMode: "environment"
-                    }
-                },
-                decoder: {
-                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "upc_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    console.error(err);
-                    alert("Error initializing camera: " + err);
-                    return;
-                }
-                
-                Quagga.start();
-                isCameraActive = true;
-            });
-            
-            Quagga.onDetected(function(result) {
-                const code = result.codeResult.code;
-                document.getElementById('productSearch').value = code;
-                handleProductSearch({target: {value: code}});
-                stopCamera();
-                document.getElementById('scanner-container').style.display = 'none';
-            });
-        }
-        
-        function stopCamera() {
-            if (isCameraActive) {
-                Quagga.stop();
-                isCameraActive = false;
-            }
-        }
-        
-        async function saveInvoice() {
-            // Validate form
-            if (!selectedCustomer) {
-                alert('Please select a customer');
-                return;
-            }
-            
-            if (products.length === 0) {
-                alert('Please add at least one product');
-                return;
-            }
-            
-            const shopID = localStorage.getItem('ShopIDTag');
-            if (!shopID) {
-                alert('Shop ID not found. Please login again.');
-                return;
-            }
-            
-            try {
-                // Save to Sales table
-                for (const product of products) {
-                    const salesData = {
-                        fields: {
-                            "Costomer Name": selectedCustomer.fields['Costomer Name'],
-                            "Mobile": selectedCustomer.fields.Mobile,
-                            "Address": selectedCustomer.fields.Address,
-                            "GST": document.getElementById('GST').value,
-                            "Date": document.getElementById('Date').value,
-                            "Product ID": product.productId,
-                            "Item Name": product.productName,
-                            "Batch No": product.batchNo,
-                            "Quantity": product.quantity,
-                            "Price": product.price,
-                            "Invoice Number": document.getElementById('Invoice Number').value,
-                            "Tag": document.getElementById('Tag').value,
-                            "ShopID": shopID,
-                            "Sales Person": document.getElementById('Sales Person').value
-                        }
-                    };
-                    
-                    await fetch(`${BASE_URL}/${SALES_TABLE}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${API_KEY}`
-                        },
-                        body: JSON.stringify(salesData)
-                    });
-                    
-                    // Update inventory count
-                    await updateInventory(product.productId, product.batchNo, product.quantity);
-                }
-                
-                // Save to Ledger table
-                const totalValue = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
-                
-                const ledgerData = {
-                    fields: {
-                        "Costomer Name": selectedCustomer.fields['Costomer Name'],
-                        "Mobile": selectedCustomer.fields.Mobile,
-                        "Date": document.getElementById('Date').value,
-                        "Invoice Number": document.getElementById('Invoice Number').value,
-                        "Total Invoice Value": totalValue,
-                        "ShopID": shopID
-                    }
-                };
-                
-                await fetch(`${BASE_URL}/${LEDGER_TABLE}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    },
-                    body: JSON.stringify(ledgerData)
-                });
-                
-                alert('Invoice saved successfully!');
-                resetForm();
-                
-            } catch (error) {
-                console.error('Error saving invoice:', error);
-                alert('Error saving invoice. Please try again.');
-            }
-        }
-        
-        async function updateInventory(productId, batchNo, quantity) {
-            try {
-                // Get current inventory record
-                const response = await fetch(
-                    `${BASE_URL}/${INVENTORY_TABLE}?filterByFormula=AND({Product ID}="${productId}", {Batch No}=${batchNo})`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${API_KEY}`
-                        }
-                    }
-                );
-                
-                const data = await response.json();
-                
-                if (data.records.length > 0) {
-                    const inventoryRecord = data.records[0];
-                    const newCount = inventoryRecord.fields.Count - quantity;
-                    
-                    // Update inventory record
-                    await fetch(`${BASE_URL}/${INVENTORY_TABLE}/${inventoryRecord.id}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${API_KEY}`
-                        },
-                        body: JSON.stringify({
-                            fields: {
-                                "Count": newCount
-                            }
-                        })
-                    });
-                }
-            } catch (error) {
-                console.error('Error updating inventory:', error);
-            }
-        }
-        
-        function resetForm() {
-            selectedCustomer = null;
-            products = [];
-            
-            document.getElementById('Costomer Name').value = '';
-            document.getElementById('Mobile').value = '';
-            document.getElementById('Address').value = '';
-            document.getElementById('GST').value = '';
-            document.getElementById('customerSearch').value = '';
-            document.getElementById('productSearch').value = '';
-            
-            renderProductList();
-            updateInvoiceTotal();
-            generateInvoiceNumber();
-            setCurrentDate();
-        }
-    </script>
-</body>
+          }catch(e){}
+          if(streamRef) requestAnimationFrame(loop);
+        };
+        loop();
+      }
+    }catch(err){
+      console.error('camera open failed', err);
+      alert('Camera access failed or not allowed. Use manual entry.');
+    }
+  }
+  function closeScanner(){
+    document.getElementById('scannerModal').classList.add('hidden');
+    stopCamera();
+  }
+  function stopCamera(){
+    if(streamRef){
+      streamRef.getTracks().forEach(t=>t.stop());
+      streamRef = null;
+    }
+    document.getElementById('stopScanner').classList.add('hidden');
+  }
+
+  // small helper
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Print helper
+  function printInvoice(){
+    const area = document.getElementById('invoicePrintArea');
+    if(!area.innerHTML) return alert('No invoice to print — save first');
+    const w = window.open('','_blank');
+    w.document.write('<html><head><title>Invoice</title></head><body>'+area.innerHTML+'</body></html>');
+    w.document.close();
+    w.print();
+  }
+  </script></body>
 </html>
