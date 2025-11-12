@@ -239,6 +239,152 @@
     width: auto;
     font-size: 0.9rem;
   }
+
+  /* Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+  
+  .modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--gray-light);
+  }
+  
+  .modal-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray);
+    cursor: pointer;
+    width: auto;
+    padding: 5px;
+  }
+  
+  .close-btn:hover {
+    color: var(--danger);
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .batch-list {
+    margin-bottom: 20px;
+  }
+  
+  .batch-item {
+    padding: 15px;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .batch-item:hover {
+    border-color: var(--primary);
+    background: #f8f9ff;
+  }
+  
+  .batch-item.selected {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+  
+  .batch-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .batch-name {
+    font-weight: 600;
+  }
+  
+  .batch-count {
+    color: var(--gray);
+    font-size: 0.9rem;
+  }
+  
+  .batch-item.selected .batch-count {
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .quantity-section {
+    margin-top: 20px;
+  }
+  
+  .quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+  }
+  
+  .quantity-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .quantity-input {
+    width: 80px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  
+  .add-to-invoice-btn {
+    background: linear-gradient(to right, var(--success), #2a9d8f);
+    margin-top: 20px;
+  }
+  
+  .no-batches {
+    text-align: center;
+    padding: 30px;
+    color: var(--gray);
+  }
   
   /* Responsive Design */
   
@@ -285,6 +431,10 @@
     .save-btn {
       width: 100%;
       margin-top: 10px;
+    }
+    
+    .modal-content {
+      padding: 20px;
     }
   }
   
@@ -334,6 +484,17 @@
     .save-btn {
       padding: 12px 20px;
       font-size: 1rem;
+    }
+    
+    .modal-content {
+      width: 95%;
+      padding: 15px;
+    }
+    
+    .batch-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
     }
   }
   
@@ -398,6 +559,14 @@
     
     #cameraView {
       height: 250px;
+    }
+    
+    .modal-content {
+      padding: 12px;
+    }
+    
+    .modal-title {
+      font-size: 1.2rem;
     }
   }
   
@@ -480,6 +649,37 @@
   </div>
 </div>
 
+<!-- Batch Selection Modal -->
+<div id="batchModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Select Batch & Quantity</h3>
+      <button class="close-btn" onclick="closeBatchModal()">&times;</button>
+    </div>
+    
+    <div class="product-info">
+      <h4 id="modalProductName"></h4>
+      <p>Price: ₹<span id="modalProductPrice"></span></p>
+    </div>
+    
+    <div class="batch-list" id="batchList">
+      <!-- Batches will be populated here -->
+    </div>
+    
+    <div class="quantity-section">
+      <label for="quantityInput"><b>Quantity:</b></label>
+      <div class="quantity-controls">
+        <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1">
+        <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+      </div>
+      <p id="maxQuantityInfo">Maximum available: <span id="maxQuantity">0</span></p>
+    </div>
+    
+    <button class="add-to-invoice-btn" onclick="addToInvoice()">Add to Invoice</button>
+  </div>
+</div>
+
 <script>
 const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const baseURL = "https://api.baserow.io/api/database/rows/table/";
@@ -501,6 +701,11 @@ if (!ShopID || !MobileTag) {
 // Generate invoice number
 const invoiceNum = "INV" + Date.now();
 document.getElementById("invoiceNum").innerText = invoiceNum;
+
+// Modal state variables
+let currentProduct = null;
+let selectedBatch = null;
+let availableBatches = [];
 
 // 🔍 Customer Search
 document.getElementById("customerSearch").addEventListener("input", async function() {
@@ -552,35 +757,153 @@ document.getElementById("productSearch").addEventListener("input", async functio
   });
 });
 
-// Select Product → Show Batch Options
+// Select Product → Show Batch Options in Modal
 async function selectProduct(p) {
+  currentProduct = p;
+  
   const invURL = `${baseURL}${inventoryTable}/?user_field_names=true`;
   const res = await fetch(invURL, { headers: { Authorization: `Token ${apiKey}` } });
   const data = await res.json();
-  const batches = data.results.filter(b => b["Product ID"] === p["Product ID"]);
+  availableBatches = data.results.filter(b => b["Product ID"] === p["Product ID"]);
 
-  if (batches.length === 0) return alert("No batches found!");
+  if (availableBatches.length === 0) {
+    alert("No batches found for this product!");
+    return;
+  }
 
-  const batch = prompt(`Select Batch No:\n${batches.map(x => `Batch ${x["Batch No"]} (Count: ${x["Count"]})`).join("\n")}`);
-  const batchData = batches.find(x => x["Batch No"] == batch.match(/\d+/)?.[0]);
+  // Show modal with batch selection
+  showBatchModal();
+}
 
-  const qty = parseInt(prompt("Enter Quantity:"));
-  if (!qty || qty > batchData["Count"]) return alert("Invalid quantity!");
+// Show Batch Selection Modal
+function showBatchModal() {
+  const modal = document.getElementById("batchModal");
+  const batchList = document.getElementById("batchList");
+  const productName = document.getElementById("modalProductName");
+  const productPrice = document.getElementById("modalProductPrice");
+  
+  // Set product info
+  productName.textContent = `${currentProduct["Product Name"]} (${currentProduct["Product ID"]})`;
+  productPrice.textContent = currentProduct["Price"];
+  
+  // Clear and populate batch list
+  batchList.innerHTML = "";
+  
+  if (availableBatches.length === 0) {
+    batchList.innerHTML = '<div class="no-batches">No batches available</div>';
+  } else {
+    availableBatches.forEach((batch, index) => {
+      const batchItem = document.createElement("div");
+      batchItem.className = "batch-item";
+      batchItem.innerHTML = `
+        <div class="batch-info">
+          <div class="batch-name">Batch ${batch["Batch No"]}</div>
+          <div class="batch-count">Available: ${batch["Count"]}</div>
+        </div>
+      `;
+      batchItem.onclick = () => selectBatch(batch, batchItem);
+      
+      // Select first batch by default
+      if (index === 0) {
+        selectBatch(batch, batchItem);
+      }
+      
+      batchList.appendChild(batchItem);
+    });
+  }
+  
+  // Reset quantity
+  document.getElementById("quantityInput").value = 1;
+  
+  // Show modal
+  modal.style.display = "block";
+}
 
-  const total = p["Price"] * qty;
+// Close Batch Modal
+function closeBatchModal() {
+  document.getElementById("batchModal").style.display = "none";
+  currentProduct = null;
+  selectedBatch = null;
+  document.getElementById("productList").innerHTML = "";
+}
+
+// Select Batch
+function selectBatch(batch, batchElement) {
+  // Remove selected class from all batches
+  document.querySelectorAll('.batch-item').forEach(item => {
+    item.classList.remove('selected');
+  });
+  
+  // Add selected class to clicked batch
+  batchElement.classList.add('selected');
+  selectedBatch = batch;
+  
+  // Update max quantity info
+  document.getElementById("maxQuantity").textContent = batch["Count"];
+  
+  // Reset quantity if it exceeds available count
+  const quantityInput = document.getElementById("quantityInput");
+  if (parseInt(quantityInput.value) > batch["Count"]) {
+    quantityInput.value = batch["Count"];
+  }
+  quantityInput.max = batch["Count"];
+}
+
+// Quantity Controls
+function increaseQuantity() {
+  const quantityInput = document.getElementById("quantityInput");
+  const currentValue = parseInt(quantityInput.value);
+  const maxQuantity = selectedBatch ? selectedBatch["Count"] : 0;
+  
+  if (currentValue < maxQuantity) {
+    quantityInput.value = currentValue + 1;
+  }
+}
+
+function decreaseQuantity() {
+  const quantityInput = document.getElementById("quantityInput");
+  const currentValue = parseInt(quantityInput.value);
+  
+  if (currentValue > 1) {
+    quantityInput.value = currentValue - 1;
+  }
+}
+
+// Add to Invoice
+function addToInvoice() {
+  if (!currentProduct || !selectedBatch) {
+    alert("Please select a batch first!");
+    return;
+  }
+  
+  const quantity = parseInt(document.getElementById("quantityInput").value);
+  
+  if (!quantity || quantity <= 0) {
+    alert("Please enter a valid quantity!");
+    return;
+  }
+  
+  if (quantity > selectedBatch["Count"]) {
+    alert(`Only ${selectedBatch["Count"]} items available in this batch!`);
+    return;
+  }
+  
+  const total = currentProduct["Price"] * quantity;
   const row = document.createElement("tr");
   row.innerHTML = `
-    <td>${p["Product ID"]}</td>
-    <td>${p["Product Name"]}</td>
-    <td>${batchData["Batch No"]}</td>
-    <td>${qty}</td>
-    <td>${p["Price"]}</td>
+    <td>${currentProduct["Product ID"]}</td>
+    <td>${currentProduct["Product Name"]}</td>
+    <td>${selectedBatch["Batch No"]}</td>
+    <td>${quantity}</td>
+    <td>${currentProduct["Price"]}</td>
     <td>${total}</td>
     <td><button class="remove-btn" onclick="this.closest('tr').remove();updateTotal()">❌</button></td>
   `;
   document.querySelector("#productTable tbody").appendChild(row);
   updateTotal();
-  document.getElementById("productList").innerHTML = "";
+  
+  // Close modal and clear product list
+  closeBatchModal();
 }
 
 function updateTotal() {
@@ -703,6 +1026,14 @@ async function toggleCamera() {
     requestAnimationFrame(scan);
   };
   scan();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById("batchModal");
+  if (event.target === modal) {
+    closeBatchModal();
+  }
 }
 </script>
 </body>
