@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invoice Viewer</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     :root {
       --primary: #4361ee;
@@ -221,66 +220,12 @@
       background-color: rgba(67, 97, 238, 0.05);
     }
     
-    .summary-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 25px;
-      gap: 30px;
-    }
-    
-    .qr-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      min-width: 150px;
-    }
-    
-    .qr-container {
-      background: white;
-      padding: 15px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--gray-light);
-    }
-    
-    #qrCode {
-      width: 120px;
-      height: 120px;
-    }
-    
-    .copy-btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: var(--border-radius);
-      background: var(--primary);
-      color: white;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .copy-btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-2px);
-    }
-    
-    .copy-btn.copied {
-      background: var(--success);
-    }
-    
     .summary {
       text-align: right;
+      margin-top: 25px;
       padding: 20px;
       background: var(--light);
       border-radius: var(--border-radius);
-      flex: 1;
-      max-width: 300px;
     }
     
     .total-amount {
@@ -314,7 +259,7 @@
     }
     
     @media print {
-      .search-section, .print-btn, .qr-section {
+      .search-section, .print-btn {
         display: none;
       }
       body {
@@ -358,21 +303,6 @@
       .items-table {
         display: block;
         overflow-x: auto;
-      }
-      
-      .summary-section {
-        flex-direction: column-reverse;
-        align-items: center;
-        gap: 20px;
-      }
-      
-      .summary {
-        max-width: 100%;
-        text-align: center;
-      }
-      
-      .qr-section {
-        order: -1;
       }
     }
     
@@ -432,18 +362,7 @@
       <div id="invoiceDetails" class="invoice-details"></div>
 
       <div id="itemsTable"></div>
-      
-      <div class="summary-section">
-        <div class="qr-section" id="qrSection" style="display: none;">
-          <div class="qr-container">
-            <canvas id="qrCode"></canvas>
-          </div>
-          <button class="copy-btn" id="copyUrlBtn" onclick="copyUrlToClipboard()">
-            <span>📋 Copy URL</span>
-          </button>
-        </div>
-        <div id="totalAmount" class="summary"></div>
-      </div>
+      <div id="totalAmount" class="summary"></div>
 
       <button id="printBtn" class="print-btn" style="display:none;" onclick="window.print()">🖨 Print / Save PDF</button>
     </div>
@@ -554,40 +473,6 @@
       }
     }
 
-    function generateQRCode(url) {
-      const qrContainer = document.getElementById('qrCode');
-      QRCode.toCanvas(qrContainer, url, {
-        width: 120,
-        margin: 1,
-        color: {
-          dark: '#4361ee',
-          light: '#ffffff'
-        }
-      }, function(error) {
-        if (error) console.error('QR Code generation error:', error);
-      });
-    }
-
-    function copyUrlToClipboard() {
-      const currentUrl = window.location.href;
-      const copyBtn = document.getElementById('copyUrlBtn');
-      
-      navigator.clipboard.writeText(currentUrl).then(function() {
-        // Success feedback
-        const originalText = copyBtn.innerHTML;
-        copyBtn.innerHTML = '✅ Copied!';
-        copyBtn.classList.add('copied');
-        
-        setTimeout(function() {
-          copyBtn.innerHTML = originalText;
-          copyBtn.classList.remove('copied');
-        }, 2000);
-      }).catch(function(err) {
-        console.error('Failed to copy: ', err);
-        alert('Failed to copy URL to clipboard');
-      });
-    }
-
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
@@ -599,7 +484,6 @@
       const searchBtn = document.getElementById("searchBtn");
       const btnText = document.getElementById("btnText");
       const invoiceTag = document.getElementById("invoiceTag");
-      const qrSection = document.getElementById("qrSection");
 
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
@@ -607,7 +491,6 @@
       totalDiv.innerText = "";
       printBtn.style.display = "none";
       invoiceTag.style.display = "none";
-      qrSection.style.display = "none";
 
       // Show loading state
       searchBtn.disabled = true;
@@ -660,10 +543,6 @@
           invoiceTag.style.display = "block";
         }
 
-        // Generate QR Code for current URL
-        generateQRCode(window.location.href);
-        qrSection.style.display = "flex";
-
         // Customer Details
         detailsDiv.innerHTML = `
           <div class="detail-group">
@@ -696,14 +575,14 @@
           </div>
         `;
 
-        // Table Header with rearranged columns
+        // Table Header
         let tableHTML = `
           <table class="items-table">
             <thead>
               <tr>
                 <th>Sl. No</th>
-                <th>Item Name</th>
                 <th>Product ID</th>
+                <th>Item Name</th>
                 <th>Batch No</th>
                 <th>Quantity</th>
                 <th>Price</th>
@@ -725,8 +604,8 @@
           tableHTML += `
             <tr>
               <td>${index + 1}</td>
-              <td>${productName}</td>
               <td>${row["Product ID"]}</td>
+              <td>${productName}</td>
               <td>${row["Batch No"]}</td>
               <td>${row["Quantity"]}</td>
               <td>₹${Number(row["Price"]).toFixed(2)}</td>
@@ -744,7 +623,6 @@
         detailsDiv.classList.add('fade-in');
         itemsDiv.classList.add('fade-in');
         totalDiv.classList.add('fade-in');
-        qrSection.classList.add('fade-in');
         
         // Update URL without page reload
         const newUrl = new URL(window.location);
