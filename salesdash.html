@@ -1669,7 +1669,16 @@
         return;
       }
       
-      viewInvoiceInModal(invoiceNumber);
+      // Check if the invoice exists in current data
+      const invoiceExists = currentInvoiceData.some(row => row["Invoice Number"] === invoiceNumber);
+      
+      if (invoiceExists) {
+        // Open the Edit Tag modal with the invoice number
+        openEditModal(invoiceNumber);
+      } else {
+        // Show error message
+        alert(`Invoice "${invoiceNumber}" not found in the current data. Please check the invoice number or adjust your filters.`);
+      }
     }
 
     function viewInvoiceInModal(invoiceNumber) {
@@ -1706,6 +1715,9 @@
       document.getElementById("modalInvoiceNumber").textContent = invoiceNumber;
       document.getElementById("tagSelect").value = invoice["Tag"] || "None";
       document.getElementById("remarkText").value = invoice["Remark"] || "";
+      
+      // Clear the search input
+      document.getElementById('invoiceSearch').value = '';
       
       // Show modal
       document.getElementById("editTagModal").style.display = "flex";
