@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Report Dashboard</title>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #7209b7;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --warning: #f8961e;
+      --info: #4895ef;
+      --gray: #6c757d;
+      --gray-light: #e9ecef;
+      --border-radius: 12px;
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .dashboard-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 25px 30px;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      margin-bottom: 0;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .shop-info {
+      text-align: left;
+    }
+    
+    .shop-name {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    
+    .shop-details {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+    
+    .shop-address, .shop-phone {
+      margin-bottom: 4px;
+    }
+    
+    .shop-id {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    
+    .dashboard-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .dashboard-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .filters-section {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+    }
+    
+    .filters-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      align-items: end;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .filter-label {
+      font-weight: 600;
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .filter-input {
+      padding: 12px 16px;
+      border-radius: var(--border-radius);
+      border: 2px solid var(--gray-light);
+      font-size: 15px;
+      transition: var(--transition);
+      background: var(--light);
+    }
+    
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+    }
+    
+    .filter-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--border-radius);
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      height: fit-content;
+    }
+    
+    .filter-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+    }
+    
+    .stats-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    }
+    
+    .stat-icon {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      font-size: 16px;
+      color: var(--gray);
+      font-weight: 500;
+    }
+    
+    .card-total {
+      border-top: 4px solid var(--primary);
+    }
+    
+    .card-invoices {
+      border-top: 4px solid var(--info);
+    }
+    
+    .card-products {
+      border-top: 4px solid var(--success);
+    }
+    
+    .card-average {
+      border-top: 4px solid var(--warning);
+    }
+    
+    .tables-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    @media (max-width: 1024px) {
+      .tables-section {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .table-container {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    
+    .table-header {
+      padding: 20px 25px;
+      background: var(--light);
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .table-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .table-content {
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table thead {
+      background: var(--light);
+      position: sticky;
+      top: 0;
+    }
+    
+    .data-table th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--gray);
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .data-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--gray-light);
+      font-size: 14px;
+    }
+    
+    .data-table tbody tr {
+      transition: var(--transition);
+    }
+    
+    .data-table tbody tr:hover {
+      background: rgba(67, 97, 238, 0.03);
+    }
+    
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .view-btn {
+      padding: 6px 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .view-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .no-data {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray);
+      font-style: italic;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-header {
+        padding: 20px;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .shop-info {
+        text-align: center;
+      }
+      
+      .filters-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-section {
+        grid-template-columns: 1fr;
+      }
+      
+      .data-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div class="header-content">
+        <div class="shop-info">
+          <div class="shop-name" id="shopName">Loading Shop Name...</div>
+          <div class="shop-details">
+            <div class="shop-address" id="shopAddress">Loading address...</div>
+            <div class="shop-phone" id="shopPhone">Loading phone...</div>
+          </div>
+          <div class="shop-id">Shop ID: <span id="shopTag">Loading...</span></div>
+        </div>
+        <div class="dashboard-info">
+          <div class="dashboard-title">Sales Report Dashboard</div>
+          <div class="dashboard-subtitle">Analyze your sales performance</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters-section">
+      <div class="filters-container">
+        <div class="filter-group">
+          <div class="filter-label">Date Range</div>
+          <input type="date" id="startDate" class="filter-input">
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">To</div>
+          <input type="date" id="endDate" class="filter-input">
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Sales Person</div>
+          <select id="salesPerson" class="filter-input">
+            <option value="">All Sales Persons</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Product</div>
+          <select id="productFilter" class="filter-input">
+            <option value="">All Products</option>
+          </select>
+        </div>
+        <button class="filter-btn" id="applyFilters">
+          <span id="btnText">Apply Filters</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <div class="stat-card card-total">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="totalSales">₹0.00</div>
+        <div class="stat-label">Total Sales Value</div>
+      </div>
+      <div class="stat-card card-invoices">
+        <div class="stat-icon">📄</div>
+        <div class="stat-value" id="totalInvoices">0</div>
+        <div class="stat-label">Total Invoices</div>
+      </div>
+      <div class="stat-card card-products">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value" id="totalProducts">0</div>
+        <div class="stat-label">Products Sold</div>
+      </div>
+      <div class="stat-card card-average">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="averageInvoice">₹0.00</div>
+        <div class="stat-label">Average Invoice Value</div>
+      </div>
+    </div>
+
+    <div class="tables-section">
+      <div class="table-container">
+        <div class="table-header">
+          <div class="table-title">Recent Invoices</div>
+        </div>
+        <div class="table-content">
+          <table class="data-table" id="invoicesTable">
+            <thead>
+              <tr>
+                <th>Invoice No.</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="invoicesTableBody">
+              <!-- Invoice data will be populated here -->
+            </tbody>
+          </table>
+          <div id="noInvoices" class="no-data" style="display: none;">No invoices found for the selected filters</div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <div class="table-title">Product Summary</div>
+        </div>
+        <div class="table-content">
+          <table class="data-table" id="productsTable">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Product ID</th>
+                <th>Quantity</th>
+                <th>Total Value</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <!-- Product summary data will be populated here -->
+            </tbody>
+          </table>
+          <div id="noProducts" class="no-data" style="display: none;">No product data available</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+    const salesTableId = 736209;
+    const productTableId = 734793;
+
+    const salesUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/?user_field_names=true`;
+    const productUrl = `https://api.baserow.io/api/database/rows/table/${productTableId}/?user_field_names=true`;
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load shop information from localStorage
+      loadShopInfo();
+      
+      // Set default date range (last 30 days)
+      setDefaultDateRange();
+      
+      // Load initial data
+      loadSalesData();
+      
+      // Set up event listeners
+      document.getElementById('applyFilters').addEventListener('click', loadSalesData);
+    });
+
+    function setDefaultDateRange() {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      
+      document.getElementById('startDate').valueAsDate = startDate;
+      document.getElementById('endDate').valueAsDate = endDate;
+    }
+
+    function parseShopTag(shopTag) {
+      // Expected format: ShopName-Address/PhoneNumber
+      let shopName = "Your Shop";
+      let address = "Address not available";
+      let phone = "Phone not available";
+      
+      if (shopTag) {
+        // Split by '-' to separate shop name from address/phone
+        const firstSplit = shopTag.split('-');
+        
+        if (firstSplit.length > 1) {
+          shopName = firstSplit[0].trim();
+          
+          // Split the remaining part by '/' to separate address and phone
+          const secondSplit = firstSplit[1].split('/');
+          
+          if (secondSplit.length > 1) {
+            address = secondSplit[0].trim();
+            phone = secondSplit[1].trim();
+          } else {
+            // If no '/' found, treat the whole remaining part as address
+            address = firstSplit[1].trim();
+          }
+        } else {
+          // If no '-' found, use the whole string as shop name
+          shopName = shopTag.trim();
+        }
+      }
+      
+      return {
+        shopName,
+        address,
+        phone
+      };
+    }
+
+    function loadShopInfo() {
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const shopTagValue = localStorage.getItem("ShopTag") || "Your Shop";
+      
+      // Parse the ShopTag value
+      const shopInfo = parseShopTag(shopTagValue);
+      
+      if (shopIDTag) {
+        document.getElementById('shopTag').textContent = shopIDTag;
+        document.getElementById('shopName').textContent = shopInfo.shopName;
+        document.getElementById('shopAddress').textContent = shopInfo.address;
+        document.getElementById('shopPhone').textContent = shopInfo.phone;
+      } else {
+        document.getElementById('shopTag').textContent = "Not Set";
+        document.getElementById('shopName').textContent = "Please Set Shop Information";
+        document.getElementById('shopAddress').textContent = "Please set ShopTag in localStorage";
+        document.getElementById('shopPhone').textContent = "Please set ShopTag in localStorage";
+      }
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "N/A";
+      
+      try {
+        // Try to parse the date string
+        const date = new Date(dateString);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return dateString; // Return original if invalid
+        }
+        
+        // Format as DD/MM/YYYY
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
+      } catch (error) {
+        console.error("Date formatting error:", error);
+        return dateString; // Return original if error
+      }
+    }
+
+    function formatCurrency(amount) {
+      return '₹' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    }
+
+    async function loadSalesData() {
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const salesPerson = document.getElementById("salesPerson").value;
+      const productFilter = document.getElementById("productFilter").value;
+      const applyBtn = document.getElementById("applyFilters");
+      const btnText = document.getElementById("btnText");
+
+      // Show loading state
+      applyBtn.disabled = true;
+      btnText.innerHTML = '<span class="loading"></span> Loading...';
+
+      if (!shopIDTag) {
+        alert("ShopIDTag not found in local storage. Please log in first.");
+        applyBtn.disabled = false;
+        btnText.textContent = "Apply Filters";
+        return;
+      }
+
+      try {
+        // Fetch Product Table for mapping
+        const productResponse = await fetch(productUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const productData = await productResponse.json();
+
+        // Fetch Sales Table
+        const salesResponse = await fetch(salesUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const salesData = await salesResponse.json();
+
+        // Filter sales data based on criteria
+        let filteredSales = salesData.results.filter(row => row["ShopID"] === shopIDTag);
+
+        // Apply date filter
+        if (startDate && endDate) {
+          filteredSales = filteredSales.filter(row => {
+            const saleDate = new Date(row["Date"]);
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999); // Include the entire end date
+            
+            return saleDate >= start && saleDate <= end;
+          });
+        }
+
+        // Apply sales person filter
+        if (salesPerson) {
+          filteredSales = filteredSales.filter(row => row["Sales Person"] === salesPerson);
+        }
+
+        // Apply product filter
+        if (productFilter) {
+          filteredSales = filteredSales.filter(row => row["Product ID"] === productFilter);
+        }
+
+        // Process data for display
+        processSalesData(filteredSales, productData);
+
+      } catch (error) {
+        console.error(error);
+        alert("Error fetching data. Please try again.");
+      } finally {
+        applyBtn.disabled = false;
+        btnText.textContent = "Apply Filters";
+      }
+    }
+
+    function processSalesData(salesData, productData) {
+      // Group by invoice number to get unique invoices
+      const invoicesMap = {};
+      const productsMap = {};
+      
+      let totalSalesValue = 0;
+      let totalProductsSold = 0;
+
+      salesData.forEach(row => {
+        const invoiceNumber = row["Invoice Number"];
+        const productId = row["Product ID"];
+        const quantity = Number(row["Quantity"]) || 0;
+        const price = Number(row["Price"]) || 0;
+        const total = quantity * price;
+        
+        // Process invoice data
+        if (!invoicesMap[invoiceNumber]) {
+          invoicesMap[invoiceNumber] = {
+            invoiceNumber: invoiceNumber,
+            date: row["Date"],
+            customer: row["Costomer Name"],
+            total: 0,
+            salesPerson: row["Sales Person"]
+          };
+        }
+        invoicesMap[invoiceNumber].total += total;
+        
+        // Process product data
+        if (!productsMap[productId]) {
+          const product = productData.results.find(p => p["Product ID"] === productId);
+          productsMap[productId] = {
+            productId: productId,
+            productName: product ? product["Product Name"] : "Unknown Product",
+            quantity: 0,
+            total: 0
+          };
+        }
+        productsMap[productId].quantity += quantity;
+        productsMap[productId].total += total;
+        
+        // Update totals
+        totalSalesValue += total;
+        totalProductsSold += quantity;
+      });
+
+      // Convert maps to arrays and sort
+      const invoices = Object.values(invoicesMap)
+        .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+      
+      const products = Object.values(productsMap)
+        .sort((a, b) => b.total - a.total); // Highest value first
+
+      // Update statistics
+      updateStatistics(invoices, totalSalesValue, totalProductsSold);
+      
+      // Update tables
+      updateInvoicesTable(invoices);
+      updateProductsTable(products);
+      
+      // Update filter dropdowns
+      updateFilterDropdowns(salesData, productData);
+    }
+
+    function updateStatistics(invoices, totalSalesValue, totalProductsSold) {
+      document.getElementById("totalSales").textContent = formatCurrency(totalSalesValue);
+      document.getElementById("totalInvoices").textContent = invoices.length;
+      document.getElementById("totalProducts").textContent = totalProductsSold;
+      
+      const averageInvoice = invoices.length > 0 ? totalSalesValue / invoices.length : 0;
+      document.getElementById("averageInvoice").textContent = formatCurrency(averageInvoice);
+    }
+
+    function updateInvoicesTable(invoices) {
+      const tableBody = document.getElementById("invoicesTableBody");
+      const noDataMsg = document.getElementById("noInvoices");
+      
+      tableBody.innerHTML = "";
+      
+      if (invoices.length === 0) {
+        noDataMsg.style.display = "block";
+        return;
+      }
+      
+      noDataMsg.style.display = "none";
+      
+      invoices.forEach(invoice => {
+        const row = document.createElement("tr");
+        row.classList.add("fade-in");
+        row.innerHTML = `
+          <td>${invoice.invoiceNumber}</td>
+          <td>${formatDate(invoice.date)}</td>
+          <td>${invoice.customer}</td>
+          <td>${formatCurrency(invoice.total)}</td>
+          <td>
+            <button class="view-btn" onclick="viewInvoice('${invoice.invoiceNumber}')">View</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function updateProductsTable(products) {
+      const tableBody = document.getElementById("productsTableBody");
+      const noDataMsg = document.getElementById("noProducts");
+      
+      tableBody.innerHTML = "";
+      
+      if (products.length === 0) {
+        noDataMsg.style.display = "block";
+        return;
+      }
+      
+      noDataMsg.style.display = "none";
+      
+      products.forEach(product => {
+        const row = document.createElement("tr");
+        row.classList.add("fade-in");
+        row.innerHTML = `
+          <td>${product.productName}</td>
+          <td>${product.productId}</td>
+          <td>${product.quantity}</td>
+          <td>${formatCurrency(product.total)}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function updateFilterDropdowns(salesData, productData) {
+      // Update sales person dropdown
+      const salesPersonSelect = document.getElementById("salesPerson");
+      const salesPersons = [...new Set(salesData.map(row => row["Sales Person"]))].filter(Boolean);
+      
+      // Clear existing options except the first one
+      while (salesPersonSelect.options.length > 1) {
+        salesPersonSelect.remove(1);
+      }
+      
+      // Add new options
+      salesPersons.forEach(person => {
+        const option = document.createElement("option");
+        option.value = person;
+        option.textContent = person;
+        salesPersonSelect.appendChild(option);
+      });
+      
+      // Update product filter dropdown
+      const productSelect = document.getElementById("productFilter");
+      const products = [...new Set(salesData.map(row => row["Product ID"]))].filter(Boolean);
+      
+      // Clear existing options except the first one
+      while (productSelect.options.length > 1) {
+        productSelect.remove(1);
+      }
+      
+      // Add new options
+      products.forEach(productId => {
+        const product = productData.results.find(p => p["Product ID"] === productId);
+        const productName = product ? product["Product Name"] : productId;
+        
+        const option = document.createElement("option");
+        option.value = productId;
+        option.textContent = productName;
+        productSelect.appendChild(option);
+      });
+    }
+
+    function viewInvoice(invoiceNumber) {
+      // Redirect to invoice.html with the invoice number as a parameter
+      window.location.href = `invoice.html?invoice=${invoiceNumber}`;
+    }
+  </script>
+
+</body>
+</html>
