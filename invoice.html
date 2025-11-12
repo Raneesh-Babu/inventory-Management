@@ -83,6 +83,7 @@ const SALES_TABLE = 736209;
 const PRODUCT_TABLE = 734793;
 let currentRowId = null;
 
+// Convert number to words
 function inWords(num) {
   const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
   const b=['','', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
@@ -97,36 +98,39 @@ function inWords(num) {
   return str;
 }
 
+// On page load
 window.onload = () => {
   document.getElementById("shopName").textContent = localStorage.getItem("ShopTag") || "Shop Name";
-  const urlParams = new URLSearchParams(window.location.search);
-  const inv = urlParams.get("inv");
-  if(inv){ document.getElementById("invoiceInput").value=inv; loadInvoice(); }
 };
 
+// Load invoice
 async function loadInvoice() {
   const inv = document.getElementById("invoiceInput").value.trim();
   if(!inv) return alert("Enter Invoice Number");
 
   const shopIdTag = localStorage.getItem("ShopIDTag");
-  if(!shopIdTag) return alert("ShopIDTag not found in localStorage");
+  if(!shopIdTag) return alert("ShopIDTag not found");
 
-  const salesResp = await fetch(`https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/?user_field_names=true&filter__field=Invoice Number__equal=${inv}`, {
-    headers:{ Authorization:`Token ${API_KEY}` }
+  // Correct Baserow filter URL
+  const url = `https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/?user_field_names=true&filter__field=Invoice%20Number__equal=${encodeURIComponent(inv)}`;
+  const salesResp = await fetch(url, {
+    headers: { Authorization: `Token ${API_KEY}` }
   });
+
   const salesData = await salesResp.json();
-  if(!salesData.results.length) return alert("Invoice not found");
+  console.log("Sales API Response:", salesData);
 
-  console.log("Invoice Row Data:", salesData.results[0]); 
+  if(!salesData.results || salesData.results.length === 0) return alert("Invoice not found");
 
-  // Use exact ShopID field
-  const shopIdFromSales = salesData.results[0].ShopID;
+  // Validate ShopID
+  const row = salesData.results[0];
+  const shopIdFromSales = row.ShopID;
 
-  if(shopIdTag.toString()!==shopIdFromSales.toString()){
-    return alert(`Access denied! ShopIDTag (${shopIdTag}) does not match ShopID (${shopIdFromSales}) in Sales Table.`);
+  if(shopIdTag.toString() !== shopIdFromSales.toString()) {
+    return alert(`Access denied! ShopIDTag (${shopIdTag}) does not match ShopID (${shopIdFromSales})`);
   }
 
-  const row = salesData.results[0];
+  currentRowId = row.id;
   document.getElementById("invoiceNumber").textContent = row["Invoice Number"];
   document.getElementById("invoiceDate").textContent = row.Date;
   document.getElementById("custName").textContent = row["Costomer Name"];
@@ -135,16 +139,16 @@ async function loadInvoice() {
   document.getElementById("custGST").textContent = row.GST || "Nil";
   document.getElementById("salesPerson").textContent = row["Sales Person"];
   document.getElementById("tagField").textContent = row.Tag || "";
-  currentRowId = row.id;
 
+  // Build invoice items
   let total = 0;
   let tableHTML = "";
-  for(const r of salesData.results){
+  for(const r of salesData.results) {
     const pid = r["Product ID"];
     const pname = r["Item Name"] || await getProductName(pid);
-    const qty = parseFloat(r.Quantity||0);
-    const price = parseFloat(r.Price||0);
-    const subtotal = qty*price;
+    const qty = parseFloat(r.Quantity || 0);
+    const price = parseFloat(r.Price || 0);
+    const subtotal = qty * price;
     total += subtotal;
 
     tableHTML += `<tr>
@@ -156,26 +160,29 @@ async function loadInvoice() {
       <td>${subtotal.toFixed(2)}</td>
     </tr>`;
   }
+
   document.getElementById("itemTable").innerHTML = tableHTML;
   document.getElementById("totalAmount").textContent = total.toFixed(2);
   document.getElementById("amountWords").textContent = inWords(Math.round(total));
 }
 
-async function getProductName(pid){
-  const resp = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filter__field=Product ID__equal=${pid}`, {
-    headers:{ Authorization:`Token ${API_KEY}` }
+// Fetch Product Name from Product Table
+async function getProductName(pid) {
+  const resp = await fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filter__field=Product%20ID__equal=${encodeURIComponent(pid)}`, {
+    headers: { Authorization: `Token ${API_KEY}` }
   });
   const data = await resp.json();
   return data.results[0]?.["Product Name"] || "N/A";
 }
 
-async function updateTag(){
+// Update Tag field
+async function updateTag() {
   const newTag = document.getElementById("tagField").textContent.trim();
   if(!currentRowId) return;
   await fetch(`https://api.baserow.io/api/database/rows/table/${SALES_TABLE}/${currentRowId}/?user_field_names=true`, {
-    method:"PATCH",
-    headers:{ Authorization:`Token ${API_KEY}`, "Content-Type":"application/json" },
-    body: JSON.stringify({ Tag:newTag })
+    method: "PATCH",
+    headers: { Authorization: `Token ${API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ Tag: newTag })
   });
   alert("Tag updated successfully!");
 }
