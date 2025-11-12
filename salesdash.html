@@ -451,6 +451,61 @@
       border-bottom: none;
     }
     
+    .expandable-row {
+      cursor: pointer;
+    }
+    
+    .expandable-row:hover {
+      background: rgba(67, 97, 238, 0.05) !important;
+    }
+    
+    .batch-details {
+      background: #f8f9fa;
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .batch-details.expanded {
+      max-height: 500px;
+      padding: 15px;
+    }
+    
+    .batch-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
+    .batch-table th {
+      background: #e9ecef;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--gray);
+    }
+    
+    .batch-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #dee2e6;
+      font-size: 12px;
+    }
+    
+    .batch-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .expand-icon {
+      transition: transform 0.3s ease;
+      margin-right: 8px;
+    }
+    
+    .expanded .expand-icon {
+      transform: rotate(90deg);
+    }
+    
     .tag {
       display: inline-block;
       padding: 4px 10px;
@@ -870,6 +925,7 @@
           <table class="data-table" id="productsTable">
             <thead>
               <tr>
+                <th></th>
                 <th>Product Name</th>
                 <th>Product ID</th>
                 <th>Quantity</th>
@@ -930,6 +986,7 @@
     // Global variables
     let currentInvoiceData = [];
     let currentEditingInvoice = null;
+    let expandedProducts = new Set();
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
@@ -1103,6 +1160,7 @@
       // Group by invoice number to get unique invoices
       const invoicesMap = {};
       const productsMap = {};
+      const productBatchMap = {};
       const dailySales = {};
       
       let totalSalesValue = 0;
@@ -1121,6 +1179,7 @@
       salesData.forEach(row => {
         const invoiceNumber = row["Invoice Number"];
         const productId = row["Product ID"];
+        const batchNo = row["Batch No"] || "N/A";
         const quantity = Number(row["Quantity"]) || 0;
         const price = Number(row["Price"]) || 0;
         const total = quantity * price;
@@ -1152,11 +1211,31 @@
             productId: productId,
             productName: product ? product["Product Name"] : "Unknown Product",
             quantity: 0,
-            total: 0
+            total: 0,
+            batches: {}
           };
         }
         productsMap[productId].quantity += quantity;
         productsMap[productId].total += total;
+        
+        // Process batch data
+        if (!productsMap[productId].batches[batchNo]) {
+          productsMap[productId].batches[batchNo] = {
+            batchNo: batchNo,
+            quantity: 0,
+            total: 0,
+            invoices: []
+          };
+        }
+        productsMap[productId].batches[batchNo].quantity += quantity;
+        productsMap[productId].batches[batchNo].total += total;
+        productsMap[productId].batches[batchNo].invoices.push({
+          invoiceNumber: invoiceNumber,
+          date: row["Date"],
+          quantity: quantity,
+          price: price,
+          total: total
+        });
         
         // Update totals
         totalSalesValue += total;
@@ -1175,7 +1254,7 @@
       
       // Update tables
       updateInvoicesTable(invoices);
-      updateProductsTable(products);
+      updateProductsTable(products, productsMap);
       
       // Update trends
       updateSalesTrends(dailySales, last7Days);
@@ -1292,7 +1371,7 @@
       });
     }
 
-    function updateProductsTable(products) {
+    function updateProductsTable(products, productsMap) {
       const tableBody = document.getElementById("productsTableBody");
       const noDataMsg = document.getElementById("noProducts");
       
@@ -1306,16 +1385,137 @@
       noDataMsg.style.display = "none";
       
       products.forEach(product => {
+        const isExpanded = expandedProducts.has(product.productId);
+        
         const row = document.createElement("tr");
-        row.classList.add("fade-in");
+        row.className = `expandable-row ${isExpanded ? 'expanded' : ''}`;
+        row.setAttribute('data-product-id', product.productId);
+        
         row.innerHTML = `
+          <td>
+            <i class="fas fa-chevron-right expand-icon"></i>
+          </td>
           <td>${product.productName}</td>
           <td>${product.productId}</td>
           <td>${product.quantity}</td>
           <td>${formatCurrency(product.total)}</td>
         `;
+        
         tableBody.appendChild(row);
+        
+        // Add batch details row
+        const batchRow = document.createElement("tr");
+        batchRow.className = "batch-row";
+        
+        const batchCell = document.createElement("td");
+        batchCell.colSpan = 6;
+        batchCell.className = "batch-cell";
+        
+        const batchDetails = document.createElement("div");
+        batchDetails.className = `batch-details ${isExpanded ? 'expanded' : ''}`;
+        batchDetails.id = `batch-details-${product.productId}`;
+        
+        if (isExpanded) {
+          batchDetails.innerHTML = generateBatchDetailsHTML(product, productsMap[product.productId].batches);
+        }
+        
+        batchCell.appendChild(batchDetails);
+        batchRow.appendChild(batchCell);
+        tableBody.appendChild(batchRow);
+        
+        // Add click event to expand/collapse
+        row.addEventListener('click', function() {
+          toggleProductExpansion(product.productId, product, productsMap[product.productId].batches);
+        });
       });
+    }
+
+    function generateBatchDetailsHTML(product, batches) {
+      let html = `<h4 style="margin-bottom: 15px; color: var(--primary);">Batch-wise Report for ${product.productName}</h4>`;
+      
+      // Sort batches by total value (descending)
+      const sortedBatches = Object.values(batches).sort((a, b) => b.total - a.total);
+      
+      sortedBatches.forEach(batch => {
+        html += `
+          <div style="margin-bottom: 20px; border: 1px solid var(--gray-light); border-radius: 8px; overflow: hidden;">
+            <div style="background: var(--light); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-weight: 600;">Batch No: ${batch.batchNo}</div>
+              <div style="font-weight: 600;">Total: ${formatCurrency(batch.total)}</div>
+            </div>
+            <table class="batch-table">
+              <thead>
+                <tr>
+                  <th>Invoice No.</th>
+                  <th>Date</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        // Sort invoices by date (newest first)
+        const sortedInvoices = batch.invoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        sortedInvoices.forEach(invoice => {
+          html += `
+            <tr>
+              <td>${invoice.invoiceNumber}</td>
+              <td>${formatDate(invoice.date)}</td>
+              <td>${invoice.quantity}</td>
+              <td>${formatCurrency(invoice.price)}</td>
+              <td>${formatCurrency(invoice.total)}</td>
+            </tr>
+          `;
+        });
+        
+        html += `
+              </tbody>
+              <tfoot>
+                <tr style="background: #f8f9fa; font-weight: 600;">
+                  <td colspan="2" style="text-align: right;">Batch Total:</td>
+                  <td>${batch.quantity}</td>
+                  <td></td>
+                  <td>${formatCurrency(batch.total)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `;
+      });
+      
+      return html;
+    }
+
+    function toggleProductExpansion(productId, product, batches) {
+      const batchDetails = document.getElementById(`batch-details-${productId}`);
+      const productRow = document.querySelector(`tr[data-product-id="${productId}"]`);
+      
+      if (expandedProducts.has(productId)) {
+        // Collapse
+        expandedProducts.delete(productId);
+        batchDetails.classList.remove('expanded');
+        productRow.classList.remove('expanded');
+        
+        // Clear content after animation
+        setTimeout(() => {
+          if (!expandedProducts.has(productId)) {
+            batchDetails.innerHTML = '';
+          }
+        }, 300);
+      } else {
+        // Expand
+        expandedProducts.add(productId);
+        batchDetails.innerHTML = generateBatchDetailsHTML(product, batches);
+        
+        // Trigger animation
+        setTimeout(() => {
+          batchDetails.classList.add('expanded');
+          productRow.classList.add('expanded');
+        }, 10);
+      }
     }
 
     function updateFilterDropdowns(salesData, productData) {
