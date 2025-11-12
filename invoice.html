@@ -48,7 +48,18 @@
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
       padding: 25px 30px;
-      text-align: center;
+      position: relative;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .shop-info {
+      text-align: left;
     }
     
     .shop-name {
@@ -61,6 +72,16 @@
     .shop-tag {
       font-size: 16px;
       opacity: 0.9;
+    }
+    
+    .invoice-tag {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
     .search-section {
@@ -244,6 +265,16 @@
         margin: 15px;
       }
       
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .invoice-tag {
+        margin-top: 10px;
+      }
+      
       .search-container {
         flex-direction: column;
       }
@@ -287,8 +318,13 @@
 
   <div class="invoice-container">
     <div class="invoice-header">
-      <div class="shop-name" id="shopName">Loading Shop Name...</div>
-      <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
+      <div class="header-content">
+        <div class="shop-info">
+          <div class="shop-name" id="shopName">Loading Shop Name...</div>
+          <div class="shop-tag">Shop ID: <span id="shopTag">Loading...</span></div>
+        </div>
+        <div class="invoice-tag" id="invoiceTag" style="display: none;"></div>
+      </div>
     </div>
 
     <div class="search-section" id="searchSection">
@@ -349,6 +385,30 @@
       }
     }
 
+    function formatDate(dateString) {
+      if (!dateString) return "N/A";
+      
+      try {
+        // Try to parse the date string
+        const date = new Date(dateString);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return dateString; // Return original if invalid
+        }
+        
+        // Format as DD/MM/YYYY
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${day}/${month}/${year}`;
+      } catch (error) {
+        console.error("Date formatting error:", error);
+        return dateString; // Return original if error
+      }
+    }
+
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
@@ -359,12 +419,14 @@
       const printBtn = document.getElementById("printBtn");
       const searchBtn = document.getElementById("searchBtn");
       const btnText = document.getElementById("btnText");
+      const invoiceTag = document.getElementById("invoiceTag");
 
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
       itemsDiv.innerHTML = "";
       totalDiv.innerText = "";
       printBtn.style.display = "none";
+      invoiceTag.style.display = "none";
 
       // Show loading state
       searchBtn.disabled = true;
@@ -411,6 +473,12 @@
         // Basic customer info from first row
         const invoice = invoiceRows[0];
 
+        // Display Tag value at top right if available
+        if (invoice["Tag"]) {
+          invoiceTag.textContent = invoice["Tag"];
+          invoiceTag.style.display = "block";
+        }
+
         // Customer Details
         detailsDiv.innerHTML = `
           <div class="detail-group">
@@ -435,7 +503,7 @@
           </div>
           <div class="detail-group">
             <span class="label">Date</span>
-            <span class="value">${invoice["Date"]}</span>
+            <span class="value">${formatDate(invoice["Date"])}</span>
           </div>
           <div class="detail-group">
             <span class="label">Sales Person</span>
