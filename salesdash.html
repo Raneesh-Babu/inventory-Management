@@ -637,7 +637,7 @@
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
       width: 90%;
-      max-width: 600px;
+      max-width: 500px;
       padding: 25px;
       animation: modalFadeIn 0.3s ease;
     }
@@ -781,56 +781,6 @@
     
     .save-btn:hover {
       background-color: var(--primary-dark);
-    }
-    
-    /* Product Selection Styles */
-    .product-selection {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid var(--gray-light);
-      border-radius: var(--border-radius);
-      padding: 10px;
-      background: var(--light);
-    }
-    
-    .product-item {
-      display: flex;
-      align-items: center;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--gray-light);
-      transition: var(--transition);
-    }
-    
-    .product-item:last-child {
-      border-bottom: none;
-    }
-    
-    .product-item:hover {
-      background: rgba(67, 97, 238, 0.05);
-    }
-    
-    .product-checkbox {
-      margin-right: 12px;
-    }
-    
-    .product-details {
-      flex: 1;
-    }
-    
-    .product-id {
-      font-size: 12px;
-      color: var(--gray);
-      margin-top: 2px;
-    }
-    
-    .select-all {
-      display: flex;
-      align-items: center;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      background: white;
-      border-radius: 6px;
-      font-weight: 600;
     }
     
     .fade-in {
@@ -1076,14 +1026,6 @@
           <div class="form-label">Invoice Number</div>
           <div id="modalInvoiceNumber" class="filter-input" style="background: #f0f0f0;">INV123456</div>
         </div>
-        
-        <div class="form-group">
-          <div class="form-label">Select Products to Update</div>
-          <div class="product-selection" id="productSelection">
-            <!-- Product checkboxes will be populated here -->
-          </div>
-        </div>
-        
         <div class="form-group">
           <div class="form-label">Tag</div>
           <select id="tagSelect" class="form-select">
@@ -1093,7 +1035,6 @@
             <option value="Replacement">Replacement</option>
           </select>
         </div>
-        
         <div class="form-group">
           <div class="form-label">Remark</div>
           <textarea id="remarkText" class="form-textarea" placeholder="Enter remark for this tag update..."></textarea>
@@ -1131,7 +1072,6 @@
     let currentInvoiceData = [];
     let currentEditingInvoice = null;
     let expandedProducts = new Set();
-    let currentProductData = [];
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
@@ -1250,7 +1190,6 @@
           headers: { Authorization: `Token ${apiKey}` }
         });
         const productData = await productResponse.json();
-        currentProductData = productData.results;
 
         // Fetch Sales Table
         const salesResponse = await fetch(salesUrl, {
@@ -1348,24 +1287,14 @@
             total: 0,
             salesPerson: row["Sales Person"],
             tag: row["Tag"] || "None",
-            remark: row["Remark"] || "",
-            products: []
+            remark: row["Remark"] || ""
           };
         }
         invoicesMap[invoiceNumber].total += total;
         
-        // Add product to invoice
-        const product = productData.results.find(p => p["Product ID"] === productId);
-        invoicesMap[invoiceNumber].products.push({
-          productId: productId,
-          productName: product ? product["Product Name"] : "Unknown Product",
-          rowId: row.id,
-          tag: row["Tag"] || "None",
-          remark: row["Remark"] || ""
-        });
-        
         // Process product data
         if (!productsMap[productId]) {
+          const product = productData.results.find(p => p["Product ID"] === productId);
           productsMap[productId] = {
             productId: productId,
             productName: product ? product["Product Name"] : "Unknown Product",
@@ -1784,48 +1713,14 @@
       
       // Populate modal fields
       document.getElementById("modalInvoiceNumber").textContent = invoiceNumber;
+      document.getElementById("tagSelect").value = invoice["Tag"] || "None";
+      document.getElementById("remarkText").value = invoice["Remark"] || "";
       
-      // Populate product selection
-      populateProductSelection(invoice.products);
+      // Clear the search input
+      document.getElementById('invoiceSearch').value = '';
       
       // Show modal
       document.getElementById("editTagModal").style.display = "flex";
-    }
-
-    function populateProductSelection(products) {
-      const productSelection = document.getElementById('productSelection');
-      productSelection.innerHTML = '';
-      
-      // Add select all option
-      const selectAllDiv = document.createElement('div');
-      selectAllDiv.className = 'select-all';
-      selectAllDiv.innerHTML = `
-        <input type="checkbox" id="selectAllProducts" class="product-checkbox" checked>
-        <label for="selectAllProducts">Select All Products</label>
-      `;
-      productSelection.appendChild(selectAllDiv);
-      
-      // Add individual product checkboxes
-      products.forEach(product => {
-        const productItem = document.createElement('div');
-        productItem.className = 'product-item';
-        productItem.innerHTML = `
-          <input type="checkbox" class="product-checkbox" value="${product.rowId}" data-product-id="${product.productId}" checked>
-          <div class="product-details">
-            <div>${product.productName}</div>
-            <div class="product-id">Product ID: ${product.productId}</div>
-          </div>
-        `;
-        productSelection.appendChild(productItem);
-      });
-      
-      // Add event listener for select all
-      document.getElementById('selectAllProducts').addEventListener('change', function() {
-        const checkboxes = productSelection.querySelectorAll('.product-checkbox:not(#selectAllProducts)');
-        checkboxes.forEach(checkbox => {
-          checkbox.checked = this.checked;
-        });
-      });
     }
 
     function closeModal() {
@@ -1843,62 +1738,43 @@
       const remark = document.getElementById("remarkText").value;
       const saveBtn = document.getElementById("saveTag");
       
-      // Get selected products
-      const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked:not(#selectAllProducts)');
-      
-      if (selectedCheckboxes.length === 0) {
-        alert("Please select at least one product to update");
-        return;
-      }
-      
       // Show loading state
       saveBtn.disabled = true;
       saveBtn.innerHTML = '<span class="loading"></span> Updating...';
       
       try {
-        const updatePromises = [];
+        // Get the row ID for the current invoice
+        const rowId = currentEditingInvoice.id;
         
-        // Update each selected product
-        for (const checkbox of selectedCheckboxes) {
-          const rowId = checkbox.value;
-          const productId = checkbox.getAttribute('data-product-id');
-          
-          // Prepare update data
-          const updateData = {
-            "Tag": tag,
-            "Remark": remark
-          };
-          
-          // Update the row in Baserow
-          const updateUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/${rowId}/?user_field_names=true`;
-          
-          updatePromises.push(
-            fetch(updateUrl, {
-              method: "PATCH",
-              headers: {
-                "Authorization": `Token ${apiKey}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(updateData)
-            })
-          );
-        }
+        // Prepare update data
+        const updateData = {
+          "Tag": tag,
+          "Remark": remark
+        };
         
-        // Wait for all updates to complete
-        const responses = await Promise.all(updatePromises);
-        const allSuccessful = responses.every(response => response.ok);
+        // Update the row in Baserow
+        const updateUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/${rowId}/?user_field_names=true`;
         
-        if (allSuccessful) {
-          alert(`Tag and remark updated successfully for ${selectedCheckboxes.length} product(s)!`);
+        const response = await fetch(updateUrl, {
+          method: "PATCH",
+          headers: {
+            "Authorization": `Token ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (response.ok) {
+          alert("Tag and remark updated successfully!");
           closeModal();
           // Reload data to reflect changes
           loadSalesData();
         } else {
-          throw new Error("Failed to update some tags");
+          throw new Error("Failed to update tag");
         }
       } catch (error) {
         console.error(error);
-        alert("Error updating tags. Please try again.");
+        alert("Error updating tag. Please try again.");
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "Update Tag";
