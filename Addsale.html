@@ -498,7 +498,9 @@ if (!ShopID || !MobileTag) {
   window.location.href = "login.html";
 }
 
-document.getElementById("invoiceNum").innerText = "INV" + Date.now();
+// Generate invoice number
+const invoiceNum = "INV" + Date.now();
+document.getElementById("invoiceNum").innerText = invoiceNum;
 
 // 🔍 Customer Search
 document.getElementById("customerSearch").addEventListener("input", async function() {
@@ -593,67 +595,81 @@ function updateTotal() {
 async function saveInvoice() {
   const rows = document.querySelectorAll("#productTable tbody tr");
   if (rows.length === 0) return alert("No products added!");
-  const invoiceNum = document.getElementById("invoiceNum").innerText;
-  const total = document.getElementById("grandTotal").innerText;
+  
   const CostomerName = document.getElementById("CostomerName").value;
   const Mobile = document.getElementById("Mobile").value;
   const Address = document.getElementById("Address").value;
   const GST = document.getElementById("GST").value;
   const DateNow = new Date().toISOString().split("T")[0];
 
-  for (let r of rows) {
-    const obj = {
-      "Costomer Name": CostomerName,
-      "Mobile": Mobile,
-      "Address": Address,
-      "GST": GST,
-      "Date": DateNow,
-      "Product ID": r.children[0].innerText,
-      "Item Name": r.children[1].innerText,
-      "Batch No": r.children[2].innerText,
-      "Quantity": parseInt(r.children[3].innerText),
-      "Price": parseFloat(r.children[4].innerText),
-      "Invoice Number": invoiceNum,
-      "Tag": "Order Confirmed",
-      "ShopID": ShopID,
-      "Sales Person": SalesPerson
-    };
-    await fetch(`${baseURL}${salesTable}/?user_field_names=true`, {
+  // Show saving indicator
+  const saveBtn = document.querySelector('.save-btn');
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = '⏳ Saving...';
+  saveBtn.disabled = true;
+
+  try {
+    for (let r of rows) {
+      const obj = {
+        "Costomer Name": CostomerName,
+        "Mobile": Mobile,
+        "Address": Address,
+        "GST": GST,
+        "Date": DateNow,
+        "Product ID": r.children[0].innerText,
+        "Item Name": r.children[1].innerText,
+        "Batch No": r.children[2].innerText,
+        "Quantity": parseInt(r.children[3].innerText),
+        "Price": parseFloat(r.children[4].innerText),
+        "Invoice Number": invoiceNum,
+        "Tag": "Order Confirmed",
+        "ShopID": ShopID,
+        "Sales Person": SalesPerson
+      };
+      await fetch(`${baseURL}${salesTable}/?user_field_names=true`, {
+        method: "POST",
+        headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(obj)
+      });
+
+      // 🧾 Reduce inventory
+      const invRes = await fetch(`${baseURL}${inventoryTable}/?user_field_names=true`, { headers: { Authorization: `Token ${apiKey}` } });
+      const invData = await invRes.json();
+      const batchRow = invData.results.find(x => x["Product ID"] === r.children[0].innerText && x["Batch No"] == r.children[2].innerText);
+      if (batchRow) {
+        const newCount = batchRow["Count"] - parseInt(r.children[3].innerText);
+        await fetch(`${baseURL}${inventoryTable}/${batchRow.id}/?user_field_names=true`, {
+          method: "PATCH",
+          headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ "Count": newCount })
+        });
+      }
+    }
+
+    // 💰 Add Ledger Entry
+    await fetch(`${baseURL}${ledgerTable}/?user_field_names=true`, {
       method: "POST",
       headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(obj)
+      body: JSON.stringify({
+        "Costomer Name": CostomerName,
+        "Mobile": Mobile,
+        "Date": DateNow,
+        "Invoice Number": invoiceNum,
+        "Total Invoice Value": parseFloat(document.getElementById("grandTotal").innerText),
+        "ShopID": ShopID
+      })
     });
 
-    // 🧾 Reduce inventory
-    const invRes = await fetch(`${baseURL}${inventoryTable}/?user_field_names=true`, { headers: { Authorization: `Token ${apiKey}` } });
-    const invData = await invRes.json();
-    const batchRow = invData.results.find(x => x["Product ID"] === r.children[0].innerText && x["Batch No"] == r.children[2].innerText);
-    if (batchRow) {
-      const newCount = batchRow["Count"] - parseInt(r.children[3].innerText);
-      await fetch(`${baseURL}${inventoryTable}/${batchRow.id}/?user_field_names=true`, {
-        method: "PATCH",
-        headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ "Count": newCount })
-      });
-    }
+    // ✅ Success - redirect to invoice.html with invoice number
+    alert("✅ Invoice Saved Successfully!");
+    window.location.href = `invoice.html?invoice=${encodeURIComponent(invoiceNum)}`;
+    
+  } catch (error) {
+    console.error("Error saving invoice:", error);
+    alert("❌ Error saving invoice. Please try again.");
+    saveBtn.innerHTML = originalText;
+    saveBtn.disabled = false;
   }
-
-  // 💰 Add Ledger Entry
-  await fetch(`${baseURL}${ledgerTable}/?user_field_names=true`, {
-    method: "POST",
-    headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      "Costomer Name": CostomerName,
-      "Mobile": Mobile,
-      "Date": DateNow,
-      "Invoice Number": invoiceNum,
-      "Total Invoice Value": parseFloat(total),
-      "ShopID": ShopID
-    })
-  });
-
-  alert("✅ Invoice Saved Successfully!");
-  location.reload();
 }
 
 // 📷 Camera Scanner
