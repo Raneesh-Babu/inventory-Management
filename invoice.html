@@ -575,14 +575,14 @@
           </div>
         `;
 
-        // Table Header
+        // Table Header with Item Name between Sl. No and Product ID
         let tableHTML = `
           <table class="items-table">
             <thead>
               <tr>
                 <th>Sl. No</th>
-                <th>Product ID</th>
                 <th>Item Name</th>
+                <th>Product ID</th>
                 <th>Batch No</th>
                 <th>Quantity</th>
                 <th>Price</th>
@@ -604,8 +604,8 @@
           tableHTML += `
             <tr>
               <td>${index + 1}</td>
-              <td>${row["Product ID"]}</td>
               <td>${productName}</td>
+              <td>${row["Product ID"]}</td>
               <td>${row["Batch No"]}</td>
               <td>${row["Quantity"]}</td>
               <td>₹${Number(row["Price"]).toFixed(2)}</td>
