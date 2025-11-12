@@ -1,499 +1,264 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sales Invoice - Single Page</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;padding:16px;background:#f5f7fb}
-    .container{max-width:1100px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(20,20,50,0.06)}
-    h1{margin:0 0 12px;font-size:20px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .card{background:#fbfdff;padding:12px;border-radius:8px;border:1px solid #e6eef8;flex:1 1 300px}
-    label{display:block;font-size:13px;margin-bottom:6px}
-    input[type=text], input[type=number], input[type=date], select, textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #d6e6f5}
-    button{padding:8px 12px;border-radius:8px;border:0;background:#0b63d1;color:#fff;cursor:pointer}
-    .muted{color:#666;font-size:13px}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
-    .actions{display:flex;gap:8px}
-    .scanner{position:relative}
-    #video{width:100%;border-radius:8px;background:#000}
-    .modal{position:fixed;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)}
-    .modal > .modal-inner{background:#fff;padding:12px;border-radius:8px;width:90%;max-width:720px}
-    .hidden{display:none}
-    .print-area{background:#fff;padding:18px;border-radius:8px}
-    .danger{background:#ef4444}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Invoice</title>
+<style>
+  body { font-family: Arial; margin: 20px; background: #f4f6f8; }
+  h2 { color: #333; }
+  .section { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  input, select, textarea, button { width: 100%; margin: 5px 0; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+  button { background: #007bff; color: white; border: none; cursor: pointer; }
+  button:hover { background: #0056b3; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  #productList div, #customerList div { padding: 5px; border-bottom: 1px solid #ddd; cursor: pointer; }
+  #productList div:hover, #customerList div:hover { background: #f0f0f0; }
+  #cameraView { display: none; width: 100%; height: 300px; background: #000; }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Sales Invoice — Single Page</h1>
-    <div id="loginWarning" class="muted"></div><div class="row">
-  <div class="card" style="flex:1 1 420px;">
-    <h3>Customer (Costomer) details</h3>
-    <div style="margin-bottom:8px">
-      <label>Search Costomer (Costomer Name or Mobile)</label>
-      <input id="custSearch" placeholder="type name or mobile to search" />
-    </div>
-    <div style="margin-bottom:8px">
-      <label>Costomer Name</label>
-      <input id="Costomer Name" />
-    </div>
-    <div style="margin-bottom:8px">
-      <label>Mobile-Number</label>
-      <input id="Mobile-Number" />
-    </div>
-    <div style="margin-bottom:8px">
-      <label>Address -long Text</label>
-      <textarea id="Address-Long-Text"></textarea>
-    </div>
-    <div style="margin-bottom:8px">
-      <label>GST- (optional)</label>
-      <input id="GST" />
-    </div>
-  </div>
 
-  <div class="card" style="flex:1 1 520px;">
-    <h3>Add Product</h3>
-    <div>
-      <label>Search Product (Product Name or Product ID)</label>
-      <input id="prodSearch" placeholder="search product" />
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button id="openScanner">Open Scanner (Back Camera)</button>
-      <button id="stopScanner" class="hidden">Camera Off</button>
-    </div>
+<h2>Sales Invoice Form</h2>
 
-    <div id="scannerModal" class="modal hidden">
-      <div class="modal-inner">
-        <h4>Scanner</h4>
-        <div class="scanner">
-          <video id="video" autoplay playsinline></video>
-        </div>
-        <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
-          <button id="captureFallback">Use captured value</button>
-          <button id="closeScanner">Close</button>
-        </div>
-        <p class="muted">This uses the browser <code>BarcodeDetector</code> if available; otherwise use manual entry.</p>
-      </div>
-    </div>
-
-    <div style="margin-top:12px">
-      <button id="showMatches">Show matching products</button>
-    </div>
-
-    <div id="productMatches" style="margin-top:12px"></div>
-
-    <h4 style="margin-top:12px">Selected Items</h4>
-    <table id="itemsTable">
-      <thead><tr><th>Product ID</th><th>Item Name</th><th>Batch No</th><th>Qty</th><th>Price</th><th>Subtotal</th><th></th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="section" id="customerSection">
+  <h3>Customer Details</h3>
+  <input type="text" id="customerSearch" placeholder="Search by Costomer Name or Mobile">
+  <div id="customerList"></div>
+  <input type="text" id="CostomerName" placeholder="Costomer Name">
+  <input type="text" id="Mobile" placeholder="Mobile Number">
+  <textarea id="Address" placeholder="Address"></textarea>
+  <input type="text" id="GST" placeholder="GST (optional)">
 </div>
 
-<div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-  <div class="muted">Invoice Number: <strong id="invoiceNumber"></strong></div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <div class="muted">Tag:</div>
-    <div><input id="Tag" value="Order Confirmed" /></div>
-    <button id="saveInvoice">Save Invoice</button>
-    <button id="printInvoice">Print</button>
-  </div>
+<div class="section" id="productSection">
+  <h3>Product Details</h3>
+  <button onclick="toggleCamera()">📷 Scan Product ID</button>
+  <video id="cameraView" autoplay></video>
+  <input type="text" id="productSearch" placeholder="Search Product Name or Product ID">
+  <div id="productList"></div>
+  <table id="productTable">
+    <thead><tr><th>Product ID</th><th>Item Name</th><th>Batch No</th><th>Qty</th><th>Price</th><th>Total</th><th>Remove</th></tr></thead>
+    <tbody></tbody>
+  </table>
 </div>
 
-<div style="margin-top:12px">
-  <div class="card">
-    <h3>Preview / Summary</h3>
-    <div class="muted">ShopID: <span id="shopIdDisplay"></span> &nbsp; Sales Person: <span id="salesPersonDisplay"></span></div>
-    <table id="summaryTable">
-      <tbody>
-        <tr><td>Total Items</td><td id="totalItems">0</td></tr>
-        <tr><td>Total Value</td><td id="totalValue">0</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="section">
+  <h3>Invoice Summary</h3>
+  <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
+  <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
+  <button onclick="saveInvoice()">💾 Save Invoice</button>
 </div>
 
-<div id="printView" class="hidden">
-  <div class="print-area" id="invoicePrintArea"></div>
-</div>
+<script>
+const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const baseURL = "https://api.baserow.io/api/database/rows/table/";
+const customerTable = 736204;
+const productTable = 734793;
+const inventoryTable = 734795;
+const salesTable = 736209;
+const ledgerTable = 736207;
 
-  </div>  <script>
-  // CONFIG - use the API key and table ids provided by you
-  const BASEROW_API_TOKEN = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
-  const API_BASE = 'https://api.baserow.io/api/database/rows/table';
+let ShopID = localStorage.getItem("ShopIDTag");
+let SalesPerson = localStorage.getItem("NameTag");
+let MobileTag = localStorage.getItem("MobileTag");
 
-  // Table IDs (as provided)
-  const TABLES = {
-    COSTOMER: 736204, // Costomer table
-    PRODUCTS: 734793,
-    INVENTORY: 734795,
-    SALES: 736209,
-    LEDGER: 736207
-  };
+if (!ShopID || !MobileTag) {
+  alert("Please Login First.");
+  window.location.href = "login.html";
+}
 
-  // In-memory caches
-  let customers = [];
-  let products = [];
-  let inventory = [];
-  let invoiceItems = [];
+document.getElementById("invoiceNum").innerText = "INV" + Date.now();
 
-  // Local storage keys
-  const LOCAL_KEYS = { ShopIDTag: 'ShopIDTag', MobileTag: 'MobileTag', NameTag: 'NameTag' };
-
-  // Helpers for Baserow
-  function baserowFetch(url, options={}){
-    options.headers = Object.assign({'Authorization': 'Token '+BASEROW_API_TOKEN,'Content-Type':'application/json'}, options.headers || {});
-    return fetch(url, options).then(r=>{ if(!r.ok) return r.json().then(j=>{throw j}); return r.json() });
-  }
-
-  async function fetchAllTable(tableId){
-    const url = `${API_BASE}/${tableId}/?user_field_names=true&page_size=10000`;
-    return baserowFetch(url);
-  }
-
-  async function patchRow(tableId, rowId, body){
-    const url = `${API_BASE}/${tableId}/${rowId}/?user_field_names=true`;
-    return baserowFetch(url, {method:'PATCH', body: JSON.stringify(body)});
-  }
-
-  async function postRow(tableId, body){
-    const url = `${API_BASE}/${tableId}/?user_field_names=true`;
-    return baserowFetch(url, {method:'POST', body: JSON.stringify(body)});
-  }
-
-  // Init
-  document.addEventListener('DOMContentLoaded', init);
-
-  async function init(){
-    // Check local storage
-    let shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
-    let mobileTag = localStorage.getItem(LOCAL_KEYS.MobileTag);
-    let nameTag = localStorage.getItem(LOCAL_KEYS.NameTag);
-
-    const loginWarning = document.getElementById('loginWarning');
-    if(!shopID || !mobileTag || !nameTag){
-      loginWarning.innerHTML = 'Missing ShopID / Mobile or Name in localStorage. Please login. <button id="doLogin">Login</button>';
-      document.getElementById('doLogin').addEventListener('click', askLogin);
-    } else {
-      loginWarning.innerHTML = '';
-    }
-
-    document.getElementById('shopIdDisplay').innerText = shopID || '';
-    document.getElementById('salesPersonDisplay').innerText = nameTag || '';
-
-    // Generate invoice number
-    document.getElementById('invoiceNumber').innerText = genInvoiceNum();
-
-    // Wire up UI
-    document.getElementById('custSearch').addEventListener('input', renderCustomerMatches);
-    document.getElementById('prodSearch').addEventListener('input', ()=>{});
-    document.getElementById('showMatches').addEventListener('click', showProductMatches);
-    document.getElementById('saveInvoice').addEventListener('click', saveInvoice);
-    document.getElementById('printInvoice').addEventListener('click', printInvoice);
-
-    // Scanner
-    document.getElementById('openScanner').addEventListener('click', openScanner);
-    document.getElementById('closeScanner').addEventListener('click', closeScanner);
-    document.getElementById('stopScanner').addEventListener('click', stopCamera);
-    document.getElementById('captureFallback').addEventListener('click', () => {
-      const manual = prompt('Enter scanned Product ID or value:');
-      if(manual) document.getElementById('prodSearch').value = manual;
-      closeScanner();
-    });
-
-    // Load data from baserow
-    try{
-      const [c,p,i] = await Promise.all([fetchAllTable(TABLES.COSTOMER), fetchAllTable(TABLES.PRODUCTS), fetchAllTable(TABLES.INVENTORY)]);
-      customers = c.results || c;
-      products = p.results || p;
-      inventory = i.results || i;
-    }catch(err){
-      console.error('Failed to load from Baserow', err);
-      alert('Failed to load required data from Baserow. Check API token and network.');
-      return;
-    }
-
-    // render initial
-    renderCustomerMatches();
-    renderItems();
-  }
-
-  function askLogin(){
-    const shop = prompt('Enter ShopID (ShopIDTag)');
-    const mobile = prompt('Enter MobileTag');
-    const name = prompt('Enter NameTag (Sales person)');
-    if(shop && mobile && name){
-      localStorage.setItem(LOCAL_KEYS.ShopIDTag, shop);
-      localStorage.setItem(LOCAL_KEYS.MobileTag, mobile);
-      localStorage.setItem(LOCAL_KEYS.NameTag, name);
-      location.reload();
-    } else alert('Login cancelled or incomplete.');
-  }
-
-  function renderCustomerMatches(){
-    const q = document.getElementById('custSearch').value.trim().toLowerCase();
-    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
-    const matches = customers.filter(r=>{
-      if(!r.fields) return false;
-      if(String((r.fields.ShopID||'')).trim() !== String(shopID).trim()) return false;
-      const name = (r.fields['Costomer Name']||'').toString().toLowerCase();
-      const mobile = (r.fields['Mobile-Number']||'').toString().toLowerCase();
-      return (!q) || name.includes(q) || mobile.includes(q);
-    });
-    const out = matches.slice(0,20).map(r=>`<div style="padding:8px;border-bottom:1px solid #eee;cursor:pointer" data-id="${r.id}"><strong>${escapeHtml(r.fields['Costomer Name']||'')}</strong> — ${escapeHtml(r.fields['Mobile-Number']||'')}</div>`).join('');
-    const container = document.getElementById('productMatches');
-    // show customers above products if search box used
-    if(document.getElementById('custSearch').value.trim()){
-      container.innerHTML = `<div><h4>Matching Costomers</h4>${out || '<div class="muted">No matches</div>'}</div>`;
-      container.querySelectorAll('div[data-id]').forEach(el=>el.addEventListener('click', ()=>{
-        const row = customers.find(c=>c.id==el.dataset.id);
-        fillCustomer(row.fields);
-      }));
-    }
-  }
-
-  function fillCustomer(fields){
-    document.getElementById('Costomer Name').value = fields['Costomer Name'] || '';
-    document.getElementById('Mobile-Number').value = fields['Mobile-Number'] || '';
-    document.getElementById('Address-Long-Text').value = fields['Address-Long-Text'] || '';
-    document.getElementById('GST').value = fields['GST'] || '';
-  }
-
-  function showProductMatches(){
-    const q = document.getElementById('prodSearch').value.trim().toLowerCase();
-    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
-    const matches = products.filter(r=>{
-      if(!r.fields) return false;
-      if(String((r.fields.ShopID||'')).trim() !== String(shopID).trim()) return false;
-      const name = (r.fields['Product Name']||'').toString().toLowerCase();
-      const pid = (r.fields['Product ID']||'').toString().toLowerCase();
-      return (!q) || name.includes(q) || pid.includes(q);
-    });
-    const out = matches.slice(0,30).map(r=>`<div style="padding:8px;border-bottom:1px solid #eee;cursor:pointer" data-id="${r.id}"><strong>${escapeHtml(r.fields['Product Name']||'')}</strong> — ${escapeHtml(r.fields['Product ID']||'')} — Price: ${r.fields.Price||0}</div>`).join('');
-    const container = document.getElementById('productMatches');
-    container.innerHTML = `<div><h4>Matching Products</h4>${out || '<div class="muted">No matches</div>'}</div>`;
-    container.querySelectorAll('div[data-id]').forEach(el=>el.addEventListener('click', ()=>{
-      const prod = products.find(p=>p.id==el.dataset.id);
-      openInventorySelector(prod.fields['Product ID'], prod.fields['Product Name'], prod.fields.Price);
-    }));
-  }
-
-  function openInventorySelector(productId, productName, price){
-    // find inventory rows for this product and same ShopID
-    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
-    const rows = inventory.filter(r=>{
-      if(!r.fields) return false;
-      if(String((r.fields['Product ID']||'')).trim() !== String(productId).trim()) return false;
-      if(String((r.fields['ShopID']||'')).trim() && String((r.fields['ShopID']||'')).trim() !== String(shopID).trim()) return false;
-      return true;
-    });
-
-    // build modal content
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `<div class="modal-inner">
-      <h4>Choose Batch for ${escapeHtml(productName)} (${escapeHtml(productId)})</h4>
-      <div id="batchList">${rows.map(r=>`<div style="padding:8px;border-bottom:1px solid #eee"><strong>Batch No:</strong> ${r.fields['Batch No']||''} &nbsp; <strong>Count:</strong> ${r.fields.Count||0} &nbsp; <strong>Expire:</strong> ${r.fields['Expire Date']||''} <br/><button data-rowid="${r.id}">Select</button></div>`).join('') || '<div class="muted">No batches found for this product in inventory</div>'}</div>
-      <div style="margin-top:8px;text-align:right"><button id="closeInvModal">Close</button></div>
-    </div>`;
-    document.body.appendChild(modal);
-    modal.querySelectorAll('button[data-rowid]').forEach(btn=>btn.addEventListener('click', ()=>{
-      const rowId = btn.dataset.rowid;
-      const invRow = inventory.find(it=>it.id==rowId);
-      const max = Number(invRow.fields.Count||0);
-      const qty = Number(prompt(`Enter quantity to sell (available: ${max})`, 1));
-      if(!qty || qty<=0) return alert('Invalid qty');
-      if(qty>max) return alert('Quantity greater than available count');
-      addInvoiceItem({
-        productId: productId,
-        itemName: productName,
-        batchNo: invRow.fields['Batch No']||'',
-        inventoryRowId: invRow.id,
-        qty: qty,
-        price: Number(price||0)
-      });
-      document.body.removeChild(modal);
-    }));
-    modal.querySelector('#closeInvModal').addEventListener('click', ()=>document.body.removeChild(modal));
-  }
-
-  function addInvoiceItem(it){
-    invoiceItems.push(it);
-    renderItems();
-  }
-
-  function renderItems(){
-    const tbody = document.querySelector('#itemsTable tbody');
-    tbody.innerHTML = invoiceItems.map((it, idx)=>`<tr data-idx="${idx}"><td>${escapeHtml(it.productId)}</td><td>${escapeHtml(it.itemName)}</td><td>${escapeHtml(it.batchNo)}</td><td>${it.qty}</td><td>${it.price}</td><td>${(it.qty*it.price).toFixed(2)}</td><td><button data-remove="${idx}">Remove</button></td></tr>`).join('');
-    tbody.querySelectorAll('button[data-remove]').forEach(b=>b.addEventListener('click', ()=>{invoiceItems.splice(Number(b.dataset.remove),1);renderItems();}));
-    // summary
-    const totalItems = invoiceItems.reduce((s,i)=>s+i.qty,0);
-    const totalValue = invoiceItems.reduce((s,i)=>s + i.qty*i.price,0);
-    document.getElementById('totalItems').innerText = totalItems;
-    document.getElementById('totalValue').innerText = totalValue.toFixed(2);
-  }
-
-  function genInvoiceNum(){
-    const t = Date.now();
-    const r = Math.floor(Math.random()*9000)+1000;
-    return `INV-${t}-${r}`;
-  }
-
-  async function saveInvoice(){
-    if(invoiceItems.length===0) return alert('Add at least one product');
-    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
-    if(!shopID) return alert('Missing ShopID. Please login.');
-
-    // prepare sales row
-    const costomerName = document.getElementById('Costomer Name').value.trim();
-    const mobile = document.getElementById('Mobile-Number').value.trim();
-    const invoiceNumber = document.getElementById('invoiceNumber').innerText || genInvoiceNum();
-    const totalValue = invoiceItems.reduce((s,i)=>s + i.qty*i.price,0);
-
-    const salesBody = {
-      'Costomer Name': costomerName,
-      'Mobile-Number': mobile,
-      'Date': (new Date()).toISOString().split('T')[0],
-      'Invoice Number': invoiceNumber,
-      'Total Invoice Value': totalValue,
-      'ShopID': shopID
+// 🔍 Customer Search
+document.getElementById("customerSearch").addEventListener("input", async function() {
+  let query = this.value.trim();
+  if (query.length < 2) return;
+  let url = `${baseURL}${customerTable}/?user_field_names=true`;
+  const res = await fetch(url, { headers: { Authorization: `Token ${apiKey}` } });
+  const data = await res.json();
+  const filtered = data.results.filter(x =>
+    (x["Costomer Name"].toLowerCase().includes(query.toLowerCase()) ||
+     x["Mobile"].includes(query)) &&
+     x["ShopID"] === ShopID
+  );
+  const list = document.getElementById("customerList");
+  list.innerHTML = "";
+  filtered.forEach(c => {
+    const div = document.createElement("div");
+    div.textContent = `${c["Costomer Name"]} (${c["Mobile"]})`;
+    div.onclick = () => {
+      document.getElementById("CostomerName").value = c["Costomer Name"];
+      document.getElementById("Mobile").value = c["Mobile"];
+      document.getElementById("Address").value = c["Address"];
+      document.getElementById("GST").value = c["GST"];
+      list.innerHTML = "";
     };
+    list.appendChild(div);
+  });
+});
 
-    try{
-      // create sales row
-      const salesResp = await postRow(TABLES.SALES, salesBody);
+// 🔍 Product Search
+document.getElementById("productSearch").addEventListener("input", async function() {
+  let query = this.value.trim();
+  if (query.length < 2) return;
+  let url = `${baseURL}${productTable}/?user_field_names=true`;
+  const res = await fetch(url, { headers: { Authorization: `Token ${apiKey}` } });
+  const data = await res.json();
+  const filtered = data.results.filter(x =>
+    (x["Product Name"].toLowerCase().includes(query.toLowerCase()) ||
+     x["Product ID"].toLowerCase().includes(query.toLowerCase())) &&
+     x["ShopID"] === ShopID
+  );
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+  filtered.forEach(p => {
+    const div = document.createElement("div");
+    div.textContent = `${p["Product Name"]} (₹${p["Price"]})`;
+    div.onclick = () => selectProduct(p);
+    list.appendChild(div);
+  });
+});
 
-      // create ledger row (best-effort; field names may vary)
-      const ledgerBody = {
-        'Costomer Name': costomerName,
-        'Invoice Number': invoiceNumber,
-        'Amount': totalValue,
-        'Date': (new Date()).toISOString().split('T')[0],
-        'ShopID': shopID
-      };
-      try{ await postRow(TABLES.LEDGER, ledgerBody); } catch(e){ console.warn('Ledger insert failed', e); }
+// Select Product → Show Batch Options
+async function selectProduct(p) {
+  const invURL = `${baseURL}${inventoryTable}/?user_field_names=true`;
+  const res = await fetch(invURL, { headers: { Authorization: `Token ${apiKey}` } });
+  const data = await res.json();
+  const batches = data.results.filter(b => b["Product ID"] === p["Product ID"]);
 
-      // reduce inventory counts
-      for(const it of invoiceItems){
-        // find inventory row by id
-        const inv = inventory.find(x=>x.id==it.inventoryRowId);
-        if(!inv) continue;
-        const current = Number(inv.fields.Count||0);
-        const newCount = current - Number(it.qty);
-        if(newCount < 0) { alert(`Not enough stock in batch ${inv.fields['Batch No']} for product ${it.productId}`); continue; }
-        await patchRow(TABLES.INVENTORY, inv.id, {'Count': newCount});
-        // update local cache
-        inv.fields.Count = newCount;
+  if (batches.length === 0) return alert("No batches found!");
+
+  const batch = prompt(`Select Batch No:\n${batches.map(x => `Batch ${x["Batch No"]} (Count: ${x["Count"]})`).join("\n")}`);
+  const batchData = batches.find(x => x["Batch No"] == batch.match(/\d+/)?.[0]);
+
+  const qty = parseInt(prompt("Enter Quantity:"));
+  if (!qty || qty > batchData["Count"]) return alert("Invalid quantity!");
+
+  const total = p["Price"] * qty;
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${p["Product ID"]}</td>
+    <td>${p["Product Name"]}</td>
+    <td>${batchData["Batch No"]}</td>
+    <td>${qty}</td>
+    <td>${p["Price"]}</td>
+    <td>${total}</td>
+    <td><button onclick="this.closest('tr').remove();updateTotal()">❌</button></td>
+  `;
+  document.querySelector("#productTable tbody").appendChild(row);
+  updateTotal();
+  document.getElementById("productList").innerHTML = "";
+}
+
+function updateTotal() {
+  let total = 0;
+  document.querySelectorAll("#productTable tbody tr").forEach(r => {
+    total += parseFloat(r.children[5].innerText);
+  });
+  document.getElementById("grandTotal").innerText = total.toFixed(2);
+}
+
+// 💾 Save Invoice
+async function saveInvoice() {
+  const rows = document.querySelectorAll("#productTable tbody tr");
+  if (rows.length === 0) return alert("No products added!");
+  const invoiceNum = document.getElementById("invoiceNum").innerText;
+  const total = document.getElementById("grandTotal").innerText;
+  const CostomerName = document.getElementById("CostomerName").value;
+  const Mobile = document.getElementById("Mobile").value;
+  const Address = document.getElementById("Address").value;
+  const GST = document.getElementById("GST").value;
+  const DateNow = new Date().toISOString().split("T")[0];
+
+  for (let r of rows) {
+    const obj = {
+      "Costomer Name": CostomerName,
+      "Mobile": Mobile,
+      "Address": Address,
+      "GST": GST,
+      "Date": DateNow,
+      "Product ID": r.children[0].innerText,
+      "Item Name": r.children[1].innerText,
+      "Batch No": r.children[2].innerText,
+      "Quantity": parseInt(r.children[3].innerText),
+      "Price": parseFloat(r.children[4].innerText),
+      "Invoice Number": invoiceNum,
+      "Tag": "Order Confirmed",
+      "ShopID": ShopID,
+      "Sales Person": SalesPerson
+    };
+    await fetch(`${baseURL}${salesTable}/?user_field_names=true`, {
+      method: "POST",
+      headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(obj)
+    });
+
+    // 🧾 Reduce inventory
+    const invRes = await fetch(`${baseURL}${inventoryTable}/?user_field_names=true`, { headers: { Authorization: `Token ${apiKey}` } });
+    const invData = await invRes.json();
+    const batchRow = invData.results.find(x => x["Product ID"] === r.children[0].innerText && x["Batch No"] == r.children[2].innerText);
+    if (batchRow) {
+      const newCount = batchRow["Count"] - parseInt(r.children[3].innerText);
+      await fetch(`${baseURL}${inventoryTable}/${batchRow.id}/?user_field_names=true`, {
+        method: "PATCH",
+        headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ "Count": newCount })
+      });
+    }
+  }
+
+  // 💰 Add Ledger Entry
+  await fetch(`${baseURL}${ledgerTable}/?user_field_names=true`, {
+    method: "POST",
+    headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      "Costomer Name": CostomerName,
+      "Mobile": Mobile,
+      "Date": DateNow,
+      "Invoice Number": invoiceNum,
+      "Total Invoice Value": parseFloat(total),
+      "ShopID": ShopID
+    })
+  });
+
+  alert("✅ Invoice Saved Successfully!");
+  location.reload();
+}
+
+// 📷 Camera Scanner
+let cameraOn = false;
+async function toggleCamera() {
+  const video = document.getElementById("cameraView");
+  if (cameraOn) {
+    const stream = video.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach(t => t.stop());
+    video.style.display = "none";
+    cameraOn = false;
+    return;
+  }
+  video.style.display = "block";
+  cameraOn = true;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  video.srcObject = stream;
+
+  const barcodeDetector = new BarcodeDetector({ formats: ["code_128", "ean_13", "qr_code"] });
+  const scan = async () => {
+    if (!cameraOn) return;
+    try {
+      const barcodes = await barcodeDetector.detect(video);
+      if (barcodes.length > 0) {
+        document.getElementById("productSearch").value = barcodes[0].rawValue;
+        toggleCamera();
+        document.getElementById("productSearch").dispatchEvent(new Event("input"));
       }
-
-      // success
-      alert('Invoice saved successfully.');
-      // show printable invoice
-      showPrintableInvoice({sales: salesResp, items: invoiceItems});
-      // reset
-      invoiceItems = [];
-      renderItems();
-      document.getElementById('invoiceNumber').innerText = genInvoiceNum();
-    }catch(err){
-      console.error('Save failed', err);
-      alert('Failed to save invoice. Check console.');
-    }
-  }
-
-  function showPrintableInvoice({sales, items}){
-    const area = document.getElementById('invoicePrintArea');
-    const shopID = localStorage.getItem(LOCAL_KEYS.ShopIDTag);
-    const nameTag = localStorage.getItem(LOCAL_KEYS.NameTag);
-    const html = `
-      <div>
-        <h2>Invoice: ${escapeHtml(sales.fields['Invoice Number']||'')}</h2>
-        <div>ShopID: ${escapeHtml(shopID||'')}</div>
-        <div>Sales Person: ${escapeHtml(nameTag||'')}</div>
-        <div>Costomer: ${escapeHtml(sales.fields['Costomer Name']||'')} — ${escapeHtml(sales.fields['Mobile-Number']||'')}</div>
-        <table style="width:100%;margin-top:12px;border-collapse:collapse">
-          <thead><tr><th>Product ID</th><th>Item</th><th>Batch</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
-          <tbody>
-            ${items.map(it=>`<tr><td>${escapeHtml(it.productId)}</td><td>${escapeHtml(it.itemName)}</td><td>${escapeHtml(it.batchNo)}</td><td>${it.qty}</td><td>${it.price}</td><td>${(it.qty*it.price).toFixed(2)}</td></tr>`).join('')}
-          </tbody>
-        </table>
-        <div style="margin-top:12px">Total: ${items.reduce((s,i)=>s+i.qty*i.price,0).toFixed(2)}</div>
-        <div style="margin-top:12px">Generated at: ${new Date().toLocaleString()}</div>
-      </div>
-    `;
-    area.innerHTML = html;
-    document.getElementById('printView').classList.remove('hidden');
-    // open print dialog
-    const w = window.open('','_blank');
-    w.document.write('<html><head><title>Invoice</title></head><body>'+html+'</body></html>');
-    w.document.close();
-    w.print();
-  }
-
-  // Scanner implementation using BarcodeDetector if available
-  let streamRef = null; let detector = null;
-  async function openScanner(){
-    const modal = document.getElementById('scannerModal');
-    modal.classList.remove('hidden');
-    const video = document.getElementById('video');
-    try{
-      const constraints = { video: { facingMode: { exact: 'environment' } } };
-      // fallback to any camera
-      let stream;
-      try{ stream = await navigator.mediaDevices.getUserMedia(constraints); }
-      catch(e){ stream = await navigator.mediaDevices.getUserMedia({video:true}); }
-      streamRef = stream;
-      video.srcObject = stream;
-      document.getElementById('stopScanner').classList.remove('hidden');
-
-      if('BarcodeDetector' in window){
-        const formats = await BarcodeDetector.getSupportedFormats();
-        detector = new BarcodeDetector({formats});
-        const loop = async ()=>{
-          try{
-            const barcodes = await detector.detect(video);
-            if(barcodes && barcodes.length){
-              const raw = barcodes[0].rawValue;
-              document.getElementById('prodSearch').value = raw;
-              closeScanner();
-              return;
-            }
-          }catch(e){}
-          if(streamRef) requestAnimationFrame(loop);
-        };
-        loop();
-      }
-    }catch(err){
-      console.error('camera open failed', err);
-      alert('Camera access failed or not allowed. Use manual entry.');
-    }
-  }
-  function closeScanner(){
-    document.getElementById('scannerModal').classList.add('hidden');
-    stopCamera();
-  }
-  function stopCamera(){
-    if(streamRef){
-      streamRef.getTracks().forEach(t=>t.stop());
-      streamRef = null;
-    }
-    document.getElementById('stopScanner').classList.add('hidden');
-  }
-
-  // small helper
-  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  // Print helper
-  function printInvoice(){
-    const area = document.getElementById('invoicePrintArea');
-    if(!area.innerHTML) return alert('No invoice to print — save first');
-    const w = window.open('','_blank');
-    w.document.write('<html><head><title>Invoice</title></head><body>'+area.innerHTML+'</body></html>');
-    w.document.close();
-    w.print();
-  }
-  </script></body>
+    } catch {}
+    requestAnimationFrame(scan);
+  };
+  scan();
+}
+</script>
+</body>
 </html>
