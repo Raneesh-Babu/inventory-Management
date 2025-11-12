@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      padding: 20px;
+    }
+    .invoice-container {
+      max-width: 800px;
+      background: white;
+      margin: 30px auto;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .input-group {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 250px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 18px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .details {
+      margin-top: 20px;
+      border-top: 2px solid #007bff;
+      padding-top: 15px;
+    }
+    .details div {
+      margin-bottom: 8px;
+    }
+    .label {
+      font-weight: bold;
+      color: #333;
+    }
+    .value {
+      color: #555;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="invoice-container">
+    <h2>Invoice Viewer</h2>
+
+    <div class="input-group">
+      <input type="text" id="invoiceNumber" placeholder="Enter Invoice Number (e.g. INV1762933901829)">
+      <button onclick="fetchInvoice()">Search</button>
+    </div>
+
+    <div id="errorMsg" class="error"></div>
+    <div id="invoiceDetails" class="details"></div>
+  </div>
+
+  <script>
+    const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+    const tableId = 736209;
+    const apiUrl = `https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true`;
+
+    async function fetchInvoice() {
+      const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const detailsDiv = document.getElementById("invoiceDetails");
+      const errorDiv = document.getElementById("errorMsg");
+
+      detailsDiv.innerHTML = "";
+      errorDiv.innerText = "";
+
+      if (!invoiceNumber) {
+        errorDiv.innerText = "⚠️ Please enter an invoice number.";
+        return;
+      }
+
+      if (!shopIDTag) {
+        errorDiv.innerText = "⚠️ ShopIDTag not found in local storage. Please log in first.";
+        return;
+      }
+
+      try {
+        const response = await fetch(apiUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const data = await response.json();
+        const rows = data.results;
+
+        const invoice = rows.find(row => row["Invoice Number"] === invoiceNumber && row["ShopID"] === shopIDTag);
+
+        if (!invoice) {
+          errorDiv.innerText = "❌ No invoice found for this number or invalid ShopID.";
+          return;
+        }
+
+        detailsDiv.innerHTML = `
+          <div><span class="label">Invoice Number:</span> <span class="value">${invoice["Invoice Number"]}</span></div>
+          <div><span class="label">Customer Name:</span> <span class="value">${invoice["Costomer Name"]}</span></div>
+          <div><span class="label">Mobile:</span> <span class="value">${invoice["Mobile"]}</span></div>
+          <div><span class="label">Address:</span> <span class="value">${invoice["Address"]}</span></div>
+          <div><span class="label">GST:</span> <span class="value">${invoice["GST"] || "Nil"}</span></div>
+          <div><span class="label">Date:</span> <span class="value">${invoice["Date"]}</span></div>
+          <div><span class="label">Product ID:</span> <span class="value">${invoice["Product ID"]}</span></div>
+          <div><span class="label">Item Name:</span> <span class="value">${invoice["Item Name"]}</span></div>
+          <div><span class="label">Batch No:</span> <span class="value">${invoice["Batch No"]}</span></div>
+          <div><span class="label">Quantity:</span> <span class="value">${invoice["Quantity"]}</span></div>
+          <div><span class="label">Price:</span> <span class="value">${invoice["Price"]}</span></div>
+          <div><span class="label">Tag:</span> <span class="value">${invoice["Tag"]}</span></div>
+          <div><span class="label">Sales Person:</span> <span class="value">${invoice["Sales Person"]}</span></div>
+        `;
+      } catch (error) {
+        console.error(error);
+        errorDiv.innerText = "⚠️ Error fetching data. Please try again.";
+      }
+    }
+  </script>
+
+</body>
+</html>
