@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📱 Inventory Management App</title>
+<title>📱 Business Management App</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -61,6 +61,31 @@
     flex-direction: column;
     z-index: 1000;
     transition: var(--transition);
+    flex-shrink: 0;
+  }
+
+  .sidebar.collapsed {
+    width: 70px;
+  }
+
+  .sidebar.collapsed .nav-text,
+  .sidebar.collapsed .app-subtitle,
+  .sidebar.collapsed .logout-text {
+    display: none;
+  }
+
+  .sidebar.collapsed .app-title {
+    font-size: 14px;
+  }
+
+  .sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .sidebar.collapsed .nav-icon {
+    margin-right: 0;
+    font-size: 18px;
   }
 
   .app-header {
@@ -68,17 +93,45 @@
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     text-align: center;
+    position: relative;
+  }
+
+  .collapse-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .collapse-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .sidebar.collapsed .collapse-toggle {
+    transform: rotate(180deg);
   }
 
   .app-title {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
     margin-bottom: 5px;
+    transition: var(--transition);
   }
 
   .app-subtitle {
     font-size: 12px;
     opacity: 0.9;
+    transition: var(--transition);
   }
 
   .nav-menu {
@@ -95,6 +148,7 @@
     text-decoration: none;
     transition: var(--transition);
     border-left: 4px solid transparent;
+    white-space: nowrap;
   }
 
   .nav-item:hover {
@@ -115,11 +169,14 @@
     text-align: center;
     margin-right: 12px;
     font-size: 16px;
+    flex-shrink: 0;
+    transition: var(--transition);
   }
 
   .nav-text {
     font-size: 14px;
     font-weight: 500;
+    transition: var(--transition);
   }
 
   .nav-footer {
@@ -130,6 +187,7 @@
   .logout-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     width: 100%;
     padding: 12px 16px;
     background: var(--danger);
@@ -141,6 +199,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    white-space: nowrap;
   }
 
   .logout-btn:hover {
@@ -151,6 +210,11 @@
   .logout-icon {
     margin-right: 8px;
     font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .logout-text {
+    transition: var(--transition);
   }
 
   /* Main Content Area */
@@ -159,6 +223,7 @@
     display: flex;
     flex-direction: column;
     background: var(--gray-100);
+    min-width: 0; /* Important for flexbox shrinking */
   }
 
   .top-bar {
@@ -169,6 +234,7 @@
     background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     border-bottom: 1px solid var(--gray-200);
+    flex-shrink: 0;
   }
 
   .menu-toggle {
@@ -209,11 +275,13 @@
     font-weight: 500;
   }
 
-  /* Iframe Container */
+  /* Iframe Container - FIXED FOR SCROLLING */
   .iframe-container {
     flex: 1;
     position: relative;
     background: white;
+    min-height: 0; /* Important for flexbox */
+    overflow: hidden; /* Changed from auto to hidden */
   }
 
   .content-frame {
@@ -221,6 +289,13 @@
     height: 100%;
     border: none;
     background: white;
+    display: block; /* Ensure it's block level */
+  }
+
+  /* Ensure iframe content is scrollable */
+  .content-frame {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   .loading-overlay {
@@ -276,12 +351,20 @@
       left: 0;
     }
 
+    .sidebar.collapsed {
+      width: 260px; /* Full width on mobile when active */
+    }
+
     .menu-toggle {
       display: block;
     }
 
     .main-content {
       width: 100%;
+    }
+
+    .collapse-toggle {
+      display: none; /* Hide collapse toggle on mobile */
     }
 
     .overlay {
@@ -317,6 +400,24 @@
   .nav-menu::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500);
   }
+
+  /* Iframe scrollbar styling */
+  .content-frame::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .content-frame::-webkit-scrollbar-track {
+    background: var(--gray-100);
+  }
+
+  .content-frame::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: 4px;
+  }
+
+  .content-frame::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+  }
 </style>
 </head>
 <body>
@@ -324,8 +425,11 @@
   <!-- Sidebar Navigation -->
   <div class="sidebar" id="sidebar">
     <div class="app-header">
-      <div class="app-title">📱 Inventory Pro</div>
-      <div class="app-subtitle">Business Management Suite</div>
+      <button class="collapse-toggle" id="collapseToggle">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="app-title" id="welcomeTitle">Welcome</div>
+      <div class="app-subtitle">Business Management</div>
     </div>
 
     <div class="nav-menu">
@@ -344,7 +448,7 @@
         <div class="nav-text">Add Customer</div>
       </a>
       
-      <a href="Cosromerdash.html" class="nav-item" data-page="Loyalty Programme">
+      <a href="consromerdash.html" class="nav-item" data-page="Loyalty Programme">
         <div class="nav-icon"><i class="fas fa-award"></i></div>
         <div class="nav-text">Loyalty Programme</div>
       </a>
@@ -378,7 +482,7 @@
     <div class="nav-footer">
       <button class="logout-btn" id="logoutBtn">
         <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
-        Logout
+        <div class="logout-text">Logout</div>
       </button>
     </div>
   </div>
@@ -407,7 +511,8 @@
         src="invdash2.html" 
         class="content-frame" 
         id="contentFrame"
-        onload="hideLoading()">
+        onload="hideLoading()"
+        scrolling="yes">
       </iframe>
     </div>
   </div>
@@ -424,10 +529,20 @@ const contentFrame = document.getElementById('contentFrame');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const logoutBtn = document.getElementById('logoutBtn');
 const shopBadge = document.getElementById('shopBadge');
+const collapseToggle = document.getElementById('collapseToggle');
+const welcomeTitle = document.getElementById('welcomeTitle');
 
-// Get shop info from localStorage
+// Get user info from localStorage
+const nameTag = localStorage.getItem('NameTag');
 const shopID = localStorage.getItem('ShopIDTag');
 const shopTag = localStorage.getItem('ShopTag');
+
+// Update welcome title with user's name
+if (nameTag) {
+  welcomeTitle.textContent = `Welcome, ${nameTag}`;
+} else {
+  welcomeTitle.textContent = 'Welcome';
+}
 
 // Update shop badge
 if (shopTag) {
@@ -446,6 +561,11 @@ menuToggle.addEventListener('click', () => {
 overlay.addEventListener('click', () => {
   sidebar.classList.remove('active');
   overlay.classList.remove('active');
+});
+
+// Collapse sidebar on desktop
+collapseToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
 });
 
 // Navigation handling
@@ -484,6 +604,21 @@ function showLoading() {
 
 function hideLoading() {
   loadingOverlay.style.display = 'none';
+  
+  // Ensure iframe is properly scrollable
+  setTimeout(() => {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    if (iframeDoc && iframeDoc.body) {
+      iframeDoc.body.style.overflowY = 'auto';
+      iframeDoc.body.style.overflowX = 'hidden';
+      iframeDoc.body.style.height = '100%';
+      
+      // Force redraw and ensure scrolling works
+      iframeDoc.documentElement.style.overflowY = 'auto';
+      iframeDoc.documentElement.style.overflowX = 'hidden';
+      iframeDoc.documentElement.style.height = '100%';
+    }
+  }, 100);
 }
 
 // Logout functionality
@@ -500,6 +635,25 @@ logoutBtn.addEventListener('click', () => {
 // Handle iframe loading events
 contentFrame.addEventListener('load', () => {
   hideLoading();
+  
+  // Additional measures to ensure scrollability
+  try {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    if (iframeDoc && iframeDoc.body) {
+      // Force enable scrolling
+      iframeDoc.body.style.overflow = 'auto';
+      iframeDoc.body.style.height = 'auto';
+      iframeDoc.body.style.minHeight = '100%';
+      
+      iframeDoc.documentElement.style.overflow = 'auto';
+      iframeDoc.documentElement.style.height = 'auto';
+      
+      // Ensure iframe itself allows scrolling
+      contentFrame.style.overflow = 'auto';
+    }
+  } catch (e) {
+    console.log('Cross-origin iframe, cannot modify styles');
+  }
 });
 
 contentFrame.addEventListener('error', () => {
@@ -525,6 +679,11 @@ function retryLoading() {
 // Handle browser back/forward buttons
 window.addEventListener('popstate', (event) => {
   // You can add additional logic here if needed
+});
+
+// Ensure iframe is scrollable on initial load
+window.addEventListener('DOMContentLoaded', () => {
+  contentFrame.style.overflow = 'auto';
 });
 
 // Auto-hide loading after 10 seconds (fallback)
