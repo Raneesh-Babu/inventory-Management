@@ -16,8 +16,10 @@
     --light: #f8f9fa;
     --dark: #212529;
     --success: #4bb543;
+    --success-dark: #3a9c33;
     --warning: #ffc107;
     --danger: #dc3545;
+    --danger-dark: #c82333;
     --expiring: #ff9500;
     --expiring-15: #ff6b00;
     --expiring-30: #ffa500;
@@ -58,6 +60,56 @@
 
   #status {
     display: none; /* Hide user status */
+  }
+
+  .main-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .main-stat-box {
+    background: white;
+    padding: 25px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .main-stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+  }
+
+  .main-stat-box.blue-gradient {
+    background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+    color: white;
+  }
+
+  .main-stat-box.green-gradient {
+    background: linear-gradient(135deg, #4bb543 0%, #3a9c33 100%);
+    color: white;
+  }
+
+  .main-stat-box.red-gradient {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+  }
+
+  .main-stat-box h3 {
+    margin: 10px 0;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .main-stat-box p {
+    font-weight: 500;
+    font-size: 15px;
+    opacity: 0.9;
   }
 
   .alert-stats {
@@ -392,7 +444,7 @@
       margin-top: 10px;
     }
     
-    .alert-stats {
+    .main-stats, .alert-stats {
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
     
@@ -412,6 +464,21 @@
 <div class="container">
   <!-- Status section is hidden -->
   <div id="status"></div>
+
+  <div class="main-stats">
+    <div class="main-stat-box blue-gradient">
+      <h3 id="totalProducts">0</h3>
+      <p>Total Products</p>
+    </div>
+    <div class="main-stat-box green-gradient">
+      <h3 id="totalInvoices">0</h3>
+      <p>Total Invoices</p>
+    </div>
+    <div class="main-stat-box red-gradient">
+      <h3 id="totalInvoiceValue">0</h3>
+      <p>Total Invoice Value</p>
+    </div>
+  </div>
 
   <div class="alert-stats">
     <div class="alert-box expired">
@@ -490,12 +557,14 @@ const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const USERS_TABLE = 729979;
 const PRODUCTS_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
+const LEDGER_TABLE = 736207;
 
 let role = "";
 let shopID = localStorage.getItem("ShopIDTag");
 let mobileTag = localStorage.getItem("MobileTag");
 let products = [];
 let inventory = [];
+let ledgerData = [];
 let expiredProducts = [];
 let expiring7Products = [];
 let expiring15Products = [];
@@ -506,6 +575,13 @@ let lowStockProducts = [];
 async function init() {
   if (!mobileTag) {
     alert("Please login first.");
+    location.href = "login.html";
+    return;
+  }
+
+  // Validate ShopID
+  if (!shopID) {
+    alert("Shop ID not found. Please login again.");
     location.href = "login.html";
     return;
   }
@@ -522,29 +598,87 @@ async function init() {
   }
   role = user.Role;
   
-  // Don't display user info in the status element
-  // document.getElementById("status").innerHTML = `<i class="fas fa-user"></i> <b>User:</b> ${mobileTag} | <b>Role:</b> ${role}`;
-
   await loadData();
 }
 
-// 🔹 Load Products + Inventory
+// 🔹 Load Products + Inventory + Ledger Data
 async function loadData() {
-  const [pRes, iRes] = await Promise.all([
-    fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, { headers: { Authorization: `Token ${API_KEY}` } }),
-    fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, { headers: { Authorization: `Token ${API_KEY}` } })
-  ]);
+  try {
+    const [pRes, iRes, lRes] = await Promise.all([
+      fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, { 
+        headers: { Authorization: `Token ${API_KEY}` } 
+      }),
+      fetch(`https://api.baserow.io/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, { 
+        headers: { Authorization: `Token ${API_KEY}` } 
+      }),
+      fetch(`https://api.baserow.io/api/database/rows/table/${LEDGER_TABLE}/?user_field_names=true`, { 
+        headers: { Authorization: `Token ${API_KEY}` } 
+      })
+    ]);
 
-  const pData = await pRes.json();
-  const iData = await iRes.json();
+    if (!pRes.ok || !iRes.ok || !lRes.ok) {
+      throw new Error('Failed to fetch data from one or more tables');
+    }
 
-  products = pData.results.filter(p => p.ShopID === shopID);
-  inventory = iData.results.filter(i => i.ShopID === shopID);
+    const pData = await pRes.json();
+    const iData = await iRes.json();
+    const lData = await lRes.json();
 
-  // Calculate alert counts
-  calculateAlerts();
+    // Validate ShopID in all data
+    products = pData.results.filter(p => {
+      if (!p.ShopID) {
+        console.warn('Product missing ShopID:', p.id);
+        return false;
+      }
+      return p.ShopID === shopID;
+    });
+
+    inventory = iData.results.filter(i => {
+      if (!i.ShopID) {
+        console.warn('Inventory item missing ShopID:', i.id);
+        return false;
+      }
+      return i.ShopID === shopID;
+    });
+
+    ledgerData = lData.results.filter(l => {
+      if (!l.ShopID) {
+        console.warn('Ledger entry missing ShopID:', l.id);
+        return false;
+      }
+      return l.ShopID === shopID;
+    });
+
+    // Update main statistics
+    updateMainStatistics();
+    
+    // Calculate alert counts
+    calculateAlerts();
+    
+    renderAlertProducts();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    alert('Error loading data. Please try again.');
+  }
+}
+
+// 🔹 Update main statistics
+function updateMainStatistics() {
+  // Total Products
+  document.getElementById("totalProducts").innerText = products.length;
   
-  renderAlertProducts();
+  // Total Invoices (count unique invoice numbers)
+  const uniqueInvoices = [...new Set(ledgerData
+    .filter(item => item["Invoice No"])
+    .map(item => item["Invoice No"]))];
+  document.getElementById("totalInvoices").innerText = uniqueInvoices.length;
+  
+  // Total Invoice Value (sum of all invoice values)
+  const totalValue = ledgerData.reduce((sum, item) => {
+    const value = parseFloat(item["Total Amount"]) || 0;
+    return sum + value;
+  }, 0);
+  document.getElementById("totalInvoiceValue").innerText = `₹${totalValue.toLocaleString()}`;
 }
 
 // 🔹 Calculate expired, expiring and low stock products
