@@ -59,6 +59,57 @@
     margin: 0 auto;
   }
 
+  /* Header Section */
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  .shop-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .shop-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .shop-address {
+    font-size: 14px;
+    color: var(--gray-600);
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .welcome-message {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--gray-800);
+  }
+
+  .shop-id {
+    font-size: 12px;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
   #status {
     display: none; /* Hide user status */
   }
@@ -440,6 +491,16 @@
 
   /* Responsive adjustments */
   @media (max-width: 768px) {
+    .dashboard-header {
+      flex-direction: column;
+      gap: 15px;
+      text-align: center;
+    }
+    
+    .user-info {
+      align-items: center;
+    }
+    
     .batch-info {
       flex-direction: column;
       align-items: flex-start;
@@ -470,6 +531,18 @@
 </head>
 <body>
 <div class="container">
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="shop-info">
+      <div class="shop-name" id="shopNameDisplay">Loading...</div>
+      <div class="shop-address" id="shopAddressDisplay"></div>
+    </div>
+    <div class="user-info">
+      <div class="welcome-message" id="welcomeMessage">Welcome Back!</div>
+      <div class="shop-id" id="shopIdDisplay">Shop ID: Loading...</div>
+    </div>
+  </div>
+
   <!-- Status section is hidden -->
   <div id="status"></div>
 
@@ -575,6 +648,8 @@ const CUSTOMERS_TABLE = 736204;
 let role = "";
 let shopID = localStorage.getItem("ShopIDTag");
 let mobileTag = localStorage.getItem("MobileTag");
+let nameTag = localStorage.getItem("NameTag");
+let shopTag = localStorage.getItem("ShopTag");
 let products = [];
 let inventory = [];
 let ledgerData = [];
@@ -600,6 +675,9 @@ async function init() {
     return;
   }
 
+  // Update header information
+  updateHeaderInfo();
+
   // Fetch Role (but don't display it)
   const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
@@ -613,6 +691,46 @@ async function init() {
   role = user.Role;
   
   await loadData();
+}
+
+// 🔹 Update header information
+function updateHeaderInfo() {
+  // Welcome message with user's name
+  const welcomeMessage = document.getElementById('welcomeMessage');
+  if (nameTag) {
+    welcomeMessage.textContent = `Welcome Back, ${nameTag}!`;
+  }
+
+  // Shop ID display
+  const shopIdDisplay = document.getElementById('shopIdDisplay');
+  if (shopID) {
+    shopIdDisplay.textContent = `Shop ID: ${shopID}`;
+  }
+
+  // Shop name and address from ShopTag
+  const shopNameDisplay = document.getElementById('shopNameDisplay');
+  const shopAddressDisplay = document.getElementById('shopAddressDisplay');
+  
+  if (shopTag) {
+    // Split ShopTag by '-' to get shop name, address, and mobile
+    const shopParts = shopTag.split('-');
+    
+    if (shopParts.length >= 1) {
+      shopNameDisplay.textContent = shopParts[0]; // Shop Name
+    }
+    
+    if (shopParts.length >= 2) {
+      // If there are 3 parts, show address and mobile separately
+      if (shopParts.length >= 3) {
+        shopAddressDisplay.textContent = `${shopParts[1]} | Mobile: ${shopParts[2]}`;
+      } else {
+        // If only 2 parts, show the second part as address
+        shopAddressDisplay.textContent = shopParts[1];
+      }
+    }
+  } else {
+    shopNameDisplay.textContent = 'Shop Information Not Available';
+  }
 }
 
 // 🔹 Load Products + Inventory + Ledger + Customers Data
