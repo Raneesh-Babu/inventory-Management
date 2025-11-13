@@ -59,55 +59,104 @@
     margin: 0 auto;
   }
 
-  /* Header Section */
-  .dashboard-header {
+  /* Minimal Shop Info */
+  .shop-info-minimal {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1000;
+  }
+
+  .shop-name-minimal {
+    font-size: 12px;
+    color: rgba(108, 117, 125, 0.7);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .shop-id-minimal {
+    font-size: 10px;
+    color: rgba(108, 117, 125, 0.5);
+    background: rgba(248, 249, 250, 0.8);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+
+  /* Welcome Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    padding: 20px;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .welcome-modal {
     background: white;
+    padding: 40px;
     border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    box-shadow: var(--box-shadow-hover);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    transform: translateY(-20px);
+    transition: var(--transition);
   }
 
-  .shop-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+  .modal-overlay.active .welcome-modal {
+    transform: translateY(0);
   }
 
-  .shop-name {
-    font-size: 18px;
-    font-weight: 600;
+  .welcome-icon {
+    font-size: 48px;
     color: var(--primary);
+    margin-bottom: 20px;
   }
 
-  .shop-address {
-    font-size: 14px;
-    color: var(--gray-600);
-  }
-
-  .user-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
+  .welcome-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 10px;
   }
 
   .welcome-message {
     font-size: 16px;
-    font-weight: 500;
-    color: var(--gray-800);
+    color: var(--gray-600);
+    margin-bottom: 25px;
+    line-height: 1.5;
   }
 
-  .shop-id {
-    font-size: 12px;
-    color: var(--gray-500);
-    background: var(--gray-100);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-weight: 500;
+  .modal-button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .modal-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
   }
 
   #status {
@@ -491,14 +540,9 @@
 
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .dashboard-header {
-      flex-direction: column;
-      gap: 15px;
-      text-align: center;
-    }
-    
-    .user-info {
-      align-items: center;
+    .shop-info-minimal {
+      top: 10px;
+      left: 10px;
     }
     
     .batch-info {
@@ -530,19 +574,25 @@
 </style>
 </head>
 <body>
-<div class="container">
-  <!-- Dashboard Header -->
-  <div class="dashboard-header">
-    <div class="shop-info">
-      <div class="shop-name" id="shopNameDisplay">Loading...</div>
-      <div class="shop-address" id="shopAddressDisplay"></div>
-    </div>
-    <div class="user-info">
-      <div class="welcome-message" id="welcomeMessage">Welcome Back!</div>
-      <div class="shop-id" id="shopIdDisplay">Shop ID: Loading...</div>
-    </div>
-  </div>
+<!-- Minimal Shop Info -->
+<div class="shop-info-minimal">
+  <div class="shop-name-minimal" id="shopNameMinimal">Loading...</div>
+  <div class="shop-id-minimal" id="shopIdMinimal">Shop ID: Loading...</div>
+</div>
 
+<!-- Welcome Modal -->
+<div class="modal-overlay" id="welcomeModal">
+  <div class="welcome-modal">
+    <div class="welcome-icon">
+      <i class="fas fa-hand-wave"></i>
+    </div>
+    <h2 class="welcome-title">Welcome Back!</h2>
+    <p class="welcome-message" id="welcomeMessageModal">Great to see you again!</p>
+    <button class="modal-button" onclick="closeWelcomeModal()">Get Started</button>
+  </div>
+</div>
+
+<div class="container">
   <!-- Status section is hidden -->
   <div id="status"></div>
 
@@ -675,8 +725,11 @@ async function init() {
     return;
   }
 
-  // Update header information
-  updateHeaderInfo();
+  // Update minimal shop information
+  updateMinimalShopInfo();
+
+  // Show welcome modal
+  showWelcomeModal();
 
   // Fetch Role (but don't display it)
   const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
@@ -693,44 +746,45 @@ async function init() {
   await loadData();
 }
 
-// 🔹 Update header information
-function updateHeaderInfo() {
-  // Welcome message with user's name
-  const welcomeMessage = document.getElementById('welcomeMessage');
-  if (nameTag) {
-    welcomeMessage.textContent = `Welcome Back, ${nameTag}!`;
-  }
-
-  // Shop ID display
-  const shopIdDisplay = document.getElementById('shopIdDisplay');
-  if (shopID) {
-    shopIdDisplay.textContent = `Shop ID: ${shopID}`;
-  }
-
-  // Shop name and address from ShopTag
-  const shopNameDisplay = document.getElementById('shopNameDisplay');
-  const shopAddressDisplay = document.getElementById('shopAddressDisplay');
+// 🔹 Update minimal shop information
+function updateMinimalShopInfo() {
+  const shopNameMinimal = document.getElementById('shopNameMinimal');
+  const shopIdMinimal = document.getElementById('shopIdMinimal');
   
   if (shopTag) {
-    // Split ShopTag by '-' to get shop name, address, and mobile
+    // Extract just the shop name (first part before '-')
     const shopParts = shopTag.split('-');
-    
-    if (shopParts.length >= 1) {
-      shopNameDisplay.textContent = shopParts[0]; // Shop Name
-    }
-    
-    if (shopParts.length >= 2) {
-      // If there are 3 parts, show address and mobile separately
-      if (shopParts.length >= 3) {
-        shopAddressDisplay.textContent = `${shopParts[1]} | Mobile: ${shopParts[2]}`;
-      } else {
-        // If only 2 parts, show the second part as address
-        shopAddressDisplay.textContent = shopParts[1];
-      }
-    }
+    shopNameMinimal.textContent = shopParts[0] || 'Shop';
   } else {
-    shopNameDisplay.textContent = 'Shop Information Not Available';
+    shopNameMinimal.textContent = 'Shop';
   }
+  
+  if (shopID) {
+    shopIdMinimal.textContent = `ID: ${shopID}`;
+  }
+}
+
+// 🔹 Show welcome modal
+function showWelcomeModal() {
+  const modal = document.getElementById('welcomeModal');
+  const welcomeMessage = document.getElementById('welcomeMessageModal');
+  
+  if (nameTag) {
+    welcomeMessage.textContent = `Welcome back, ${nameTag}! Ready to manage your inventory?`;
+  } else {
+    welcomeMessage.textContent = 'Welcome back! Ready to manage your inventory?';
+  }
+  
+  // Show modal after a small delay for better UX
+  setTimeout(() => {
+    modal.classList.add('active');
+  }, 500);
+}
+
+// 🔹 Close welcome modal
+function closeWelcomeModal() {
+  const modal = document.getElementById('welcomeModal');
+  modal.classList.remove('active');
 }
 
 // 🔹 Load Products + Inventory + Ledger + Customers Data
