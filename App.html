@@ -52,6 +52,18 @@
     position: relative;
   }
 
+  /* Full screen styles */
+  .app-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+  }
+
   /* Sidebar Navigation */
   .sidebar {
     width: 260px;
@@ -277,16 +289,82 @@
     font-size: 12px;
     color: var(--gray-600);
     font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
   }
 
-  /* Iframe Container - FIXED FOR COMPLETE SCROLLABILITY */
+  .shop-badge:hover {
+    background: var(--gray-200);
+  }
+
+  /* Context Menu for Logout */
+  .context-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 8px;
+    min-width: 150px;
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+  }
+
+  .context-menu.active {
+    display: block;
+  }
+
+  .context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    color: var(--gray-700);
+    text-decoration: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 14px;
+  }
+
+  .context-menu-item:hover {
+    background: var(--gray-100);
+    color: var(--danger);
+  }
+
+  .context-menu-icon {
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+  }
+
+  /* Full screen button */
+  .fullscreen-toggle {
+    background: none;
+    border: none;
+    color: var(--gray-600);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: var(--transition);
+    font-size: 14px;
+  }
+
+  .fullscreen-toggle:hover {
+    background: var(--gray-100);
+    color: var(--primary);
+  }
+
+  /* Iframe Container */
   .iframe-container {
     flex: 1;
     position: relative;
     background: white;
     min-height: 0;
     overflow: hidden;
-    height: calc(100vh - 70px); /* Subtract top bar height */
+    height: calc(100vh - 70px);
   }
 
   .content-frame {
@@ -297,13 +375,11 @@
     display: block;
   }
 
-  /* Force iframe to be scrollable */
   .content-frame {
     overflow-y: auto !important;
     overflow-x: hidden !important;
   }
 
-  /* Ensure iframe content can scroll properly */
   .iframe-wrapper {
     width: 100%;
     height: 100%;
@@ -397,6 +473,10 @@
     .iframe-container {
       height: calc(100vh - 70px);
     }
+
+    .context-menu {
+      right: 10px;
+    }
   }
 
   /* Scrollbar Styling */
@@ -417,7 +497,6 @@
     background: var(--gray-500);
   }
 
-  /* Iframe scrollbar styling */
   .content-frame::-webkit-scrollbar {
     width: 8px;
   }
@@ -435,7 +514,6 @@
     background: var(--gray-500);
   }
 
-  /* Ensure body and html allow scrolling */
   html, body {
     overflow: hidden;
     height: 100%;
@@ -443,7 +521,7 @@
 </style>
 </head>
 <body>
-<div class="app-container">
+<div class="app-container" id="appContainer">
   <!-- Sidebar Navigation -->
   <div class="sidebar" id="sidebar">
     <div class="app-header">
@@ -501,7 +579,6 @@
       </a>
     </div>
 
-    <!-- LOGOUT BUTTON - FIXED POSITION -->
     <div class="nav-footer">
       <button class="logout-btn" id="logoutBtn">
         <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
@@ -521,7 +598,21 @@
       </button>
       <div class="current-page" id="currentPage">Dashboard</div>
       <div class="user-info">
-        <div class="shop-badge" id="shopBadge">Shop: Loading...</div>
+        <button class="fullscreen-toggle" id="fullscreenToggle" title="Toggle Fullscreen">
+          <i class="fas fa-expand"></i>
+        </button>
+        <div class="shop-badge" id="shopBadge">
+          Shop: Loading...
+          <!-- Context Menu for Logout -->
+          <div class="context-menu" id="contextMenu">
+            <div class="context-menu-item" id="contextLogout">
+              <div class="context-menu-icon">
+                <i class="fas fa-sign-out-alt"></i>
+              </div>
+              Logout
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -530,7 +621,6 @@
         <div class="loading-spinner"></div>
         <div class="loading-text">Loading Dashboard...</div>
       </div>
-      <!-- WRAPPER FOR BETTER SCROLL CONTROL -->
       <div class="iframe-wrapper">
         <iframe 
           src="invdash2.html" 
@@ -558,6 +648,10 @@ const logoutBtn = document.getElementById('logoutBtn');
 const shopBadge = document.getElementById('shopBadge');
 const collapseToggle = document.getElementById('collapseToggle');
 const welcomeTitle = document.getElementById('welcomeTitle');
+const fullscreenToggle = document.getElementById('fullscreenToggle');
+const appContainer = document.getElementById('appContainer');
+const contextMenu = document.getElementById('contextMenu');
+const contextLogout = document.getElementById('contextLogout');
 
 // Get user info from localStorage
 const nameTag = localStorage.getItem('NameTag');
@@ -575,7 +669,7 @@ if (nameTag) {
 if (shopTag) {
   const shopParts = shopTag.split('-');
   const shopName = shopParts[0] || 'Shop';
-  shopBadge.textContent = `Shop: ${shopName}`;
+  shopBadge.innerHTML = `Shop: ${shopName}`;
 }
 
 // Toggle sidebar on mobile
@@ -593,6 +687,65 @@ overlay.addEventListener('click', () => {
 // Collapse sidebar on desktop
 collapseToggle.addEventListener('click', () => {
   sidebar.classList.toggle('collapsed');
+});
+
+// Fullscreen functionality
+fullscreenToggle.addEventListener('click', toggleFullscreen);
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    // Enter fullscreen
+    if (appContainer.requestFullscreen) {
+      appContainer.requestFullscreen();
+    } else if (appContainer.webkitRequestFullscreen) {
+      appContainer.webkitRequestFullscreen();
+    } else if (appContainer.msRequestFullscreen) {
+      appContainer.msRequestFullscreen();
+    }
+    appContainer.classList.add('fullscreen');
+    fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+  } else {
+    // Exit fullscreen
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+    appContainer.classList.remove('fullscreen');
+    fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+  }
+}
+
+// Handle fullscreen change events
+document.addEventListener('fullscreenchange', handleFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+function handleFullscreenChange() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+    appContainer.classList.remove('fullscreen');
+    fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+  }
+}
+
+// Context menu for logout
+shopBadge.addEventListener('click', (e) => {
+  e.stopPropagation();
+  contextMenu.classList.toggle('active');
+});
+
+// Close context menu when clicking elsewhere
+document.addEventListener('click', (e) => {
+  if (!shopBadge.contains(e.target)) {
+    contextMenu.classList.remove('active');
+  }
+});
+
+// Context menu logout functionality
+contextLogout.addEventListener('click', () => {
+  performLogout();
 });
 
 // Navigation handling
@@ -621,6 +774,9 @@ navItems.forEach(item => {
       sidebar.classList.remove('active');
       overlay.classList.remove('active');
     }
+    
+    // Close context menu
+    contextMenu.classList.remove('active');
   });
 });
 
@@ -632,12 +788,10 @@ function showLoading() {
 function hideLoading() {
   loadingOverlay.style.display = 'none';
   
-  // Enhanced scrollability fix
   setTimeout(() => {
     try {
       const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
       if (iframeDoc && iframeDoc.body) {
-        // Force enable scrolling on all elements
         iframeDoc.body.style.overflow = 'auto';
         iframeDoc.body.style.overflowX = 'hidden';
         iframeDoc.body.style.height = 'auto';
@@ -648,7 +802,6 @@ function hideLoading() {
         iframeDoc.documentElement.style.height = 'auto';
         iframeDoc.documentElement.style.minHeight = '100%';
         
-        // Ensure all child elements allow scrolling
         const allElements = iframeDoc.querySelectorAll('*');
         allElements.forEach(el => {
           el.style.overflow = 'visible';
@@ -656,28 +809,23 @@ function hideLoading() {
         });
       }
     } catch (e) {
-      // Cross-origin iframe, use alternative approach
-      console.log('Cross-origin iframe, using alternative scroll fix');
       forceIframeScroll();
     }
   }, 500);
 }
 
-// Alternative approach for cross-origin iframes
 function forceIframeScroll() {
-  // Set iframe styles directly
   contentFrame.style.overflow = 'auto';
   contentFrame.style.overflowX = 'hidden';
   contentFrame.style.height = '100%';
   
-  // Force iframe to take full height
   const iframeContainer = contentFrame.parentElement;
   iframeContainer.style.overflow = 'auto';
   iframeContainer.style.height = '100%';
 }
 
 // Logout functionality
-logoutBtn.addEventListener('click', () => {
+function performLogout() {
   if (confirm('Are you sure you want to logout?')) {
     // Clear all localStorage data
     localStorage.clear();
@@ -685,13 +833,14 @@ logoutBtn.addEventListener('click', () => {
     // Redirect to login page
     window.location.href = 'login.html';
   }
-});
+}
+
+logoutBtn.addEventListener('click', performLogout);
 
 // Handle iframe loading events
 contentFrame.addEventListener('load', () => {
   hideLoading();
   
-  // Additional scrollability measures
   setTimeout(() => {
     forceIframeScroll();
   }, 1000);
