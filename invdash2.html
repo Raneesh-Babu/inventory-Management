@@ -669,13 +669,13 @@ function updateMainStatistics() {
   
   // Total Invoices (count unique invoice numbers)
   const uniqueInvoices = [...new Set(ledgerData
-    .filter(item => item["Invoice No"])
-    .map(item => item["Invoice No"]))];
+    .filter(item => item["invoice Number"])
+    .map(item => item["invoice Number"]))];
   document.getElementById("totalInvoices").innerText = uniqueInvoices.length;
   
   // Total Invoice Value (sum of all invoice values)
   const totalValue = ledgerData.reduce((sum, item) => {
-    const value = parseFloat(item["Total Amount"]) || 0;
+    const value = parseFloat(item["Total Invoice Value"]) || 0;
     return sum + value;
   }, 0);
   document.getElementById("totalInvoiceValue").innerText = `₹${totalValue.toLocaleString()}`;
