@@ -182,6 +182,7 @@
   .nav-footer {
     padding: 20px;
     border-top: 1px solid var(--gray-200);
+    margin-top: auto;
   }
 
   .logout-btn {
@@ -223,7 +224,9 @@
     display: flex;
     flex-direction: column;
     background: var(--gray-100);
-    min-width: 0; /* Important for flexbox shrinking */
+    min-width: 0;
+    height: 100vh;
+    overflow: hidden;
   }
 
   .top-bar {
@@ -235,6 +238,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     border-bottom: 1px solid var(--gray-200);
     flex-shrink: 0;
+    z-index: 100;
   }
 
   .menu-toggle {
@@ -275,13 +279,14 @@
     font-weight: 500;
   }
 
-  /* Iframe Container - FIXED FOR SCROLLING */
+  /* Iframe Container - FIXED FOR COMPLETE SCROLLABILITY */
   .iframe-container {
     flex: 1;
     position: relative;
     background: white;
-    min-height: 0; /* Important for flexbox */
-    overflow: hidden; /* Changed from auto to hidden */
+    min-height: 0;
+    overflow: hidden;
+    height: calc(100vh - 70px); /* Subtract top bar height */
   }
 
   .content-frame {
@@ -289,13 +294,20 @@
     height: 100%;
     border: none;
     background: white;
-    display: block; /* Ensure it's block level */
+    display: block;
   }
 
-  /* Ensure iframe content is scrollable */
+  /* Force iframe to be scrollable */
   .content-frame {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+  }
+
+  /* Ensure iframe content can scroll properly */
+  .iframe-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
   }
 
   .loading-overlay {
@@ -352,7 +364,7 @@
     }
 
     .sidebar.collapsed {
-      width: 260px; /* Full width on mobile when active */
+      width: 260px;
     }
 
     .menu-toggle {
@@ -364,7 +376,7 @@
     }
 
     .collapse-toggle {
-      display: none; /* Hide collapse toggle on mobile */
+      display: none;
     }
 
     .overlay {
@@ -380,6 +392,10 @@
 
     .overlay.active {
       display: block;
+    }
+
+    .iframe-container {
+      height: calc(100vh - 70px);
     }
   }
 
@@ -417,6 +433,12 @@
 
   .content-frame::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500);
+  }
+
+  /* Ensure body and html allow scrolling */
+  html, body {
+    overflow: hidden;
+    height: 100%;
   }
 </style>
 </head>
@@ -479,6 +501,7 @@
       </a>
     </div>
 
+    <!-- LOGOUT BUTTON - FIXED POSITION -->
     <div class="nav-footer">
       <button class="logout-btn" id="logoutBtn">
         <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
@@ -507,13 +530,17 @@
         <div class="loading-spinner"></div>
         <div class="loading-text">Loading Dashboard...</div>
       </div>
-      <iframe 
-        src="invdash2.html" 
-        class="content-frame" 
-        id="contentFrame"
-        onload="hideLoading()"
-        scrolling="yes">
-      </iframe>
+      <!-- WRAPPER FOR BETTER SCROLL CONTROL -->
+      <div class="iframe-wrapper">
+        <iframe 
+          src="invdash2.html" 
+          class="content-frame" 
+          id="contentFrame"
+          onload="hideLoading()"
+          scrolling="yes"
+          style="width: 100%; height: 100%; border: none;">
+        </iframe>
+      </div>
     </div>
   </div>
 </div>
@@ -605,20 +632,48 @@ function showLoading() {
 function hideLoading() {
   loadingOverlay.style.display = 'none';
   
-  // Ensure iframe is properly scrollable
+  // Enhanced scrollability fix
   setTimeout(() => {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc && iframeDoc.body) {
-      iframeDoc.body.style.overflowY = 'auto';
-      iframeDoc.body.style.overflowX = 'hidden';
-      iframeDoc.body.style.height = '100%';
-      
-      // Force redraw and ensure scrolling works
-      iframeDoc.documentElement.style.overflowY = 'auto';
-      iframeDoc.documentElement.style.overflowX = 'hidden';
-      iframeDoc.documentElement.style.height = '100%';
+    try {
+      const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+      if (iframeDoc && iframeDoc.body) {
+        // Force enable scrolling on all elements
+        iframeDoc.body.style.overflow = 'auto';
+        iframeDoc.body.style.overflowX = 'hidden';
+        iframeDoc.body.style.height = 'auto';
+        iframeDoc.body.style.minHeight = '100%';
+        
+        iframeDoc.documentElement.style.overflow = 'auto';
+        iframeDoc.documentElement.style.overflowX = 'hidden';
+        iframeDoc.documentElement.style.height = 'auto';
+        iframeDoc.documentElement.style.minHeight = '100%';
+        
+        // Ensure all child elements allow scrolling
+        const allElements = iframeDoc.querySelectorAll('*');
+        allElements.forEach(el => {
+          el.style.overflow = 'visible';
+          el.style.overflowX = 'hidden';
+        });
+      }
+    } catch (e) {
+      // Cross-origin iframe, use alternative approach
+      console.log('Cross-origin iframe, using alternative scroll fix');
+      forceIframeScroll();
     }
-  }, 100);
+  }, 500);
+}
+
+// Alternative approach for cross-origin iframes
+function forceIframeScroll() {
+  // Set iframe styles directly
+  contentFrame.style.overflow = 'auto';
+  contentFrame.style.overflowX = 'hidden';
+  contentFrame.style.height = '100%';
+  
+  // Force iframe to take full height
+  const iframeContainer = contentFrame.parentElement;
+  iframeContainer.style.overflow = 'auto';
+  iframeContainer.style.height = '100%';
 }
 
 // Logout functionality
@@ -636,24 +691,10 @@ logoutBtn.addEventListener('click', () => {
 contentFrame.addEventListener('load', () => {
   hideLoading();
   
-  // Additional measures to ensure scrollability
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc && iframeDoc.body) {
-      // Force enable scrolling
-      iframeDoc.body.style.overflow = 'auto';
-      iframeDoc.body.style.height = 'auto';
-      iframeDoc.body.style.minHeight = '100%';
-      
-      iframeDoc.documentElement.style.overflow = 'auto';
-      iframeDoc.documentElement.style.height = 'auto';
-      
-      // Ensure iframe itself allows scrolling
-      contentFrame.style.overflow = 'auto';
-    }
-  } catch (e) {
-    console.log('Cross-origin iframe, cannot modify styles');
-  }
+  // Additional scrollability measures
+  setTimeout(() => {
+    forceIframeScroll();
+  }, 1000);
 });
 
 contentFrame.addEventListener('error', () => {
@@ -676,15 +717,22 @@ function retryLoading() {
   }
 }
 
-// Handle browser back/forward buttons
-window.addEventListener('popstate', (event) => {
-  // You can add additional logic here if needed
+// Ensure proper height calculation
+function updateIframeHeight() {
+  const iframeContainer = document.querySelector('.iframe-container');
+  const topBar = document.querySelector('.top-bar');
+  const topBarHeight = topBar.offsetHeight;
+  
+  iframeContainer.style.height = `calc(100vh - ${topBarHeight}px)`;
+}
+
+// Initial setup
+window.addEventListener('DOMContentLoaded', () => {
+  updateIframeHeight();
+  forceIframeScroll();
 });
 
-// Ensure iframe is scrollable on initial load
-window.addEventListener('DOMContentLoaded', () => {
-  contentFrame.style.overflow = 'auto';
-});
+window.addEventListener('resize', updateIframeHeight);
 
 // Auto-hide loading after 10 seconds (fallback)
 setTimeout(hideLoading, 10000);
