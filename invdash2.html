@@ -104,12 +104,14 @@
     margin: 10px 0;
     font-size: 32px;
     font-weight: 700;
+    color: white; /* White text for count numbers */
   }
 
   .main-stat-box p {
     font-weight: 500;
     font-size: 15px;
     opacity: 0.9;
+    color: white; /* White text for labels */
   }
 
   .alert-stats {
@@ -669,8 +671,8 @@ function updateMainStatistics() {
   
   // Total Invoices (count unique invoice numbers)
   const uniqueInvoices = [...new Set(ledgerData
-    .filter(item => item["invoice Number"])
-    .map(item => item["invoice Number"]))];
+    .filter(item => item["Invoice Number"])
+    .map(item => item["Invoice Number"]))];
   document.getElementById("totalInvoices").innerText = uniqueInvoices.length;
   
   // Total Invoice Value (sum of all invoice values)
