@@ -18,6 +18,36 @@
     margin-bottom: 20px;
   }
 
+  .summary-cards {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+
+  .summary-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .summary-card h2 {
+    font-size: 1.4em;
+    color: #333;
+    margin: 0;
+  }
+
+  .summary-card p {
+    font-size: 1em;
+    color: #555;
+    margin-top: 5px;
+  }
+
   .ledger-container {
     max-width: 900px;
     margin: auto;
@@ -77,6 +107,12 @@
     border-bottom: 1px dashed #ddd;
   }
 
+  .invoice span:first-child {
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
   .summary {
     margin-top: 10px;
     text-align: right;
@@ -102,11 +138,45 @@
   .progress-blue { background: #2196f3; }
   .progress-green { background: #4caf50; }
 
+  .contact-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .contact-buttons button {
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: white;
+    font-weight: 500;
+  }
+
+  .whatsapp-btn { background: #25d366; }
+  .call-btn { background: #4caf50; }
 </style>
 </head>
 <body>
 
 <h1>📒 Customer Ledger</h1>
+
+<div class="summary-cards">
+  <div class="summary-card">
+    <h2 id="totalCustomers">0</h2>
+    <p>Total Customers</p>
+  </div>
+  <div class="summary-card">
+    <h2 id="totalInvoices">0</h2>
+    <p>Total Invoices</p>
+  </div>
+  <div class="summary-card">
+    <h2 id="totalSales">₹0</h2>
+    <p>Total Sales</p>
+  </div>
+</div>
+
 <div class="ledger-container" id="ledgerContainer">Loading data...</div>
 
 <script>
@@ -125,7 +195,6 @@ async function loadLedger() {
 
     const customers = {};
 
-    // Group invoices by customer
     rows.forEach(r => {
       if (!customers[r["Costomer Name"]]) {
         customers[r["Costomer Name"]] = { 
@@ -141,16 +210,25 @@ async function loadLedger() {
       customers[r["Costomer Name"]].totalValue += parseFloat(r["Total Invoice Value"] || 0);
     });
 
-    // Sort by total purchase value (descending)
+    // Top summary data
+    const totalInvoices = rows.length;
+    const totalCustomers = Object.keys(customers).length;
+    const totalSales = rows.reduce((sum, r) => sum + parseFloat(r["Total Invoice Value"] || 0), 0);
+
+    document.getElementById("totalInvoices").innerText = totalInvoices;
+    document.getElementById("totalCustomers").innerText = totalCustomers;
+    document.getElementById("totalSales").innerText = `₹${totalSales.toFixed(2)}`;
+
+    // Sort customers by total purchase
     const sortedCustomers = Object.entries(customers)
       .sort((a, b) => b[1].totalValue - a[1].totalValue);
 
-    // Generate HTML
     let html = "";
     sortedCustomers.forEach(([name, data]) => {
       const invoiceCount = data.invoices.length;
       const totalValue = data.totalValue;
 
+      // Ranking logic
       let rankLabel = "NewFace";
       let rankText = "New Face";
       let progressPercent = 25;
@@ -168,8 +246,11 @@ async function loadLedger() {
         progressColor = "progress-blue";
       }
 
+      const encodedName = name.replace(/'/g, "\\'");
+      const detailId = `details-${name.replace(/\s/g, '_')}`;
+
       html += `
-        <div class="customer" onclick="toggleDetails('${name.replace(/'/g, "\\'")}')">
+        <div class="customer" onclick="toggleDetails('${encodedName}')">
           <div class="customer-header">
             <span class="customer-name">${name}</span>
             <span class="rank ${rankLabel}">${rankText}</span>
@@ -177,14 +258,20 @@ async function loadLedger() {
           <div class="progress-container">
             <div class="progress-bar ${progressColor}" style="width: ${progressPercent}%;"></div>
           </div>
-          <div class="invoice-details" id="details-${name.replace(/\s/g, '_')}">
+          <div class="invoice-details" id="${detailId}">
+            <p><strong>Invoice Count:</strong> ${invoiceCount}</p>
+            <p><strong>Total Purchase:</strong> ₹${totalValue.toFixed(2)}</p>
             ${data.invoices.map(inv => `
               <div class="invoice">
-                <span>Invoice: ${inv.invoice}</span>
+                <span onclick="openInvoice('${inv.invoice}')">Invoice: ${inv.invoice}</span>
                 <span>₹${inv.value.toFixed(2)}</span>
               </div>
             `).join('')}
             <div class="summary">Total: ₹${totalValue.toFixed(2)}</div>
+            <div class="contact-buttons">
+              <button class="whatsapp-btn" onclick="event.stopPropagation(); openWhatsApp('${data.mobile}')">WhatsApp</button>
+              <button class="call-btn" onclick="event.stopPropagation(); callCustomer('${data.mobile}')">Call</button>
+            </div>
           </div>
         </div>
       `;
@@ -201,6 +288,18 @@ function toggleDetails(name) {
   const id = `details-${name.replace(/\s/g, '_')}`;
   const el = document.getElementById(id);
   el.classList.toggle("active");
+}
+
+function openInvoice(invoiceNumber) {
+  window.location.href = `invoice.html?invoice=${encodeURIComponent(invoiceNumber)}`;
+}
+
+function openWhatsApp(mobile) {
+  window.open(`https://wa.me/91${mobile}`, '_blank');
+}
+
+function callCustomer(mobile) {
+  window.location.href = `tel:+91${mobile}`;
 }
 
 loadLedger();
