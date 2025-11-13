@@ -57,13 +57,7 @@
   }
 
   #status {
-    background: white;
-    padding: 15px 20px;
-    border-radius: var(--border-radius);
-    margin-bottom: 25px;
-    box-shadow: var(--box-shadow);
-    font-weight: 500;
-    border-left: 4px solid var(--primary);
+    display: none; /* Hide user status */
   }
 
   .alert-stats {
@@ -350,28 +344,6 @@
     margin-top: 10px;
   }
 
-  #reader {
-    width: 100%;
-    height: 350px;
-    margin-top: 10px;
-    display: none;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--box-shadow);
-    border: 2px solid var(--primary);
-  }
-
-  .scanner-active {
-    border: 2px solid var(--primary);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0% { border-color: var(--primary); }
-    50% { border-color: var(--accent); }
-    100% { border-color: var(--primary); }
-  }
-
   h3 {
     margin: 25px 0 15px;
     color: var(--gray-800);
@@ -438,6 +410,7 @@
 </head>
 <body>
 <div class="container">
+  <!-- Status section is hidden -->
   <div id="status"></div>
 
   <div class="alert-stats">
@@ -537,7 +510,7 @@ async function init() {
     return;
   }
 
-  // Fetch Role
+  // Fetch Role (but don't display it)
   const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
     headers: { Authorization: `Token ${API_KEY}` }
   });
@@ -548,7 +521,9 @@ async function init() {
     return;
   }
   role = user.Role;
-  document.getElementById("status").innerHTML = `<i class="fas fa-user"></i> <b>User:</b> ${mobileTag} | <b>Role:</b> ${role}`;
+  
+  // Don't display user info in the status element
+  // document.getElementById("status").innerHTML = `<i class="fas fa-user"></i> <b>User:</b> ${mobileTag} | <b>Role:</b> ${role}`;
 
   await loadData();
 }
