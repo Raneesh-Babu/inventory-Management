@@ -82,6 +82,7 @@
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+    cursor: pointer;
   }
 
   .alert-box:hover {
@@ -148,86 +149,6 @@
     color: var(--gray-600);
     font-weight: 500;
     font-size: 14px;
-  }
-
-  .search-bar {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    background: white;
-    padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-  }
-
-  input[type="text"] {
-    flex: 1;
-    padding: 12px 15px;
-    border: 1px solid var(--gray-300);
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    transition: var(--transition);
-  }
-
-  input[type="text"]:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-  }
-
-  button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-  }
-
-  button:disabled {
-    background: var(--gray-400);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .btn-small {
-    padding: 8px 12px;
-    font-size: 13px;
-    margin-top: 5px;
-  }
-
-  .btn-danger {
-    background: var(--danger);
-  }
-
-  .btn-danger:hover {
-    background: #c82333;
-    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
-  }
-
-  .btn-warning {
-    background: var(--warning);
-    color: var(--dark);
-  }
-
-  .btn-warning:hover {
-    background: #e0a800;
-    box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
   }
 
   .card {
@@ -488,10 +409,6 @@
 
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .search-bar {
-      flex-direction: column;
-    }
-    
     .batch-info {
       flex-direction: column;
       align-items: flex-start;
@@ -525,50 +442,36 @@
   <div id="status"></div>
 
   <div class="alert-stats">
-    <div class="alert-box expired">
+    <div class="alert-box expired" onclick="toggleSection('expiredProducts')">
       <h3 id="expiredCount">0</h3>
       <p>Expired Products</p>
     </div>
-    <div class="alert-box expiring-7">
+    <div class="alert-box expiring-7" onclick="toggleSection('expiring7Products')">
       <h3 id="expiring7Count">0</h3>
       <p>Expiring in 7 Days</p>
     </div>
-    <div class="alert-box expiring-15">
+    <div class="alert-box expiring-15" onclick="toggleSection('expiring15Products')">
       <h3 id="expiring15Count">0</h3>
       <p>Expiring in 15 Days</p>
     </div>
-    <div class="alert-box expiring-30">
+    <div class="alert-box expiring-30" onclick="toggleSection('expiring30Products')">
       <h3 id="expiring30Count">0</h3>
       <p>Expiring in 30 Days</p>
     </div>
-    <div class="alert-box low-stock">
+    <div class="alert-box low-stock" onclick="toggleSection('lowStockProducts')">
       <h3 id="lowStockCount">0</h3>
       <p>Low Stock (< 3)</p>
     </div>
   </div>
 
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search by Product Name or ID">
-    <button onclick="searchProduct()"><i class="fas fa-search"></i> Search</button>
-    <button onclick="toggleScanner()"><i class="fas fa-camera"></i> Scan</button>
-  </div>
-
-  <div id="reader" class="scanner-active"></div>
-
-  <div class="section-header">
-    <h3><i class="fas fa-exclamation-triangle"></i> Alerts & Warnings</h3>
-    <button class="section-toggle" onclick="toggleSection('alertsSection')">
-      <i class="fas fa-chevron-down" id="alertsSectionToggle"></i> Show/Hide
-    </button>
-  </div>
-  <div id="alertsSection">
+  <div id="alertsSection" style="display: none;">
     <div class="section-header">
       <h4><i class="fas fa-skull-crossbones"></i> Expired Products</h4>
       <button class="section-toggle" onclick="toggleSection('expiredProducts')">
         <i class="fas fa-chevron-down" id="expiredProductsToggle"></i> Show/Hide
       </button>
     </div>
-    <div id="expiredProducts"></div>
+    <div id="expiredProducts" style="display: none;"></div>
 
     <div class="section-header">
       <h4><i class="fas fa-clock"></i> Expiring Soon (Next 7 Days)</h4>
@@ -576,7 +479,7 @@
         <i class="fas fa-chevron-down" id="expiring7ProductsToggle"></i> Show/Hide
       </button>
     </div>
-    <div id="expiring7Products"></div>
+    <div id="expiring7Products" style="display: none;"></div>
 
     <div class="section-header">
       <h4><i class="fas fa-calendar-week"></i> Expiring in 15 Days</h4>
@@ -584,7 +487,7 @@
         <i class="fas fa-chevron-down" id="expiring15ProductsToggle"></i> Show/Hide
       </button>
     </div>
-    <div id="expiring15Products"></div>
+    <div id="expiring15Products" style="display: none;"></div>
 
     <div class="section-header">
       <h4><i class="fas fa-calendar-alt"></i> Expiring in 30 Days</h4>
@@ -592,7 +495,7 @@
         <i class="fas fa-chevron-down" id="expiring30ProductsToggle"></i> Show/Hide
       </button>
     </div>
-    <div id="expiring30Products"></div>
+    <div id="expiring30Products" style="display: none;"></div>
 
     <div class="section-header">
       <h4><i class="fas fa-exclamation-circle"></i> Low Stock Products (< 3)</h4>
@@ -600,7 +503,7 @@
         <i class="fas fa-chevron-down" id="lowStockProductsToggle"></i> Show/Hide
       </button>
     </div>
-    <div id="lowStockProducts"></div>
+    <div id="lowStockProducts" style="display: none;"></div>
   </div>
 </div>
 
@@ -829,179 +732,16 @@ function toggleSection(sectionId) {
   
   if (section.style.display === "none") {
     section.style.display = "block";
-    toggleIcon.classList.remove("fa-chevron-down");
-    toggleIcon.classList.add("fa-chevron-up");
+    if (toggleIcon) {
+      toggleIcon.classList.remove("fa-chevron-down");
+      toggleIcon.classList.add("fa-chevron-up");
+    }
   } else {
     section.style.display = "none";
-    toggleIcon.classList.remove("fa-chevron-up");
-    toggleIcon.classList.add("fa-chevron-down");
-  }
-}
-
-// 🔹 Search
-function searchProduct() {
-  const val = document.getElementById("searchInput").value.trim().toLowerCase();
-  
-  // Filter all alert arrays
-  const filteredExpired = expiredProducts.filter(item => 
-    item.product["Product Name"].toLowerCase().includes(val) ||
-    item.product["Product ID"].toLowerCase().includes(val)
-  );
-  
-  const filteredExpiring7 = expiring7Products.filter(item => 
-    item.product["Product Name"].toLowerCase().includes(val) ||
-    item.product["Product ID"].toLowerCase().includes(val)
-  );
-  
-  const filteredExpiring15 = expiring15Products.filter(item => 
-    item.product["Product Name"].toLowerCase().includes(val) ||
-    item.product["Product ID"].toLowerCase().includes(val)
-  );
-  
-  const filteredExpiring30 = expiring30Products.filter(item => 
-    item.product["Product Name"].toLowerCase().includes(val) ||
-    item.product["Product ID"].toLowerCase().includes(val)
-  );
-  
-  const filteredLowStock = lowStockProducts.filter(item => 
-    item.product["Product Name"].toLowerCase().includes(val) ||
-    item.product["Product ID"].toLowerCase().includes(val)
-  );
-  
-  // Update counts
-  document.getElementById("expiredCount").innerText = filteredExpired.length;
-  document.getElementById("expiring7Count").innerText = filteredExpiring7.length;
-  document.getElementById("expiring15Count").innerText = filteredExpiring15.length;
-  document.getElementById("expiring30Count").innerText = filteredExpiring30.length;
-  document.getElementById("lowStockCount").innerText = filteredLowStock.length;
-  
-  // Render filtered results
-  renderFilteredAlertProducts(
-    filteredExpired, 
-    filteredExpiring7, 
-    filteredExpiring15, 
-    filteredExpiring30, 
-    filteredLowStock
-  );
-}
-
-// 🔹 Render filtered alert products
-function renderFilteredAlertProducts(expired, expiring7, expiring15, expiring30, lowStock) {
-  // Render expired products
-  renderFilteredCategory(expired, 'expiredProducts', 'expired', 'skull-crossbones');
-  
-  // Render expiring in 7 days products
-  renderFilteredCategory(expiring7, 'expiring7Products', 'expiring-7', 'clock');
-  
-  // Render expiring in 15 days products
-  renderFilteredCategory(expiring15, 'expiring15Products', 'expiring-15', 'calendar-week');
-  
-  // Render expiring in 30 days products
-  renderFilteredCategory(expiring30, 'expiring30Products', 'expiring-30', 'calendar-alt');
-  
-  // Render low stock products
-  renderFilteredCategory(lowStock, 'lowStockProducts', 'low-stock', 'exclamation-circle', true);
-}
-
-// 🔹 Helper function to render filtered categories
-function renderFilteredCategory(category, containerId, alertClass, icon, isLowStock = false) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "";
-  
-  if (category.length === 0) {
-    container.innerHTML = `<div class="card"><p>No products found in this category.</p></div>`;
-  } else {
-    category.forEach(item => {
-      const div = document.createElement("div");
-      div.className = `card ${alertClass}`;
-      
-      let batchListHTML = '';
-      if (!isLowStock) {
-        batchListHTML = `
-          <p><i class="fas fa-exclamation-triangle"></i> <b>Expiring Batches:</b> ${item.batches.length}</p>
-          <div class="batch-list">
-            ${item.batches.map(b => `
-              <div class="batch-item ${alertClass}">
-                <div class="batch-info">
-                  <span><i class="fas fa-layer-group"></i> Batch: ${b["Batch No"]}</span>
-                  <span><i class="fas fa-hashtag"></i> Count: ${b.Count}</span>
-                  <span><i class="fas fa-calendar-alt"></i> ${getExpiryText(alertClass)}: ${formatDate(b["Expire Date"])}</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
-      
-      div.innerHTML = `
-        <div class="product-header">
-          <h3 class="product-title">
-            <i class="fas fa-${icon}"></i> ${item.product["Product Name"]} (${item.product["Product ID"]})
-          </h3>
-        </div>
-        <p><i class="fas fa-cubes"></i> <b>Total Count:</b> ${item.totalCount}</p>
-        ${batchListHTML}
-        ${isLowStock ? `<p><i class="fas fa-exclamation-triangle"></i> <b>Status:</b> Low Stock (less than 3)</p>` : ''}
-      `;
-      container.appendChild(div);
-    });
-  }
-}
-
-// 🔹 Scanner (rear camera)
-function toggleScanner() {
-  const reader = document.getElementById("reader");
-  if (reader.style.display === "none" || reader.style.display === "") {
-    reader.style.display = "block";
-    startScanner();
-  } else {
-    stopScanner();
-  }
-}
-
-function startScanner() {
-  html5QrCode = new Html5Qrcode("reader");
-  Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
-      // Use rear camera if available, otherwise use first camera
-      const backCam = devices.find(c => c.label.toLowerCase().includes("back")) || devices[0];
-      html5QrCode.start(
-        backCam.id,
-        { 
-          fps: 10, 
-          qrbox: { width: 250, height: 250 } 
-        },
-        (decodedText) => {
-          stopScanner();
-          document.getElementById("searchInput").value = decodedText;
-          searchProduct();
-        },
-        (errorMessage) => {
-          // Ignore scanning errors
-        }
-      ).catch(err => {
-        console.error("Unable to start scanning:", err);
-        alert("Unable to start camera. Please check permissions and try again.");
-        stopScanner();
-      });
-    } else {
-      alert("No cameras found. Please check your device permissions.");
+    if (toggleIcon) {
+      toggleIcon.classList.remove("fa-chevron-up");
+      toggleIcon.classList.add("fa-chevron-down");
     }
-  }).catch(err => {
-    console.error("Camera error:", err);
-    alert("Error accessing camera. Please check permissions and try again.");
-  });
-}
-
-function stopScanner() {
-  const reader = document.getElementById("reader");
-  reader.style.display = "none";
-  if (html5QrCode && html5QrCode.isScanning) {
-    html5QrCode.stop().then(() => {
-      console.log("Scanner stopped");
-    }).catch(err => {
-      console.error("Error stopping scanner:", err);
-    });
   }
 }
 
