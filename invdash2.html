@@ -59,28 +59,28 @@
     margin: 0 auto;
   }
 
-  /* Minimal Shop Info */
-  .shop-info-minimal {
+  /* Top Aligned Shop Info */
+  .shop-info-top {
     position: fixed;
     top: 15px;
     left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     z-index: 1000;
   }
 
-  .shop-name-minimal {
+  .shop-name-top {
     font-size: 12px;
     color: rgba(108, 117, 125, 0.7);
     font-weight: 500;
-    margin-bottom: 2px;
   }
 
-  .shop-id-minimal {
-    font-size: 10px;
-    color: rgba(108, 117, 125, 0.5);
-    background: rgba(248, 249, 250, 0.8);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 400;
+  .shop-id-top {
+    font-size: 12px;
+    color: rgba(108, 117, 125, 0.7);
+    font-weight: 500;
   }
 
   /* Welcome Modal */
@@ -168,6 +168,7 @@
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
+    margin-top: 40px; /* Space for top shop info */
   }
 
   .main-stat-box {
@@ -540,9 +541,14 @@
 
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .shop-info-minimal {
+    .shop-info-top {
       top: 10px;
       left: 10px;
+      right: 10px;
+    }
+    
+    .main-stats {
+      margin-top: 35px;
     }
     
     .batch-info {
@@ -574,10 +580,10 @@
 </style>
 </head>
 <body>
-<!-- Minimal Shop Info -->
-<div class="shop-info-minimal">
-  <div class="shop-name-minimal" id="shopNameMinimal">Loading...</div>
-  <div class="shop-id-minimal" id="shopIdMinimal">Shop ID: Loading...</div>
+<!-- Top Aligned Shop Info -->
+<div class="shop-info-top">
+  <div class="shop-name-top" id="shopNameTop">Loading...</div>
+  <div class="shop-id-top" id="shopIdTop">Shop ID: Loading...</div>
 </div>
 
 <!-- Welcome Modal -->
@@ -725,11 +731,11 @@ async function init() {
     return;
   }
 
-  // Update minimal shop information
-  updateMinimalShopInfo();
+  // Update top shop information
+  updateTopShopInfo();
 
-  // Show welcome modal
-  showWelcomeModal();
+  // Show welcome modal (only once per day)
+  checkAndShowWelcomeModal();
 
   // Fetch Role (but don't display it)
   const res = await fetch(`https://api.baserow.io/api/database/rows/table/${USERS_TABLE}/?user_field_names=true`, {
@@ -746,21 +752,34 @@ async function init() {
   await loadData();
 }
 
-// 🔹 Update minimal shop information
-function updateMinimalShopInfo() {
-  const shopNameMinimal = document.getElementById('shopNameMinimal');
-  const shopIdMinimal = document.getElementById('shopIdMinimal');
+// 🔹 Update top shop information
+function updateTopShopInfo() {
+  const shopNameTop = document.getElementById('shopNameTop');
+  const shopIdTop = document.getElementById('shopIdTop');
   
   if (shopTag) {
     // Extract just the shop name (first part before '-')
     const shopParts = shopTag.split('-');
-    shopNameMinimal.textContent = shopParts[0] || 'Shop';
+    shopNameTop.textContent = shopParts[0] || 'Shop';
   } else {
-    shopNameMinimal.textContent = 'Shop';
+    shopNameTop.textContent = 'Shop';
   }
   
   if (shopID) {
-    shopIdMinimal.textContent = `ID: ${shopID}`;
+    shopIdTop.textContent = `ID: ${shopID}`;
+  }
+}
+
+// 🔹 Check and show welcome modal (only once per day)
+function checkAndShowWelcomeModal() {
+  const today = new Date().toDateString();
+  const lastWelcomeDate = localStorage.getItem('lastWelcomeDate');
+  
+  // Only show modal if it hasn't been shown today
+  if (lastWelcomeDate !== today) {
+    showWelcomeModal();
+    // Store today's date to prevent showing again today
+    localStorage.setItem('lastWelcomeDate', today);
   }
 }
 
