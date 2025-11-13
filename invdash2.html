@@ -18,6 +18,7 @@
     --success: #4bb543;
     --success-dark: #3a9c33;
     --warning: #ffc107;
+    --warning-dark: #e0a800;
     --danger: #dc3545;
     --danger-dark: #c82333;
     --expiring: #ff9500;
@@ -97,6 +98,11 @@
 
   .main-stat-box.red-gradient {
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+  }
+
+  .main-stat-box.yellow-gradient {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
     color: white;
   }
 
@@ -480,6 +486,10 @@
       <h3 id="totalInvoiceValue">0</h3>
       <p>Total Invoice Value</p>
     </div>
+    <div class="main-stat-box yellow-gradient">
+      <h3 id="totalCustomers">0</h3>
+      <p>Total Customers</p>
+    </div>
   </div>
 
   <div class="alert-stats">
@@ -560,6 +570,7 @@ const USERS_TABLE = 729979;
 const PRODUCTS_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
 const LEDGER_TABLE = 736207;
+const CUSTOMERS_TABLE = 736204;
 
 let role = "";
 let shopID = localStorage.getItem("ShopIDTag");
@@ -567,6 +578,7 @@ let mobileTag = localStorage.getItem("MobileTag");
 let products = [];
 let inventory = [];
 let ledgerData = [];
+let customersData = [];
 let expiredProducts = [];
 let expiring7Products = [];
 let expiring15Products = [];
@@ -603,10 +615,10 @@ async function init() {
   await loadData();
 }
 
-// 🔹 Load Products + Inventory + Ledger Data
+// 🔹 Load Products + Inventory + Ledger + Customers Data
 async function loadData() {
   try {
-    const [pRes, iRes, lRes] = await Promise.all([
+    const [pRes, iRes, lRes, cRes] = await Promise.all([
       fetch(`https://api.baserow.io/api/database/rows/table/${PRODUCTS_TABLE}/?user_field_names=true`, { 
         headers: { Authorization: `Token ${API_KEY}` } 
       }),
@@ -615,16 +627,20 @@ async function loadData() {
       }),
       fetch(`https://api.baserow.io/api/database/rows/table/${LEDGER_TABLE}/?user_field_names=true`, { 
         headers: { Authorization: `Token ${API_KEY}` } 
+      }),
+      fetch(`https://api.baserow.io/api/database/rows/table/${CUSTOMERS_TABLE}/?user_field_names=true`, { 
+        headers: { Authorization: `Token ${API_KEY}` } 
       })
     ]);
 
-    if (!pRes.ok || !iRes.ok || !lRes.ok) {
+    if (!pRes.ok || !iRes.ok || !lRes.ok || !cRes.ok) {
       throw new Error('Failed to fetch data from one or more tables');
     }
 
     const pData = await pRes.json();
     const iData = await iRes.json();
     const lData = await lRes.json();
+    const cData = await cRes.json();
 
     // Validate ShopID in all data
     products = pData.results.filter(p => {
@@ -649,6 +665,14 @@ async function loadData() {
         return false;
       }
       return l.ShopID === shopID;
+    });
+
+    customersData = cData.results.filter(c => {
+      if (!c.ShopID) {
+        console.warn('Customer entry missing ShopID:', c.id);
+        return false;
+      }
+      return c.ShopID === shopID;
     });
 
     // Update main statistics
@@ -681,6 +705,12 @@ function updateMainStatistics() {
     return sum + value;
   }, 0);
   document.getElementById("totalInvoiceValue").innerText = `₹${totalValue.toLocaleString()}`;
+  
+  // Total Customers (count customers with valid names)
+  const totalCustomers = customersData.filter(customer => 
+    customer["Costomer Name"] && customer["Costomer Name"].trim() !== ""
+  ).length;
+  document.getElementById("totalCustomers").innerText = totalCustomers;
 }
 
 // 🔹 Calculate expired, expiring and low stock products
