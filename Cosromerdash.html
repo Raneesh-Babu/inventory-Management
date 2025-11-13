@@ -60,6 +60,36 @@
     font-size: 2.2rem;
   }
 
+  .search-container {
+    margin-bottom: 25px;
+    position: relative;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 15px 20px 15px 50px;
+    border: none;
+    border-radius: var(--border-radius);
+    background: white;
+    box-shadow: var(--box-shadow);
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+
+  .search-box:focus {
+    outline: none;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    font-size: 1.2rem;
+  }
+
   .summary-cards {
     display: flex;
     justify-content: space-between;
@@ -439,6 +469,11 @@
 <div class="container">
   <h1><i class="fas fa-book"></i> Customer Ledger</h1>
 
+  <div class="search-container">
+    <i class="fas fa-search search-icon"></i>
+    <input type="text" id="searchInput" class="search-box" placeholder="Search by customer name or mobile number...">
+  </div>
+
   <div class="summary-cards">
     <div class="summary-card">
       <i class="fas fa-users"></i>
@@ -471,8 +506,8 @@
       <!-- Modal content will be loaded here -->
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" id="printInvoice"><i class="fas fa-print"></i> Print</button>
-      <button class="btn btn-primary" id="closeModal">Close</button>
+      <button class="btn btn-primary" id="viewFullInvoice"><i class="fas fa-external-link-alt"></i> View Full Invoice</button>
+      <button class="btn btn-secondary" id="closeModal">Close</button>
     </div>
   </div>
 </div>
@@ -485,6 +520,7 @@ const shopIdTag = localStorage.getItem("ShopIDTag");
 
 // Sample data for demonstration (will be replaced with API data)
 let allRows = [];
+let currentInvoiceNumber = '';
 
 async function loadLedger() {
   try {
@@ -523,73 +559,100 @@ async function loadLedger() {
     document.getElementById("totalCustomers").innerText = totalCustomers;
     document.getElementById("totalSales").innerText = `₹${totalSales.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
 
-    // Sort customers by total purchase
-    const sortedCustomers = Object.entries(customers)
-      .sort((a, b) => b[1].totalValue - a[1].totalValue);
-
-    let html = "";
-    sortedCustomers.forEach(([name, data]) => {
-      const invoiceCount = data.invoices.length;
-      const totalValue = data.totalValue;
-
-      // Ranking logic
-      let rankLabel = "NewFace";
-      let rankText = "New Face";
-      let progressPercent = 25;
-      let progressColor = "progress-orange";
-
-      if (invoiceCount > 10 || totalValue > 50000) {
-        rankLabel = "Trusted";
-        rankText = "Trusted";
-        progressPercent = 100;
-        progressColor = "progress-green";
-      } else if (invoiceCount > 3) {
-        rankLabel = "Acquainted";
-        rankText = "Acquainted";
-        progressPercent = 60;
-        progressColor = "progress-blue";
-      }
-
-      const encodedName = name.replace(/'/g, "\\'");
-      const detailId = `details-${name.replace(/\s/g, '_')}`;
-
-      html += `
-        <div class="customer" onclick="toggleDetails('${encodedName}')">
-          <div class="customer-header">
-            <span class="customer-name"><i class="fas fa-user"></i> ${name}</span>
-            <span class="rank ${rankLabel}"><i class="fas fa-${rankLabel === 'Trusted' ? 'crown' : rankLabel === 'Acquainted' ? 'handshake' : 'user-plus'}"></i> ${rankText}</span>
-          </div>
-          <div class="customer-info">
-            <span><i class="fas fa-file-invoice"></i> ${invoiceCount} Invoices</span>
-            <span><i class="fas fa-indian-rupee-sign"></i> ${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-          </div>
-          <div class="progress-container">
-            <div class="progress-bar ${progressColor}" style="width: ${progressPercent}%;"></div>
-          </div>
-          <div class="invoice-details" id="${detailId}">
-            <p><strong>Invoice Count:</strong> ${invoiceCount}</p>
-            <p><strong>Total Purchase:</strong> ₹${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
-            ${data.invoices.map(inv => `
-              <div class="invoice">
-                <span onclick="event.stopPropagation(); openInvoiceModal('${inv.invoice}')"><i class="fas fa-file-invoice-dollar"></i> Invoice: ${inv.invoice}</span>
-                <span>₹${inv.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-              </div>
-            `).join('')}
-            <div class="summary">Total: ₹${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-            <div class="contact-buttons">
-              <button class="whatsapp-btn" onclick="event.stopPropagation(); openWhatsApp('${data.mobile}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-              <button class="call-btn" onclick="event.stopPropagation(); callCustomer('${data.mobile}')"><i class="fas fa-phone"></i> Call</button>
-            </div>
-          </div>
-        </div>
-      `;
+    // Render customers
+    renderCustomers(customers);
+    
+    // Add search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      filterCustomers(customers, searchTerm);
     });
-
-    document.getElementById("ledgerContainer").innerHTML = html || "<p>No customers found for your shop.</p>";
+    
   } catch (error) {
     console.error(error);
     document.getElementById("ledgerContainer").innerHTML = "<p>Error loading data.</p>";
   }
+}
+
+function renderCustomers(customers) {
+  // Sort customers by total purchase
+  const sortedCustomers = Object.entries(customers)
+    .sort((a, b) => b[1].totalValue - a[1].totalValue);
+
+  let html = "";
+  sortedCustomers.forEach(([name, data]) => {
+    const invoiceCount = data.invoices.length;
+    const totalValue = data.totalValue;
+
+    // Ranking logic
+    let rankLabel = "NewFace";
+    let rankText = "New Face";
+    let progressPercent = 25;
+    let progressColor = "progress-orange";
+
+    if (invoiceCount > 10 || totalValue > 50000) {
+      rankLabel = "Trusted";
+      rankText = "Trusted";
+      progressPercent = 100;
+      progressColor = "progress-green";
+    } else if (invoiceCount > 3) {
+      rankLabel = "Acquainted";
+      rankText = "Acquainted";
+      progressPercent = 60;
+      progressColor = "progress-blue";
+    }
+
+    const encodedName = name.replace(/'/g, "\\'");
+    const detailId = `details-${name.replace(/\s/g, '_')}`;
+
+    html += `
+      <div class="customer" data-name="${name.toLowerCase()}" data-mobile="${data.mobile}">
+        <div class="customer-header" onclick="toggleDetails('${encodedName}')">
+          <span class="customer-name"><i class="fas fa-user"></i> ${name}</span>
+          <span class="rank ${rankLabel}"><i class="fas fa-${rankLabel === 'Trusted' ? 'crown' : rankLabel === 'Acquainted' ? 'handshake' : 'user-plus'}"></i> ${rankText}</span>
+        </div>
+        <div class="customer-info">
+          <span><i class="fas fa-file-invoice"></i> ${invoiceCount} Invoices</span>
+          <span><i class="fas fa-indian-rupee-sign"></i> ${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar ${progressColor}" style="width: ${progressPercent}%;"></div>
+        </div>
+        <div class="invoice-details" id="${detailId}">
+          <p><strong>Invoice Count:</strong> ${invoiceCount}</p>
+          <p><strong>Total Purchase:</strong> ₹${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+          ${data.invoices.map(inv => `
+            <div class="invoice">
+              <span onclick="event.stopPropagation(); openInvoiceModal('${inv.invoice}')"><i class="fas fa-file-invoice-dollar"></i> Invoice: ${inv.invoice}</span>
+              <span>₹${inv.value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+            </div>
+          `).join('')}
+          <div class="summary">Total: ₹${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          <div class="contact-buttons">
+            <button class="whatsapp-btn" onclick="event.stopPropagation(); openWhatsApp('${data.mobile}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+            <button class="call-btn" onclick="event.stopPropagation(); callCustomer('${data.mobile}')"><i class="fas fa-phone"></i> Call</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("ledgerContainer").innerHTML = html || "<p>No customers found for your shop.</p>";
+}
+
+function filterCustomers(customers, searchTerm) {
+  const customerElements = document.querySelectorAll('.customer');
+  
+  customerElements.forEach(customer => {
+    const name = customer.getAttribute('data-name');
+    const mobile = customer.getAttribute('data-mobile');
+    
+    if (name.includes(searchTerm) || mobile.includes(searchTerm)) {
+      customer.style.display = 'block';
+    } else {
+      customer.style.display = 'none';
+    }
+  });
 }
 
 function toggleDetails(name) {
@@ -599,6 +662,8 @@ function toggleDetails(name) {
 }
 
 function openInvoiceModal(invoiceNumber) {
+  currentInvoiceNumber = invoiceNumber;
+  
   // Find the invoice data
   const invoiceData = allRows.find(r => r["Invoice Number"] === invoiceNumber);
   
@@ -688,12 +753,16 @@ function callCustomer(mobile) {
   window.location.href = `tel:+91${mobile}`;
 }
 
+function redirectToInvoicePage() {
+  window.location.href = `invoice.html?invoice=${encodeURIComponent(currentInvoiceNumber)}`;
+}
+
 // Modal close functionality
 document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById("invoiceModal");
   const closeBtn = document.querySelector(".close");
   const closeModalBtn = document.getElementById("closeModal");
-  const printBtn = document.getElementById("printInvoice");
+  const viewFullInvoiceBtn = document.getElementById("viewFullInvoice");
   
   closeBtn.onclick = function() {
     modal.style.display = "none";
@@ -703,8 +772,8 @@ document.addEventListener('DOMContentLoaded', function() {
     modal.style.display = "none";
   }
   
-  printBtn.onclick = function() {
-    window.print();
+  viewFullInvoiceBtn.onclick = function() {
+    redirectToInvoicePage();
   }
   
   window.onclick = function(event) {
