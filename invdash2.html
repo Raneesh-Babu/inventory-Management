@@ -82,7 +82,6 @@
     transition: var(--transition);
     position: relative;
     overflow: hidden;
-    cursor: pointer;
   }
 
   .alert-box:hover {
@@ -351,6 +350,28 @@
     margin-top: 10px;
   }
 
+  #reader {
+    width: 100%;
+    height: 350px;
+    margin-top: 10px;
+    display: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    border: 2px solid var(--primary);
+  }
+
+  .scanner-active {
+    border: 2px solid var(--primary);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { border-color: var(--primary); }
+    50% { border-color: var(--accent); }
+    100% { border-color: var(--primary); }
+  }
+
   h3 {
     margin: 25px 0 15px;
     color: var(--gray-800);
@@ -420,65 +441,71 @@
   <div id="status"></div>
 
   <div class="alert-stats">
-    <div class="alert-box expired" onclick="toggleSection('expiredProducts')">
+    <div class="alert-box expired">
       <h3 id="expiredCount">0</h3>
       <p>Expired Products</p>
     </div>
-    <div class="alert-box expiring-7" onclick="toggleSection('expiring7Products')">
+    <div class="alert-box expiring-7">
       <h3 id="expiring7Count">0</h3>
       <p>Expiring in 7 Days</p>
     </div>
-    <div class="alert-box expiring-15" onclick="toggleSection('expiring15Products')">
+    <div class="alert-box expiring-15">
       <h3 id="expiring15Count">0</h3>
       <p>Expiring in 15 Days</p>
     </div>
-    <div class="alert-box expiring-30" onclick="toggleSection('expiring30Products')">
+    <div class="alert-box expiring-30">
       <h3 id="expiring30Count">0</h3>
       <p>Expiring in 30 Days</p>
     </div>
-    <div class="alert-box low-stock" onclick="toggleSection('lowStockProducts')">
+    <div class="alert-box low-stock">
       <h3 id="lowStockCount">0</h3>
       <p>Low Stock (< 3)</p>
     </div>
   </div>
 
+  <div class="section-header">
+    <h3><i class="fas fa-exclamation-triangle"></i> Alerts & Warnings</h3>
+    <button class="section-toggle" onclick="toggleSection('alertsSection')">
+      <i class="fas fa-chevron-down" id="alertsSectionToggle"></i> Show/Hide
+    </button>
+  </div>
   <div id="alertsSection">
     <div class="section-header">
-      <h3><i class="fas fa-skull-crossbones"></i> Expired Products</h3>
+      <h4><i class="fas fa-skull-crossbones"></i> Expired Products</h4>
       <button class="section-toggle" onclick="toggleSection('expiredProducts')">
-        <i class="fas fa-chevron-up" id="expiredProductsToggle"></i> Hide
+        <i class="fas fa-chevron-down" id="expiredProductsToggle"></i> Show/Hide
       </button>
     </div>
     <div id="expiredProducts"></div>
 
     <div class="section-header">
-      <h3><i class="fas fa-clock"></i> Expiring Soon (Next 7 Days)</h3>
+      <h4><i class="fas fa-clock"></i> Expiring Soon (Next 7 Days)</h4>
       <button class="section-toggle" onclick="toggleSection('expiring7Products')">
-        <i class="fas fa-chevron-up" id="expiring7ProductsToggle"></i> Hide
+        <i class="fas fa-chevron-down" id="expiring7ProductsToggle"></i> Show/Hide
       </button>
     </div>
     <div id="expiring7Products"></div>
 
     <div class="section-header">
-      <h3><i class="fas fa-calendar-week"></i> Expiring in 15 Days</h3>
+      <h4><i class="fas fa-calendar-week"></i> Expiring in 15 Days</h4>
       <button class="section-toggle" onclick="toggleSection('expiring15Products')">
-        <i class="fas fa-chevron-up" id="expiring15ProductsToggle"></i> Hide
+        <i class="fas fa-chevron-down" id="expiring15ProductsToggle"></i> Show/Hide
       </button>
     </div>
     <div id="expiring15Products"></div>
 
     <div class="section-header">
-      <h3><i class="fas fa-calendar-alt"></i> Expiring in 30 Days</h3>
+      <h4><i class="fas fa-calendar-alt"></i> Expiring in 30 Days</h4>
       <button class="section-toggle" onclick="toggleSection('expiring30Products')">
-        <i class="fas fa-chevron-up" id="expiring30ProductsToggle"></i> Hide
+        <i class="fas fa-chevron-down" id="expiring30ProductsToggle"></i> Show/Hide
       </button>
     </div>
     <div id="expiring30Products"></div>
 
     <div class="section-header">
-      <h3><i class="fas fa-exclamation-circle"></i> Low Stock Products (< 3)</h3>
+      <h4><i class="fas fa-exclamation-circle"></i> Low Stock Products (< 3)</h4>
       <button class="section-toggle" onclick="toggleSection('lowStockProducts')">
-        <i class="fas fa-chevron-up" id="lowStockProductsToggle"></i> Hide
+        <i class="fas fa-chevron-down" id="lowStockProductsToggle"></i> Show/Hide
       </button>
     </div>
     <div id="lowStockProducts"></div>
@@ -709,18 +736,12 @@ function toggleSection(sectionId) {
   
   if (section.style.display === "none") {
     section.style.display = "block";
-    if (toggleIcon) {
-      toggleIcon.classList.remove("fa-chevron-down");
-      toggleIcon.classList.add("fa-chevron-up");
-      toggleIcon.parentElement.innerHTML = '<i class="fas fa-chevron-up"></i> Hide';
-    }
+    toggleIcon.classList.remove("fa-chevron-down");
+    toggleIcon.classList.add("fa-chevron-up");
   } else {
     section.style.display = "none";
-    if (toggleIcon) {
-      toggleIcon.classList.remove("fa-chevron-up");
-      toggleIcon.classList.add("fa-chevron-down");
-      toggleIcon.parentElement.innerHTML = '<i class="fas fa-chevron-down"></i> Show';
-    }
+    toggleIcon.classList.remove("fa-chevron-up");
+    toggleIcon.classList.add("fa-chevron-down");
   }
 }
 
