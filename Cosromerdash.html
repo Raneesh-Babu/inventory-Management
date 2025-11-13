@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Ledger</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .ledger-container {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .customer {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .customer:hover {
+    background: #f9fafb;
+  }
+
+  .customer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .customer-name {
+    font-weight: 600;
+    font-size: 1.1em;
+  }
+
+  .rank {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    color: #fff;
+  }
+
+  .NewFace { background: #ff9800; }
+  .Acquainted { background: #2196f3; }
+  .Trusted { background: #4caf50; }
+
+  .invoice-details {
+    display: none;
+    padding: 8px 20px;
+    color: #444;
+  }
+
+  .invoice-details.active {
+    display: block;
+  }
+
+  .invoice {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed #ddd;
+  }
+
+  .summary {
+    margin-top: 10px;
+    text-align: right;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .progress-container {
+    margin-top: 8px;
+    background: #eee;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 8px;
+    border-radius: 10px;
+    transition: width 0.5s;
+  }
+
+  .progress-orange { background: #ff9800; }
+  .progress-blue { background: #2196f3; }
+  .progress-green { background: #4caf50; }
+
+</style>
+</head>
+<body>
+
+<h1>📒 Customer Ledger</h1>
+<div class="ledger-container" id="ledgerContainer">Loading data...</div>
+
+<script>
+const tableId = 736207;
+const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const apiUrl = `https://api.baserow.io/api/database/rows/table/${tableId}/?user_field_names=true`;
+const shopIdTag = localStorage.getItem("ShopIDTag");
+
+async function loadLedger() {
+  try {
+    const response = await fetch(apiUrl, {
+      headers: { Authorization: `Token ${apiKey}` }
+    });
+    const data = await response.json();
+    const rows = data.results.filter(r => r.ShopID === shopIdTag);
+
+    const customers = {};
+
+    // Group invoices by customer
+    rows.forEach(r => {
+      if (!customers[r["Costomer Name"]]) {
+        customers[r["Costomer Name"]] = { 
+          mobile: r["Mobile"], 
+          invoices: [],
+          totalValue: 0
+        };
+      }
+      customers[r["Costomer Name"]].invoices.push({
+        invoice: r["Invoice Number"],
+        value: parseFloat(r["Total Invoice Value"] || 0)
+      });
+      customers[r["Costomer Name"]].totalValue += parseFloat(r["Total Invoice Value"] || 0);
+    });
+
+    // Sort by total purchase value (descending)
+    const sortedCustomers = Object.entries(customers)
+      .sort((a, b) => b[1].totalValue - a[1].totalValue);
+
+    // Generate HTML
+    let html = "";
+    sortedCustomers.forEach(([name, data]) => {
+      const invoiceCount = data.invoices.length;
+      const totalValue = data.totalValue;
+
+      let rankLabel = "NewFace";
+      let rankText = "New Face";
+      let progressPercent = 25;
+      let progressColor = "progress-orange";
+
+      if (invoiceCount > 10 || totalValue > 50000) {
+        rankLabel = "Trusted";
+        rankText = "Trusted";
+        progressPercent = 100;
+        progressColor = "progress-green";
+      } else if (invoiceCount > 3) {
+        rankLabel = "Acquainted";
+        rankText = "Acquainted";
+        progressPercent = 60;
+        progressColor = "progress-blue";
+      }
+
+      html += `
+        <div class="customer" onclick="toggleDetails('${name.replace(/'/g, "\\'")}')">
+          <div class="customer-header">
+            <span class="customer-name">${name}</span>
+            <span class="rank ${rankLabel}">${rankText}</span>
+          </div>
+          <div class="progress-container">
+            <div class="progress-bar ${progressColor}" style="width: ${progressPercent}%;"></div>
+          </div>
+          <div class="invoice-details" id="details-${name.replace(/\s/g, '_')}">
+            ${data.invoices.map(inv => `
+              <div class="invoice">
+                <span>Invoice: ${inv.invoice}</span>
+                <span>₹${inv.value.toFixed(2)}</span>
+              </div>
+            `).join('')}
+            <div class="summary">Total: ₹${totalValue.toFixed(2)}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById("ledgerContainer").innerHTML = html || "<p>No customers found for your shop.</p>";
+  } catch (error) {
+    console.error(error);
+    document.getElementById("ledgerContainer").innerHTML = "<p>Error loading data.</p>";
+  }
+}
+
+function toggleDetails(name) {
+  const id = `details-${name.replace(/\s/g, '_')}`;
+  const el = document.getElementById(id);
+  el.classList.toggle("active");
+}
+
+loadLedger();
+</script>
+
+</body>
+</html>
