@@ -643,115 +643,6 @@
     background: #c82333;
   }
 
-  /* PIN Bypass Modal */
-  .pin-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10002;
-    display: none;
-  }
-
-  .pin-modal.active {
-    display: flex;
-  }
-
-  .pin-content {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    width: 90%;
-    max-width: 350px;
-    padding: 30px;
-    text-align: center;
-    animation: modalFadeIn 0.3s ease;
-  }
-
-  .pin-icon {
-    font-size: 48px;
-    color: var(--primary);
-    margin-bottom: 20px;
-  }
-
-  .pin-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--gray-800);
-  }
-
-  .pin-message {
-    color: var(--gray-600);
-    margin-bottom: 25px;
-    line-height: 1.5;
-  }
-
-  .pin-input-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-
-  .pin-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid var(--gray-300);
-    border-radius: var(--border-radius);
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    text-align: center;
-    letter-spacing: 8px;
-    transition: var(--transition);
-  }
-
-  .pin-input:focus {
-    border-color: var(--primary);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-  }
-
-  .pin-actions {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-  }
-
-  .pin-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: var(--border-radius);
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    min-width: 100px;
-  }
-
-  .pin-btn-cancel {
-    background: var(--gray-200);
-    color: var(--gray-700);
-  }
-
-  .pin-btn-cancel:hover {
-    background: var(--gray-300);
-  }
-
-  .pin-btn-submit {
-    background: var(--primary);
-    color: white;
-  }
-
-  .pin-btn-submit:hover {
-    background: var(--primary-dark);
-  }
-
   @keyframes modalFadeIn {
     from {
       opacity: 0;
@@ -917,24 +808,6 @@
     </div>
   </div>
 
-  <!-- PIN Bypass Modal -->
-  <div class="pin-modal" id="pinModal">
-    <div class="pin-content">
-      <div class="pin-icon">
-        <i class="fas fa-unlock-alt"></i>
-      </div>
-      <div class="pin-title">Enter PIN to Bypass Restrictions</div>
-      <div class="pin-message">Enter the security PIN to disable developer tools restrictions</div>
-      <div class="pin-input-container">
-        <input type="password" class="pin-input" id="pinInput" maxlength="4" placeholder="8089">
-      </div>
-      <div class="pin-actions">
-        <button class="pin-btn pin-btn-cancel" id="cancelPin">Cancel</button>
-        <button class="pin-btn pin-btn-submit" id="submitPin">Submit</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Sidebar Navigation -->
   <div class="sidebar" id="sidebar">
     <div class="app-header">
@@ -1045,396 +918,716 @@
           scrolling="yes"
           style="width: 100%; height: 100%; border: none;"
           allow="fullscreen"
-        ></iframe>
+          sandbox="allow-same-origin allow-forms allow-scripts allow-popups allow-popups-to-escape-sandbox">
+        </iframe>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  // DOM Elements
-  const appContainer = document.getElementById('appContainer');
-  const sidebar = document.getElementById('sidebar');
-  const mainContent = document.querySelector('.main-content');
-  const menuToggle = document.getElementById('menuToggle');
-  const collapseToggle = document.getElementById('collapseToggle');
-  const overlay = document.getElementById('overlay');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const contextLogout = document.getElementById('contextLogout');
-  const shopBadge = document.getElementById('shopBadge');
-  const contextMenu = document.getElementById('contextMenu');
-  const logoutModal = document.getElementById('logoutModal');
-  const cancelLogout = document.getElementById('cancelLogout');
-  const confirmLogout = document.getElementById('confirmLogout');
-  const fullscreenToggle = document.getElementById('fullscreenToggle');
-  const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
-  const securityWarning = document.getElementById('securityWarning');
-  const closeWarning = document.getElementById('closeWarning');
-  const navItems = document.querySelectorAll('.nav-item');
-  const currentPage = document.getElementById('currentPage');
-  const contentFrame = document.getElementById('contentFrame');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const iframeOverlay = document.getElementById('iframeOverlay');
-  const welcomeTitle = document.getElementById('welcomeTitle');
-  const pinModal = document.getElementById('pinModal');
-  const pinInput = document.getElementById('pinInput');
-  const submitPin = document.getElementById('submitPin');
-  const cancelPin = document.getElementById('cancelPin');
+// Get elements
+const sidebar = document.getElementById('sidebar');
+const menuToggle = document.getElementById('menuToggle');
+const overlay = document.getElementById('overlay');
+const navItems = document.querySelectorAll('.nav-item');
+const currentPage = document.getElementById('currentPage');
+const contentFrame = document.getElementById('contentFrame');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const logoutBtn = document.getElementById('logoutBtn');
+const shopBadge = document.getElementById('shopBadge');
+const collapseToggle = document.getElementById('collapseToggle');
+const welcomeTitle = document.getElementById('welcomeTitle');
+const fullscreenToggle = document.getElementById('fullscreenToggle');
+const appContainer = document.getElementById('appContainer');
+const contextMenu = document.getElementById('contextMenu');
+const contextLogout = document.getElementById('contextLogout');
+const iframeWrapper = document.getElementById('iframeWrapper');
+const securityWarning = document.getElementById('securityWarning');
+const closeWarning = document.getElementById('closeWarning');
+const iframeOverlay = document.getElementById('iframeOverlay');
+const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
 
-  // Security bypass state
-  let securityBypassed = false;
-  const BYPASS_PIN = "8089";
+// Logout Modal elements
+const logoutModal = document.getElementById('logoutModal');
+const cancelLogout = document.getElementById('cancelLogout');
+const confirmLogout = document.getElementById('confirmLogout');
 
-  // Initialize the app
-  function initApp() {
-    // Set welcome message with user name
-    welcomeTitle.textContent = "Welcome, User";
+// Authentication check
+function checkAuthentication() {
+  const shopIDTag = localStorage.getItem('ShopIDTag');
+  const nameTag = localStorage.getItem('NameTag');
+  const shopTag = localStorage.getItem('ShopTag');
+  
+  if (!shopIDTag || !nameTag || !shopTag) {
+    // User is not authenticated
+    console.log('User not authenticated, redirecting to login');
+    appContainer.classList.add('unauthorized');
     
-    // Set shop name
-    document.querySelector('.shop-badge').textContent = "Shop: Main Store";
+    // Load login page in iframe
+    contentFrame.src = 'login.html';
     
-    // Add event listeners
-    setupEventListeners();
+    // Update loading text
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    if (loadingText) {
+      loadingText.textContent = 'Loading Login...';
+    }
     
-    // Initialize security features
-    initSecurity();
+    // Hide navigation elements
+    sidebar.style.display = 'none';
+    
+    return false;
+  }
+  
+  // User is authenticated
+  console.log('User authenticated');
+  appContainer.classList.remove('unauthorized');
+  sidebar.style.display = 'flex';
+  
+  return true;
+}
+
+// Initialize authentication check on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const isAuthenticated = checkAuthentication();
+  
+  if (isAuthenticated) {
+    // Only proceed with normal initialization if authenticated
+    originalHeight = window.innerHeight;
+    
+    // Update UI with user info
+    updateUserInterface();
+  }
+});
+
+// Update UI with user information
+function updateUserInterface() {
+  const nameTag = localStorage.getItem('NameTag');
+  const shopTag = localStorage.getItem('ShopTag');
+  
+  // Update welcome title with user's name
+  if (nameTag) {
+    welcomeTitle.textContent = `Welcome, ${nameTag}`;
+  } else {
+    welcomeTitle.textContent = 'Welcome';
   }
 
-  // Setup all event listeners
-  function setupEventListeners() {
-    // Menu toggle for mobile
-    menuToggle.addEventListener('click', toggleSidebar);
-    
-    // Collapse toggle for sidebar
-    collapseToggle.addEventListener('click', toggleSidebarCollapse);
-    
-    // Overlay click to close sidebar on mobile
-    overlay.addEventListener('click', closeSidebar);
-    
-    // Logout buttons
-    logoutBtn.addEventListener('click', showLogoutModal);
-    contextLogout.addEventListener('click', showLogoutModal);
-    
-    // Logout modal actions
-    cancelLogout.addEventListener('click', hideLogoutModal);
-    confirmLogout.addEventListener('click', performLogout);
-    
-    // Context menu for shop badge
-    shopBadge.addEventListener('click', toggleContextMenu);
-    
-    // Fullscreen toggle
-    fullscreenToggle.addEventListener('click', toggleFullscreen);
-    
-    // Keyboard close button
-    keyboardCloseBtn.addEventListener('click', hideKeyboard);
-    
-    // Security warning close
-    closeWarning.addEventListener('click', hideSecurityWarning);
-    
-    // Navigation items
-    navItems.forEach(item => {
-      item.addEventListener('click', handleNavClick);
-    });
-    
-    // PIN bypass modal
-    submitPin.addEventListener('click', verifyPin);
-    cancelPin.addEventListener('click', hidePinModal);
-    pinInput.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') verifyPin();
-    });
-    
-    // Long press detection for close button
-    setupLongPressDetection();
-    
-    // Handle iframe load
-    contentFrame.addEventListener('load', hideLoading);
-    
-    // Handle window resize
-    window.addEventListener('resize', handleResize);
-    
-    // Handle focus/blur for keyboard detection
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
+  // Update shop badge
+  if (shopTag) {
+    const shopParts = shopTag.split('-');
+    const shopName = shopParts[0] || 'Shop';
+    shopBadge.innerHTML = `Shop: ${shopName}`;
   }
+}
 
-  // Initialize security features
-  function initSecurity() {
-    // Disable right-click context menu
-    document.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      showSecurityWarning();
-    });
+// Listen for authentication changes from iframe (login success)
+window.addEventListener('message', function(event) {
+  // Check if the message is from a trusted source (optional)
+  // if (event.origin !== "https://your-trusted-domain.com") return;
+  
+  if (event.data && event.data.type === 'LOGIN_SUCCESS') {
+    console.log('Login successful, updating UI');
     
-    // Disable text selection
-    document.addEventListener('selectstart', (e) => {
-      e.preventDefault();
-    });
+    // Update localStorage with user data
+    if (event.data.userData) {
+      localStorage.setItem('NameTag', event.data.userData.name || 'User');
+      localStorage.setItem('ShopIDTag', event.data.userData.shopId || '');
+      localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
+    }
     
-    // Disable drag and drop
-    document.addEventListener('dragstart', (e) => {
-      e.preventDefault();
-    });
+    // Re-check authentication
+    const isAuthenticated = checkAuthentication();
     
-    // Disable F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U
-    document.addEventListener('keydown', (e) => {
-      if (securityBypassed) return;
+    if (isAuthenticated) {
+      // Update UI
+      updateUserInterface();
       
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-        (e.ctrlKey && e.key === 'u')
-      ) {
-        e.preventDefault();
-        showSecurityWarning();
-      }
-    });
-    
-    // Detect if developer tools is open
-    detectDevTools();
-  }
-
-  // Setup long press detection for close button
-  function setupLongPressDetection() {
-    const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
-    let pressTimer;
-    
-    keyboardCloseBtn.addEventListener('mousedown', startPressTimer);
-    keyboardCloseBtn.addEventListener('touchstart', startPressTimer);
-    
-    keyboardCloseBtn.addEventListener('mouseup', clearPressTimer);
-    keyboardCloseBtn.addEventListener('mouseleave', clearPressTimer);
-    keyboardCloseBtn.addEventListener('touchend', clearPressTimer);
-    keyboardCloseBtn.addEventListener('touchcancel', clearPressTimer);
-    
-    function startPressTimer(e) {
-      e.preventDefault();
-      pressTimer = window.setTimeout(() => {
-        showPinModal();
-      }, 1000); // 1 second long press
-    }
-    
-    function clearPressTimer() {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
+      // Redirect to dashboard
+      contentFrame.src = 'Dashboard.html';
+      currentPage.textContent = 'Dashboard';
+      
+      // Update active nav item
+      navItems.forEach(nav => nav.classList.remove('active'));
+      navItems[0].classList.add('active');
     }
   }
+});
 
-  // Show PIN modal for bypass
-  function showPinModal() {
-    pinModal.classList.add('active');
-    pinInput.value = '';
-    pinInput.focus();
-  }
+// Keyboard detection and adjustment
+let isKeyboardActive = false;
+let originalHeight = window.innerHeight;
 
-  // Hide PIN modal
-  function hidePinModal() {
-    pinModal.classList.remove('active');
-  }
-
-  // Verify PIN code
-  function verifyPin() {
-    if (pinInput.value === BYPASS_PIN) {
-      securityBypassed = true;
-      hidePinModal();
-      // Show success message
-      alert('Security restrictions have been disabled. Developer tools can now be accessed.');
-    } else {
-      // Show error
-      pinInput.value = '';
-      pinInput.placeholder = 'Incorrect PIN! Try again';
-      pinInput.style.borderColor = 'var(--danger)';
-      setTimeout(() => {
-        pinInput.placeholder = '8089';
-        pinInput.style.borderColor = 'var(--gray-300)';
-      }, 2000);
+// Detect keyboard appearance
+window.addEventListener('resize', function() {
+  if (window.innerHeight < originalHeight * 0.7) {
+    // Keyboard is likely open
+    if (!isKeyboardActive) {
+      activateKeyboardMode();
+    }
+  } else {
+    // Keyboard is likely closed
+    if (isKeyboardActive) {
+      deactivateKeyboardMode();
     }
   }
+});
 
-  // Detect if developer tools is open
-  function detectDevTools() {
-    if (securityBypassed) return;
-    
-    const element = new Image();
-    Object.defineProperty(element, 'id', {
-      get: function() {
-        showSecurityWarning();
-      }
-    });
-    
-    console.log(element);
-    
-    // Check window dimensions
-    const widthThreshold = window.outerWidth - window.innerWidth > 160;
-    const heightThreshold = window.outerHeight - window.innerHeight > 160;
-    
-    if (widthThreshold || heightThreshold) {
-      showSecurityWarning();
-    }
-  }
-
-  // Show security warning
-  function showSecurityWarning() {
-    if (securityBypassed) return;
-    securityWarning.classList.add('active');
-  }
-
-  // Hide security warning
-  function hideSecurityWarning() {
-    securityWarning.classList.remove('active');
-  }
-
-  // Toggle sidebar on mobile
-  function toggleSidebar() {
-    sidebar.classList.toggle('active');
-    overlay.classList.toggle('active');
-  }
-
-  // Close sidebar on mobile
-  function closeSidebar() {
-    sidebar.classList.remove('active');
-    overlay.classList.remove('active');
-  }
-
-  // Toggle sidebar collapse
-  function toggleSidebarCollapse() {
-    sidebar.classList.toggle('collapsed');
-  }
-
-  // Show logout confirmation modal
-  function showLogoutModal() {
-    logoutModal.classList.add('active');
-    contextMenu.classList.remove('active');
-  }
-
-  // Hide logout confirmation modal
-  function hideLogoutModal() {
-    logoutModal.classList.remove('active');
-  }
-
-  // Perform logout action
-  function performLogout() {
-    // In a real app, this would make an API call to logout
-    alert('Logging out...');
-    hideLogoutModal();
-    // Redirect to login page
-    // window.location.href = 'login.html';
-  }
-
-  // Toggle context menu
-  function toggleContextMenu(e) {
-    e.stopPropagation();
-    contextMenu.classList.toggle('active');
-  }
-
-  // Close context menu when clicking elsewhere
-  document.addEventListener('click', () => {
-    contextMenu.classList.remove('active');
-  });
-
-  // Toggle fullscreen mode
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+// Focus and blur events for iframe content
+function setupIframeKeyboardHandling() {
+  try {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    if (iframeDoc) {
+      // Add event listeners to all input elements in iframe
+      const inputs = iframeDoc.querySelectorAll('input, textarea, select');
+      inputs.forEach(input => {
+        input.addEventListener('focus', handleIframeInputFocus);
+        input.addEventListener('blur', handleIframeInputBlur);
       });
-      fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+      
+      // Also handle dynamically added inputs
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) { // Element node
+              if (node.matches('input, textarea, select')) {
+                node.addEventListener('focus', handleIframeInputFocus);
+                node.addEventListener('blur', handleIframeInputBlur);
+              }
+              node.querySelectorAll('input, textarea, select').forEach(input => {
+                input.addEventListener('focus', handleIframeInputFocus);
+                input.addEventListener('blur', handleIframeInputBlur);
+              });
+            }
+          });
+        });
+      });
+      
+      observer.observe(iframeDoc.body, {
+        childList: true,
+        subtree: true
+      });
+    }
+  } catch (e) {
+    // Cross-origin iframe - use alternative approach
+    console.log('Cross-origin iframe detected, using resize-based keyboard detection');
+  }
+}
+
+function handleIframeInputFocus(event) {
+  activateKeyboardMode();
+  
+  // Scroll the input into view
+  setTimeout(() => {
+    event.target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+  }, 300);
+}
+
+function handleIframeInputBlur() {
+  // Don't immediately deactivate - wait to see if another input gets focus
+  setTimeout(() => {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    if (iframeDoc) {
+      const activeElement = iframeDoc.activeElement;
+      if (!activeElement || (activeElement.tagName !== 'INPUT' && 
+          activeElement.tagName !== 'TEXTAREA' && 
+          activeElement.tagName !== 'SELECT')) {
+        deactivateKeyboardMode();
       }
     }
-  }
+  }, 100);
+}
 
-  // Handle navigation item clicks
-  function handleNavClick(e) {
+function activateKeyboardMode() {
+  if (isKeyboardActive) return;
+  
+  isKeyboardActive = true;
+  appContainer.classList.add('keyboard-active');
+  keyboardCloseBtn.classList.add('active');
+  
+  // Store original scroll position
+  iframeWrapper.dataset.originalScrollTop = iframeWrapper.scrollTop;
+  
+  console.log('Keyboard mode activated');
+}
+
+function deactivateKeyboardMode() {
+  if (!isKeyboardActive) return;
+  
+  isKeyboardActive = false;
+  appContainer.classList.remove('keyboard-active');
+  keyboardCloseBtn.classList.remove('active');
+  
+  // Restore original scroll position
+  if (iframeWrapper.dataset.originalScrollTop) {
+    iframeWrapper.scrollTop = iframeWrapper.dataset.originalScrollTop;
+    delete iframeWrapper.dataset.originalScrollTop;
+  }
+  
+  console.log('Keyboard mode deactivated');
+}
+
+// Manual keyboard close button
+keyboardCloseBtn.addEventListener('click', function() {
+  // Blur any active input
+  try {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    if (iframeDoc && iframeDoc.activeElement) {
+      iframeDoc.activeElement.blur();
+    }
+  } catch (e) {
+    // Cross-origin iframe
+  }
+  
+  deactivateKeyboardMode();
+});
+
+// Also close keyboard when tapping outside inputs
+document.addEventListener('click', function(event) {
+  if (isKeyboardActive && !event.target.matches('input, textarea, select')) {
+    try {
+      const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+      if (iframeDoc && iframeDoc.activeElement) {
+        const activeTag = iframeDoc.activeElement.tagName;
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
+          return; // Don't blur if clicking outside but an input is still focused
+        }
+      }
+    } catch (e) {
+      // Cross-origin iframe
+    }
+    
+    deactivateKeyboardMode();
+  }
+});
+
+// Security restrictions for main window
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  showSecurityWarning('Right-click is disabled');
+});
+
+document.addEventListener('keydown', (e) => {
+  // Disable F12
+  if (e.key === 'F12') {
+    e.preventDefault();
+    showSecurityWarning('Developer tools are disabled');
+    return false;
+  }
+  
+  // Disable Ctrl+Shift+I
+  if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+    e.preventDefault();
+    showSecurityWarning('Developer tools are disabled');
+    return false;
+  }
+  
+  // Disable Ctrl+Shift+J
+  if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+    e.preventDefault();
+    showSecurityWarning('Developer tools are disabled');
+    return false;
+  }
+  
+  // Disable Ctrl+Shift+C
+  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+    e.preventDefault();
+    showSecurityWarning('Developer tools are disabled');
+    return false;
+  }
+  
+  // Disable Ctrl+U (view source)
+  if (e.ctrlKey && e.key === 'u') {
+    e.preventDefault();
+    showSecurityWarning('Viewing source code is disabled');
+    return false;
+  }
+});
+
+// Prevent text selection
+document.addEventListener('selectstart', (e) => {
+  e.preventDefault();
+});
+
+// Prevent drag and drop
+document.addEventListener('dragstart', (e) => {
+  e.preventDefault();
+});
+
+// Security for iframe content
+function applyIframeSecurity() {
+  try {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    const iframeWindow = contentFrame.contentWindow;
+    
+    if (iframeDoc && iframeWindow) {
+      // Apply security to iframe document
+      iframeDoc.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showSecurityWarning('Right-click is disabled');
+      });
+      
+      iframeDoc.addEventListener('keydown', (e) => {
+        // Disable F12 in iframe
+        if (e.key === 'F12') {
+          e.preventDefault();
+          showSecurityWarning('Developer tools are disabled');
+          return false;
+        }
+        
+        // Disable Ctrl+Shift+I in iframe
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+          e.preventDefault();
+          showSecurityWarning('Developer tools are disabled');
+          return false;
+        }
+        
+        // Disable Ctrl+Shift+J in iframe
+        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+          e.preventDefault();
+          showSecurityWarning('Developer tools are disabled');
+          return false;
+        }
+        
+        // Disable Ctrl+Shift+C in iframe
+        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+          e.preventDefault();
+          showSecurityWarning('Developer tools are disabled');
+          return false;
+        }
+        
+        // Disable Ctrl+U in iframe
+        if (e.ctrlKey && e.key === 'u') {
+          e.preventDefault();
+          showSecurityWarning('Viewing source code is disabled');
+          return false;
+        }
+      });
+      
+      // Prevent text selection in iframe
+      iframeDoc.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+      });
+      
+      // Prevent drag and drop in iframe
+      iframeDoc.addEventListener('dragstart', (e) => {
+        e.preventDefault();
+      });
+      
+      // Apply CSS to prevent text selection in iframe
+      iframeDoc.body.style.userSelect = 'none';
+      iframeDoc.body.style.webkitUserSelect = 'none';
+      iframeDoc.body.style.mozUserSelect = 'none';
+      iframeDoc.body.style.msUserSelect = 'none';
+      
+      // Override console methods in iframe
+      iframeWindow.console.log = function() {};
+      iframeWindow.console.info = function() {};
+      iframeWindow.console.warn = function() {};
+      iframeWindow.console.error = function() {};
+      iframeWindow.console.debug = function() {};
+      
+      // Block opening developer tools in iframe
+      iframeWindow.addEventListener('devtoolschange', function(e) {
+        showSecurityWarning('Developer tools are disabled');
+      });
+      
+      // Detect if devtools is open in iframe
+      const checkDevTools = function() {
+        const widthThreshold = iframeWindow.outerWidth - iframeWindow.innerWidth > 160;
+        const heightThreshold = iframeWindow.outerHeight - iframeWindow.innerHeight > 160;
+        
+        if (widthThreshold || heightThreshold) {
+          showSecurityWarning('Developer tools are disabled');
+        }
+      };
+      
+      setInterval(checkDevTools, 1000);
+    }
+  } catch (e) {
+    // Cross-origin iframe - use overlay method
+    console.log('Cross-origin iframe detected, using overlay security');
+    iframeOverlay.classList.add('active');
+  }
+}
+
+// Security warning function
+function showSecurityWarning(message) {
+  const warningText = securityWarning.querySelector('p');
+  if (warningText) {
+    warningText.textContent = message;
+  }
+  securityWarning.classList.add('active');
+}
+
+closeWarning.addEventListener('click', () => {
+  securityWarning.classList.remove('active');
+});
+
+// Fullscreen functionality
+function enterFullscreen() {
+  if (!document.fullscreenElement) {
+    if (appContainer.requestFullscreen) {
+      appContainer.requestFullscreen();
+    } else if (appContainer.webkitRequestFullscreen) {
+      appContainer.webkitRequestFullscreen();
+    } else if (appContainer.msRequestFullscreen) {
+      appContainer.msRequestFullscreen();
+    }
+    appContainer.classList.add('fullscreen');
+    fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+  }
+}
+
+function exitFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+  appContainer.classList.remove('fullscreen');
+  fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+}
+
+fullscreenToggle.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    enterFullscreen();
+  } else {
+    exitFullscreen();
+  }
+});
+
+// Handle fullscreen change events
+document.addEventListener('fullscreenchange', handleFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+function handleFullscreenChange() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+    appContainer.classList.remove('fullscreen');
+    fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+  } else {
+    fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+  }
+}
+
+// Toggle sidebar on mobile
+menuToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('active');
+  overlay.classList.toggle('active');
+});
+
+// Close sidebar when clicking overlay
+overlay.addEventListener('click', () => {
+  sidebar.classList.remove('active');
+  overlay.classList.remove('active');
+});
+
+// Collapse sidebar on desktop
+collapseToggle.addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
+});
+
+// Context menu for logout
+shopBadge.addEventListener('click', (e) => {
+  e.stopPropagation();
+  contextMenu.classList.toggle('active');
+});
+
+// Close context menu when clicking elsewhere
+document.addEventListener('click', (e) => {
+  if (!shopBadge.contains(e.target)) {
+    contextMenu.classList.remove('active');
+  }
+});
+
+// Context menu logout functionality
+contextLogout.addEventListener('click', () => {
+  showLogoutModal();
+});
+
+// Navigation handling - only if authenticated
+navItems.forEach(item => {
+  item.addEventListener('click', (e) => {
+    // Check authentication before navigation
+    if (!checkAuthentication()) {
+      e.preventDefault();
+      return;
+    }
+    
     e.preventDefault();
     
-    // Remove active class from all nav items
-    navItems.forEach(item => {
-      item.classList.remove('active');
-    });
+    const pageUrl = item.getAttribute('href');
+    const pageName = item.getAttribute('data-page');
     
-    // Add active class to clicked item
-    this.classList.add('active');
+    // Show loading
+    showLoading();
     
-    // Update current page title
-    const pageName = this.getAttribute('data-page');
+    // Update active state
+    navItems.forEach(nav => nav.classList.remove('active'));
+    item.classList.add('active');
+    
+    // Update current page
     currentPage.textContent = pageName;
     
-    // Update iframe source
-    const href = this.getAttribute('href');
-    showLoading();
-    contentFrame.src = href;
+    // Load content in iframe
+    contentFrame.src = pageUrl;
     
     // Close sidebar on mobile
     if (window.innerWidth <= 768) {
-      closeSidebar();
-    }
-  }
-
-  // Show loading overlay
-  function showLoading() {
-    loadingOverlay.style.display = 'flex';
-  }
-
-  // Hide loading overlay
-  function hideLoading() {
-    loadingOverlay.style.display = 'none';
-  }
-
-  // Handle window resize
-  function handleResize() {
-    if (window.innerWidth > 768) {
       sidebar.classList.remove('active');
       overlay.classList.remove('active');
     }
-  }
+    
+    // Close context menu
+    contextMenu.classList.remove('active');
+  });
+});
 
-  // Handle focus event for keyboard detection
-  function handleFocus() {
-    // Check if keyboard is likely open on mobile
-    if (window.innerHeight < window.outerHeight * 0.8) {
-      appContainer.classList.add('keyboard-active');
-      keyboardCloseBtn.classList.add('active');
-    }
-  }
+// Loading functions
+function showLoading() {
+  loadingOverlay.style.display = 'flex';
+}
 
-  // Handle blur event for keyboard detection
-  function handleBlur() {
-    // Keyboard might be closed
-    setTimeout(() => {
-      if (window.innerHeight >= window.outerHeight * 0.9) {
-        appContainer.classList.remove('keyboard-active');
-        keyboardCloseBtn.classList.remove('active');
+function hideLoading() {
+  loadingOverlay.style.display = 'none';
+  
+  setTimeout(() => {
+    try {
+      const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+      if (iframeDoc && iframeDoc.body) {
+        // Ensure iframe content is scrollable
+        iframeDoc.body.style.overflow = 'auto';
+        iframeDoc.body.style.overflowX = 'hidden';
+        iframeDoc.body.style.maxWidth = '100%';
+        iframeDoc.body.style.boxSizing = 'border-box';
+        
+        const allElements = iframeDoc.querySelectorAll('*');
+        allElements.forEach(el => {
+          el.style.boxSizing = 'border-box';
+          el.style.maxWidth = '100%';
+        });
+        
+        const tables = iframeDoc.querySelectorAll('table');
+        tables.forEach(table => {
+          table.style.maxWidth = '100%';
+          table.style.overflowX = 'auto';
+          table.style.display = 'block';
+        });
+        
+        // Apply security to iframe content
+        applyIframeSecurity();
+        
+        // Setup keyboard handling for iframe inputs
+        setupIframeKeyboardHandling();
       }
-    }, 300);
-  }
+    } catch (e) {
+      // Cross-origin iframe
+      forceIframeScroll();
+      iframeOverlay.classList.add('active');
+    }
+  }, 500);
+}
 
-  // Hide keyboard (for mobile)
-  function hideKeyboard() {
-    // Focus and blur to hide keyboard
-    const input = document.createElement('input');
-    input.setAttribute('type', 'text');
-    input.style.position = 'absolute';
-    input.style.opacity = '0';
-    input.style.height = '0';
-    input.style.fontSize = '16px'; // Prevents zoom on iOS
-    document.body.appendChild(input);
-    input.focus();
-    setTimeout(() => {
-      input.blur();
-      document.body.removeChild(input);
-      appContainer.classList.remove('keyboard-active');
-      keyboardCloseBtn.classList.remove('active');
-    }, 100);
-  }
+function forceIframeScroll() {
+  // Ensure iframe wrapper is scrollable
+  iframeWrapper.style.overflow = 'auto';
+  iframeWrapper.style.overflowX = 'hidden';
+  iframeWrapper.style.overflowY = 'auto';
+  
+  // Ensure iframe itself is scrollable
+  contentFrame.style.overflow = 'auto';
+  contentFrame.style.overflowX = 'hidden';
+  contentFrame.style.maxWidth = '100%';
+}
 
-  // Initialize the app when DOM is loaded
-  document.addEventListener('DOMContentLoaded', initApp);
+// Logout Modal Functions
+function showLogoutModal() {
+  logoutModal.classList.add('active');
+  // Close context menu if open
+  contextMenu.classList.remove('active');
+}
+
+function hideLogoutModal() {
+  logoutModal.classList.remove('active');
+}
+
+// Logout functionality
+function performLogout() {
+  // Clear all localStorage data
+  localStorage.clear();
+  
+  // Hide the modal
+  hideLogoutModal();
+  
+  // Redirect to login page
+  checkAuthentication();
+}
+
+// Logout button event listeners
+logoutBtn.addEventListener('click', showLogoutModal);
+cancelLogout.addEventListener('click', hideLogoutModal);
+confirmLogout.addEventListener('click', performLogout);
+
+// Close modal when clicking outside
+logoutModal.addEventListener('click', (e) => {
+  if (e.target === logoutModal) {
+    hideLogoutModal();
+  }
+});
+
+// Handle iframe loading events
+contentFrame.addEventListener('load', () => {
+  hideLoading();
+  
+  setTimeout(() => {
+    forceIframeScroll();
+  }, 1000);
+});
+
+contentFrame.addEventListener('error', () => {
+  hideLoading();
+  loadingOverlay.innerHTML = `
+    <div style="text-align: center;">
+      <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--danger); margin-bottom: 15px;"></i>
+      <div class="loading-text">Failed to load page</div>
+      <button onclick="retryLoading()" style="margin-top: 15px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;">Retry</button>
+    </div>
+  `;
+  loadingOverlay.style.display = 'flex';
+});
+
+function retryLoading() {
+  const activeNav = document.querySelector('.nav-item.active');
+  if (activeNav) {
+    showLoading();
+    contentFrame.src = activeNav.getAttribute('href');
+  }
+}
+
+// Ensure proper height calculation
+function updateIframeHeight() {
+  const iframeContainer = document.querySelector('.iframe-container');
+  const topBar = document.querySelector('.top-bar');
+  const topBarHeight = topBar.offsetHeight;
+  
+  iframeContainer.style.height = `calc(100vh - ${topBarHeight}px)`;
+}
+
+// Initial setup
+window.addEventListener('DOMContentLoaded', () => {
+  updateIframeHeight();
+  forceIframeScroll();
+});
+
+window.addEventListener('resize', updateIframeHeight);
+
+// Auto-hide loading after 10 seconds (fallback)
+setTimeout(hideLoading, 10000);
 </script>
 </body>
 </html>
