@@ -4,21 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sales Invoice</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
-    --primary: #4361ee;
-    --primary-dark: #3a56d4;
-    --secondary: #7209b7;
+    --primary: #6a11cb;
+    --primary-dark: #2575fc;
+    --secondary: #ff6b6b;
     --light: #f8f9fa;
-    --dark: #212529;
-    --success: #4cc9f0;
-    --danger: #f72585;
-    --warning: #f8961e;
-    --info: #4895ef;
-    --gray: #6c757d;
-    --gray-light: #e9ecef;
+    --dark: #2d3436;
+    --success: #00b894;
+    --danger: #e84393;
+    --warning: #fdcb6e;
+    --info: #74b9ff;
+    --gray: #636e72;
+    --gray-light: #dfe6e9;
     --border-radius: 12px;
-    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
   }
   
@@ -30,20 +31,27 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: var(--dark);
     line-height: 1.6;
     font-size: 16px;
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
   }
   
   h2 {
-    color: var(--primary);
+    color: white;
     text-align: center;
     margin-bottom: 30px;
     font-weight: 700;
-    font-size: 2rem;
+    font-size: 2.2rem;
     position: relative;
     padding-bottom: 15px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
   
   h2:after {
@@ -52,7 +60,7 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 80px;
+    width: 100px;
     height: 4px;
     background: linear-gradient(to right, var(--primary), var(--secondary));
     border-radius: 2px;
@@ -73,7 +81,7 @@
     display: inline-block;
     width: 6px;
     height: 20px;
-    background: var(--primary);
+    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
     margin-right: 10px;
     border-radius: 3px;
   }
@@ -89,7 +97,8 @@
   }
   
   .section:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
   }
   
   input, select, textarea, button {
@@ -106,7 +115,7 @@
   input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.2);
   }
   
   button {
@@ -126,7 +135,7 @@
   
   button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    box-shadow: 0 6px 15px rgba(106, 17, 203, 0.4);
   }
   
   button:active {
@@ -223,18 +232,18 @@
   }
   
   .save-btn {
-    background: linear-gradient(to right, var(--success), #2a9d8f);
+    background: linear-gradient(to right, var(--success), #00a085);
     padding: 15px 30px;
     font-size: 1.1rem;
   }
   
   .scan-btn {
-    background: linear-gradient(to right, var(--warning), #e76f51);
+    background: linear-gradient(to right, var(--warning), #e67e22);
     margin-bottom: 15px;
   }
   
   .remove-btn {
-    background: linear-gradient(to right, var(--danger), #b5179e);
+    background: linear-gradient(to right, var(--danger), #c44569);
     padding: 8px 12px;
     width: auto;
     font-size: 0.9rem;
@@ -261,7 +270,7 @@
     background: white;
     padding: 30px;
     border-radius: var(--border-radius);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
     width: 90%;
     max-width: 500px;
     max-height: 80vh;
@@ -320,7 +329,7 @@
   
   .batch-item.selected {
     border-color: var(--primary);
-    background: var(--primary);
+    background: linear-gradient(to right, var(--primary), var(--primary-dark));
     color: white;
   }
   
@@ -376,7 +385,7 @@
   }
   
   .add-to-invoice-btn {
-    background: linear-gradient(to right, var(--success), #2a9d8f);
+    background: linear-gradient(to right, var(--success), #00a085);
     margin-top: 20px;
   }
   
@@ -658,13 +667,10 @@
 <body>
 
 <div class="container">
-  <!-- Heading section is hidden as requested -->
-  <div style="display: none;">
-    <h2>Sales Invoice Form</h2>
-  </div>
+  <h2><i class="fas fa-file-invoice"></i> Sales Invoice Form</h2>
 
   <div class="section" id="customerSection">
-    <h3>Customer Details</h3>
+    <h3><i class="fas fa-user"></i> Customer Details</h3>
     <input type="text" id="customerSearch" placeholder="Search by Customer Name or Mobile">
     <div id="customerList"></div>
     <input type="text" id="CostomerName" placeholder="Customer Name">
@@ -674,8 +680,8 @@
   </div>
 
   <div class="section" id="productSection">
-    <h3>Product Details</h3>
-    <button class="scan-btn" onclick="toggleCamera()">📷 Scan Product ID</button>
+    <h3><i class="fas fa-box"></i> Product Details</h3>
+    <button class="scan-btn" onclick="toggleCamera()"><i class="fas fa-camera"></i> Scan Product ID</button>
     <video id="cameraView" autoplay></video>
     <input type="text" id="productSearch" placeholder="Search Product Name or Product ID">
     <div id="productList"></div>
@@ -688,13 +694,13 @@
   </div>
 
   <div class="section">
-    <h3>Invoice Summary</h3>
+    <h3><i class="fas fa-receipt"></i> Invoice Summary</h3>
     <div class="invoice-summary">
       <div>
-        <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
-        <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
+        <p><b><i class="fas fa-hashtag"></i> Invoice Number:</b> <span id="invoiceNum"></span></p>
+        <p><b><i class="fas fa-rupee-sign"></i> Total:</b> ₹<span id="grandTotal">0</span></p>
       </div>
-      <button class="save-btn" onclick="saveInvoice()">💾 Save Invoice</button>
+      <button class="save-btn" onclick="saveInvoice()"><i class="fas fa-save"></i> Save Invoice</button>
     </div>
   </div>
 </div>
@@ -703,13 +709,13 @@
 <div id="batchModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 class="modal-title">Select Batch & Quantity</h3>
-      <button class="close-btn" onclick="closeBatchModal()">&times;</button>
+      <h3 class="modal-title"><i class="fas fa-layer-group"></i> Select Batch & Quantity</h3>
+      <button class="close-btn" onclick="closeBatchModal()"><i class="fas fa-times"></i></button>
     </div>
     
     <div class="product-info">
       <h4 id="modalProductName"></h4>
-      <p>Price: ₹<span id="modalProductPrice"></span></p>
+      <p><i class="fas fa-tag"></i> Price: ₹<span id="modalProductPrice"></span></p>
     </div>
     
     <div class="batch-list" id="batchList">
@@ -717,16 +723,16 @@
     </div>
     
     <div class="quantity-section">
-      <label for="quantityInput"><b>Quantity:</b></label>
+      <label for="quantityInput"><b><i class="fas fa-cubes"></i> Quantity:</b></label>
       <div class="quantity-controls">
-        <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+        <button class="quantity-btn" onclick="decreaseQuantity()"><i class="fas fa-minus"></i></button>
         <input type="number" id="quantityInput" class="quantity-input" value="1" min="1">
-        <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+        <button class="quantity-btn" onclick="increaseQuantity()"><i class="fas fa-plus"></i></button>
       </div>
-      <p id="maxQuantityInfo">Maximum available: <span id="maxQuantity">0</span></p>
+      <p id="maxQuantityInfo"><i class="fas fa-box-open"></i> Maximum available: <span id="maxQuantity">0</span></p>
     </div>
     
-    <button class="add-to-invoice-btn" onclick="addToInvoice()">Add to Invoice</button>
+    <button class="add-to-invoice-btn" onclick="addToInvoice()"><i class="fas fa-cart-plus"></i> Add to Invoice</button>
   </div>
 </div>
 
@@ -737,8 +743,8 @@
       <div id="alertIcon" class="modal-icon"></div>
       <div id="alertMessage" class="modal-message"></div>
       <div id="alertActions" class="modal-actions">
-        <button id="alertConfirmBtn" style="display: none;">OK</button>
-        <button id="alertCancelBtn" style="display: none;">Cancel</button>
+        <button id="alertConfirmBtn" style="display: none;"><i class="fas fa-check"></i> OK</button>
+        <button id="alertCancelBtn" style="display: none;"><i class="fas fa-times"></i> Cancel</button>
       </div>
     </div>
   </div>
@@ -788,19 +794,19 @@ function showAlert(message, type = "info", onConfirm = null, onCancel = null) {
   icon.className = "modal-icon";
   switch(type) {
     case "success":
-      icon.innerHTML = "✅";
+      icon.innerHTML = '<i class="fas fa-check-circle"></i>';
       icon.classList.add("success-icon");
       break;
     case "error":
-      icon.innerHTML = "❌";
+      icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
       icon.classList.add("error-icon");
       break;
     case "warning":
-      icon.innerHTML = "⚠️";
+      icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
       icon.classList.add("warning-icon");
       break;
     default:
-      icon.innerHTML = "ℹ️";
+      icon.innerHTML = '<i class="fas fa-info-circle"></i>';
       icon.classList.add("info-icon");
   }
   
@@ -839,7 +845,7 @@ document.getElementById("customerSearch").addEventListener("input", async functi
   list.innerHTML = "";
   filtered.forEach(c => {
     const div = document.createElement("div");
-    div.textContent = `${c["Costomer Name"]} (${c["Mobile"]})`;
+    div.innerHTML = `<i class="fas fa-user"></i> ${c["Costomer Name"]} (${c["Mobile"]})`;
     div.onclick = () => {
       document.getElementById("CostomerName").value = c["Costomer Name"];
       document.getElementById("Mobile").value = c["Mobile"];
@@ -867,7 +873,7 @@ document.getElementById("productSearch").addEventListener("input", async functio
   list.innerHTML = "";
   filtered.forEach(p => {
     const div = document.createElement("div");
-    div.textContent = `${p["Product Name"]} (₹${p["Price"]})`;
+    div.innerHTML = `<i class="fas fa-box"></i> ${p["Product Name"]} (₹${p["Price"]})`;
     div.onclick = () => selectProduct(p);
     list.appendChild(div);
   });
@@ -906,14 +912,14 @@ function showBatchModal() {
   batchList.innerHTML = "";
   
   if (availableBatches.length === 0) {
-    batchList.innerHTML = '<div class="no-batches">No batches available</div>';
+    batchList.innerHTML = '<div class="no-batches"><i class="fas fa-box-open"></i> No batches available</div>';
   } else {
     availableBatches.forEach((batch, index) => {
       const batchItem = document.createElement("div");
       batchItem.className = "batch-item";
       batchItem.innerHTML = `
         <div class="batch-info">
-          <div class="batch-name">Batch ${batch["Batch No"]}</div>
+          <div class="batch-name"><i class="fas fa-layer-group"></i> Batch ${batch["Batch No"]}</div>
           <div class="batch-count">Available: ${batch["Count"]}</div>
         </div>
       `;
@@ -1013,7 +1019,7 @@ function addToInvoice() {
     <td>${quantity}</td>
     <td>${currentProduct["Price"]}</td>
     <td>${total}</td>
-    <td><button class="remove-btn" onclick="this.closest('tr').remove();updateTotal()">❌</button></td>
+    <td><button class="remove-btn" onclick="this.closest('tr').remove();updateTotal()"><i class="fas fa-trash"></i></button></td>
   `;
   document.querySelector("#productTable tbody").appendChild(row);
   updateTotal();
@@ -1047,7 +1053,7 @@ async function saveInvoice() {
   // Show saving indicator
   const saveBtn = document.querySelector('.save-btn');
   const originalText = saveBtn.innerHTML;
-  saveBtn.innerHTML = '⏳ Saving...';
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
   saveBtn.disabled = true;
 
   try {
