@@ -519,6 +519,117 @@
     font-size: 14px;
   }
 
+  /* Modal Alert Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 400px;
+    width: 100%;
+    transform: translateY(-20px);
+    transition: var(--transition);
+    overflow: hidden;
+  }
+
+  .modal-overlay.active .modal {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    padding: 20px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .modal-icon {
+    font-size: 24px;
+    width: 30px;
+    text-align: center;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .modal-body {
+    padding: 20px;
+    color: var(--gray-700);
+    line-height: 1.5;
+  }
+
+  .modal-footer {
+    padding: 15px 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--gray-200);
+  }
+
+  .modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 80px;
+  }
+
+  .modal-btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .modal-btn-primary:hover {
+    background: var(--primary-dark);
+  }
+
+  .modal-btn-secondary {
+    background: var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .modal-btn-secondary:hover {
+    background: var(--gray-300);
+  }
+
+  .modal-btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .modal-btn-danger:hover {
+    background: #c82333;
+  }
+
   /* Security Warning */
   .security-warning {
     position: fixed;
@@ -530,7 +641,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 10001;
     color: white;
     font-size: 18px;
     text-align: center;
@@ -642,6 +753,20 @@
     .keyboard-active .overlay {
       display: none;
     }
+
+    /* Modal adjustments for mobile */
+    .modal {
+      max-width: 100%;
+      margin: 0 10px;
+    }
+
+    .modal-footer {
+      flex-direction: column;
+    }
+
+    .modal-btn {
+      width: 100%;
+    }
   }
 
   /* Scrollbar Styling */
@@ -687,6 +812,24 @@
 </head>
 <body>
 <div class="app-container" id="appContainer">
+  <!-- Modal Alert System -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="modal-header" id="modalHeader">
+        <div class="modal-icon" id="modalIcon">
+          <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="modal-title" id="modalTitle">Information</div>
+      </div>
+      <div class="modal-body" id="modalBody">
+        This is a modal alert message.
+      </div>
+      <div class="modal-footer" id="modalFooter">
+        <!-- Buttons will be dynamically added here -->
+      </div>
+    </div>
+  </div>
+
   <!-- Keyboard Close Button -->
   <button class="keyboard-close-btn" id="keyboardCloseBtn">
     <i class="fas fa-keyboard"></i>
@@ -850,6 +993,149 @@ const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
 const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
+
+// Modal elements
+const modalOverlay = document.getElementById('modalOverlay');
+const modal = document.getElementById('modal');
+const modalHeader = document.getElementById('modalHeader');
+const modalIcon = document.getElementById('modalIcon');
+const modalTitle = document.getElementById('modalTitle');
+const modalBody = document.getElementById('modalBody');
+const modalFooter = document.getElementById('modalFooter');
+
+// Modal Alert System
+class ModalAlert {
+  static show(options) {
+    return new Promise((resolve) => {
+      // Set modal content
+      modalTitle.textContent = options.title || 'Information';
+      modalBody.textContent = options.message || '';
+      
+      // Set modal type (affects styling)
+      const types = {
+        info: { icon: 'info-circle', color: 'var(--primary)', class: 'info' },
+        success: { icon: 'check-circle', color: 'var(--success)', class: 'success' },
+        warning: { icon: 'exclamation-triangle', color: 'var(--warning)', class: 'warning' },
+        error: { icon: 'times-circle', color: 'var(--danger)', class: 'error' },
+        question: { icon: 'question-circle', color: 'var(--primary)', class: 'question' }
+      };
+      
+      const type = types[options.type] || types.info;
+      modalIcon.innerHTML = `<i class="fas fa-${type.icon}"></i>`;
+      modalHeader.style.background = type.color;
+      
+      // Clear previous buttons
+      modalFooter.innerHTML = '';
+      
+      // Add buttons based on options
+      if (options.buttons && options.buttons.length > 0) {
+        options.buttons.forEach(button => {
+          const btn = document.createElement('button');
+          btn.className = `modal-btn ${button.class || 'modal-btn-primary'}`;
+          btn.textContent = button.text;
+          btn.onclick = () => {
+            modalOverlay.classList.remove('active');
+            resolve(button.value || button.text);
+          };
+          modalFooter.appendChild(btn);
+        });
+      } else {
+        // Default OK button
+        const okBtn = document.createElement('button');
+        okBtn.className = 'modal-btn modal-btn-primary';
+        okBtn.textContent = 'OK';
+        okBtn.onclick = () => {
+          modalOverlay.classList.remove('active');
+          resolve('OK');
+        };
+        modalFooter.appendChild(okBtn);
+      }
+      
+      // Show modal
+      modalOverlay.classList.add('active');
+      
+      // Close on overlay click (outside modal)
+      const closeOnOverlay = (e) => {
+        if (e.target === modalOverlay) {
+          modalOverlay.classList.remove('active');
+          modalOverlay.removeEventListener('click', closeOnOverlay);
+          resolve('cancel');
+        }
+      };
+      
+      modalOverlay.addEventListener('click', closeOnOverlay);
+    });
+  }
+  
+  // Convenience methods
+  static alert(message, title = 'Information') {
+    return ModalAlert.show({
+      title: title,
+      message: message,
+      type: 'info'
+    });
+  }
+  
+  static confirm(message, title = 'Confirmation') {
+    return ModalAlert.show({
+      title: title,
+      message: message,
+      type: 'question',
+      buttons: [
+        { text: 'Cancel', class: 'modal-btn-secondary', value: false },
+        { text: 'OK', class: 'modal-btn-primary', value: true }
+      ]
+    });
+  }
+  
+  static prompt(message, title = 'Input', defaultValue = '') {
+    return new Promise((resolve) => {
+      // Create input field
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = defaultValue;
+      input.style.width = '100%';
+      input.style.padding = '10px';
+      input.style.border = '1px solid var(--gray-300)';
+      input.style.borderRadius = '6px';
+      input.style.marginTop = '10px';
+      
+      modalBody.innerHTML = message;
+      modalBody.appendChild(input);
+      
+      ModalAlert.show({
+        title: title,
+        type: 'info',
+        buttons: [
+          { text: 'Cancel', class: 'modal-btn-secondary', value: null },
+          { text: 'OK', class: 'modal-btn-primary', value: true }
+        ]
+      }).then(result => {
+        if (result === true) {
+          resolve(input.value);
+        } else {
+          resolve(null);
+        }
+      });
+      
+      // Focus input and select text
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 300);
+    });
+  }
+}
+
+// Replace standard alert with modal
+window.alert = function(message) {
+  return ModalAlert.alert(message);
+};
+
+// Replace standard confirm with modal
+window.confirm = function(message) {
+  return ModalAlert.confirm(message);
+};
 
 // Keyboard detection and adjustment
 let isKeyboardActive = false;
@@ -1335,7 +1621,13 @@ document.addEventListener('click', (e) => {
 
 // Context menu logout functionality
 contextLogout.addEventListener('click', () => {
-  performLogout();
+  // Use modal confirm instead of native confirm
+  ModalAlert.confirm('Are you sure you want to logout?', 'Logout Confirmation')
+    .then(result => {
+      if (result) {
+        performLogout();
+      }
+    });
 });
 
 // Navigation handling
@@ -1423,16 +1715,26 @@ function forceIframeScroll() {
 
 // Logout functionality
 function performLogout() {
-  if (confirm('Are you sure you want to logout?')) {
-    // Clear all localStorage data
-    localStorage.clear();
-    
-    // Redirect to login page
-    window.location.href = 'login.html';
-  }
+  // Clear all localStorage data
+  localStorage.clear();
+  
+  // Show logout success message
+  ModalAlert.alert('You have been logged out successfully.', 'Logout Success')
+    .then(() => {
+      // Redirect to login page
+      window.location.href = 'login.html';
+    });
 }
 
-logoutBtn.addEventListener('click', performLogout);
+logoutBtn.addEventListener('click', () => {
+  // Use modal confirm instead of native confirm
+  ModalAlert.confirm('Are you sure you want to logout?', 'Logout Confirmation')
+    .then(result => {
+      if (result) {
+        performLogout();
+      }
+    });
+});
 
 // Handle iframe loading events
 contentFrame.addEventListener('load', () => {
