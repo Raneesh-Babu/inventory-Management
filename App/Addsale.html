@@ -7,19 +7,19 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
-    --primary: #6a11cb;
-    --primary-dark: #2575fc;
-    --secondary: #ff6b6b;
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #7209b7;
     --light: #f8f9fa;
-    --dark: #2d3436;
-    --success: #00b894;
-    --danger: #e84393;
-    --warning: #fdcb6e;
-    --info: #74b9ff;
-    --gray: #636e72;
-    --gray-light: #dfe6e9;
+    --dark: #212529;
+    --success: #4cc9f0;
+    --danger: #f72585;
+    --warning: #f8961e;
+    --info: #4895ef;
+    --gray: #6c757d;
+    --gray-light: #e9ecef;
     --border-radius: 12px;
-    --box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
   }
   
@@ -31,27 +31,20 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
     color: var(--dark);
     line-height: 1.6;
     font-size: 16px;
-    min-height: 100vh;
-  }
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
   }
   
   h2 {
-    color: white;
+    color: var(--primary);
     text-align: center;
     margin-bottom: 30px;
     font-weight: 700;
-    font-size: 2.2rem;
+    font-size: 2rem;
     position: relative;
     padding-bottom: 15px;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
   
   h2:after {
@@ -60,7 +53,7 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 100px;
+    width: 80px;
     height: 4px;
     background: linear-gradient(to right, var(--primary), var(--secondary));
     border-radius: 2px;
@@ -81,7 +74,7 @@
     display: inline-block;
     width: 6px;
     height: 20px;
-    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+    background: var(--primary);
     margin-right: 10px;
     border-radius: 3px;
   }
@@ -97,8 +90,7 @@
   }
   
   .section:hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   }
   
   input, select, textarea, button {
@@ -115,7 +107,7 @@
   input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.2);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
   }
   
   button {
@@ -135,7 +127,7 @@
   
   button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(106, 17, 203, 0.4);
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
   }
   
   button:active {
@@ -232,18 +224,18 @@
   }
   
   .save-btn {
-    background: linear-gradient(to right, var(--success), #00a085);
+    background: linear-gradient(to right, var(--success), #2a9d8f);
     padding: 15px 30px;
     font-size: 1.1rem;
   }
   
   .scan-btn {
-    background: linear-gradient(to right, var(--warning), #e67e22);
+    background: linear-gradient(to right, var(--warning), #e76f51);
     margin-bottom: 15px;
   }
   
   .remove-btn {
-    background: linear-gradient(to right, var(--danger), #c44569);
+    background: linear-gradient(to right, var(--danger), #b5179e);
     padding: 8px 12px;
     width: auto;
     font-size: 0.9rem;
@@ -270,7 +262,7 @@
     background: white;
     padding: 30px;
     border-radius: var(--border-radius);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     width: 90%;
     max-width: 500px;
     max-height: 80vh;
@@ -329,7 +321,7 @@
   
   .batch-item.selected {
     border-color: var(--primary);
-    background: linear-gradient(to right, var(--primary), var(--primary-dark));
+    background: var(--primary);
     color: white;
   }
   
@@ -385,7 +377,7 @@
   }
   
   .add-to-invoice-btn {
-    background: linear-gradient(to right, var(--success), #00a085);
+    background: linear-gradient(to right, var(--success), #2a9d8f);
     margin-top: 20px;
   }
   
@@ -396,50 +388,83 @@
   }
   
   /* Alert Modal Styles */
-  .alert-modal .modal-content {
-    max-width: 400px;
+  .alert-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    backdrop-filter: blur(5px);
   }
   
-  .alert-modal .modal-body {
-    padding: 20px 0;
+  .alert-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 400px;
     text-align: center;
   }
   
-  .alert-modal .modal-icon {
+  .alert-icon {
     font-size: 3rem;
-    margin-bottom: 15px;
-  }
-  
-  .alert-modal .modal-message {
-    font-size: 1.1rem;
     margin-bottom: 20px;
   }
   
-  .alert-modal .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-  
-  .alert-modal .modal-actions button {
-    width: auto;
-    padding: 10px 20px;
-  }
-  
-  .success-icon {
+  .alert-success .alert-icon {
     color: var(--success);
   }
   
-  .error-icon {
+  .alert-error .alert-icon {
     color: var(--danger);
   }
   
-  .warning-icon {
+  .alert-warning .alert-icon {
     color: var(--warning);
   }
   
-  .info-icon {
+  .alert-info .alert-icon {
     color: var(--info);
+  }
+  
+  .alert-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--dark);
+  }
+  
+  .alert-message {
+    margin-bottom: 25px;
+    color: var(--gray);
+    line-height: 1.5;
+  }
+  
+  .alert-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    width: auto;
+    margin: 0 auto;
+  }
+  
+  .alert-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
   }
   
   /* Responsive Design */
@@ -667,7 +692,10 @@
 <body>
 
 <div class="container">
-  <h2><i class="fas fa-file-invoice"></i> Sales Invoice Form</h2>
+  <!-- Heading is hidden as requested -->
+  <div style="display: none;">
+    <h2>Sales Invoice Form</h2>
+  </div>
 
   <div class="section" id="customerSection">
     <h3><i class="fas fa-user"></i> Customer Details</h3>
@@ -694,11 +722,11 @@
   </div>
 
   <div class="section">
-    <h3><i class="fas fa-receipt"></i> Invoice Summary</h3>
+    <h3><i class="fas fa-file-invoice"></i> Invoice Summary</h3>
     <div class="invoice-summary">
       <div>
-        <p><b><i class="fas fa-hashtag"></i> Invoice Number:</b> <span id="invoiceNum"></span></p>
-        <p><b><i class="fas fa-rupee-sign"></i> Total:</b> ₹<span id="grandTotal">0</span></p>
+        <p><b>Invoice Number:</b> <span id="invoiceNum"></span></p>
+        <p><b>Total:</b> ₹<span id="grandTotal">0</span></p>
       </div>
       <button class="save-btn" onclick="saveInvoice()"><i class="fas fa-save"></i> Save Invoice</button>
     </div>
@@ -710,12 +738,12 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3 class="modal-title"><i class="fas fa-layer-group"></i> Select Batch & Quantity</h3>
-      <button class="close-btn" onclick="closeBatchModal()"><i class="fas fa-times"></i></button>
+      <button class="close-btn" onclick="closeBatchModal()">&times;</button>
     </div>
     
     <div class="product-info">
       <h4 id="modalProductName"></h4>
-      <p><i class="fas fa-tag"></i> Price: ₹<span id="modalProductPrice"></span></p>
+      <p>Price: ₹<span id="modalProductPrice"></span></p>
     </div>
     
     <div class="batch-list" id="batchList">
@@ -723,30 +751,26 @@
     </div>
     
     <div class="quantity-section">
-      <label for="quantityInput"><b><i class="fas fa-cubes"></i> Quantity:</b></label>
+      <label for="quantityInput"><b>Quantity:</b></label>
       <div class="quantity-controls">
-        <button class="quantity-btn" onclick="decreaseQuantity()"><i class="fas fa-minus"></i></button>
+        <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
         <input type="number" id="quantityInput" class="quantity-input" value="1" min="1">
-        <button class="quantity-btn" onclick="increaseQuantity()"><i class="fas fa-plus"></i></button>
+        <button class="quantity-btn" onclick="increaseQuantity()">+</button>
       </div>
-      <p id="maxQuantityInfo"><i class="fas fa-box-open"></i> Maximum available: <span id="maxQuantity">0</span></p>
+      <p id="maxQuantityInfo">Maximum available: <span id="maxQuantity">0</span></p>
     </div>
     
-    <button class="add-to-invoice-btn" onclick="addToInvoice()"><i class="fas fa-cart-plus"></i> Add to Invoice</button>
+    <button class="add-to-invoice-btn" onclick="addToInvoice()"><i class="fas fa-plus-circle"></i> Add to Invoice</button>
   </div>
 </div>
 
 <!-- Alert Modal -->
-<div id="alertModal" class="modal alert-modal">
-  <div class="modal-content">
-    <div class="modal-body">
-      <div id="alertIcon" class="modal-icon"></div>
-      <div id="alertMessage" class="modal-message"></div>
-      <div id="alertActions" class="modal-actions">
-        <button id="alertConfirmBtn" style="display: none;"><i class="fas fa-check"></i> OK</button>
-        <button id="alertCancelBtn" style="display: none;"><i class="fas fa-times"></i> Cancel</button>
-      </div>
-    </div>
+<div id="alertModal" class="alert-modal">
+  <div class="alert-content" id="alertContent">
+    <div class="alert-icon" id="alertIcon"></div>
+    <h3 class="alert-title" id="alertTitle"></h3>
+    <p class="alert-message" id="alertMessage"></p>
+    <button class="alert-btn" onclick="closeAlert()">OK</button>
   </div>
 </div>
 
@@ -765,7 +789,7 @@ let MobileTag = localStorage.getItem("MobileTag");
 
 // Check if user is logged in
 if (!ShopID || !MobileTag) {
-  showAlert("Please Login First.", "error", () => {
+  showAlert("warning", "Login Required", "Please login first.", () => {
     window.location.href = "login.html";
   });
 }
@@ -780,53 +804,54 @@ let selectedBatch = null;
 let availableBatches = [];
 
 // Alert modal functions
-function showAlert(message, type = "info", onConfirm = null, onCancel = null) {
+function showAlert(type, title, message, callback = null) {
   const modal = document.getElementById("alertModal");
+  const content = document.getElementById("alertContent");
   const icon = document.getElementById("alertIcon");
-  const messageEl = document.getElementById("alertMessage");
-  const confirmBtn = document.getElementById("alertConfirmBtn");
-  const cancelBtn = document.getElementById("alertCancelBtn");
+  const alertTitle = document.getElementById("alertTitle");
+  const alertMessage = document.getElementById("alertMessage");
   
-  // Set message and icon
-  messageEl.textContent = message;
+  // Set alert type
+  content.className = "alert-content alert-" + type;
   
   // Set icon based on type
-  icon.className = "modal-icon";
   switch(type) {
     case "success":
       icon.innerHTML = '<i class="fas fa-check-circle"></i>';
-      icon.classList.add("success-icon");
       break;
     case "error":
       icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-      icon.classList.add("error-icon");
       break;
     case "warning":
       icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-      icon.classList.add("warning-icon");
       break;
-    default:
+    case "info":
       icon.innerHTML = '<i class="fas fa-info-circle"></i>';
-      icon.classList.add("info-icon");
+      break;
   }
   
-  // Set up buttons
-  confirmBtn.style.display = onConfirm ? "block" : "none";
-  cancelBtn.style.display = onCancel ? "block" : "none";
+  // Set title and message
+  alertTitle.textContent = title;
+  alertMessage.textContent = message;
   
-  // Set button actions
-  confirmBtn.onclick = () => {
-    modal.style.display = "none";
-    if (onConfirm) onConfirm();
-  };
-  
-  cancelBtn.onclick = () => {
-    modal.style.display = "none";
-    if (onCancel) onCancel();
-  };
+  // Store callback
+  if (callback) {
+    modal.callback = callback;
+  }
   
   // Show modal
   modal.style.display = "block";
+}
+
+function closeAlert() {
+  const modal = document.getElementById("alertModal");
+  modal.style.display = "none";
+  
+  // Execute callback if exists
+  if (modal.callback) {
+    modal.callback();
+    modal.callback = null;
+  }
 }
 
 // 🔍 Customer Search
@@ -845,7 +870,7 @@ document.getElementById("customerSearch").addEventListener("input", async functi
   list.innerHTML = "";
   filtered.forEach(c => {
     const div = document.createElement("div");
-    div.innerHTML = `<i class="fas fa-user"></i> ${c["Costomer Name"]} (${c["Mobile"]})`;
+    div.textContent = `${c["Costomer Name"]} (${c["Mobile"]})`;
     div.onclick = () => {
       document.getElementById("CostomerName").value = c["Costomer Name"];
       document.getElementById("Mobile").value = c["Mobile"];
@@ -873,7 +898,7 @@ document.getElementById("productSearch").addEventListener("input", async functio
   list.innerHTML = "";
   filtered.forEach(p => {
     const div = document.createElement("div");
-    div.innerHTML = `<i class="fas fa-box"></i> ${p["Product Name"]} (₹${p["Price"]})`;
+    div.textContent = `${p["Product Name"]} (₹${p["Price"]})`;
     div.onclick = () => selectProduct(p);
     list.appendChild(div);
   });
@@ -889,7 +914,7 @@ async function selectProduct(p) {
   availableBatches = data.results.filter(b => b["Product ID"] === p["Product ID"]);
 
   if (availableBatches.length === 0) {
-    showAlert("No batches found for this product!", "warning");
+    showAlert("warning", "No Batches", "No batches found for this product!");
     return;
   }
 
@@ -912,14 +937,14 @@ function showBatchModal() {
   batchList.innerHTML = "";
   
   if (availableBatches.length === 0) {
-    batchList.innerHTML = '<div class="no-batches"><i class="fas fa-box-open"></i> No batches available</div>';
+    batchList.innerHTML = '<div class="no-batches">No batches available</div>';
   } else {
     availableBatches.forEach((batch, index) => {
       const batchItem = document.createElement("div");
       batchItem.className = "batch-item";
       batchItem.innerHTML = `
         <div class="batch-info">
-          <div class="batch-name"><i class="fas fa-layer-group"></i> Batch ${batch["Batch No"]}</div>
+          <div class="batch-name"><i class="fas fa-box-open"></i> Batch ${batch["Batch No"]}</div>
           <div class="batch-count">Available: ${batch["Count"]}</div>
         </div>
       `;
@@ -994,19 +1019,19 @@ function decreaseQuantity() {
 // Add to Invoice
 function addToInvoice() {
   if (!currentProduct || !selectedBatch) {
-    showAlert("Please select a batch first!", "warning");
+    showAlert("warning", "Selection Required", "Please select a batch first!");
     return;
   }
   
   const quantity = parseInt(document.getElementById("quantityInput").value);
   
   if (!quantity || quantity <= 0) {
-    showAlert("Please enter a valid quantity!", "warning");
+    showAlert("warning", "Invalid Quantity", "Please enter a valid quantity!");
     return;
   }
   
   if (quantity > selectedBatch["Count"]) {
-    showAlert(`Only ${selectedBatch["Count"]} items available in this batch!`, "warning");
+    showAlert("warning", "Insufficient Stock", `Only ${selectedBatch["Count"]} items available in this batch!`);
     return;
   }
   
@@ -1040,7 +1065,7 @@ function updateTotal() {
 async function saveInvoice() {
   const rows = document.querySelectorAll("#productTable tbody tr");
   if (rows.length === 0) {
-    showAlert("No products added!", "warning");
+    showAlert("warning", "No Products", "Please add products to the invoice!");
     return;
   }
   
@@ -1109,13 +1134,13 @@ async function saveInvoice() {
     });
 
     // ✅ Success - redirect to invoice.html with invoice number
-    showAlert("✅ Invoice Saved Successfully!", "success", () => {
+    showAlert("success", "Invoice Saved", "Invoice saved successfully!", () => {
       window.location.href = `invoice.html?invoice=${encodeURIComponent(invoiceNum)}`;
     });
     
   } catch (error) {
     console.error("Error saving invoice:", error);
-    showAlert("❌ Error saving invoice. Please try again.", "error");
+    showAlert("error", "Save Failed", "Error saving invoice. Please try again.");
     saveBtn.innerHTML = originalText;
     saveBtn.disabled = false;
   }
@@ -1157,14 +1182,13 @@ async function toggleCamera() {
 // Close modal when clicking outside
 window.onclick = function(event) {
   const modal = document.getElementById("batchModal");
-  const alertModal = document.getElementById("alertModal");
-  
   if (event.target === modal) {
     closeBatchModal();
   }
   
+  const alertModal = document.getElementById("alertModal");
   if (event.target === alertModal) {
-    alertModal.style.display = "none";
+    closeAlert();
   }
 }
 </script>
