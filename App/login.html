@@ -356,6 +356,51 @@ textarea {
   color: #e63946;
 }
 
+/* Shop Selection Styles */
+.shop-selection {
+  margin: 20px 0;
+}
+
+.shop-option {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.shop-option:hover {
+  border-color: var(--primary);
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.shop-option.selected {
+  border-color: var(--primary);
+  background-color: rgba(67, 97, 238, 0.1);
+}
+
+.shop-radio {
+  margin-right: 10px;
+}
+
+.shop-details {
+  flex-grow: 1;
+}
+
+.shop-name {
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.shop-address {
+  font-size: 14px;
+  color: var(--gray);
+  margin-top: 4px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .container {
@@ -498,10 +543,29 @@ textarea {
   </div>
 </div>
 
+<!-- Shop Selection Popup -->
+<div class="popup-overlay" id="shopSelectionPopup">
+  <div class="popup">
+    <div class="popup-icon"><i class="fas fa-store"></i></div>
+    <h3>Select Your Shop</h3>
+    <p>This mobile number is registered with multiple shops. Please select which shop you want to access:</p>
+    
+    <div id="shopOptions" class="shop-selection">
+      <!-- Shop options will be dynamically inserted here -->
+    </div>
+    
+    <button class="popup-btn" onclick="confirmShopSelection()" tabindex="1">Continue</button>
+  </div>
+</div>
+
 <script>
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const TABLE_ID = 729979;
 const BASE_URL = "https://api.baserow.io/api/database/rows/table/";
+
+// Variables to store user data for shop selection
+let matchingUsers = [];
+let selectedShopId = "";
 
 // Check if user is already logged in
 window.onload = function() {
@@ -644,6 +708,92 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
+// Show shop selection popup
+function showShopSelectionPopup(users) {
+  matchingUsers = users;
+  const shopOptions = document.getElementById('shopOptions');
+  shopOptions.innerHTML = '';
+  
+  // Create shop selection options
+  users.forEach((user, index) => {
+    // Parse shop name from the formatted string (ShopName-Address/Mobile)
+    const shopInfo = parseShopInfo(user["Shop Name"]);
+    
+    const shopOption = document.createElement('div');
+    shopOption.className = 'shop-option';
+    shopOption.innerHTML = `
+      <div class="shop-radio">
+        <input type="radio" id="shop-${index}" name="shop" value="${user["ShopID"]}" ${index === 0 ? 'checked' : ''}>
+      </div>
+      <div class="shop-details">
+        <div class="shop-name">${shopInfo.name}</div>
+        <div class="shop-address">${shopInfo.address}</div>
+      </div>
+    `;
+    
+    shopOption.addEventListener('click', function() {
+      document.querySelectorAll('.shop-option').forEach(opt => opt.classList.remove('selected'));
+      this.classList.add('selected');
+      const radio = this.querySelector('input[type="radio"]');
+      radio.checked = true;
+      selectedShopId = radio.value;
+    });
+    
+    shopOptions.appendChild(shopOption);
+  });
+  
+  // Set the first shop as selected by default
+  if (users.length > 0) {
+    selectedShopId = users[0]["ShopID"];
+    shopOptions.firstChild.classList.add('selected');
+  }
+  
+  // Show the popup
+  document.getElementById('shopSelectionPopup').classList.add('active');
+}
+
+// Parse shop information from the formatted string
+function parseShopInfo(shopString) {
+  // Format: ShopName-Address/Mobile
+  const parts = shopString.split('-');
+  const name = parts[0];
+  
+  let address = '';
+  if (parts.length > 1) {
+    const addressMobile = parts[1].split('/');
+    address = addressMobile[0];
+  }
+  
+  return { name, address };
+}
+
+// Confirm shop selection and proceed with login
+function confirmShopSelection() {
+  if (!selectedShopId) {
+    alert('Please select a shop');
+    return;
+  }
+  
+  // Find the selected user
+  const selectedUser = matchingUsers.find(user => user["ShopID"] === selectedShopId);
+  
+  if (selectedUser) {
+    // Store user data and redirect
+    localStorage.setItem("NameTag", selectedUser["Name"]);
+    localStorage.setItem("ShopTag", selectedUser["Shop Name"]);
+    localStorage.setItem("ShopIDTag", selectedUser["ShopID"]);
+    localStorage.setItem("MobileTag", selectedUser["Username"]);
+    localStorage.setItem("LastLogin", new Date().toISOString());
+    localStorage.setItem("ActiveTime", Date.now());
+
+    // Close the popup
+    document.getElementById('shopSelectionPopup').classList.remove('active');
+    
+    // Redirect to dashboard
+    window.location.href = "app.html";
+  }
+}
+
 async function login() {
   const mobile = document.getElementById('mobile').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -670,34 +820,50 @@ async function login() {
     });
     const data = await res.json();
 
-    const user = data.results.find(u => u["Username"] === mobile);
-    if (!user) {
+    // Find all users with this mobile number
+    const users = data.results.filter(u => u["Username"] === mobile);
+    
+    if (users.length === 0) {
       msg.textContent = "Invalid mobile number or password.";
       msg.className = 'notice error';
       return;
     }
 
-    if (user["Block"]) {
-      msg.textContent = `Blocked: ${user["Notice"] || "No notice provided"}`;
+    // Check if any user is blocked
+    const blockedUser = users.find(u => u["Block"]);
+    if (blockedUser) {
+      msg.textContent = `Blocked: ${blockedUser["Notice"] || "No notice provided"}`;
       msg.className = 'notice error';
       return;
     }
 
-    if (user["Password"] !== password) {
+    // Check if password matches for any user
+    const validUsers = users.filter(u => u["Password"] === password);
+    
+    if (validUsers.length === 0) {
       msg.textContent = "Invalid mobile number or password.";
       msg.className = 'notice error';
       return;
     }
 
-    // Successful login
-    localStorage.setItem("NameTag", user["Name"]);
-    localStorage.setItem("ShopTag", user["Shop Name"]);
-    localStorage.setItem("ShopIDTag", user["ShopID"]);
-    localStorage.setItem("MobileTag", user["Username"]);
-    localStorage.setItem("LastLogin", new Date().toISOString());
-    localStorage.setItem("ActiveTime", Date.now());
+    // If only one valid user, log them in directly
+    if (validUsers.length === 1) {
+      const user = validUsers[0];
+      
+      // Successful login
+      localStorage.setItem("NameTag", user["Name"]);
+      localStorage.setItem("ShopTag", user["Shop Name"]);
+      localStorage.setItem("ShopIDTag", user["ShopID"]);
+      localStorage.setItem("MobileTag", user["Username"]);
+      localStorage.setItem("LastLogin", new Date().toISOString());
+      localStorage.setItem("ActiveTime", Date.now());
 
-    window.location.href = "app.html";
+      window.location.href = "app.html";
+    } 
+    // If multiple valid users with same password, show shop selection
+    else {
+      showShopSelectionPopup(validUsers);
+    }
   } catch (error) {
     msg.textContent = "An error occurred. Please try again.";
     msg.className = 'notice error';
@@ -760,8 +926,8 @@ async function register() {
     });
     const data = await res.json();
     
-    if (data.results.find(u => u["Username"] === mobile)) {
-      rmsg.textContent = "Mobile number already registered.";
+    if (data.results.find(u => u["Username"] === mobile && u["Shop Name"] === `${shopname}-${address}/${mobile}`)) {
+      rmsg.textContent = "This shop with the same mobile number is already registered.";
       rmsg.className = 'notice error';
       return;
     }
