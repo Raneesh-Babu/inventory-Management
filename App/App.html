@@ -558,6 +558,102 @@
     display: block;
   }
 
+  /* Logout Confirmation Modal */
+  .logout-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    display: none;
+  }
+
+  .logout-modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 90%;
+    max-width: 400px;
+    padding: 30px;
+    text-align: center;
+    animation: modalFadeIn 0.3s ease;
+  }
+
+  .modal-icon {
+    font-size: 48px;
+    color: var(--danger);
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--gray-800);
+  }
+
+  .modal-message {
+    color: var(--gray-600);
+    margin-bottom: 25px;
+    line-height: 1.5;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 100px;
+  }
+
+  .modal-btn-cancel {
+    background: var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .modal-btn-cancel:hover {
+    background: var(--gray-300);
+  }
+
+  .modal-btn-confirm {
+    background: var(--danger);
+    color: white;
+  }
+
+  .modal-btn-confirm:hover {
+    background: #c82333;
+  }
+
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -629,6 +725,10 @@
     .keyboard-active .overlay {
       display: none;
     }
+
+    .modal-actions {
+      flex-direction: column;
+    }
   }
 
   /* Scrollbar Styling */
@@ -690,6 +790,21 @@
       <button id="closeWarning" style="margin-top: 20px; padding: 10px 20px; background: white; color: var(--danger); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
         Close
       </button>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="logout-modal" id="logoutModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <div class="modal-title">Confirm Logout</div>
+      <div class="modal-message">Are you sure you want to logout from the application?</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="cancelLogout">Cancel</button>
+        <button class="modal-btn modal-btn-confirm" id="confirmLogout">Confirm Logout</button>
+      </div>
     </div>
   </div>
 
@@ -832,6 +947,11 @@ const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
 const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
+
+// Logout Modal elements
+const logoutModal = document.getElementById('logoutModal');
+const cancelLogout = document.getElementById('cancelLogout');
+const confirmLogout = document.getElementById('confirmLogout');
 
 // Authentication check
 function checkAuthentication() {
@@ -1328,7 +1448,7 @@ document.addEventListener('click', (e) => {
 
 // Context menu logout functionality
 contextLogout.addEventListener('click', () => {
-  performLogout();
+  showLogoutModal();
 });
 
 // Navigation handling - only if authenticated
@@ -1420,18 +1540,40 @@ function forceIframeScroll() {
   contentFrame.style.maxWidth = '100%';
 }
 
-// Logout functionality
-function performLogout() {
-  if (confirm('Are you sure you want to logout?')) {
-    // Clear all localStorage data
-    localStorage.clear();
-    
-    // Redirect to login page
-    checkAuthentication();
-  }
+// Logout Modal Functions
+function showLogoutModal() {
+  logoutModal.classList.add('active');
+  // Close context menu if open
+  contextMenu.classList.remove('active');
 }
 
-logoutBtn.addEventListener('click', performLogout);
+function hideLogoutModal() {
+  logoutModal.classList.remove('active');
+}
+
+// Logout functionality
+function performLogout() {
+  // Clear all localStorage data
+  localStorage.clear();
+  
+  // Hide the modal
+  hideLogoutModal();
+  
+  // Redirect to login page
+  checkAuthentication();
+}
+
+// Logout button event listeners
+logoutBtn.addEventListener('click', showLogoutModal);
+cancelLogout.addEventListener('click', hideLogoutModal);
+confirmLogout.addEventListener('click', performLogout);
+
+// Close modal when clicking outside
+logoutModal.addEventListener('click', (e) => {
+  if (e.target === logoutModal) {
+    hideLogoutModal();
+  }
+});
 
 // Handle iframe loading events
 contentFrame.addEventListener('load', () => {
