@@ -520,6 +520,17 @@
         </div>
     </div>
 
+    <!-- Duplicate Username Modal -->
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal">
+            <h3 style="color: var(--danger);">Duplicate Username</h3>
+            <p id="duplicateMessage">This mobile number is already in use in your shop.</p>
+            <div class="modal-actions">
+                <button id="duplicateOkBtn" class="update-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
         const tableId = 729979;
@@ -528,12 +539,15 @@
         const loadingOverlay = document.getElementById("loadingOverlay");
         const deleteModal = document.getElementById("deleteModal");
         const statusModal = document.getElementById("statusModal");
+        const duplicateModal = document.getElementById("duplicateModal");
         const cancelDeleteBtn = document.getElementById("cancelDelete");
         const confirmDeleteBtn = document.getElementById("confirmDelete");
         const statusOkBtn = document.getElementById("statusOkBtn");
+        const duplicateOkBtn = document.getElementById("duplicateOkBtn");
         const statusTitle = document.getElementById("statusTitle");
         const statusMessage = document.getElementById("statusMessage");
         const deleteMessage = document.getElementById("deleteMessage");
+        const duplicateMessage = document.getElementById("duplicateMessage");
 
         let staffToDelete = null;
 
@@ -555,6 +569,28 @@
             statusMessage.textContent = message;
             statusTitle.style.color = isError ? 'var(--danger)' : 'var(--success)';
             statusModal.classList.add('active');
+        }
+
+        // Show duplicate username modal
+        function showDuplicateModal() {
+            duplicateModal.classList.add('active');
+        }
+
+        // Check if username already exists in the same ShopID
+        async function checkUsernameExists(username, shopID) {
+            try {
+                const res = await fetch(baseUrl + "?user_field_names=true", {
+                    headers: { "Authorization": "Token " + apiKey }
+                });
+                const data = await res.json();
+                const users = data.results;
+
+                // Check if username exists in the same shop
+                return users.some(u => u.Username === username && u.ShopID === shopID);
+            } catch (error) {
+                console.error("Error checking username:", error);
+                return false;
+            }
         }
 
         // Validate manager using MobileTag
@@ -623,6 +659,16 @@
             const password = passwordInput.value.trim();
             const shopID = localStorage.getItem("ShopID");
             const shopName = localStorage.getItem("ShopName");
+
+            // Check if username already exists in the same shop
+            showLoading();
+            const usernameExists = await checkUsernameExists(username, shopID);
+            hideLoading();
+
+            if (usernameExists) {
+                showDuplicateModal();
+                return;
+            }
 
             const data = {
                 field_6136323: username,
@@ -830,8 +876,12 @@
             statusModal.classList.remove('active');
         });
 
+        duplicateOkBtn.addEventListener('click', () => {
+            duplicateModal.classList.remove('active');
+        });
+
         // Close modals when clicking outside
-        [deleteModal, statusModal].forEach(modal => {
+        [deleteModal, statusModal, duplicateModal].forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.remove('active');
