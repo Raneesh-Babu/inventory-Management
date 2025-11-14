@@ -1,898 +1,977 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Dashboard</title>
-    <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --success: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --light-gray: #e9ecef;
-            --danger: #e63946;
-            --warning: #f4a261;
-            --border-radius: 12px;
-            --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --secondary: #7209b7;
+  --success: #4cc9f0;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --gray: #6c757d;
+  --white: #ffffff;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: var(--dark);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
 
-        h1, h2, h3 {
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
+.container {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 450px;
+  position: relative;
+  overflow: hidden;
+}
 
-        h1 {
-            font-size: 2.2rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 700;
-        }
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            transition: var(--transition);
-        }
+h2 {
+  text-align: center;
+  color: var(--dark);
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 28px;
+}
 
-        .container:hover {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-        }
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
 
-        .header-box {
-            display: none; /* Hide header section */
-        }
+input, select, textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: var(--transition);
+  background-color: var(--white);
+  font-family: inherit;
+}
 
-        .form-section {
-            margin-bottom: 30px;
-        }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
 
-        .form-section h3 {
-            font-size: 1.4rem;
-            color: var(--primary);
-            border-bottom: 2px solid var(--light-gray);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
+label {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  color: var(--gray);
+  pointer-events: none;
+  transition: var(--transition);
+  background: var(--white);
+  padding: 0 4px;
+}
 
-        .input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+textarea + label {
+  top: 25px;
+}
 
-        .input-field {
-            flex: 1 1 300px;
-            position: relative;
-        }
+input:focus + label,
+input:not(:placeholder-shown) + label,
+textarea:focus + label,
+textarea:not(:placeholder-shown) + label {
+  top: 0;
+  font-size: 12px;
+  color: var(--primary);
+}
 
-        .input-field label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--gray);
-        }
+button {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+}
 
-        input, select, button, textarea {
-            padding: 14px 16px;
-            border-radius: var(--border-radius);
-            border: 2px solid var(--light-gray);
-            width: 100%;
-            font-size: 1rem;
-            transition: var(--transition);
-            font-family: inherit;
-        }
+button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
 
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
+button:disabled {
+  background: #b8c2cc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
-        button {
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            padding: 15px 20px;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
-        }
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--white);
+  animation: spin 1s linear infinite;
+}
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
-        }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
-        button:active {
-            transform: translateY(0);
-        }
+.link {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--gray);
+}
 
-        button:disabled {
-            background: var(--light-gray);
-            color: var(--gray);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
+.link a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
 
-        .staff-list {
-            margin-top: 40px;
-        }
+.link a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
 
-        .staff-list h3 {
-            font-size: 1.4rem;
-            color: var(--primary);
-            border-bottom: 2px solid var(--light-gray);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
+.notice {
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
 
-        .staff-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
+.error {
+  color: #e63946;
+  background-color: rgba(230, 57, 70, 0.1);
+}
 
-        .staff-card {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 20px;
-            transition: var(--transition);
-            border-left: 4px solid var(--primary);
-        }
+.success {
+  color: #2a9d8f;
+  background-color: rgba(42, 157, 143, 0.1);
+}
 
-        .staff-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        }
+/* Popup Styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+}
 
-        .staff-card.blocked {
-            border-left-color: var(--danger);
-            background-color: rgba(230, 57, 70, 0.05);
-        }
+.popup-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
 
-        .staff-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--light-gray);
-        }
+.popup {
+  background: var(--white);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  transform: translateY(20px);
+  transition: var(--transition);
+}
 
-        .staff-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark);
-        }
+.popup-overlay.active .popup {
+  transform: translateY(0);
+}
 
-        .staff-role {
-            background: var(--primary);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
+.popup-icon {
+  font-size: 48px;
+  color: #2a9d8f;
+  margin-bottom: 15px;
+}
 
-        .staff-details {
-            margin-bottom: 15px;
-        }
+.popup h3 {
+  color: var(--dark);
+  margin-bottom: 10px;
+}
 
-        .detail-row {
-            display: flex;
-            margin-bottom: 8px;
-        }
+.popup p {
+  color: var(--gray);
+  margin-bottom: 20px;
+}
 
-        .detail-label {
-            font-weight: 600;
-            color: var(--gray);
-            width: 100px;
-            flex-shrink: 0;
-        }
+.popup-btn {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
 
-        .detail-value {
-            flex: 1;
-            color: var(--dark);
-        }
+.popup-btn:hover {
+  background: var(--primary-dark);
+}
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
+/* Animation for form switching */
+.form-container {
+  transition: var(--transition);
+}
 
-        .status-active {
-            background: rgba(76, 201, 240, 0.2);
-            color: var(--success);
-        }
+.hidden {
+  display: none;
+  opacity: 0;
+  transform: translateX(20px);
+}
 
-        .status-blocked {
-            background: rgba(230, 57, 70, 0.2);
-            color: var(--danger);
-        }
+.visible {
+  display: block;
+  opacity: 1;
+  transform: translateX(0);
+}
 
-        .staff-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
+/* Password toggle button */
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+}
 
-        .update-btn {
-            background: linear-gradient(to right, var(--success), #3a86ff);
-            padding: 10px 15px;
-            font-size: 0.9rem;
-            flex: 2;
-        }
+.password-toggle:hover {
+  color: var(--primary);
+  background: none;
+  transform: translateY(-50%);
+  box-shadow: none;
+}
 
-        .update-btn:hover {
-            box-shadow: 0 4px 12px rgba(76, 201, 240, 0.4);
-        }
+/* Password validation styles */
+.password-rules {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--gray);
+  display: none; /* Hidden by default */
+}
 
-        .delete-btn {
-            background: linear-gradient(to right, var(--danger), #ff6b6b);
-            padding: 10px 15px;
-            font-size: 0.9rem;
-            flex: 1;
-        }
+.password-rule {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
 
-        .delete-btn:hover {
-            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
-        }
+.password-rule i {
+  margin-right: 5px;
+  font-size: 10px;
+}
 
-        /* Modal styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
+.rule-valid {
+  color: #2a9d8f;
+}
 
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+.rule-invalid {
+  color: #e63946;
+}
 
-        .modal {
-            background: white;
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            transform: translateY(-20px);
-            transition: var(--transition);
-        }
+/* Textarea specific styles */
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
 
-        .modal-overlay.active .modal {
-            transform: translateY(0);
-        }
+/* Password match indicator */
+.password-match {
+  margin-top: 5px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
 
-        .modal h3 {
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
+.password-match i {
+  margin-right: 5px;
+  font-size: 10px;
+}
 
-        .modal p {
-            margin-bottom: 20px;
-            color: var(--gray);
-        }
+.match-valid {
+  color: #2a9d8f;
+}
 
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
+.match-invalid {
+  color: #e63946;
+}
 
-        .confirm-delete-btn {
-            background: linear-gradient(to right, var(--danger), #ff6b6b);
-            flex: 1;
-        }
+/* Shop Selection Styles */
+.shop-selection {
+  margin: 20px 0;
+}
 
-        .cancel-delete-btn {
-            background: linear-gradient(to right, var(--gray), #adb5bd);
-            flex: 1;
-        }
+.shop-option {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+}
 
-        /* Loading spinner */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
+.shop-option:hover {
+  border-color: var(--primary);
+  background-color: rgba(67, 97, 238, 0.05);
+}
 
-        .loading-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+.shop-option.selected {
+  border-color: var(--primary);
+  background-color: rgba(67, 97, 238, 0.1);
+}
 
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(67, 97, 238, 0.2);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-        }
+.shop-radio {
+  margin-right: 10px;
+}
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+.shop-details {
+  flex-grow: 1;
+}
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .input-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .input-field {
-                flex: 1 1 100%;
-            }
-            
-            input, select, button, textarea {
-                padding: 12px 14px;
-            }
-            
-            .staff-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+.shop-name {
+  font-weight: 600;
+  color: var(--dark);
+}
 
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.6rem;
-            }
-            
-            .container {
-                padding: 15px;
-            }
-            
-            .staff-card {
-                padding: 15px;
-            }
-            
-            .staff-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .staff-actions {
-                flex-direction: column;
-            }
-        }
+.shop-address {
+  font-size: 14px;
+  color: var(--gray);
+  margin-top: 4px;
+}
 
-        /* Animation for cards */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .staff-card {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-dark);
-        }
-    </style>
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 20px;
+  }
+  
+  h2 {
+    font-size: 24px;
+  }
+}
+</style>
 </head>
 <body>
-    <div class="container" id="mainContainer" style="display:none;">
-        <div class="header-box">
-            <h3 id="welcomeText"></h3>
-            <h4 id="shopNameText"></h4>
-        </div>
-
-        <div class="form-section">
-            <h3>Add New Staff</h3>
-            <div class="input-group">
-                <div class="input-field">
-                    <label for="username">Username (10-digit mobile)</label>
-                    <input type="text" id="username" placeholder="Enter 10-digit mobile number" maxlength="10">
-                </div>
-                <div class="input-field">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" placeholder="Enter full name">
-                </div>
-                <div class="input-field">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter password">
-                </div>
-            </div>
-            <button id="addBtn" disabled>Add Staff</button>
-        </div>
-
-        <div class="staff-list">
-            <h3>Staff Members</h3>
-            <div class="staff-grid" id="staffGrid"></div>
-        </div>
+<div class="container">
+  <h2><i class="fas fa-boxes"></i> Inventory Login</h2>
+  
+  <!-- LOGIN FORM -->
+  <div id="loginForm" class="form-container visible">
+    <div class="input-group">
+      <input type="text" id="mobile" placeholder=" " maxlength="10" tabindex="1">
+      <label for="mobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
     </div>
-
-    <!-- Loading Spinner -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
+    
+    <div class="input-group">
+      <input type="password" id="password" placeholder=" " tabindex="2">
+      <label for="password"><i class="fas fa-lock"></i> Password</label>
+      <button type="button" class="password-toggle" onclick="togglePassword('password')" tabindex="3">
+        <i class="fas fa-eye"></i>
+      </button>
     </div>
+    
+    <button id="loginBtn" onclick="login()" tabindex="4">
+      <span id="loginText"><i class="fas fa-sign-in-alt"></i> Login</span>
+    </button>
+    
+    <div class="link">
+      <p>Don't have an account? <a href="#" onclick="showRegister()" tabindex="5">Register</a></p>
+    </div>
+    
+    <div id="msg" class="notice"></div>
+  </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <h3>Confirm Delete</h3>
-            <p id="deleteMessage">Are you sure you want to delete this staff member? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button class="cancel-delete-btn" id="cancelDelete">Cancel</button>
-                <button class="confirm-delete-btn" id="confirmDelete">Delete</button>
-            </div>
+  <!-- REGISTRATION FORM -->
+  <div id="registerForm" class="form-container hidden">
+    <!-- Personal Information -->
+    <div class="input-group">
+      <input type="text" id="rname" placeholder=" " tabindex="1">
+      <label for="rname"><i class="fas fa-user"></i> Full Name</label>
+    </div>
+    
+    <div class="input-group">
+      <input type="text" id="rmobile" placeholder=" " maxlength="10" tabindex="2">
+      <label for="rmobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
+    </div>
+    
+    <!-- Shop Information -->
+    <div class="input-group">
+      <input type="text" id="rshopname" placeholder=" " tabindex="3">
+      <label for="rshopname"><i class="fas fa-store"></i> Shop Name</label>
+    </div>
+    
+    <div class="input-group">
+      <textarea id="raddress" placeholder=" " tabindex="4"></textarea>
+      <label for="raddress"><i class="fas fa-map-marker-alt"></i> Shop Address</label>
+    </div>
+    
+    <!-- Password Section -->
+    <div class="input-group">
+      <input type="password" id="rpassword" placeholder=" " onkeyup="validatePassword()" tabindex="5">
+      <label for="rpassword"><i class="fas fa-lock"></i> Password</label>
+      <button type="button" class="password-toggle" onclick="togglePassword('rpassword')" tabindex="6">
+        <i class="fas fa-eye"></i>
+      </button>
+      
+      <!-- Password validation rules - only shown when not obeyed -->
+      <div id="passwordRules" class="password-rules">
+        <div class="password-rule">
+          <i id="lengthRule" class="fas fa-times-circle rule-invalid"></i>
+          <span>At least 8 characters</span>
         </div>
-    </div>
-
-    <!-- Status Modal -->
-    <div class="modal-overlay" id="statusModal">
-        <div class="modal">
-            <h3 id="statusTitle">Status</h3>
-            <p id="statusMessage"></p>
-            <div class="modal-actions">
-                <button id="statusOkBtn" class="update-btn">OK</button>
-            </div>
+        <div class="password-rule">
+          <i id="uppercaseRule" class="fas fa-times-circle rule-invalid"></i>
+          <span>At least one uppercase letter</span>
         </div>
-    </div>
-
-    <!-- Duplicate Username Modal -->
-    <div class="modal-overlay" id="duplicateModal">
-        <div class="modal">
-            <h3 style="color: var(--danger);">Duplicate Username</h3>
-            <p id="duplicateMessage">This mobile number is already in use in your shop.</p>
-            <div class="modal-actions">
-                <button id="duplicateOkBtn" class="update-btn">OK</button>
-            </div>
+        <div class="password-rule">
+          <i id="lowercaseRule" class="fas fa-times-circle rule-invalid"></i>
+          <span>At least one lowercase letter</span>
         </div>
+        <div class="input-group">
+          <i id="numberRule" class="fas fa-times-circle rule-invalid"></i>
+          <span>At least one number</span>
+        </div>
+        <div class="password-rule">
+          <i id="specialRule" class="fas fa-times-circle rule-invalid"></i>
+          <span>At least one special character</span>
+        </div>
+      </div>
     </div>
+    
+    <div class="input-group">
+      <input type="password" id="rconfirmpassword" placeholder=" " onkeyup="checkPasswordMatch()" tabindex="7">
+      <label for="rconfirmpassword"><i class="fas fa-lock"></i> Re-enter Password</label>
+      <button type="button" class="password-toggle" onclick="togglePassword('rconfirmpassword')" tabindex="8">
+        <i class="fas fa-eye"></i>
+      </button>
+      
+      <!-- Password match indicator -->
+      <div id="passwordMatch" class="password-match" style="display: none;">
+        <i id="matchIcon" class="fas fa-times-circle match-invalid"></i>
+        <span id="matchText">Passwords do not match</span>
+      </div>
+    </div>
+    
+    <!-- Hidden Role section -->
+    <div class="input-group" style="display: none;">
+      <select id="rrole">
+        <option value="Manager">Manager</option>
+      </select>
+    </div>
+    
+    <button id="registerBtn" onclick="register()" tabindex="9">
+      <span id="registerText"><i class="fas fa-user-plus"></i> Register</span>
+    </button>
+    
+    <div class="link">
+      <p>Already have an account? <a href="#" onclick="showLogin()" tabindex="10">Login</a></p>
+    </div>
+    
+    <div id="rmsg" class="notice"></div>
+  </div>
+</div>
 
-    <script>
-        const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-        const tableId = 729979;
-        const baseUrl = `https://api.baserow.io/api/database/rows/table/${tableId}/`;
-        const mainContainer = document.getElementById("mainContainer");
-        const loadingOverlay = document.getElementById("loadingOverlay");
-        const deleteModal = document.getElementById("deleteModal");
-        const statusModal = document.getElementById("statusModal");
-        const duplicateModal = document.getElementById("duplicateModal");
-        const cancelDeleteBtn = document.getElementById("cancelDelete");
-        const confirmDeleteBtn = document.getElementById("confirmDelete");
-        const statusOkBtn = document.getElementById("statusOkBtn");
-        const duplicateOkBtn = document.getElementById("duplicateOkBtn");
-        const statusTitle = document.getElementById("statusTitle");
-        const statusMessage = document.getElementById("statusMessage");
-        const deleteMessage = document.getElementById("deleteMessage");
-        const duplicateMessage = document.getElementById("duplicateMessage");
+<!-- Success Popup -->
+<div class="popup-overlay" id="successPopup">
+  <div class="popup">
+    <div class="popup-icon"><i class="fas fa-check-circle"></i></div>
+    <h3>Registration Successful!</h3>
+    <p>Your account has been created successfully. You can now login with your credentials.</p>
+    <button class="popup-btn" onclick="closePopup()" tabindex="1">Continue to Login</button>
+  </div>
+</div>
 
-        let staffToDelete = null;
+<!-- Shop Selection Popup -->
+<div class="popup-overlay" id="shopSelectionPopup">
+  <div class="popup">
+    <div class="popup-icon"><i class="fas fa-store"></i></div>
+    <h3>Select Your Shop</h3>
+    <p>This mobile number is registered with multiple shops. Please select which shop you want to access:</p>
+    
+    <div id="shopOptions" class="shop-selection">
+      <!-- Shop options will be dynamically inserted here -->
+    </div>
+    
+    <button class="popup-btn" onclick="confirmShopSelection()" tabindex="1">Continue</button>
+  </div>
+</div>
 
-        const mobileTag = localStorage.getItem("MobileTag");
+<script>
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const TABLE_ID = 729979;
+const BASE_URL = "https://api.baserow.io/api/database/rows/table/";
 
-        // Show loading spinner
-        function showLoading() {
-            loadingOverlay.classList.add('active');
-        }
+// Variables to store user data for shop selection
+let matchingUsers = [];
+let selectedShopId = "";
 
-        // Hide loading spinner
-        function hideLoading() {
-            loadingOverlay.classList.remove('active');
-        }
+// Check if user is already logged in
+window.onload = function() {
+  const shopIdTag = localStorage.getItem("ShopIDTag");
+  if (shopIdTag) {
+    window.location.href = "dashboard.html";
+  }
+};
 
-        // Show status modal
-        function showStatus(title, message, isError = false) {
-            statusTitle.textContent = title;
-            statusMessage.textContent = message;
-            statusTitle.style.color = isError ? 'var(--danger)' : 'var(--success)';
-            statusModal.classList.add('active');
-        }
+function showRegister() {
+  document.getElementById('loginForm').classList.remove('visible');
+  document.getElementById('loginForm').classList.add('hidden');
+  
+  setTimeout(() => {
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('visible');
+    // Focus on first field when switching to register form
+    document.getElementById('rname').focus();
+  }, 150);
+}
 
-        // Show duplicate username modal
-        function showDuplicateModal() {
-            duplicateModal.classList.add('active');
-        }
+function showLogin() {
+  document.getElementById('registerForm').classList.remove('visible');
+  document.getElementById('registerForm').classList.add('hidden');
+  
+  setTimeout(() => {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('visible');
+    // Focus on first field when switching to login form
+    document.getElementById('mobile').focus();
+  }, 150);
+}
 
-        // Check if username already exists in the same ShopID
-        async function checkUsernameExists(username, shopID) {
-            try {
-                const res = await fetch(baseUrl + "?user_field_names=true", {
-                    headers: { "Authorization": "Token " + apiKey }
-                });
-                const data = await res.json();
-                const users = data.results;
+function showPopup() {
+  document.getElementById('successPopup').classList.add('active');
+}
 
-                // Check if username exists in the same shop
-                return users.some(u => u.Username === username && u.ShopID === shopID);
-            } catch (error) {
-                console.error("Error checking username:", error);
-                return false;
-            }
-        }
+function closePopup() {
+  document.getElementById('successPopup').classList.remove('active');
+  showLogin();
+}
 
-        // Validate manager using MobileTag
-        async function validateManager() {
-            if (!mobileTag) {
-                showStatus("Login Required", "Please login first.", true);
-                return;
-            }
+// Toggle password visibility
+function togglePassword(fieldId) {
+  const passwordField = document.getElementById(fieldId);
+  const toggleButton = passwordField.nextElementSibling;
+  const icon = toggleButton.querySelector('i');
+  
+  if (passwordField.type === 'password') {
+    passwordField.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    passwordField.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
 
-            showLoading();
-            
-            try {
-                const res = await fetch(baseUrl + "?user_field_names=true", {
-                    headers: { "Authorization": "Token " + apiKey }
-                });
-                const data = await res.json();
-                const users = data.results;
+// Password validation function
+function validatePassword() {
+  const password = document.getElementById('rpassword').value;
+  const passwordRules = document.getElementById('passwordRules');
+  
+  // Validation rules
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  
+  // Update UI for each rule
+  updateRuleIcon('lengthRule', hasMinLength);
+  updateRuleIcon('uppercaseRule', hasUppercase);
+  updateRuleIcon('lowercaseRule', hasLowercase);
+  updateRuleIcon('numberRule', hasNumber);
+  updateRuleIcon('specialRule', hasSpecial);
+  
+  // Show password rules only if password is not empty and not all rules are met
+  if (password.length > 0 && !(hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial)) {
+    passwordRules.style.display = 'block';
+  } else {
+    passwordRules.style.display = 'none';
+  }
+  
+  // Return overall validation status
+  return hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+}
 
-                const currentUser = users.find(u => u.Username == mobileTag);
+function updateRuleIcon(ruleId, isValid) {
+  const ruleIcon = document.getElementById(ruleId);
+  if (isValid) {
+    ruleIcon.className = 'fas fa-check-circle rule-valid';
+  } else {
+    ruleIcon.className = 'fas fa-times-circle rule-invalid';
+  }
+}
 
-                if (!currentUser) {
-                    hideLoading();
-                    showStatus("User Not Found", "User not found for MobileTag: " + mobileTag, true);
-                    return;
-                }
+// Check if passwords match
+function checkPasswordMatch() {
+  const password = document.getElementById('rpassword').value;
+  const confirmPassword = document.getElementById('rconfirmpassword').value;
+  const passwordMatch = document.getElementById('passwordMatch');
+  
+  if (confirmPassword.length === 0) {
+    passwordMatch.style.display = 'none';
+    return false;
+  }
+  
+  const passwordsMatch = password === confirmPassword;
+  
+  if (passwordsMatch) {
+    document.getElementById('matchIcon').className = 'fas fa-check-circle match-valid';
+    document.getElementById('matchText').textContent = 'Passwords match';
+    document.getElementById('matchText').className = 'match-valid';
+  } else {
+    document.getElementById('matchIcon').className = 'fas fa-times-circle match-invalid';
+    document.getElementById('matchText').textContent = 'Passwords do not match';
+    document.getElementById('matchText').className = 'match-invalid';
+  }
+  
+  passwordMatch.style.display = 'block';
+  return passwordsMatch;
+}
 
-                if (currentUser.Role !== "Manager") {
-                    hideLoading();
-                    showStatus("Access Denied", "You are not authorized to access this page.", true);
-                    return;
-                }
+// Enter key support for forms
+document.addEventListener('keydown', function(event) {
+  // Login form enter key
+  if (event.key === 'Enter' && document.getElementById('loginForm').classList.contains('visible')) {
+    if (document.activeElement.id === 'mobile' || document.activeElement.id === 'password') {
+      login();
+    }
+  }
+  
+  // Register form enter key
+  if (event.key === 'Enter' && document.getElementById('registerForm').classList.contains('visible')) {
+    const activeElement = document.activeElement;
+    const registerFields = ['rname', 'rmobile', 'rshopname', 'raddress', 'rpassword', 'rconfirmpassword'];
+    if (registerFields.includes(activeElement.id)) {
+      register();
+    }
+  }
+});
 
-                // Save manager details to localStorage
-                localStorage.setItem("Role", currentUser.Role);
-                localStorage.setItem("ShopID", currentUser.ShopID);
-                localStorage.setItem("ShopName", currentUser["Shop Name"]);
-                localStorage.setItem("Name", currentUser.Name);
+// Show shop selection popup
+function showShopSelectionPopup(users) {
+  matchingUsers = users;
+  const shopOptions = document.getElementById('shopOptions');
+  shopOptions.innerHTML = '';
+  
+  // Create shop selection options
+  users.forEach((user, index) => {
+    // Parse shop name from the formatted string (ShopName-Address/Mobile)
+    const shopInfo = parseShopInfo(user["Shop Name"]);
+    
+    const shopOption = document.createElement('div');
+    shopOption.className = 'shop-option';
+    shopOption.innerHTML = `
+      <div class="shop-radio">
+        <input type="radio" id="shop-${index}" name="shop" value="${user["ShopID"]}" ${index === 0 ? 'checked' : ''}>
+      </div>
+      <div class="shop-details">
+        <div class="shop-name">${shopInfo.name}</div>
+        <div class="shop-address">${shopInfo.address}</div>
+      </div>
+    `;
+    
+    shopOption.addEventListener('click', function() {
+      document.querySelectorAll('.shop-option').forEach(opt => opt.classList.remove('selected'));
+      this.classList.add('selected');
+      const radio = this.querySelector('input[type="radio"]');
+      radio.checked = true;
+      selectedShopId = radio.value;
+    });
+    
+    shopOptions.appendChild(shopOption);
+  });
+  
+  // Set the first shop as selected by default
+  if (users.length > 0) {
+    selectedShopId = users[0]["ShopID"];
+    shopOptions.firstChild.classList.add('selected');
+  }
+  
+  // Show the popup
+  document.getElementById('shopSelectionPopup').classList.add('active');
+}
 
-                hideLoading();
-                mainContainer.style.display = "block";
+// Parse shop information from the formatted string
+function parseShopInfo(shopString) {
+  // Format: ShopName-Address/Mobile
+  const parts = shopString.split('-');
+  const name = parts[0];
+  
+  let address = '';
+  if (parts.length > 1) {
+    const addressMobile = parts[1].split('/');
+    address = addressMobile[0];
+  }
+  
+  return { name, address };
+}
 
-                fetchStaff(currentUser.ShopID);
-            } catch (error) {
-                hideLoading();
-                showStatus("Error", "Error validating user: " + error.message, true);
-            }
-        }
+// Confirm shop selection and proceed with login
+function confirmShopSelection() {
+  if (!selectedShopId) {
+    alert('Please select a shop');
+    return;
+  }
+  
+  // Find the selected user
+  const selectedUser = matchingUsers.find(user => user["ShopID"] === selectedShopId);
+  
+  if (selectedUser) {
+    // Store user data and redirect
+    localStorage.setItem("NameTag", selectedUser["Name"]);
+    localStorage.setItem("ShopTag", selectedUser["Shop Name"]);
+    localStorage.setItem("ShopIDTag", selectedUser["ShopID"]);
+    localStorage.setItem("MobileTag", selectedUser["Username"]);
+    localStorage.setItem("LastLogin", new Date().toISOString());
+    localStorage.setItem("ActiveTime", Date.now());
 
-        // Enable Add button when fields are valid
-        const addBtn = document.getElementById("addBtn");
-        const usernameInput = document.getElementById("username");
-        const nameInput = document.getElementById("name");
-        const passwordInput = document.getElementById("password");
+    // Close the popup
+    document.getElementById('shopSelectionPopup').classList.remove('active');
+    
+    // Redirect to dashboard
+    window.location.href = "app.html";
+  }
+}
 
-        [usernameInput, nameInput, passwordInput].forEach(input => {
-            input.addEventListener("input", () => {
-                const valid = usernameInput.value.length === 10 && nameInput.value && passwordInput.value;
-                addBtn.disabled = !valid;
-            });
-        });
+async function login() {
+  const mobile = document.getElementById('mobile').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const msg = document.getElementById('msg');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginText = document.getElementById('loginText');
+  
+  msg.textContent = '';
+  msg.className = 'notice';
+  
+  if (!mobile || !password) {
+    msg.textContent = "Please enter all fields.";
+    msg.className = 'notice error';
+    return;
+  }
+  
+  // Disable button and show spinner only (no text)
+  loginBtn.disabled = true;
+  loginText.innerHTML = '<div class="spinner"></div>';
+  
+  try {
+    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const data = await res.json();
 
-        // Add staff (inherits manager's ShopID & Shop Name)
-        addBtn.addEventListener("click", async () => {
-            const username = usernameInput.value.trim();
-            const name = nameInput.value.trim();
-            const password = passwordInput.value.trim();
-            const shopID = localStorage.getItem("ShopID");
-            const shopName = localStorage.getItem("ShopName");
+    // Find all users with this mobile number
+    const users = data.results.filter(u => u["Username"] === mobile);
+    
+    if (users.length === 0) {
+      msg.textContent = "Invalid mobile number or password.";
+      msg.className = 'notice error';
+      return;
+    }
 
-            // Check if username already exists in the same shop
-            showLoading();
-            const usernameExists = await checkUsernameExists(username, shopID);
-            hideLoading();
+    // Check if any user is blocked
+    const blockedUser = users.find(u => u["Block"]);
+    if (blockedUser) {
+      msg.textContent = `Blocked: ${blockedUser["Notice"] || "No notice provided"}`;
+      msg.className = 'notice error';
+      return;
+    }
 
-            if (usernameExists) {
-                showDuplicateModal();
-                return;
-            }
+    // Check if password matches for any user
+    const validUsers = users.filter(u => u["Password"] === password);
+    
+    if (validUsers.length === 0) {
+      msg.textContent = "Invalid mobile number or password.";
+      msg.className = 'notice error';
+      return;
+    }
 
-            const data = {
-                field_6136323: username,
-                field_6138249: name,
-                field_6136324: password,
-                field_6136325: "Staff",
-                field_6138245: shopID,
-                field_6138941: shopName,
-                field_6168111: false // Block field (boolean)
-            };
+    // If only one valid user, log them in directly
+    if (validUsers.length === 1) {
+      const user = validUsers[0];
+      
+      // Successful login
+      localStorage.setItem("NameTag", user["Name"]);
+      localStorage.setItem("ShopTag", user["Shop Name"]);
+      localStorage.setItem("ShopIDTag", user["ShopID"]);
+      localStorage.setItem("MobileTag", user["Username"]);
+      localStorage.setItem("LastLogin", new Date().toISOString());
+      localStorage.setItem("ActiveTime", Date.now());
 
-            showLoading();
-            
-            try {
-                await fetch(baseUrl, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "Token " + apiKey,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
+      window.location.href = "app.html";
+    } 
+    // If multiple valid users with same password, show shop selection
+    else {
+      showShopSelectionPopup(validUsers);
+    }
+  } catch (error) {
+    msg.textContent = "An error occurred. Please try again.";
+    msg.className = 'notice error';
+  } finally {
+    // Re-enable button
+    loginBtn.disabled = false;
+    loginText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+  }
+}
 
-                hideLoading();
-                showStatus("Success", "Staff added successfully!");
-                
-                fetchStaff(shopID);
-                usernameInput.value = nameInput.value = passwordInput.value = "";
-                addBtn.disabled = true;
-            } catch (error) {
-                hideLoading();
-                showStatus("Error", "Error adding staff: " + error.message, true);
-            }
-        });
+async function register() {
+  const name = document.getElementById('rname').value.trim();
+  const role = document.getElementById('rrole').value;
+  const shopname = document.getElementById('rshopname').value.trim();
+  const address = document.getElementById('raddress').value.trim();
+  const mobile = document.getElementById('rmobile').value.trim();
+  const password = document.getElementById('rpassword').value.trim();
+  const confirmPassword = document.getElementById('rconfirmpassword').value.trim();
+  const rmsg = document.getElementById('rmsg');
+  const registerBtn = document.getElementById('registerBtn');
+  const registerText = document.getElementById('registerText');
+  
+  rmsg.textContent = '';
+  rmsg.className = 'notice';
+  
+  if (!name || !shopname || !address || !mobile || !password || !confirmPassword) {
+    rmsg.textContent = "Please fill all fields.";
+    rmsg.className = 'notice error';
+    return;
+  }
+  
+  if (mobile.length !== 10 || isNaN(mobile)) {
+    rmsg.textContent = "Enter valid 10-digit mobile number.";
+    rmsg.className = 'notice error';
+    return;
+  }
 
-        // Fetch staff under same ShopID
-        async function fetchStaff(shopID) {
-            showLoading();
-            
-            try {
-                const res = await fetch(baseUrl + "?user_field_names=true", {
-                    headers: { "Authorization": "Token " + apiKey }
-                });
-                const result = await res.json();
-                const staff = result.results.filter(u => u.ShopID == shopID);
-                const staffGrid = document.getElementById("staffGrid");
-                staffGrid.innerHTML = "";
+  // Validate password
+  if (!validatePassword()) {
+    rmsg.textContent = "Please ensure your password meets all requirements.";
+    rmsg.className = 'notice error';
+    return;
+  }
 
-                staff.forEach(u => {
-                    const staffCard = document.createElement("div");
-                    staffCard.className = "staff-card";
-                    if (u.Block) staffCard.classList.add("blocked");
+  // Check if passwords match
+  if (!checkPasswordMatch()) {
+    rmsg.textContent = "Passwords do not match.";
+    rmsg.className = 'notice error';
+    return;
+  }
 
-                    staffCard.innerHTML = `
-                        <div class="staff-header">
-                            <div class="staff-name">${u.Name || "N/A"}</div>
-                            <div class="staff-role">${u.Role || "Staff"}</div>
-                        </div>
-                        <div class="staff-details">
-                            <div class="detail-row">
-                                <div class="detail-label">Username:</div>
-                                <div class="detail-value">${u.Username || "N/A"}</div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Password:</div>
-                                <div class="detail-value">
-                                    <input type="text" value="${u.Password || ""}" data-id="${u.id}" data-field="field_6136324">
-                                </div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Role:</div>
-                                <div class="detail-value">
-                                    <select data-id="${u.id}" data-field="field_6136325">
-                                        <option value="Staff" ${u.Role === "Staff" ? "selected" : ""}>Staff</option>
-                                        <option value="Manager" ${u.Role === "Manager" ? "selected" : ""}>Manager</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Status:</div>
-                                <div class="detail-value">
-                                    <select data-id="${u.id}" data-field="field_6168111">
-                                        <option value="false" ${!u.Block ? "selected" : ""}>Active</option>
-                                        <option value="true" ${u.Block ? "selected" : ""}>Blocked</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="staff-actions">
-                            <button class="update-btn" onclick="updateUser(${u.id})">Update</button>
-                            <button class="delete-btn" onclick="showDeleteModal(${u.id}, '${u.Name}')">Delete</button>
-                        </div>
-                    `;
-                    staffGrid.appendChild(staffCard);
-                });
-                
-                hideLoading();
-            } catch (error) {
-                hideLoading();
-                showStatus("Error", "Error fetching staff: " + error.message, true);
-            }
-        }
+  // Disable button and show spinner only (no text)
+  registerBtn.disabled = true;
+  registerText.innerHTML = '<div class="spinner"></div>';
+  
+  try {
+    // Check duplicates
+    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const data = await res.json();
+    
+    if (data.results.find(u => u["Username"] === mobile && u["Shop Name"] === `${shopname}-${address}/${mobile}`)) {
+      rmsg.textContent = "This shop with the same mobile number is already registered.";
+      rmsg.className = 'notice error';
+      return;
+    }
 
-        // Update record in Baserow
-        async function updateUser(id) {
-            showLoading();
-            
-            try {
-                // Get all inputs for this user
-                const inputs = document.querySelectorAll(`[data-id="${id}"]`);
-                const data = {};
-                
-                // Map field names to their values with proper type conversion
-                inputs.forEach(el => {
-                    const fieldName = el.getAttribute("data-field");
-                    let value = el.value;
-                    
-                    // Convert boolean fields
-                    if (fieldName === "field_6168111") {
-                        value = value === "true";
-                    }
-                    
-                    data[fieldName] = value;
-                });
+    const shopId = "SHOP-" + Date.now();
+    
+    // Create the formatted string: ShopName,Address/Username
+    const formattedShopName = `${shopname}-${address}/${mobile}`;
 
-                // Send PATCH request to update the user
-                const response = await fetch(baseUrl + id + "/", {
-                    method: "PATCH",
-                    headers: {
-                        "Authorization": "Token " + apiKey,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
+    const createRes = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Token ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "Name": name,
+        "Role": role,
+        "Username": mobile,
+        "Password": password,
+        "ShopID": shopId,
+        "Shop Name": formattedShopName,
+        "Block": false,
+        "Notice": "",
+        "Last Login": new Date().toISOString()
+      })
+    });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                hideLoading();
-                showStatus("Success", "User updated successfully!");
-                
-                // Refresh the staff list
-                const shopID = localStorage.getItem("ShopID");
-                fetchStaff(shopID);
-            } catch (error) {
-                console.error("Error updating user:", error);
-                hideLoading();
-                showStatus("Error", "Error updating user: " + error.message, true);
-            }
-        }
-
-        // Show delete confirmation modal
-        function showDeleteModal(id, name) {
-            staffToDelete = id;
-            deleteMessage.textContent = `Are you sure you want to delete ${name}? This action cannot be undone.`;
-            deleteModal.classList.add('active');
-        }
-
-        // Delete staff member
-        async function deleteStaff(id) {
-            showLoading();
-            
-            try {
-                const response = await fetch(baseUrl + id + "/", {
-                    method: "DELETE",
-                    headers: {
-                        "Authorization": "Token " + apiKey,
-                        "Content-Type": "application/json"
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                hideLoading();
-                showStatus("Success", "Staff member deleted successfully!");
-                
-                // Refresh the staff list
-                const shopID = localStorage.getItem("ShopID");
-                fetchStaff(shopID);
-            } catch (error) {
-                console.error("Error deleting staff:", error);
-                hideLoading();
-                showStatus("Error", "Error deleting staff: " + error.message, true);
-            }
-        }
-
-        // Modal event listeners
-        cancelDeleteBtn.addEventListener('click', () => {
-            deleteModal.classList.remove('active');
-            staffToDelete = null;
-        });
-
-        confirmDeleteBtn.addEventListener('click', () => {
-            if (staffToDelete) {
-                deleteStaff(staffToDelete);
-                deleteModal.classList.remove('active');
-                staffToDelete = null;
-            }
-        });
-
-        statusOkBtn.addEventListener('click', () => {
-            statusModal.classList.remove('active');
-        });
-
-        duplicateOkBtn.addEventListener('click', () => {
-            duplicateModal.classList.remove('active');
-        });
-
-        // Close modals when clicking outside
-        [deleteModal, statusModal, duplicateModal].forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                    if (modal === deleteModal) {
-                        staffToDelete = null;
-                    }
-                }
-            });
-        });
-
-        validateManager();
-    </script>
+    if (createRes.ok) {
+      // Show success popup
+      showPopup();
+    } else {
+      rmsg.textContent = "Registration failed. Try again.";
+      rmsg.className = 'notice error';
+    }
+  } catch (error) {
+    rmsg.textContent = "An error occurred. Please try again.";
+    rmsg.className = 'notice error';
+  } finally {
+    // Re-enable button
+    registerBtn.disabled = false;
+    registerText.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+  }
+}
+</script>
 </body>
 </html>
