@@ -69,12 +69,6 @@
     z-index: 10000;
   }
 
-  /* Keyboard active state */
-  .app-container.keyboard-active {
-    height: 100vh;
-    overflow: hidden;
-  }
-
   /* Sidebar Navigation */
   .sidebar {
     width: 260px;
@@ -250,13 +244,6 @@
     min-width: 0;
     height: 100vh;
     overflow: hidden;
-    transition: var(--transition);
-  }
-
-  /* Keyboard active state for main content */
-  .keyboard-active .main-content {
-    height: 100vh;
-    overflow: visible;
   }
 
   .top-bar {
@@ -269,15 +256,6 @@
     border-bottom: 1px solid var(--gray-200);
     flex-shrink: 0;
     z-index: 100;
-    transition: var(--transition);
-  }
-
-  /* Hide top bar when keyboard is active on mobile */
-  @media (max-width: 768px) {
-    .keyboard-active .top-bar {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
   }
 
   .menu-toggle {
@@ -393,18 +371,6 @@
     overflow: hidden;
     height: calc(100vh - 70px);
     width: 100%;
-    transition: var(--transition);
-  }
-
-  /* Adjust iframe container when keyboard is active */
-  .keyboard-active .iframe-container {
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
   }
 
   .content-frame {
@@ -423,44 +389,6 @@
     overflow: auto;
     overflow-x: hidden;
     position: relative;
-    transition: var(--transition);
-  }
-
-  /* Keyboard active adjustments for iframe wrapper */
-  .keyboard-active .iframe-wrapper {
-    height: 100vh;
-    padding-bottom: 0;
-  }
-
-  /* Floating action button for keyboard close */
-  .keyboard-close-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 1001;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    display: none;
-  }
-
-  .keyboard-close-btn.active {
-    display: flex;
-  }
-
-  .keyboard-close-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.1);
   }
 
   /* Swipe Refresh Indicator */
@@ -633,15 +561,6 @@
     .context-menu {
       right: 10px;
     }
-
-    /* Enhanced mobile keyboard handling */
-    .keyboard-active .sidebar {
-      display: none;
-    }
-
-    .keyboard-active .overlay {
-      display: none;
-    }
   }
 
   /* Scrollbar Styling */
@@ -687,11 +606,6 @@
 </head>
 <body>
 <div class="app-container" id="appContainer">
-  <!-- Keyboard Close Button -->
-  <button class="keyboard-close-btn" id="keyboardCloseBtn">
-    <i class="fas fa-keyboard"></i>
-  </button>
-
   <!-- Security Warning -->
   <div class="security-warning" id="securityWarning">
     <div class="warning-content">
@@ -849,157 +763,6 @@ const iframeWrapper = document.getElementById('iframeWrapper');
 const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
-const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
-
-// Keyboard detection and adjustment
-let isKeyboardActive = false;
-let originalHeight = window.innerHeight;
-
-// Detect keyboard appearance
-window.addEventListener('resize', function() {
-  if (window.innerHeight < originalHeight * 0.7) {
-    // Keyboard is likely open
-    if (!isKeyboardActive) {
-      activateKeyboardMode();
-    }
-  } else {
-    // Keyboard is likely closed
-    if (isKeyboardActive) {
-      deactivateKeyboardMode();
-    }
-  }
-});
-
-// Focus and blur events for iframe content
-function setupIframeKeyboardHandling() {
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc) {
-      // Add event listeners to all input elements in iframe
-      const inputs = iframeDoc.querySelectorAll('input, textarea, select');
-      inputs.forEach(input => {
-        input.addEventListener('focus', handleIframeInputFocus);
-        input.addEventListener('blur', handleIframeInputBlur);
-      });
-      
-      // Also handle dynamically added inputs
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          mutation.addedNodes.forEach(function(node) {
-            if (node.nodeType === 1) { // Element node
-              if (node.matches('input, textarea, select')) {
-                node.addEventListener('focus', handleIframeInputFocus);
-                node.addEventListener('blur', handleIframeInputBlur);
-              }
-              node.querySelectorAll('input, textarea, select').forEach(input => {
-                input.addEventListener('focus', handleIframeInputFocus);
-                input.addEventListener('blur', handleIframeInputBlur);
-              });
-            }
-          });
-        });
-      });
-      
-      observer.observe(iframeDoc.body, {
-        childList: true,
-        subtree: true
-      });
-    }
-  } catch (e) {
-    // Cross-origin iframe - use alternative approach
-    console.log('Cross-origin iframe detected, using resize-based keyboard detection');
-  }
-}
-
-function handleIframeInputFocus(event) {
-  activateKeyboardMode();
-  
-  // Scroll the input into view
-  setTimeout(() => {
-    event.target.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    });
-  }, 300);
-}
-
-function handleIframeInputBlur() {
-  // Don't immediately deactivate - wait to see if another input gets focus
-  setTimeout(() => {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc) {
-      const activeElement = iframeDoc.activeElement;
-      if (!activeElement || (activeElement.tagName !== 'INPUT' && 
-          activeElement.tagName !== 'TEXTAREA' && 
-          activeElement.tagName !== 'SELECT')) {
-        deactivateKeyboardMode();
-      }
-    }
-  }, 100);
-}
-
-function activateKeyboardMode() {
-  if (isKeyboardActive) return;
-  
-  isKeyboardActive = true;
-  appContainer.classList.add('keyboard-active');
-  keyboardCloseBtn.classList.add('active');
-  
-  // Store original scroll position
-  iframeWrapper.dataset.originalScrollTop = iframeWrapper.scrollTop;
-  
-  console.log('Keyboard mode activated');
-}
-
-function deactivateKeyboardMode() {
-  if (!isKeyboardActive) return;
-  
-  isKeyboardActive = false;
-  appContainer.classList.remove('keyboard-active');
-  keyboardCloseBtn.classList.remove('active');
-  
-  // Restore original scroll position
-  if (iframeWrapper.dataset.originalScrollTop) {
-    iframeWrapper.scrollTop = iframeWrapper.dataset.originalScrollTop;
-    delete iframeWrapper.dataset.originalScrollTop;
-  }
-  
-  console.log('Keyboard mode deactivated');
-}
-
-// Manual keyboard close button
-keyboardCloseBtn.addEventListener('click', function() {
-  // Blur any active input
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc && iframeDoc.activeElement) {
-      iframeDoc.activeElement.blur();
-    }
-  } catch (e) {
-    // Cross-origin iframe
-  }
-  
-  deactivateKeyboardMode();
-});
-
-// Also close keyboard when tapping outside inputs
-document.addEventListener('click', function(event) {
-  if (isKeyboardActive && !event.target.matches('input, textarea, select')) {
-    try {
-      const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-      if (iframeDoc && iframeDoc.activeElement) {
-        const activeTag = iframeDoc.activeElement.tagName;
-        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
-          return; // Don't blur if clicking outside but an input is still focused
-        }
-      }
-    } catch (e) {
-      // Cross-origin iframe
-    }
-    
-    deactivateKeyboardMode();
-  }
-});
 
 // Security restrictions for main window
 document.addEventListener('contextmenu', (e) => {
@@ -1186,7 +949,6 @@ if (shopTag) {
 // Enter fullscreen mode on page load
 window.addEventListener('DOMContentLoaded', () => {
   enterFullscreen();
-  originalHeight = window.innerHeight;
 });
 
 // Fullscreen functionality
@@ -1401,9 +1163,6 @@ function hideLoading() {
         
         // Apply security to iframe content
         applyIframeSecurity();
-        
-        // Setup keyboard handling for iframe inputs
-        setupIframeKeyboardHandling();
       }
     } catch (e) {
       // Cross-origin iframe
