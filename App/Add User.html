@@ -551,8 +551,6 @@
 
         let staffToDelete = null;
 
-        const mobileTag = localStorage.getItem("MobileTag");
-
         // Show loading spinner
         function showLoading() {
             loadingOverlay.classList.add('active');
@@ -593,9 +591,12 @@
             }
         }
 
-        // Validate manager using MobileTag
+        // Validate manager using MobileTag and ShopIDTag from localStorage
         async function validateManager() {
-            if (!mobileTag) {
+            const mobileTag = localStorage.getItem("MobileTag");
+            const shopIDTag = localStorage.getItem("ShopIDTag");
+
+            if (!mobileTag || !shopIDTag) {
                 showStatus("Login Required", "Please login first.", true);
                 return;
             }
@@ -609,17 +610,32 @@
                 const data = await res.json();
                 const users = data.results;
 
-                const currentUser = users.find(u => u.Username == mobileTag);
+                // Find user with matching MobileTag (Username) AND ShopIDTag (ShopID)
+                const currentUser = users.find(u => 
+                    u.Username === mobileTag && u.ShopID === shopIDTag
+                );
 
                 if (!currentUser) {
                     hideLoading();
-                    showStatus("User Not Found", "User not found for MobileTag: " + mobileTag, true);
+                    showStatus(
+                        "User Not Found", 
+                        `No user found with Mobile: ${mobileTag} and Shop ID: ${shopIDTag}`, 
+                        true
+                    );
                     return;
                 }
 
+                // Check if user is blocked
+                if (currentUser.Block) {
+                    hideLoading();
+                    showStatus("Account Blocked", "Your account has been blocked. Please contact administrator.", true);
+                    return;
+                }
+
+                // Check if user has Manager role
                 if (currentUser.Role !== "Manager") {
                     hideLoading();
-                    showStatus("Access Denied", "You are not authorized to access this page.", true);
+                    showStatus("Access Denied", "You are not authorized to access this page. Manager role required.", true);
                     return;
                 }
 
@@ -632,6 +648,7 @@
                 hideLoading();
                 mainContainer.style.display = "block";
 
+                // Fetch staff members for this shop
                 fetchStaff(currentUser.ShopID);
             } catch (error) {
                 hideLoading();
@@ -892,6 +909,7 @@
             });
         });
 
+        // Initialize the dashboard
         validateManager();
     </script>
 </body>
