@@ -1336,8 +1336,8 @@ function applyIframeSecurity() {
       
       // Detect if devtools is open in iframe
       const checkDevTools = function() {
-        const widthThreshold = iframeWindow.outerWidth - iframeWindow.innerWidth > 160;
-        const heightThreshold = iframeWindow.outerHeight - iframeWindow.innerHeight > 160;
+        const widthThreshold = iframeWindow.outerWidth - iframeWindow.innerWidth > 600;
+        const heightThreshold = iframeWindow.outerHeight - iframeWindow.innerHeight > 600;
         
         if (widthThreshold || heightThreshold) {
           showSecurityWarning('Developer tools are disabled');
