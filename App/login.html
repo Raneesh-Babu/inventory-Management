@@ -401,6 +401,27 @@ textarea {
   margin-top: 4px;
 }
 
+/* Mobile validation indicator */
+.mobile-validation {
+  margin-top: 5px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-validation i {
+  margin-right: 5px;
+  font-size: 10px;
+}
+
+.mobile-valid {
+  color: #2a9d8f;
+}
+
+.mobile-invalid {
+  color: #e63946;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .container {
@@ -452,8 +473,14 @@ textarea {
     </div>
     
     <div class="input-group">
-      <input type="text" id="rmobile" placeholder=" " maxlength="10" tabindex="2">
+      <input type="text" id="rmobile" placeholder=" " maxlength="10" tabindex="2" onblur="checkMobileAvailability()">
       <label for="rmobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
+      
+      <!-- Mobile availability indicator -->
+      <div id="mobileValidation" class="mobile-validation" style="display: none;">
+        <i id="mobileIcon" class="fas fa-times-circle mobile-invalid"></i>
+        <span id="mobileText">Mobile number already registered</span>
+      </div>
     </div>
     
     <!-- Shop Information -->
@@ -489,7 +516,7 @@ textarea {
           <i id="lowercaseRule" class="fas fa-times-circle rule-invalid"></i>
           <span>At least one lowercase letter</span>
         </div>
-        <div class="input-group">
+        <div class="password-rule">
           <i id="numberRule" class="fas fa-times-circle rule-invalid"></i>
           <span>At least one number</span>
         </div>
@@ -566,6 +593,7 @@ const BASE_URL = "https://api.baserow.io/api/database/rows/table/";
 // Variables to store user data for shop selection
 let matchingUsers = [];
 let selectedShopId = "";
+let isMobileAvailable = false;
 
 // Check if user is already logged in
 window.onload = function() {
@@ -687,6 +715,46 @@ function checkPasswordMatch() {
   
   passwordMatch.style.display = 'block';
   return passwordsMatch;
+}
+
+// Check mobile number availability
+async function checkMobileAvailability() {
+  const mobile = document.getElementById('rmobile').value.trim();
+  const mobileValidation = document.getElementById('mobileValidation');
+  
+  if (mobile.length !== 10 || isNaN(mobile)) {
+    mobileValidation.style.display = 'none';
+    isMobileAvailable = false;
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const data = await res.json();
+    
+    // Check if mobile number already exists in Username column
+    const existingUser = data.results.find(u => u["Username"] === mobile);
+    
+    if (existingUser) {
+      mobileValidation.style.display = 'flex';
+      document.getElementById('mobileIcon').className = 'fas fa-times-circle mobile-invalid';
+      document.getElementById('mobileText').textContent = 'Mobile number already registered';
+      document.getElementById('mobileText').className = 'mobile-invalid';
+      isMobileAvailable = false;
+    } else {
+      mobileValidation.style.display = 'flex';
+      document.getElementById('mobileIcon').className = 'fas fa-check-circle mobile-valid';
+      document.getElementById('mobileText').textContent = 'Mobile number is available';
+      document.getElementById('mobileText').className = 'mobile-valid';
+      isMobileAvailable = true;
+    }
+  } catch (error) {
+    console.error("Error checking mobile number:", error);
+    mobileValidation.style.display = 'none';
+    isMobileAvailable = false;
+  }
 }
 
 // Enter key support for forms
@@ -901,6 +969,13 @@ async function register() {
     return;
   }
 
+  // Check if mobile number is available
+  if (!isMobileAvailable) {
+    rmsg.textContent = "This mobile number is already registered. Please use a different number.";
+    rmsg.className = 'notice error';
+    return;
+  }
+
   // Validate password
   if (!validatePassword()) {
     rmsg.textContent = "Please ensure your password meets all requirements.";
@@ -920,14 +995,15 @@ async function register() {
   registerText.innerHTML = '<div class="spinner"></div>';
   
   try {
-    // Check duplicates
+    // Check duplicates - Check only by Username (mobile number)
     const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
       headers: { Authorization: `Token ${API_KEY}` }
     });
     const data = await res.json();
     
-    if (data.results.find(u => u["Username"] === mobile && u["Shop Name"] === `${shopname}-${address}/${mobile}`)) {
-      rmsg.textContent = "This shop with the same mobile number is already registered.";
+    // Check if mobile number already exists in Username column
+    if (data.results.find(u => u["Username"] === mobile)) {
+      rmsg.textContent = "This mobile number is already registered. Please use a different number.";
       rmsg.className = 'notice error';
       return;
     }
