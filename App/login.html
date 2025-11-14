@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --secondary: #7209b7;
+  --success: #4cc9f0;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --gray: #6c757d;
+  --white: #ffffff;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 450px;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+}
+
+h2 {
+  text-align: center;
+  color: var(--dark);
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 28px;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+input, select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: var(--transition);
+  background-color: var(--white);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+label {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  color: var(--gray);
+  pointer-events: none;
+  transition: var(--transition);
+  background: var(--white);
+  padding: 0 4px;
+}
+
+input:focus + label,
+input:not(:placeholder-shown) + label {
+  top: 0;
+  font-size: 12px;
+  color: var(--primary);
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:disabled {
+  background: #b8c2cc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--white);
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.link {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--gray);
+}
+
+.link a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.link a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.notice {
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.error {
+  color: #e63946;
+  background-color: rgba(230, 57, 70, 0.1);
+}
+
+.success {
+  color: #2a9d8f;
+  background-color: rgba(42, 157, 143, 0.1);
+}
+
+/* Popup Styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+}
+
+.popup-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.popup {
+  background: var(--white);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  transform: translateY(20px);
+  transition: var(--transition);
+}
+
+.popup-overlay.active .popup {
+  transform: translateY(0);
+}
+
+.popup-icon {
+  font-size: 48px;
+  color: #2a9d8f;
+  margin-bottom: 15px;
+}
+
+.popup h3 {
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+
+.popup p {
+  color: var(--gray);
+  margin-bottom: 20px;
+}
+
+.popup-btn {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.popup-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* Animation for form switching */
+.form-container {
+  transition: var(--transition);
+}
+
+.hidden {
+  display: none;
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.visible {
+  display: block;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Icon styles */
+.input-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray);
+  font-size: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 20px;
+  }
+  
+  h2 {
+    font-size: 24px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2><i class="fas fa-boxes"></i> Inventory Login</h2>
+  
+  <!-- LOGIN FORM -->
+  <div id="loginForm" class="form-container visible">
+    <div class="input-group">
+      <input type="text" id="mobile" placeholder=" " maxlength="10">
+      <label for="mobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
+      <div class="input-icon"><i class="fas fa-user"></i></div>
+    </div>
+    
+    <div class="input-group">
+      <input type="password" id="password" placeholder=" ">
+      <label for="password"><i class="fas fa-lock"></i> Password</label>
+      <div class="input-icon"><i class="fas fa-key"></i></div>
+    </div>
+    
+    <button id="loginBtn" onclick="login()">
+      <span id="loginText"><i class="fas fa-sign-in-alt"></i> Login</span>
+    </button>
+    
+    <div class="link">
+      <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+    </div>
+    
+    <div id="msg" class="notice"></div>
+  </div>
+
+  <!-- REGISTRATION FORM -->
+  <div id="registerForm" class="form-container hidden">
+    <div class="input-group">
+      <input type="text" id="rname" placeholder=" ">
+      <label for="rname"><i class="fas fa-user"></i> Full Name</label>
+      <div class="input-icon"><i class="fas fa-id-card"></i></div>
+    </div>
+    
+    <!-- Role section is hidden as requested -->
+    <div class="input-group" style="display: none;">
+      <select id="rrole">
+        <option value="Manager">Manager</option>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <input type="text" id="rshopname" placeholder=" ">
+      <label for="rshopname"><i class="fas fa-store"></i> Shop Name</label>
+      <div class="input-icon"><i class="fas fa-building"></i></div>
+    </div>
+    
+    <div class="input-group">
+      <input type="text" id="rmobile" placeholder=" " maxlength="10">
+      <label for="rmobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
+      <div class="input-icon"><i class="fas fa-phone"></i></div>
+    </div>
+    
+    <div class="input-group">
+      <input type="password" id="rpassword" placeholder=" ">
+      <label for="rpassword"><i class="fas fa-lock"></i> Password</label>
+      <div class="input-icon"><i class="fas fa-key"></i></div>
+    </div>
+    
+    <button id="registerBtn" onclick="register()">
+      <span id="registerText"><i class="fas fa-user-plus"></i> Register</span>
+    </button>
+    
+    <div class="link">
+      <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
+    
+    <div id="rmsg" class="notice"></div>
+  </div>
+</div>
+
+<!-- Success Popup -->
+<div class="popup-overlay" id="successPopup">
+  <div class="popup">
+    <div class="popup-icon"><i class="fas fa-check-circle"></i></div>
+    <h3>Registration Successful!</h3>
+    <p>Your account has been created successfully. You can now login with your credentials.</p>
+    <button class="popup-btn" onclick="closePopup()">Continue</button>
+  </div>
+</div>
+
+<script>
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const TABLE_ID = 729979;
+const BASE_URL = "https://api.baserow.io/api/database/rows/table/";
+
+// Check if user is already logged in
+window.onload = function() {
+  const shopIdTag = localStorage.getItem("ShopIDTag");
+  if (shopIdTag) {
+    window.location.href = "dashboard.html";
+  }
+};
+
+function showRegister() {
+  document.getElementById('loginForm').classList.remove('visible');
+  document.getElementById('loginForm').classList.add('hidden');
+  
+  setTimeout(() => {
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('visible');
+  }, 150);
+}
+
+function showLogin() {
+  document.getElementById('registerForm').classList.remove('visible');
+  document.getElementById('registerForm').classList.add('hidden');
+  
+  setTimeout(() => {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('visible');
+  }, 150);
+}
+
+function showPopup() {
+  document.getElementById('successPopup').classList.add('active');
+}
+
+function closePopup() {
+  document.getElementById('successPopup').classList.remove('active');
+  showLogin();
+}
+
+async function login() {
+  const mobile = document.getElementById('mobile').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const msg = document.getElementById('msg');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginText = document.getElementById('loginText');
+  
+  msg.textContent = '';
+  msg.className = 'notice';
+  
+  if (!mobile || !password) {
+    msg.textContent = "Please enter all fields.";
+    msg.className = 'notice error';
+    return;
+  }
+  
+  // Disable button and show spinner
+  loginBtn.disabled = true;
+  loginText.innerHTML = '<div class="spinner"></div> Logging in...';
+  
+  try {
+    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const data = await res.json();
+
+    const user = data.results.find(u => u["Username"] === mobile);
+    if (!user) {
+      msg.textContent = "Invalid mobile number or password.";
+      msg.className = 'notice error';
+      return;
+    }
+
+    if (user["Block"]) {
+      msg.textContent = `Blocked: ${user["Notice"] || "No notice provided"}`;
+      msg.className = 'notice error';
+      return;
+    }
+
+    if (user["Password"] !== password) {
+      msg.textContent = "Invalid mobile number or password.";
+      msg.className = 'notice error';
+      return;
+    }
+
+    // Successful login
+    localStorage.setItem("NameTag", user["Name"]);
+    localStorage.setItem("ShopTag", user["Shop Name"]);
+    localStorage.setItem("ShopIDTag", user["ShopID"]);
+    localStorage.setItem("MobileTag", user["Username"]);
+    localStorage.setItem("LastLogin", new Date().toISOString());
+    localStorage.setItem("ActiveTime", Date.now());
+
+    window.location.href = "dashboard.html";
+  } catch (error) {
+    msg.textContent = "An error occurred. Please try again.";
+    msg.className = 'notice error';
+  } finally {
+    // Re-enable button
+    loginBtn.disabled = false;
+    loginText.textContent = 'Login';
+  }
+}
+
+async function register() {
+  const name = document.getElementById('rname').value.trim();
+  const role = document.getElementById('rrole').value;
+  const shopname = document.getElementById('rshopname').value.trim();
+  const mobile = document.getElementById('rmobile').value.trim();
+  const password = document.getElementById('rpassword').value.trim();
+  const rmsg = document.getElementById('rmsg');
+  const registerBtn = document.getElementById('registerBtn');
+  const registerText = document.getElementById('registerText');
+  
+  rmsg.textContent = '';
+  rmsg.className = 'notice';
+  
+  if (!name || !shopname || !mobile || !password) {
+    rmsg.textContent = "Please fill all fields.";
+    rmsg.className = 'notice error';
+    return;
+  }
+  
+  if (mobile.length !== 10 || isNaN(mobile)) {
+    rmsg.textContent = "Enter valid 10-digit mobile number.";
+    rmsg.className = 'notice error';
+    return;
+  }
+
+  // Disable button and show spinner
+  registerBtn.disabled = true;
+  registerText.innerHTML = '<div class="spinner"></div> Registering...';
+
+  try {
+    // Check duplicates
+    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    const data = await res.json();
+    
+    if (data.results.find(u => u["Username"] === mobile)) {
+      rmsg.textContent = "Mobile number already registered.";
+      rmsg.className = 'notice error';
+      return;
+    }
+
+    const shopId = "SHOP-" + Date.now();
+
+    const createRes = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Token ${API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "Name": name,
+        "Role": role,
+        "Username": mobile,
+        "Password": password,
+        "ShopID": shopId,
+        "Shop Name": shopname,
+        "Block": false,
+        "Notice": "",
+        "Last Login": new Date().toISOString()
+      })
+    });
+
+    if (createRes.ok) {
+      // Show success popup
+      showPopup();
+    } else {
+      rmsg.textContent = "Registration failed. Try again.";
+      rmsg.className = 'notice error';
+    }
+  } catch (error) {
+    rmsg.textContent = "An error occurred. Please try again.";
+    rmsg.className = 'notice error';
+  } finally {
+    // Re-enable button
+    registerBtn.disabled = false;
+    registerText.textContent = 'Register';
+  }
+}
+</script>
+</body>
+</html>
