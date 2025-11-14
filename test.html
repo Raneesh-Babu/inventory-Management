@@ -1285,6 +1285,17 @@
       return colors[index];
     }
 
+    // Extract numeric part from invoice number
+    function extractInvoiceNumber(invoiceString) {
+      if (!invoiceString) return 0;
+      
+      // Remove "INV" prefix and any non-numeric characters
+      const numericPart = invoiceString.replace(/^INV/, '').replace(/\D/g, '');
+      
+      // Convert to a number (BigInt for very large numbers)
+      return numericPart ? BigInt(numericPart) : 0n;
+    }
+
     // Show alert modal instead of native alert
     function showAlert(message, type = 'info') {
       const alertModal = document.getElementById('alertModal');
@@ -1435,6 +1446,7 @@
         if (!invoicesMap[invoiceNumber]) {
           invoicesMap[invoiceNumber] = {
             invoiceNumber: invoiceNumber,
+            numericInvoiceNumber: extractInvoiceNumber(invoiceNumber),
             date: row["Date"],
             customer: row["Costomer Name"],
             total: 0,
@@ -1486,9 +1498,14 @@
         totalProductsSold += quantity;
       });
 
-      // Convert maps to arrays and sort by date (newest first)
+      // Convert maps to arrays and sort by numeric invoice number (descending)
       const invoices = Object.values(invoicesMap)
-        .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+        .sort((a, b) => {
+          // Compare BigInt values for proper numeric sorting
+          if (a.numericInvoiceNumber > b.numericInvoiceNumber) return -1;
+          if (a.numericInvoiceNumber < b.numericInvoiceNumber) return 1;
+          return 0;
+        });
       
       const products = Object.values(productsMap)
         .sort((a, b) => b.total - a.total); // Highest value first
@@ -1704,8 +1721,14 @@
               <tbody>
         `;
         
-        // Sort invoices by date (newest first)
-        const sortedInvoices = batch.invoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort invoices by numeric invoice number (descending)
+        const sortedInvoices = batch.invoices.sort((a, b) => {
+          const aNum = extractInvoiceNumber(a.invoiceNumber);
+          const bNum = extractInvoiceNumber(b.invoiceNumber);
+          if (aNum > bNum) return -1;
+          if (aNum < bNum) return 1;
+          return 0;
+        });
         
         sortedInvoices.forEach(invoice => {
           html += `
