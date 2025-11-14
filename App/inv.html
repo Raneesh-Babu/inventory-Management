@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product & Inventory</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<style>
+/* Enhanced CSS with better styling and validations */
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --success: #06d6a0;
+  --danger: #ef476f;
+  --warning: #ffd166;
+  --dark: #333;
+  --light: #f8f9fa;
+  --gray: #6c757d;
+  --border: #dee2e6;
+  --border-radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0; 
+  padding: 20px;
+  min-height: 100vh;
+  color: var(--dark);
+}
+
+.container { 
+  max-width: 600px; 
+  margin: auto; 
+  background: white; 
+  padding: 30px; 
+  border-radius: var(--border-radius); 
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+h2 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label { 
+  display: block; 
+  margin-bottom: 8px; 
+  font-weight: 500;
+  color: var(--dark);
+}
+
+input, select, button, textarea { 
+  width: 100%; 
+  padding: 14px 16px; 
+  margin: 8px 0; 
+  border-radius: var(--border-radius); 
+  border: 2px solid var(--border);
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+input:invalid, select:invalid, textarea:invalid {
+  border-color: var(--danger);
+}
+
+input:valid, select:valid, textarea:valid {
+  border-color: var(--success);
+}
+
+button { 
+  background: var(--primary); 
+  color: white; 
+  border: none; 
+  font-weight: 600; 
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 15px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+button:hover { 
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled { 
+  background: var(--gray); 
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#cameraContainer { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.9); 
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#reader { 
+  width: 90%; 
+  max-width: 500px;
+  height: 60%; 
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
+
+#switchCameraBtn, #closeCameraBtn { 
+  position: relative;
+  margin: 20px 10px 0;
+  background: white; 
+  color: var(--dark); 
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: var(--border-radius); 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: var(--transition);
+  width: auto;
+}
+
+#switchCameraBtn:hover, #closeCameraBtn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+#buttonsRow { 
+  display: flex; 
+  gap: 10px; 
+  align-items: stretch;
+}
+
+#buttonsRow input {
+  margin: 0;
+}
+
+#buttonsRow button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+#fetchBtn {
+  background: var(--success);
+}
+
+#fetchBtn:hover {
+  background: #05c290;
+}
+
+#scanBtn {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+#scanBtn:hover {
+  background: #ffc94d;
+}
+
+#status {
+  display: none; /* Hidden as requested */
+}
+
+#loginPrompt {
+  color: var(--danger);
+  display: none;
+  padding: 12px 16px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--danger);
+  font-weight: 500;
+}
+
+.error-message {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
+
+.success-message {
+  color: var(--success);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
+
+.field-required::after {
+  content: " *";
+  color: var(--danger);
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.modal-success .modal-icon {
+  color: var(--success);
+}
+
+.modal-warning .modal-icon {
+  color: var(--warning);
+}
+
+.modal-error .modal-icon {
+  color: var(--danger);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.modal-message {
+  margin-bottom: 20px;
+  color: var(--dark);
+}
+
+.modal-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  margin: 0 auto;
+}
+
+.modal-button:hover {
+  background: var(--primary-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  #buttonsRow {
+    flex-direction: column;
+  }
+  
+  #buttonsRow button {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="status" class="status-message"></div>
+  <div id="loginPrompt" class="error-message">Please login first</div>
+  
+  <div id="app" style="display:none;">
+    <h2>Add Product & Inventory</h2>
+    
+    <div class="form-group">
+      <label for="productType" class="field-required">Product Type:</label>
+      <select id="productType" required>
+        <option value="existing">Existing Product</option>
+        <option value="new">New Product</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="productId" class="field-required">Product ID:</label>
+      <div id="buttonsRow">
+        <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
+        <button id="fetchBtn">Fetch</button>
+        <button id="scanBtn">Scan</button>
+      </div>
+      <div id="productIdError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="productName" class="field-required">Product Name:</label>
+      <input type="text" id="productName" required>
+      <div id="productNameError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="details">Details:</label>
+      <textarea id="details"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="price" class="field-required">Price:</label>
+      <input type="number" id="price" min="0" step="0.01" required>
+      <div id="priceError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="count" class="field-required">Count:</label>
+      <input type="number" id="count" min="1" required>
+      <div id="countError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="batchNo" class="field-required">Batch No:</label>
+      <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+      <div id="batchNoError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="expireDate" class="field-required">Expire Date:</label>
+      <input type="date" id="expireDate" required>
+      <div id="expireDateError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="date" class="field-required">Date:</label>
+      <input type="text" id="date" readonly required>
+    </div>
+
+    <div class="form-group">
+      <label for="location" class="field-required">Location:</label>
+      <input type="text" id="location" required>
+      <div id="locationError" class="error-message"></div>
+    </div>
+
+    <button id="addBtn">Add to Inventory</button>
+  </div>
+</div>
+
+<!-- Camera Popup -->
+<div id="cameraContainer">
+  <div id="reader"></div>
+  <button id="switchCameraBtn">Switch Camera</button>
+  <button id="closeCameraBtn">Close</button>
+</div>
+
+<!-- Modal for alerts -->
+<div id="modal" class="modal">
+  <div class="modal-content" id="modalContent">
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-message" id="modalMessage"></div>
+    <button class="modal-button" id="modalButton">OK</button>
+  </div>
+</div>
+
+<script>
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const BASEROW = "https://api.baserow.io";
+const USER_TABLE = 729979;
+const PRODUCT_TABLE = 734793;
+const INVENTORY_TABLE = 734795;
+
+const MobileTag = localStorage.getItem("MobileTag");
+const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
+
+const app = document.getElementById("app");
+const status = document.getElementById("status");
+const addBtn = document.getElementById("addBtn");
+const scanBtn = document.getElementById("scanBtn");
+const fetchBtn = document.getElementById("fetchBtn");
+const productIdInput = document.getElementById("productId");
+const productType = document.getElementById("productType");
+const dateInput = document.getElementById("date");
+
+const readerContainer = document.getElementById("cameraContainer");
+const modal = document.getElementById("modal");
+const modalContent = document.getElementById("modalContent");
+const modalIcon = document.getElementById("modalIcon");
+const modalTitle = document.getElementById("modalTitle");
+const modalMessage = document.getElementById("modalMessage");
+const modalButton = document.getElementById("modalButton");
+
+let html5QrCode;
+let currentCamera = "environment";
+
+dateInput.value = new Date().toISOString().split('T')[0];
+
+// Modal function
+function showModal(type, title, message) {
+  modalContent.className = "modal-content";
+  modalIcon.innerHTML = "";
+  
+  if (type === "success") {
+    modalContent.classList.add("modal-success");
+    modalIcon.innerHTML = "✅";
+  } else if (type === "warning") {
+    modalContent.classList.add("modal-warning");
+    modalIcon.innerHTML = "⚠️";
+  } else if (type === "error") {
+    modalContent.classList.add("modal-error");
+    modalIcon.innerHTML = "❌";
+  }
+  
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  modal.style.display = "flex";
+}
+
+modalButton.addEventListener("click", function() {
+  modal.style.display = "none";
+});
+
+// Close modal when clicking outside
+modal.addEventListener("click", function(e) {
+  if (e.target === modal) {
+    modal.style.display = "none";
+  }
+});
+
+// Field validation functions
+function validateBatchNo(batchNo) {
+  const batchNoRegex = /^[0-9]+$/;
+  return batchNoRegex.test(batchNo);
+}
+
+function validateForm() {
+  let isValid = true;
+  
+  // Reset error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Check required fields
+  const requiredFields = [
+    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+  ];
+  
+  requiredFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (!field.value.trim()) {
+      document.getElementById(fieldId + 'Error').textContent = 'This field is required';
+      document.getElementById(fieldId + 'Error').style.display = 'block';
+      isValid = false;
+    }
+  });
+  
+  // Validate batch number
+  const batchNo = document.getElementById('batchNo').value;
+  if (batchNo && !validateBatchNo(batchNo)) {
+    document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
+    document.getElementById('batchNoError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate price
+  const price = document.getElementById('price').value;
+  if (price && parseFloat(price) < 0) {
+    document.getElementById('priceError').textContent = 'Price cannot be negative';
+    document.getElementById('priceError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate count
+  const count = document.getElementById('count').value;
+  if (count && parseInt(count) < 1) {
+    document.getElementById('countError').textContent = 'Count must be at least 1';
+    document.getElementById('countError').style.display = 'block';
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+// Function to clear form fields
+function clearForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
+  
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
+  
+  // Reset product type to existing
+  productType.value = 'existing';
+  
+  // Clear all error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
+// Add real-time validation
+document.getElementById('batchNo').addEventListener('input', function() {
+  const batchNoError = document.getElementById('batchNoError');
+  if (this.value && !validateBatchNo(this.value)) {
+    batchNoError.textContent = 'Batch number should contain only numbers';
+    batchNoError.style.display = 'block';
+  } else {
+    batchNoError.style.display = 'none';
+  }
+});
+
+// ✅ 1. Role Validation
+(async function init(){
+  if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
+
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
+    const data = await res.json();
+    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
+    if(!user){ 
+      showModal("error", "User Not Found", "User not found in the system.");
+      return; 
+    }
+
+    const role = user.Role || "Staff";
+    // Status is hidden as requested
+    app.style.display = "block";
+
+    if(role.toLowerCase()!=="manager"){
+      addBtn.disabled = true;
+      Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
+      showModal("error", "Access Denied", "Only managers can add products and inventory.");
+      return;
+    }
+  }catch(e){ 
+    console.error(e); 
+    showModal("error", "Error", "Error fetching user information.");
+  }
+})();
+
+// ✅ 2. Handle Product Type
+productType.addEventListener("change", ()=>{
+  if(productType.value==="new"){
+    productIdInput.value = "PRD-" + Date.now();
+    document.getElementById("productName").value = "";
+    document.getElementById("details").value = "";
+    document.getElementById("price").value = "";
+  }else{
+    productIdInput.value = "";
+  }
+});
+
+// ✅ 3. Fetch Product Details (manual fetch or scan)
+async function fetchProduct(pid){
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+  
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+      headers:{Authorization:`Token ${API_KEY}`}
+    });
+    const data = await res.json();
+    const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    if(product){
+      document.getElementById("productName").value = product["Product Name"] || "";
+      document.getElementById("details").value = product["Details"] || "";
+      document.getElementById("price").value = product["Price"] || "";
+      
+      // Clear any previous errors
+      document.getElementById("productIdError").style.display = "none";
+      
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = '✅ Product details fetched!';
+      successMsg.style.display = 'block';
+      
+      // Remove any existing success message
+      const existingSuccess = document.querySelector('#productId + .success-message');
+      if (existingSuccess) existingSuccess.remove();
+      
+      // Add success message after product ID input
+      productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    }else{
+      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").style.display = "block";
+    }
+  }catch(err){ 
+    console.error(err); 
+    document.getElementById("productIdError").textContent = "Error fetching product.";
+    document.getElementById("productIdError").style.display = "block";
+  }
+}
+
+fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
+
+// ✅ 4. Camera Scanning
+scanBtn.addEventListener("click", ()=>{
+  readerContainer.style.display="flex";
+  startCamera();
+});
+
+document.getElementById("closeCameraBtn").addEventListener("click", ()=>{
+  stopCamera();
+});
+
+document.getElementById("switchCameraBtn").addEventListener("click", ()=>{
+  currentCamera = currentCamera==="environment" ? "user" : "environment";
+  stopCamera();
+  startCamera();
+});
+
+function startCamera(){
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start({facingMode: currentCamera}, {fps:10, qrbox:250},
+    qrCodeMessage=>{
+      productIdInput.value = qrCodeMessage;
+      stopCamera();
+      fetchProduct(qrCodeMessage);
+    },
+    error=>{}
+  ).catch(err=>{
+    console.error("Camera error:", err);
+    showModal("error", "Camera Error", "Failed to start camera. Please check permissions.");
+  });
+}
+
+function stopCamera(){
+  if(html5QrCode){
+    html5QrCode.stop().then(()=>{ html5QrCode.clear(); });
+  }
+  readerContainer.style.display="none";
+}
+
+// ✅ 5. Add to Inventory
+addBtn.addEventListener("click", async ()=>{
+  // Validate form before submission
+  if (!validateForm()) {
+    return;
+  }
+  
+  const pid = productIdInput.value.trim();
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+
+  // Disable button to prevent duplicate submissions
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding...';
+
+  try {
+    // Add product if it's new (and not duplicate)
+    if(productType.value==="new"){
+      try{
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+          headers:{Authorization:`Token ${API_KEY}`}
+        });
+        const data = await res.json();
+        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        if(!existing){
+          const body = {
+            "Product ID": pid,
+            "Product Name": document.getElementById("productName").value,
+            "Details": document.getElementById("details").value,
+            "Price": document.getElementById("price").value,
+            "ShopID": ShopID
+          };
+          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+            method:"POST",
+            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+          });
+          showModal("success", "Product Added", "✅ Product added to Product Table!");
+        }else{
+          showModal("warning", "Product Exists", "⚠️ Product ID already exists, skipping Product Table insert.");
+        }
+      }catch(e){ 
+        console.error(e); 
+        showModal("error", "Error", "Error adding product to database.");
+      }
+    }
+
+    // Always add inventory record
+    const invBody = {
+      "Product ID": pid,
+      "Count": parseInt(document.getElementById("count").value),
+      "Batch No": document.getElementById("batchNo").value,
+      "Expire Date": document.getElementById("expireDate").value,
+      "Date": dateInput.value,
+      "Location": document.getElementById("location").value,
+      "ShopID": ShopID
+    };
+
+    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      method:"POST",
+      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+      body:JSON.stringify(invBody)
+    });
+
+    showModal("success", "Success", "✅ Added to Inventory Successfully!");
+    
+    // Clear form after successful submission
+    clearForm();
+    
+  } catch (error) {
+    console.error("Error during submission:", error);
+    showModal("error", "Error", "❌ Error adding to inventory. Please try again.");
+  } finally {
+    // Re-enable button after operation is complete
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add to Inventory';
+  }
+});
+</script>
+</body>
+</html>
