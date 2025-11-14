@@ -279,14 +279,27 @@ button:disabled {
   transform: translateX(0);
 }
 
-/* Icon styles */
-.input-icon {
+/* Password toggle button */
+.password-toggle {
   position: absolute;
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
+  background: none;
+  border: none;
   color: var(--gray);
-  font-size: 16px;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+  background: none;
+  transform: translateY(-50%);
+  box-shadow: none;
 }
 
 /* Password validation styles */
@@ -364,13 +377,14 @@ textarea {
     <div class="input-group">
       <input type="text" id="mobile" placeholder=" " maxlength="10">
       <label for="mobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
-      <div class="input-icon"><i class="fas fa-user"></i></div>
     </div>
     
     <div class="input-group">
       <input type="password" id="password" placeholder=" ">
       <label for="password"><i class="fas fa-lock"></i> Password</label>
-      <div class="input-icon"><i class="fas fa-key"></i></div>
+      <button type="button" class="password-toggle" onclick="togglePassword('password')">
+        <i class="fas fa-eye"></i>
+      </button>
     </div>
     
     <button id="loginBtn" onclick="login()">
@@ -389,7 +403,6 @@ textarea {
     <div class="input-group">
       <input type="text" id="rname" placeholder=" ">
       <label for="rname"><i class="fas fa-user"></i> Full Name</label>
-      <div class="input-icon"><i class="fas fa-id-card"></i></div>
     </div>
     
     <!-- Role section is hidden as requested -->
@@ -402,7 +415,6 @@ textarea {
     <div class="input-group">
       <input type="text" id="rshopname" placeholder=" ">
       <label for="rshopname"><i class="fas fa-store"></i> Shop Name</label>
-      <div class="input-icon"><i class="fas fa-building"></i></div>
     </div>
     
     <div class="input-group">
@@ -413,13 +425,14 @@ textarea {
     <div class="input-group">
       <input type="text" id="rmobile" placeholder=" " maxlength="10">
       <label for="rmobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
-      <div class="input-icon"><i class="fas fa-phone"></i></div>
     </div>
     
     <div class="input-group">
       <input type="password" id="rpassword" placeholder=" " onkeyup="validatePassword()">
       <label for="rpassword"><i class="fas fa-lock"></i> Password</label>
-      <div class="input-icon"><i class="fas fa-key"></i></div>
+      <button type="button" class="password-toggle" onclick="togglePassword('rpassword')">
+        <i class="fas fa-eye"></i>
+      </button>
       
       <!-- Password validation rules - only shown when not obeyed -->
       <div id="passwordRules" class="password-rules">
@@ -449,7 +462,9 @@ textarea {
     <div class="input-group">
       <input type="password" id="rconfirmpassword" placeholder=" " onkeyup="checkPasswordMatch()">
       <label for="rconfirmpassword"><i class="fas fa-lock"></i> Re-enter Password</label>
-      <div class="input-icon"><i class="fas fa-key"></i></div>
+      <button type="button" class="password-toggle" onclick="togglePassword('rconfirmpassword')">
+        <i class="fas fa-eye"></i>
+      </button>
       
       <!-- Password match indicator -->
       <div id="passwordMatch" class="password-match" style="display: none;">
@@ -520,6 +535,21 @@ function showPopup() {
 function closePopup() {
   document.getElementById('successPopup').classList.remove('active');
   showLogin();
+}
+
+// Toggle password visibility
+function togglePassword(fieldId) {
+  const passwordField = document.getElementById(fieldId);
+  const toggleButton = passwordField.nextElementSibling;
+  const icon = toggleButton.querySelector('i');
+  
+  if (passwordField.type === 'password') {
+    passwordField.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    passwordField.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
 }
 
 // Password validation function
