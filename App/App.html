@@ -993,7 +993,6 @@ window.addEventListener('DOMContentLoaded', () => {
   
   if (isAuthenticated) {
     // Only proceed with normal initialization if authenticated
-    enterFullscreen();
     originalHeight = window.innerHeight;
     
     // Update UI with user info
@@ -1501,6 +1500,8 @@ function hideLoading() {
     try {
       const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
       if (iframeDoc && iframeDoc.body) {
+        // Ensure iframe content is scrollable
+        iframeDoc.body.style.overflow = 'auto';
         iframeDoc.body.style.overflowX = 'hidden';
         iframeDoc.body.style.maxWidth = '100%';
         iframeDoc.body.style.boxSizing = 'border-box';
@@ -1533,9 +1534,13 @@ function hideLoading() {
 }
 
 function forceIframeScroll() {
+  // Ensure iframe wrapper is scrollable
+  iframeWrapper.style.overflow = 'auto';
   iframeWrapper.style.overflowX = 'hidden';
   iframeWrapper.style.overflowY = 'auto';
   
+  // Ensure iframe itself is scrollable
+  contentFrame.style.overflow = 'auto';
   contentFrame.style.overflowX = 'hidden';
   contentFrame.style.maxWidth = '100%';
 }
