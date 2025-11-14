@@ -769,7 +769,7 @@ async function register() {
     const shopId = "SHOP-" + Date.now();
     
     // Create the formatted string: ShopName,Address/Username
-    const formattedShopName = `${shopname},${address}/${mobile}`;
+    const formattedShopName = `${shopname}-${address}/${mobile}`;
 
     const createRes = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
       method: "POST",
