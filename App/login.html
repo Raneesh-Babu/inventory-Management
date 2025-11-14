@@ -294,6 +294,7 @@ button:disabled {
   margin-top: 5px;
   font-size: 12px;
   color: var(--gray);
+  display: none; /* Hidden by default */
 }
 
 .password-rule {
@@ -319,6 +320,27 @@ button:disabled {
 textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+/* Password match indicator */
+.password-match {
+  margin-top: 5px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.password-match i {
+  margin-right: 5px;
+  font-size: 10px;
+}
+
+.match-valid {
+  color: #2a9d8f;
+}
+
+.match-invalid {
+  color: #e63946;
 }
 
 /* Responsive adjustments */
@@ -399,8 +421,8 @@ textarea {
       <label for="rpassword"><i class="fas fa-lock"></i> Password</label>
       <div class="input-icon"><i class="fas fa-key"></i></div>
       
-      <!-- Password validation rules -->
-      <div class="password-rules">
+      <!-- Password validation rules - only shown when not obeyed -->
+      <div id="passwordRules" class="password-rules">
         <div class="password-rule">
           <i id="lengthRule" class="fas fa-times-circle rule-invalid"></i>
           <span>At least 8 characters</span>
@@ -421,6 +443,18 @@ textarea {
           <i id="specialRule" class="fas fa-times-circle rule-invalid"></i>
           <span>At least one special character</span>
         </div>
+      </div>
+    </div>
+    
+    <div class="input-group">
+      <input type="password" id="rconfirmpassword" placeholder=" " onkeyup="checkPasswordMatch()">
+      <label for="rconfirmpassword"><i class="fas fa-lock"></i> Re-enter Password</label>
+      <div class="input-icon"><i class="fas fa-key"></i></div>
+      
+      <!-- Password match indicator -->
+      <div id="passwordMatch" class="password-match" style="display: none;">
+        <i id="matchIcon" class="fas fa-times-circle match-invalid"></i>
+        <span id="matchText">Passwords do not match</span>
       </div>
     </div>
     
@@ -491,6 +525,7 @@ function closePopup() {
 // Password validation function
 function validatePassword() {
   const password = document.getElementById('rpassword').value;
+  const passwordRules = document.getElementById('passwordRules');
   
   // Validation rules
   const hasMinLength = password.length >= 8;
@@ -506,6 +541,13 @@ function validatePassword() {
   updateRuleIcon('numberRule', hasNumber);
   updateRuleIcon('specialRule', hasSpecial);
   
+  // Show password rules only if password is not empty and not all rules are met
+  if (password.length > 0 && !(hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial)) {
+    passwordRules.style.display = 'block';
+  } else {
+    passwordRules.style.display = 'none';
+  }
+  
   // Return overall validation status
   return hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
 }
@@ -517,6 +559,33 @@ function updateRuleIcon(ruleId, isValid) {
   } else {
     ruleIcon.className = 'fas fa-times-circle rule-invalid';
   }
+}
+
+// Check if passwords match
+function checkPasswordMatch() {
+  const password = document.getElementById('rpassword').value;
+  const confirmPassword = document.getElementById('rconfirmpassword').value;
+  const passwordMatch = document.getElementById('passwordMatch');
+  
+  if (confirmPassword.length === 0) {
+    passwordMatch.style.display = 'none';
+    return false;
+  }
+  
+  const passwordsMatch = password === confirmPassword;
+  
+  if (passwordsMatch) {
+    document.getElementById('matchIcon').className = 'fas fa-check-circle match-valid';
+    document.getElementById('matchText').textContent = 'Passwords match';
+    document.getElementById('matchText').className = 'match-valid';
+  } else {
+    document.getElementById('matchIcon').className = 'fas fa-times-circle match-invalid';
+    document.getElementById('matchText').textContent = 'Passwords do not match';
+    document.getElementById('matchText').className = 'match-invalid';
+  }
+  
+  passwordMatch.style.display = 'block';
+  return passwordsMatch;
 }
 
 async function login() {
@@ -590,6 +659,7 @@ async function register() {
   const address = document.getElementById('raddress').value.trim();
   const mobile = document.getElementById('rmobile').value.trim();
   const password = document.getElementById('rpassword').value.trim();
+  const confirmPassword = document.getElementById('rconfirmpassword').value.trim();
   const rmsg = document.getElementById('rmsg');
   const registerBtn = document.getElementById('registerBtn');
   const registerText = document.getElementById('registerText');
@@ -597,7 +667,7 @@ async function register() {
   rmsg.textContent = '';
   rmsg.className = 'notice';
   
-  if (!name || !shopname || !address || !mobile || !password) {
+  if (!name || !shopname || !address || !mobile || !password || !confirmPassword) {
     rmsg.textContent = "Please fill all fields.";
     rmsg.className = 'notice error';
     return;
@@ -612,6 +682,13 @@ async function register() {
   // Validate password
   if (!validatePassword()) {
     rmsg.textContent = "Please ensure your password meets all requirements.";
+    rmsg.className = 'notice error';
+    return;
+  }
+
+  // Check if passwords match
+  if (!checkPasswordMatch()) {
+    rmsg.textContent = "Passwords do not match.";
     rmsg.className = 'notice error';
     return;
   }
