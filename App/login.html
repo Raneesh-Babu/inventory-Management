@@ -126,6 +126,7 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 50px;
 }
 
 button:hover {
@@ -142,13 +143,12 @@ button:disabled {
 }
 
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: var(--white);
   animation: spin 1s linear infinite;
-  margin-right: 10px;
 }
 
 @keyframes spin {
@@ -604,9 +604,9 @@ async function login() {
     return;
   }
   
-  // Disable button and show spinner
+  // Disable button and show spinner only (no text)
   loginBtn.disabled = true;
-  loginText.innerHTML = '<div class="spinner"></div> Logging in...';
+  loginText.innerHTML = '<div class="spinner"></div>';
   
   try {
     const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
@@ -693,10 +693,10 @@ async function register() {
     return;
   }
 
-  // Disable button and show spinner
+  // Disable button and show spinner only (no text)
   registerBtn.disabled = true;
-  registerText.innerHTML = '<div class="spinner"></div> Registering...';
-
+  registerText.innerHTML = '<div class="spinner"></div>';
+  
   try {
     // Check duplicates
     const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
