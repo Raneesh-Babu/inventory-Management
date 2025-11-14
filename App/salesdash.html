@@ -651,8 +651,9 @@
       flex-direction: column;
     }
     
-    .message-modal-content {
-      max-width: 500px;
+    .alert-modal-content {
+      max-width: 450px;
+      text-align: center;
     }
     
     @keyframes modalFadeIn {
@@ -692,22 +693,6 @@
       flex: 1;
       padding: 0;
       overflow: hidden;
-    }
-    
-    .message-modal-body {
-      padding: 25px;
-      text-align: center;
-    }
-    
-    .message-icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-    }
-    
-    .message-text {
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 25px;
     }
     
     .invoice-iframe {
@@ -870,6 +855,54 @@
       to { transform: rotate(360deg); }
     }
     
+    .alert-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    
+    .alert-success {
+      color: var(--success);
+    }
+    
+    .alert-error {
+      color: var(--danger);
+    }
+    
+    .alert-warning {
+      color: var(--warning);
+    }
+    
+    .alert-info {
+      color: var(--info);
+    }
+    
+    .alert-message {
+      margin-bottom: 25px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    .alert-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .ok-btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: var(--border-radius);
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .ok-btn:hover {
+      background-color: var(--primary-dark);
+    }
+    
     @media (max-width: 768px) {
       .dashboard-header {
         flex-direction: column;
@@ -917,7 +950,7 @@
       <div class="header-left">
         <div>
           <div class="dashboard-title">Sales Report Dashboard</div>
-          <div class="dashboard-subtitle">Track and manage your sales performance</div>
+          <div class="dashboard-subtitle">Track and analyze your sales performance</div>
         </div>
       </div>
       <div class="search-container">
@@ -1129,20 +1162,16 @@
     </div>
   </div>
 
-  <!-- Message Modal -->
-  <div class="modal" id="messageModal">
-    <div class="modal-content message-modal-content">
-      <div class="modal-header">
-        <div class="modal-title" id="messageModalTitle">Message</div>
-        <button class="close-btn" id="closeMessageModal">&times;</button>
-      </div>
-      <div class="message-modal-body">
-        <div class="message-icon" id="messageIcon">
-          <i class="fas fa-info-circle" style="color: var(--info);"></i>
+  <!-- Alert Modal -->
+  <div class="modal" id="alertModal">
+    <div class="modal-content alert-modal-content">
+      <div class="modal-body" style="padding: 30px 25px;">
+        <div class="alert-icon" id="alertIcon">
+          <i class="fas fa-info-circle alert-info"></i>
         </div>
-        <div class="message-text" id="messageText">This is a message</div>
-        <div class="modal-actions">
-          <button class="save-btn" id="confirmMessageBtn">OK</button>
+        <div class="alert-message" id="alertMessage">This is an alert message.</div>
+        <div class="alert-actions">
+          <button class="ok-btn" id="alertOkBtn">OK</button>
         </div>
       </div>
     </div>
@@ -1185,9 +1214,8 @@
       // Invoice modal event listeners
       document.getElementById('closeInvoiceModal').addEventListener('click', closeInvoiceModal);
       
-      // Message modal event listeners
-      document.getElementById('closeMessageModal').addEventListener('click', closeMessageModal);
-      document.getElementById('confirmMessageBtn').addEventListener('click', closeMessageModal);
+      // Alert modal event listeners
+      document.getElementById('alertOkBtn').addEventListener('click', closeAlertModal);
     });
 
     function setDefaultDateRange() {
@@ -1257,42 +1285,47 @@
       return colors[index];
     }
 
-    function showMessage(title, message, type = 'info') {
-      const modal = document.getElementById('messageModal');
-      const titleEl = document.getElementById('messageModalTitle');
-      const messageEl = document.getElementById('messageText');
-      const iconEl = document.getElementById('messageIcon');
+    // Extract numeric part from invoice number
+    function extractInvoiceNumber(invoiceString) {
+      if (!invoiceString) return 0;
       
-      titleEl.textContent = title;
-      messageEl.textContent = message;
+      // Remove "INV" prefix and any non-numeric characters
+      const numericPart = invoiceString.replace(/^INV/, '').replace(/\D/g, '');
       
-      // Set icon based on message type
-      let iconClass, iconColor;
-      switch(type) {
-        case 'success':
-          iconClass = 'fa-check-circle';
-          iconColor = 'var(--success)';
-          break;
-        case 'warning':
-          iconClass = 'fa-exclamation-triangle';
-          iconColor = 'var(--warning)';
-          break;
-        case 'error':
-          iconClass = 'fa-exclamation-circle';
-          iconColor = 'var(--danger)';
-          break;
-        default:
-          iconClass = 'fa-info-circle';
-          iconColor = 'var(--info)';
-      }
-      
-      iconEl.innerHTML = `<i class="fas ${iconClass}" style="color: ${iconColor};"></i>`;
-      
-      modal.style.display = 'flex';
+      // Convert to a number (BigInt for very large numbers)
+      return numericPart ? BigInt(numericPart) : 0n;
     }
 
-    function closeMessageModal() {
-      document.getElementById('messageModal').style.display = 'none';
+    // Show alert modal instead of native alert
+    function showAlert(message, type = 'info') {
+      const alertModal = document.getElementById('alertModal');
+      const alertIcon = document.getElementById('alertIcon');
+      const alertMessage = document.getElementById('alertMessage');
+      
+      // Set icon based on type
+      let iconClass = 'fas fa-info-circle alert-info';
+      switch(type) {
+        case 'success':
+          iconClass = 'fas fa-check-circle alert-success';
+          break;
+        case 'error':
+          iconClass = 'fas fa-exclamation-circle alert-error';
+          break;
+        case 'warning':
+          iconClass = 'fas fa-exclamation-triangle alert-warning';
+          break;
+        default:
+          iconClass = 'fas fa-info-circle alert-info';
+      }
+      
+      alertIcon.innerHTML = `<i class="${iconClass}"></i>`;
+      alertMessage.textContent = message;
+      
+      alertModal.style.display = 'flex';
+    }
+
+    function closeAlertModal() {
+      document.getElementById('alertModal').style.display = 'none';
     }
 
     async function loadSalesData() {
@@ -1309,7 +1342,7 @@
       applyBtn.innerHTML = '<span class="loading"></span> Loading...';
 
       if (!shopIDTag) {
-        showMessage("Authentication Required", "ShopIDTag not found in local storage. Please log in first.", "error");
+        showAlert("ShopIDTag not found in local storage. Please log in first.", "error");
         applyBtn.disabled = false;
         applyBtn.innerHTML = '<i class="fas fa-filter"></i> Apply Filters';
         return;
@@ -1368,7 +1401,7 @@
 
       } catch (error) {
         console.error(error);
-        showMessage("Error", "Error fetching data. Please try again.", "error");
+        showAlert("Error fetching data. Please try again.", "error");
       } finally {
         applyBtn.disabled = false;
         applyBtn.innerHTML = '<i class="fas fa-filter"></i> Apply Filters';
@@ -1413,6 +1446,7 @@
         if (!invoicesMap[invoiceNumber]) {
           invoicesMap[invoiceNumber] = {
             invoiceNumber: invoiceNumber,
+            numericInvoiceNumber: extractInvoiceNumber(invoiceNumber),
             date: row["Date"],
             customer: row["Costomer Name"],
             total: 0,
@@ -1464,9 +1498,14 @@
         totalProductsSold += quantity;
       });
 
-      // Convert maps to arrays and sort by date (newest first)
+      // Convert maps to arrays and sort by numeric invoice number (descending)
       const invoices = Object.values(invoicesMap)
-        .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+        .sort((a, b) => {
+          // Compare BigInt values for proper numeric sorting
+          if (a.numericInvoiceNumber > b.numericInvoiceNumber) return -1;
+          if (a.numericInvoiceNumber < b.numericInvoiceNumber) return 1;
+          return 0;
+        });
       
       const products = Object.values(productsMap)
         .sort((a, b) => b.total - a.total); // Highest value first
@@ -1682,8 +1721,14 @@
               <tbody>
         `;
         
-        // Sort invoices by date (newest first)
-        const sortedInvoices = batch.invoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort invoices by numeric invoice number (descending)
+        const sortedInvoices = batch.invoices.sort((a, b) => {
+          const aNum = extractInvoiceNumber(a.invoiceNumber);
+          const bNum = extractInvoiceNumber(b.invoiceNumber);
+          if (aNum > bNum) return -1;
+          if (aNum < bNum) return 1;
+          return 0;
+        });
         
         sortedInvoices.forEach(invoice => {
           html += `
@@ -1799,7 +1844,7 @@
       const invoiceNumber = document.getElementById('invoiceSearch').value.trim();
       
       if (!invoiceNumber) {
-        showMessage("Search Invoice", "Please enter an invoice number to search", "warning");
+        showAlert('Please enter an invoice number to search', 'warning');
         return;
       }
       
@@ -1811,7 +1856,7 @@
         openEditModal(invoiceNumber);
       } else {
         // Show error message
-        showMessage("Invoice Not Found", `Invoice "${invoiceNumber}" not found in the current data. Please check the invoice number or adjust your filters.`, "error");
+        showAlert(`Invoice "${invoiceNumber}" not found in the current data. Please check the invoice number or adjust your filters.`, 'error');
       }
     }
 
@@ -1838,7 +1883,7 @@
       const invoiceProducts = currentInvoiceData.filter(row => row["Invoice Number"] === invoiceNumber);
       
       if (invoiceProducts.length === 0) {
-        showMessage("Invoice Not Found", "Invoice data not found", "error");
+        showAlert("Invoice data not found", "error");
         return;
       }
       
@@ -1904,7 +1949,7 @@
 
     async function updateInvoiceTag() {
       if (selectedProducts.size === 0) {
-        showMessage("Update Tag", "Please select at least one product to update", "warning");
+        showAlert("Please select at least one product to update", "warning");
         return;
       }
       
@@ -1947,13 +1992,13 @@
         // Wait for all updates to complete
         await Promise.all(updatePromises);
         
-        showMessage("Success", `Tag and remark updated successfully for ${selectedProducts.size} product(s)!`, "success");
+        showAlert(`Tag and remark updated successfully for ${selectedProducts.size} product(s)!`, "success");
         closeModal();
         // Reload data to reflect changes
         loadSalesData();
       } catch (error) {
         console.error(error);
-        showMessage("Error", "Error updating tag. Please try again.", "error");
+        showAlert("Error updating tag. Please try again.", "error");
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "Update Tag";
