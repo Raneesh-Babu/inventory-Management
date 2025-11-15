@@ -75,20 +75,6 @@
     overflow: hidden;
   }
 
-  /* Authentication state */
-  .app-container.unauthorized .sidebar,
-  .app-container.unauthorized .top-bar {
-    display: none !important;
-  }
-
-  .app-container.unauthorized .main-content {
-    width: 100%;
-  }
-
-  .app-container.unauthorized .iframe-container {
-    height: 100vh;
-  }
-
   /* Sidebar Navigation */
   .sidebar {
     width: 260px;
@@ -872,30 +858,14 @@ function checkAuthentication() {
   const shopTag = localStorage.getItem('ShopTag');
   
   if (!shopIDTag || !nameTag || !shopTag) {
-    // User is not authenticated
-    console.log('User not authenticated, redirecting to login');
-    appContainer.classList.add('unauthorized');
-    
-    // Load login page in iframe
-    contentFrame.src = 'login.html';
-    
-    // Update loading text
-    const loadingText = loadingOverlay.querySelector('.loading-text');
-    if (loadingText) {
-      loadingText.textContent = 'Loading Login...';
-    }
-    
-    // Hide navigation elements
-    sidebar.style.display = 'none';
-    
+    // User is not authenticated - redirect to login page
+    console.log('User not authenticated, redirecting to login.html');
+    window.location.href = 'login.html';
     return false;
   }
   
   // User is authenticated
   console.log('User authenticated');
-  appContainer.classList.remove('unauthorized');
-  sidebar.style.display = 'flex';
-  
   return true;
 }
 
@@ -932,39 +902,6 @@ function updateUserInterface() {
     shopBadge.innerHTML = `Shop: ${shopName}`;
   }
 }
-
-// Listen for authentication changes from iframe (login success)
-window.addEventListener('message', function(event) {
-  // Check if the message is from a trusted source (optional)
-  // if (event.origin !== "https://your-trusted-domain.com") return;
-  
-  if (event.data && event.data.type === 'LOGIN_SUCCESS') {
-    console.log('Login successful, updating UI');
-    
-    // Update localStorage with user data
-    if (event.data.userData) {
-      localStorage.setItem('NameTag', event.data.userData.name || 'User');
-      localStorage.setItem('ShopIDTag', event.data.userData.shopId || '');
-      localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
-    }
-    
-    // Re-check authentication
-    const isAuthenticated = checkAuthentication();
-    
-    if (isAuthenticated) {
-      // Update UI
-      updateUserInterface();
-      
-      // Redirect to dashboard
-      contentFrame.src = 'invdash2.html';
-      currentPage.textContent = 'Dashboard';
-      
-      // Update active nav item
-      navItems.forEach(nav => nav.classList.remove('active'));
-      navItems[0].classList.add('active');
-    }
-  }
-});
 
 // Keyboard detection and adjustment
 let isKeyboardActive = false;
@@ -1524,7 +1461,7 @@ function performLogout() {
     localStorage.clear();
     
     // Redirect to login page
-    checkAuthentication();
+    window.location.href = 'login.html';
   }
 }
 
