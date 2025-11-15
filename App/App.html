@@ -786,7 +786,7 @@
         <i class="fas fa-shield-alt"></i>
       </div>
       <h3>Security Violation Detected</h3>
-      <p>This action is not permitted in the application.</p>
+      <p>Copying content is not permitted in the application.</p>
       <button id="closeWarning" style="margin-top: 20px; padding: 10px 20px; background: white; color: var(--danger); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
         Close
       </button>
@@ -1203,155 +1203,11 @@ document.addEventListener('click', function(event) {
   }
 });
 
-// Security restrictions for main window
-document.addEventListener('contextmenu', (e) => {
+// Security restrictions for main window - ONLY COPY RESTRICTION
+document.addEventListener('copy', (e) => {
   e.preventDefault();
-  showSecurityWarning('Right-click is disabled');
+  showSecurityWarning('Copying content is disabled');
 });
-
-document.addEventListener('keydown', (e) => {
-  // Disable F12
-  if (e.key === 'F12') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+Shift+I
-  if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+Shift+J
-  if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+Shift+C
-  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+U (view source)
-  if (e.ctrlKey && e.key === 'u') {
-    e.preventDefault();
-    showSecurityWarning('Viewing source code is disabled');
-    return false;
-  }
-});
-
-// Prevent text selection
-document.addEventListener('selectstart', (e) => {
-  e.preventDefault();
-});
-
-// Prevent drag and drop
-document.addEventListener('dragstart', (e) => {
-  e.preventDefault();
-});
-
-// Security for iframe content
-function applyIframeSecurity() {
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    const iframeWindow = contentFrame.contentWindow;
-    
-    if (iframeDoc && iframeWindow) {
-      // Apply security to iframe document
-      iframeDoc.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        showSecurityWarning('Right-click is disabled');
-      });
-      
-      iframeDoc.addEventListener('keydown', (e) => {
-        // Disable F12 in iframe
-        if (e.key === 'F12') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+Shift+I in iframe
-        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+Shift+J in iframe
-        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+Shift+C in iframe
-        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+U in iframe
-        if (e.ctrlKey && e.key === 'u') {
-          e.preventDefault();
-          showSecurityWarning('Viewing source code is disabled');
-          return false;
-        }
-      });
-      
-      // Prevent text selection in iframe
-      iframeDoc.addEventListener('selectstart', (e) => {
-        e.preventDefault();
-      });
-      
-      // Prevent drag and drop in iframe
-      iframeDoc.addEventListener('dragstart', (e) => {
-        e.preventDefault();
-      });
-      
-      // Apply CSS to prevent text selection in iframe
-      iframeDoc.body.style.userSelect = 'none';
-      iframeDoc.body.style.webkitUserSelect = 'none';
-      iframeDoc.body.style.mozUserSelect = 'none';
-      iframeDoc.body.style.msUserSelect = 'none';
-      
-      // Override console methods in iframe
-      iframeWindow.console.log = function() {};
-      iframeWindow.console.info = function() {};
-      iframeWindow.console.warn = function() {};
-      iframeWindow.console.error = function() {};
-      iframeWindow.console.debug = function() {};
-      
-      // Block opening developer tools in iframe
-      iframeWindow.addEventListener('devtoolschange', function(e) {
-        showSecurityWarning('Developer tools are disabled');
-      });
-      
-      // Detect if devtools is open in iframe
-      const checkDevTools = function() {
-        const widthThreshold = iframeWindow.outerWidth - iframeWindow.innerWidth > 600;
-        const heightThreshold = iframeWindow.outerHeight - iframeWindow.innerHeight > 600;
-        
-        if (widthThreshold || heightThreshold) {
-          showSecurityWarning('Developer tools are disabled');
-        }
-      };
-      
-      setInterval(checkDevTools, 1000);
-    }
-  } catch (e) {
-    // Cross-origin iframe - use overlay method
-    console.log('Cross-origin iframe detected, using overlay security');
-    iframeOverlay.classList.add('active');
-  }
-}
 
 // Security warning function
 function showSecurityWarning(message) {
@@ -1365,6 +1221,32 @@ function showSecurityWarning(message) {
 closeWarning.addEventListener('click', () => {
   securityWarning.classList.remove('active');
 });
+
+// Security for iframe content - ONLY COPY RESTRICTION
+function applyIframeSecurity() {
+  try {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    const iframeWindow = contentFrame.contentWindow;
+    
+    if (iframeDoc && iframeWindow) {
+      // Apply copy restriction to iframe document
+      iframeDoc.addEventListener('copy', (e) => {
+        e.preventDefault();
+        showSecurityWarning('Copying content is disabled');
+      });
+      
+      // Apply CSS to prevent text selection in iframe
+      iframeDoc.body.style.userSelect = 'none';
+      iframeDoc.body.style.webkitUserSelect = 'none';
+      iframeDoc.body.style.mozUserSelect = 'none';
+      iframeDoc.body.style.msUserSelect = 'none';
+    }
+  } catch (e) {
+    // Cross-origin iframe - use overlay method
+    console.log('Cross-origin iframe detected, using overlay security');
+    iframeOverlay.classList.add('active');
+  }
+}
 
 // Fullscreen functionality
 function enterFullscreen() {
