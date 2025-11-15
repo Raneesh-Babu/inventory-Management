@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📱 Business Management App</title>
+<title>Invento Mobile</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -67,6 +67,20 @@
     width: 100vw;
     height: 100vh;
     z-index: 10000;
+  }
+
+  /* Authentication state */
+  .app-container.unauthorized .sidebar,
+  .app-container.unauthorized .top-bar {
+    display: none !important;
+  }
+
+  .app-container.unauthorized .main-content {
+    width: 100%;
+  }
+
+  .app-container.unauthorized .iframe-container {
+    height: 100vh;
   }
 
   /* Sidebar Navigation */
@@ -244,6 +258,7 @@
     min-width: 0;
     height: 100vh;
     overflow: hidden;
+    transition: var(--transition);
   }
 
   .top-bar {
@@ -256,6 +271,7 @@
     border-bottom: 1px solid var(--gray-200);
     flex-shrink: 0;
     z-index: 100;
+    transition: var(--transition);
   }
 
   .menu-toggle {
@@ -371,6 +387,7 @@
     overflow: hidden;
     height: calc(100vh - 70px);
     width: 100%;
+    transition: var(--transition);
   }
 
   .content-frame {
@@ -389,33 +406,7 @@
     overflow: auto;
     overflow-x: hidden;
     position: relative;
-  }
-
-  /* Swipe Refresh Indicator */
-  .swipe-refresh-indicator {
-    position: absolute;
-    top: -50px;
-    left: 0;
-    right: 0;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--primary);
-    color: white;
-    font-size: 14px;
-    font-weight: 500;
-    transition: top 0.3s ease;
-    z-index: 100;
-  }
-
-  .swipe-refresh-indicator.active {
-    top: 0;
-  }
-
-  .swipe-refresh-indicator i {
-    margin-right: 8px;
-    animation: spin 1s linear infinite;
+    transition: var(--transition);
   }
 
   .loading-overlay {
@@ -499,52 +490,63 @@
     display: block;
   }
 
-  /* Authentication Error */
-  .auth-error {
+  /* Logout Confirmation Modal */
+  .logout-modal {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: white;
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-    padding: 20px;
-  }
-
-  .auth-error.hidden {
+    z-index: 10001;
     display: none;
   }
 
-  .auth-error-icon {
-    font-size: 64px;
+  .logout-modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 90%;
+    max-width: 400px;
+    padding: 30px;
+    text-align: center;
+    animation: modalFadeIn 0.3s ease;
+  }
+
+  .modal-icon {
+    font-size: 48px;
     color: var(--danger);
     margin-bottom: 20px;
   }
 
-  .auth-error-title {
-    font-size: 24px;
+  .modal-title {
+    font-size: 20px;
     font-weight: 600;
-    color: var(--dark);
     margin-bottom: 10px;
+    color: var(--gray-800);
   }
 
-  .auth-error-message {
-    font-size: 16px;
+  .modal-message {
     color: var(--gray-600);
-    margin-bottom: 30px;
-    max-width: 400px;
+    margin-bottom: 25px;
+    line-height: 1.5;
   }
 
-  .auth-error-btn {
-    padding: 12px 24px;
-    background: var(--primary);
-    color: white;
+  .modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .modal-btn {
+    padding: 10px 20px;
     border: none;
     border-radius: var(--border-radius);
     font-family: 'Inter', sans-serif;
@@ -552,11 +554,36 @@
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    min-width: 100px;
   }
 
-  .auth-error-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
+  .modal-btn-cancel {
+    background: var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .modal-btn-cancel:hover {
+    background: var(--gray-300);
+  }
+
+  .modal-btn-confirm {
+    background: var(--danger);
+    color: white;
+  }
+
+  .modal-btn-confirm:hover {
+    background: #c82333;
+  }
+
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes spin {
@@ -621,6 +648,10 @@
     .context-menu {
       right: 10px;
     }
+
+    .modal-actions {
+      flex-direction: column;
+    }
   }
 
   /* Scrollbar Styling */
@@ -666,20 +697,6 @@
 </head>
 <body>
 <div class="app-container" id="appContainer">
-  <!-- Authentication Error -->
-  <div class="auth-error" id="authError">
-    <div class="auth-error-icon">
-      <i class="fas fa-exclamation-triangle"></i>
-    </div>
-    <div class="auth-error-title">Authentication Required</div>
-    <div class="auth-error-message" id="authErrorMessage">
-      You need to be logged in to access this application. Please log in to continue.
-    </div>
-    <button class="auth-error-btn" id="authErrorBtn">
-      Go to Login
-    </button>
-  </div>
-
   <!-- Security Warning -->
   <div class="security-warning" id="securityWarning">
     <div class="warning-content">
@@ -687,10 +704,25 @@
         <i class="fas fa-shield-alt"></i>
       </div>
       <h3>Security Violation Detected</h3>
-      <p>This action is not permitted in the application.</p>
+      <p>Copying content is not permitted in the application.</p>
       <button id="closeWarning" style="margin-top: 20px; padding: 10px 20px; background: white; color: var(--danger); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
         Close
       </button>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="logout-modal" id="logoutModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <div class="modal-title">Confirm Logout</div>
+      <div class="modal-message">Are you sure you want to logout from the application?</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="cancelLogout">Cancel</button>
+        <button class="modal-btn modal-btn-confirm" id="confirmLogout">Confirm Logout</button>
+      </div>
     </div>
   </div>
 
@@ -701,16 +733,16 @@
         <i class="fas fa-chevron-left"></i>
       </button>
       <div class="app-title" id="welcomeTitle">Welcome</div>
-      <div class="app-subtitle">Business Management</div>
+      <div class="app-subtitle">Invento Mobile</div>
     </div>
 
     <div class="nav-menu">
-      <a href="invdash2.html" class="nav-item active" data-page="Dashboard">
+      <a href="Dashboard.html" class="nav-item active" data-page="Dashboard">
         <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
         <div class="nav-text">Dashboard</div>
       </a>
       
-      <a href="Add.html" class="nav-item" data-page="Add Users">
+      <a href="Add User.html" class="nav-item" data-page="Add Users">
         <div class="nav-icon"><i class="fas fa-user-plus"></i></div>
         <div class="nav-text">Add Users</div>
       </a>
@@ -720,7 +752,7 @@
         <div class="nav-text">Add Customer</div>
       </a>
       
-      <a href="consromerdash.html" class="nav-item" data-page="Loyalty Programme">
+      <a href="costomer dash.html" class="nav-item" data-page="Loyalty Programme">
         <div class="nav-icon"><i class="fas fa-award"></i></div>
         <div class="nav-text">Loyalty Programme</div>
       </a>
@@ -789,10 +821,6 @@
     </div>
 
     <div class="iframe-container">
-      <div class="swipe-refresh-indicator" id="swipeRefreshIndicator">
-        <i class="fas fa-sync-alt"></i>
-        <span>Refreshing...</span>
-      </div>
       <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">Loading Dashboard...</div>
@@ -801,7 +829,7 @@
         <!-- Security overlay for iframe -->
         <div class="iframe-overlay" id="iframeOverlay"></div>
         <iframe 
-          src="invdash2.html" 
+          src="Dashboard.html" 
           class="content-frame" 
           id="contentFrame"
           onload="hideLoading()"
@@ -832,224 +860,105 @@ const fullscreenToggle = document.getElementById('fullscreenToggle');
 const appContainer = document.getElementById('appContainer');
 const contextMenu = document.getElementById('contextMenu');
 const contextLogout = document.getElementById('contextLogout');
-const swipeRefreshIndicator = document.getElementById('swipeRefreshIndicator');
 const iframeWrapper = document.getElementById('iframeWrapper');
 const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
-const authError = document.getElementById('authError');
-const authErrorMessage = document.getElementById('authErrorMessage');
-const authErrorBtn = document.getElementById('authErrorBtn');
 
-// Authentication check function
+// Logout Modal elements
+const logoutModal = document.getElementById('logoutModal');
+const cancelLogout = document.getElementById('cancelLogout');
+const confirmLogout = document.getElementById('confirmLogout');
+
+// Authentication check
 function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
   const nameTag = localStorage.getItem('NameTag');
   const shopTag = localStorage.getItem('ShopTag');
   
-  // Check if ShopIDTag exists and has a value
-  if (!shopIDTag || shopIDTag.trim() === '' || shopIDTag === 'null' || shopIDTag === 'undefined') {
-    showAuthError('Shop ID is missing or invalid. Please log in again.');
+  if (!shopIDTag || !nameTag || !shopTag) {
+    // User is not authenticated - redirect to login page
+    console.log('User not authenticated, redirecting to login');
+    window.location.href = 'login.html';
     return false;
   }
   
-  // Check if NameTag exists and has a value
-  if (!nameTag || nameTag.trim() === '' || nameTag === 'null' || nameTag === 'undefined') {
-    showAuthError('User information is missing. Please log in again.');
-    return false;
-  }
-  
-  // Check if ShopTag exists and has a value
-  if (!shopTag || shopTag.trim() === '' || shopTag === 'null' || shopTag === 'undefined') {
-    showAuthError('Shop information is missing. Please log in again.');
-    return false;
-  }
+  // User is authenticated
+  console.log('User authenticated');
+  appContainer.classList.remove('unauthorized');
+  sidebar.style.display = 'flex';
   
   return true;
 }
 
-// Show authentication error
-function showAuthError(message) {
-  if (message) {
-    authErrorMessage.textContent = message;
-  }
-  authError.classList.remove('hidden');
+// Initialize authentication check on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const isAuthenticated = checkAuthentication();
   
-  // Hide the main app content
-  sidebar.style.display = 'none';
-  document.querySelector('.main-content').style.display = 'none';
+  if (isAuthenticated) {
+    // Only proceed with normal initialization if authenticated
+    updateUserInterface();
+  }
+});
+
+// Update UI with user information
+function updateUserInterface() {
+  const nameTag = localStorage.getItem('NameTag');
+  const shopTag = localStorage.getItem('ShopTag');
+  
+  // Update welcome title with user's name
+  if (nameTag) {
+    welcomeTitle.textContent = `Welcome, ${nameTag}`;
+  } else {
+    welcomeTitle.textContent = 'Welcome';
+  }
+
+  // Update shop badge
+  if (shopTag) {
+    const shopParts = shopTag.split('-');
+    const shopName = shopParts[0] || 'Shop';
+    shopBadge.innerHTML = `Shop: ${shopName}`;
+  }
 }
 
-// Hide authentication error
-function hideAuthError() {
-  authError.classList.add('hidden');
+// Listen for authentication changes from iframe (login success)
+window.addEventListener('message', function(event) {
+  // Check if the message is from a trusted source (optional)
+  // if (event.origin !== "https://your-trusted-domain.com") return;
   
-  // Show the main app content
-  sidebar.style.display = 'flex';
-  document.querySelector('.main-content').style.display = 'flex';
-}
-
-// Redirect to login
-function redirectToLogin() {
-  // Clear all localStorage data
-  localStorage.clear();
-  
-  // Redirect to login page in the main window, not in iframe
-  window.location.href = 'login.html';
-}
-
-// Authentication error button handler
-authErrorBtn.addEventListener('click', redirectToLogin);
-
-// Security restrictions for main window
-document.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  showSecurityWarning('Right-click is disabled');
-});
-
-document.addEventListener('keydown', (e) => {
-  // Disable F12
-  if (e.key === 'F12') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+Shift+I
-  if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+Shift+J
-  if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+Shift+C
-  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-    e.preventDefault();
-    showSecurityWarning('Developer tools are disabled');
-    return false;
-  }
-  
-  // Disable Ctrl+U (view source)
-  if (e.ctrlKey && e.key === 'u') {
-    e.preventDefault();
-    showSecurityWarning('Viewing source code is disabled');
-    return false;
-  }
-});
-
-// Prevent text selection
-document.addEventListener('selectstart', (e) => {
-  e.preventDefault();
-});
-
-// Prevent drag and drop
-document.addEventListener('dragstart', (e) => {
-  e.preventDefault();
-});
-
-// Security for iframe content
-function applyIframeSecurity() {
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    const iframeWindow = contentFrame.contentWindow;
+  if (event.data && event.data.type === 'LOGIN_SUCCESS') {
+    console.log('Login successful, updating UI');
     
-    if (iframeDoc && iframeWindow) {
-      // Apply security to iframe document
-      iframeDoc.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        showSecurityWarning('Right-click is disabled');
-      });
-      
-      iframeDoc.addEventListener('keydown', (e) => {
-        // Disable F12 in iframe
-        if (e.key === 'F12') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+Shift+I in iframe
-        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+Shift+J in iframe
-        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+Shift+C in iframe
-        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-          e.preventDefault();
-          showSecurityWarning('Developer tools are disabled');
-          return false;
-        }
-        
-        // Disable Ctrl+U in iframe
-        if (e.ctrlKey && e.key === 'u') {
-          e.preventDefault();
-          showSecurityWarning('Viewing source code is disabled');
-          return false;
-        }
-      });
-      
-      // Prevent text selection in iframe
-      iframeDoc.addEventListener('selectstart', (e) => {
-        e.preventDefault();
-      });
-      
-      // Prevent drag and drop in iframe
-      iframeDoc.addEventListener('dragstart', (e) => {
-        e.preventDefault();
-      });
-      
-      // Apply CSS to prevent text selection in iframe
-      iframeDoc.body.style.userSelect = 'none';
-      iframeDoc.body.style.webkitUserSelect = 'none';
-      iframeDoc.body.style.mozUserSelect = 'none';
-      iframeDoc.body.style.msUserSelect = 'none';
-      
-      // Override console methods in iframe
-      iframeWindow.console.log = function() {};
-      iframeWindow.console.info = function() {};
-      iframeWindow.console.warn = function() {};
-      iframeWindow.console.error = function() {};
-      iframeWindow.console.debug = function() {};
-      
-      // Block opening developer tools in iframe
-      iframeWindow.addEventListener('devtoolschange', function(e) {
-        showSecurityWarning('Developer tools are disabled');
-      });
-      
-      // Detect if devtools is open in iframe
-      const checkDevTools = function() {
-        const widthThreshold = iframeWindow.outerWidth - iframeWindow.innerWidth > 160;
-        const heightThreshold = iframeWindow.outerHeight - iframeWindow.innerHeight > 160;
-        
-        if (widthThreshold || heightThreshold) {
-          showSecurityWarning('Developer tools are disabled');
-        }
-      };
-      
-      setInterval(checkDevTools, 1000);
+    // Update localStorage with user data
+    if (event.data.userData) {
+      localStorage.setItem('NameTag', event.data.userData.name || 'User');
+      localStorage.setItem('ShopIDTag', event.data.userData.shopId || '');
+      localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
     }
-  } catch (e) {
-    // Cross-origin iframe - use overlay method
-    console.log('Cross-origin iframe detected, using overlay security');
-    iframeOverlay.classList.add('active');
+    
+    // Re-check authentication
+    const isAuthenticated = checkAuthentication();
+    
+    if (isAuthenticated) {
+      // Update UI
+      updateUserInterface();
+      
+      // Redirect to dashboard
+      contentFrame.src = 'Dashboard.html';
+      currentPage.textContent = 'Dashboard';
+      
+      // Update active nav item
+      navItems.forEach(nav => nav.classList.remove('active'));
+      navItems[0].classList.add('active');
+    }
   }
-}
+});
+
+// Security restrictions for main window - ONLY COPY RESTRICTION
+document.addEventListener('copy', (e) => {
+  e.preventDefault();
+  showSecurityWarning('Copying content is disabled');
+});
 
 // Security warning function
 function showSecurityWarning(message) {
@@ -1064,43 +973,33 @@ closeWarning.addEventListener('click', () => {
   securityWarning.classList.remove('active');
 });
 
-// Get user info from localStorage
-const nameTag = localStorage.getItem('NameTag');
-const shopID = localStorage.getItem('ShopIDTag');
-const shopTag = localStorage.getItem('ShopTag');
-
-// Check authentication on page load
-window.addEventListener('DOMContentLoaded', () => {
-  // Check authentication first
-  if (!checkAuthentication()) {
-    return; // Stop execution if not authenticated
-  }
-  
-  // If authenticated, continue with normal initialization
-  updateWelcomeTitle();
-  updateShopBadge();
-  enterFullscreen();
-});
-
-// Update welcome title with user's name
-function updateWelcomeTitle() {
-  if (nameTag) {
-    welcomeTitle.textContent = `Welcome, ${nameTag}`;
-  } else {
-    welcomeTitle.textContent = 'Welcome';
-  }
-}
-
-// Update shop badge
-function updateShopBadge() {
-  if (shopTag) {
-    const shopParts = shopTag.split('-');
-    const shopName = shopParts[0] || 'Shop';
-    shopBadge.innerHTML = `Shop: ${shopName}`;
+// Security for iframe content - ONLY COPY RESTRICTION
+function applyIframeSecurity() {
+  try {
+    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
+    const iframeWindow = contentFrame.contentWindow;
+    
+    if (iframeDoc && iframeWindow) {
+      // Apply copy restriction to iframe document
+      iframeDoc.addEventListener('copy', (e) => {
+        e.preventDefault();
+        showSecurityWarning('Copying content is disabled');
+      });
+      
+      // Apply CSS to prevent text selection in iframe
+      iframeDoc.body.style.userSelect = 'none';
+      iframeDoc.body.style.webkitUserSelect = 'none';
+      iframeDoc.body.style.mozUserSelect = 'none';
+      iframeDoc.body.style.msUserSelect = 'none';
+    }
+  } catch (e) {
+    // Cross-origin iframe - use overlay method
+    console.log('Cross-origin iframe detected, using overlay security');
+    iframeOverlay.classList.add('active');
   }
 }
 
-// Enter fullscreen mode on page load
+// Fullscreen functionality
 function enterFullscreen() {
   if (!document.fullscreenElement) {
     if (appContainer.requestFullscreen) {
@@ -1149,71 +1048,6 @@ function handleFullscreenChange() {
   }
 }
 
-// Swipe to refresh functionality
-let touchStartY = 0;
-let touchEndY = 0;
-let isRefreshing = false;
-
-iframeWrapper.addEventListener('touchstart', (e) => {
-  touchStartY = e.touches[0].clientY;
-});
-
-iframeWrapper.addEventListener('touchmove', (e) => {
-  if (isRefreshing) return;
-  
-  const touchY = e.touches[0].clientY;
-  const scrollTop = iframeWrapper.scrollTop;
-  
-  // Only trigger refresh if at the top of the content
-  if (scrollTop === 0 && touchY > touchStartY) {
-    const pullDistance = touchY - touchStartY;
-    
-    // Show refresh indicator when pulled down enough
-    if (pullDistance > 80) {
-      swipeRefreshIndicator.classList.add('active');
-    }
-  }
-});
-
-iframeWrapper.addEventListener('touchend', (e) => {
-  if (isRefreshing) return;
-  
-  touchEndY = e.changedTouches[0].clientY;
-  const pullDistance = touchEndY - touchStartY;
-  const scrollTop = iframeWrapper.scrollTop;
-  
-  // Only trigger refresh if at the top and pulled down enough
-  if (scrollTop === 0 && pullDistance > 100) {
-    triggerRefresh();
-  } else {
-    // Hide refresh indicator if not pulled enough
-    swipeRefreshIndicator.classList.remove('active');
-  }
-});
-
-function triggerRefresh() {
-  if (isRefreshing) return;
-  
-  isRefreshing = true;
-  swipeRefreshIndicator.classList.add('active');
-  
-  // Get the current active page
-  const activeNav = document.querySelector('.nav-item.active');
-  const pageUrl = activeNav.getAttribute('href');
-  
-  // Show loading overlay
-  showLoading();
-  
-  // Reload the iframe content
-  contentFrame.src = pageUrl;
-  
-  // Hide refresh indicator after a delay
-  setTimeout(() => {
-    swipeRefreshIndicator.classList.remove('active');
-    isRefreshing = false;
-  }, 1500);
-}
-
 // Toggle sidebar on mobile
 menuToggle.addEventListener('click', () => {
   sidebar.classList.toggle('active');
@@ -1246,18 +1080,19 @@ document.addEventListener('click', (e) => {
 
 // Context menu logout functionality
 contextLogout.addEventListener('click', () => {
-  performLogout();
+  showLogoutModal();
 });
 
-// Navigation handling
+// Navigation handling - only if authenticated
 navItems.forEach(item => {
   item.addEventListener('click', (e) => {
-    e.preventDefault();
-    
     // Check authentication before navigation
     if (!checkAuthentication()) {
+      e.preventDefault();
       return;
     }
+    
+    e.preventDefault();
     
     const pageUrl = item.getAttribute('href');
     const pageName = item.getAttribute('data-page');
@@ -1298,6 +1133,8 @@ function hideLoading() {
     try {
       const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
       if (iframeDoc && iframeDoc.body) {
+        // Ensure iframe content is scrollable
+        iframeDoc.body.style.overflow = 'auto';
         iframeDoc.body.style.overflowX = 'hidden';
         iframeDoc.body.style.maxWidth = '100%';
         iframeDoc.body.style.boxSizing = 'border-box';
@@ -1327,21 +1164,51 @@ function hideLoading() {
 }
 
 function forceIframeScroll() {
+  // Ensure iframe wrapper is scrollable
+  iframeWrapper.style.overflow = 'auto';
   iframeWrapper.style.overflowX = 'hidden';
   iframeWrapper.style.overflowY = 'auto';
   
+  // Ensure iframe itself is scrollable
+  contentFrame.style.overflow = 'auto';
   contentFrame.style.overflowX = 'hidden';
   contentFrame.style.maxWidth = '100%';
 }
 
-// Logout functionality
-function performLogout() {
-  if (confirm('Are you sure you want to logout?')) {
-    redirectToLogin();
-  }
+// Logout Modal Functions
+function showLogoutModal() {
+  logoutModal.classList.add('active');
+  // Close context menu if open
+  contextMenu.classList.remove('active');
 }
 
-logoutBtn.addEventListener('click', performLogout);
+function hideLogoutModal() {
+  logoutModal.classList.remove('active');
+}
+
+// Logout functionality
+function performLogout() {
+  // Clear all localStorage data
+  localStorage.clear();
+  
+  // Hide the modal
+  hideLogoutModal();
+  
+  // Redirect to login page
+  window.location.href = 'login.html';
+}
+
+// Logout button event listeners
+logoutBtn.addEventListener('click', showLogoutModal);
+cancelLogout.addEventListener('click', hideLogoutModal);
+confirmLogout.addEventListener('click', performLogout);
+
+// Close modal when clicking outside
+logoutModal.addEventListener('click', (e) => {
+  if (e.target === logoutModal) {
+    hideLogoutModal();
+  }
+});
 
 // Handle iframe loading events
 contentFrame.addEventListener('load', () => {
@@ -1383,22 +1250,14 @@ function updateIframeHeight() {
 
 // Initial setup
 window.addEventListener('DOMContentLoaded', () => {
-  // Only setup if authenticated
-  if (checkAuthentication()) {
-    updateIframeHeight();
-    forceIframeScroll();
-  }
+  updateIframeHeight();
+  forceIframeScroll();
 });
 
 window.addEventListener('resize', updateIframeHeight);
 
 // Auto-hide loading after 10 seconds (fallback)
 setTimeout(hideLoading, 10000);
-
-// Periodically check authentication (every 30 seconds)
-setInterval(() => {
-  checkAuthentication();
-}, 30000);
 </script>
 </body>
 </html>
