@@ -83,6 +83,13 @@
     height: 100vh;
   }
 
+  /* Blocked user state */
+  .app-container.blocked .sidebar,
+  .app-container.blocked .top-bar,
+  .app-container.blocked .iframe-container {
+    display: none !important;
+  }
+
   /* Sidebar Navigation */
   .sidebar {
     width: 260px;
@@ -509,6 +516,25 @@
     display: flex;
   }
 
+  /* Block User Modal */
+  .block-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+    display: none;
+  }
+
+  .block-modal.active {
+    display: flex;
+  }
+
   .modal-content {
     background: white;
     border-radius: var(--border-radius);
@@ -520,10 +546,19 @@
     animation: modalFadeIn 0.3s ease;
   }
 
+  .block-modal .modal-content {
+    background: var(--danger);
+    color: white;
+  }
+
   .modal-icon {
     font-size: 48px;
     color: var(--danger);
     margin-bottom: 20px;
+  }
+
+  .block-modal .modal-icon {
+    color: white;
   }
 
   .modal-title {
@@ -533,10 +568,21 @@
     color: var(--gray-800);
   }
 
+  .block-modal .modal-title {
+    color: white;
+    font-size: 24px;
+  }
+
   .modal-message {
     color: var(--gray-600);
     margin-bottom: 25px;
     line-height: 1.5;
+  }
+
+  .block-modal .modal-message {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 30px;
   }
 
   .modal-actions {
@@ -573,6 +619,19 @@
 
   .modal-btn-confirm:hover {
     background: #c82333;
+  }
+
+  .block-modal .modal-btn {
+    background: white;
+    color: var(--danger);
+    font-weight: 600;
+    padding: 12px 30px;
+    font-size: 16px;
+  }
+
+  .block-modal .modal-btn:hover {
+    background: var(--gray-100);
+    transform: translateY(-2px);
   }
 
   @keyframes modalFadeIn {
@@ -726,6 +785,20 @@
     </div>
   </div>
 
+  <!-- Block User Modal -->
+  <div class="block-modal" id="blockModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-ban"></i>
+      </div>
+      <div class="modal-title">Account Blocked</div>
+      <div class="modal-message">Your account has been blocked. Please contact administrator for more information.</div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="blockOkButton">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Sidebar Navigation -->
   <div class="sidebar" id="sidebar">
     <div class="app-header">
@@ -870,6 +943,14 @@ const logoutModal = document.getElementById('logoutModal');
 const cancelLogout = document.getElementById('cancelLogout');
 const confirmLogout = document.getElementById('confirmLogout');
 
+// Block Modal elements
+const blockModal = document.getElementById('blockModal');
+const blockOkButton = document.getElementById('blockOkButton');
+
+// Block check interval variable
+let blockCheckInterval = null;
+let isCheckingBlockStatus = false;
+
 // Authentication check
 function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
@@ -883,20 +964,132 @@ function checkAuthentication() {
     return false;
   }
   
-  // User is authenticated
-  console.log('User authenticated');
-  appContainer.classList.remove('unauthorized');
-  sidebar.style.display = 'flex';
+  // User is authenticated - start background block checking
+  startBackgroundBlockCheck();
   
   return true;
 }
+
+// Start background block checking every second
+function startBackgroundBlockCheck() {
+  // Clear any existing interval
+  if (blockCheckInterval) {
+    clearInterval(blockCheckInterval);
+  }
+  
+  // Initial check
+  checkUserBlockStatus();
+  
+  // Set up interval for continuous checking every second
+  blockCheckInterval = setInterval(() => {
+    if (!isCheckingBlockStatus) {
+      checkUserBlockStatus();
+    }
+  }, 1000); // Check every second
+  
+  console.log('Background block checking started');
+}
+
+// Stop background block checking
+function stopBackgroundBlockCheck() {
+  if (blockCheckInterval) {
+    clearInterval(blockCheckInterval);
+    blockCheckInterval = null;
+    console.log('Background block checking stopped');
+  }
+}
+
+// Check if user is blocked
+async function checkUserBlockStatus() {
+  // Prevent multiple simultaneous requests
+  if (isCheckingBlockStatus) return;
+  
+  try {
+    isCheckingBlockStatus = true;
+    
+    const shopIDTag = localStorage.getItem('ShopIDTag');
+    const nameTag = localStorage.getItem('NameTag');
+    
+    // If user is not logged in, stop checking
+    if (!shopIDTag || !nameTag) {
+      stopBackgroundBlockCheck();
+      return;
+    }
+    
+    // Make API call to check block status
+    const response = await fetch(`/api/check-user-status?shopId=${shopIDTag}&username=${nameTag}&t=${Date.now()}`, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.blocked === true) {
+        // User is blocked - show block modal and hide everything else
+        showBlockModal();
+        stopBackgroundBlockCheck(); // Stop checking once blocked
+        return;
+      }
+    }
+    
+    // User is not blocked - proceed normally
+    if (appContainer.classList.contains('blocked')) {
+      console.log('User block status: Not blocked');
+      appContainer.classList.remove('blocked');
+      blockModal.classList.remove('active');
+      sidebar.style.display = 'flex';
+    }
+    
+  } catch (error) {
+    console.error('Error checking user block status:', error);
+    // If there's an error checking status, continue normal operation
+    // Don't block the user due to network errors
+  } finally {
+    isCheckingBlockStatus = false;
+  }
+}
+
+// Show block modal and hide all navigation
+function showBlockModal() {
+  console.log('User is blocked, showing block modal');
+  appContainer.classList.add('blocked');
+  blockModal.classList.add('active');
+  
+  // Hide all navigation elements
+  sidebar.style.display = 'none';
+  
+  // Clear any existing content
+  contentFrame.src = 'about:blank';
+  
+  // Stop any ongoing operations
+  stopBackgroundBlockCheck();
+}
+
+// Handle block modal OK button
+blockOkButton.addEventListener('click', () => {
+  // Clear all localStorage data
+  localStorage.clear();
+  
+  // Hide the modal
+  blockModal.classList.remove('active');
+  
+  // Stop background checking
+  stopBackgroundBlockCheck();
+  
+  // Redirect to login page
+  window.location.href = 'login.html';
+});
 
 // Initialize authentication check on page load
 window.addEventListener('DOMContentLoaded', () => {
   const isAuthenticated = checkAuthentication();
   
   if (isAuthenticated) {
-    // Only proceed with normal initialization if authenticated
+    // Only proceed with normal initialization if authenticated and not blocked
     updateUserInterface();
   }
 });
@@ -936,7 +1129,7 @@ window.addEventListener('message', function(event) {
       localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
     }
     
-    // Re-check authentication
+    // Re-check authentication and start background block checking
     const isAuthenticated = checkAuthentication();
     
     if (isAuthenticated) {
@@ -1191,6 +1384,9 @@ function performLogout() {
   // Clear all localStorage data
   localStorage.clear();
   
+  // Stop background checking
+  stopBackgroundBlockCheck();
+  
   // Hide the modal
   hideLogoutModal();
   
@@ -1258,6 +1454,17 @@ window.addEventListener('resize', updateIframeHeight);
 
 // Auto-hide loading after 10 seconds (fallback)
 setTimeout(hideLoading, 10000);
+
+// Stop background checking when page is hidden (to reduce load)
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    // Page is hidden, could slow down checking if needed
+    console.log('Page hidden, background checks continue');
+  } else {
+    // Page is visible
+    console.log('Page visible, full speed background checks');
+  }
+});
 </script>
 </body>
 </html>
