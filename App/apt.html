@@ -83,7 +83,7 @@
     height: 100vh;
   }
 
-  /* Blocked user state */
+  /* Block state */
   .app-container.blocked .sidebar,
   .app-container.blocked .top-bar,
   .app-container.blocked .iframe-container {
@@ -627,7 +627,7 @@
     color: var(--danger);
     font-weight: 600;
     padding: 12px 30px;
-    min-width: 120px;
+    min-width: 150px;
   }
 
   .block-modal .modal-btn:hover {
@@ -795,7 +795,7 @@
       <div class="modal-title">Account Blocked</div>
       <div class="modal-message">Your account has been blocked by the administrator. Please contact support for more information.</div>
       <div class="modal-actions">
-        <button class="modal-btn" id="okBlock">Okay</button>
+        <button class="modal-btn" id="blockOkBtn">OK</button>
       </div>
     </div>
   </div>
@@ -946,18 +946,19 @@ const confirmLogout = document.getElementById('confirmLogout');
 
 // Block Modal elements
 const blockModal = document.getElementById('blockModal');
-const okBlock = document.getElementById('okBlock');
+const blockOkBtn = document.getElementById('blockOkBtn');
 
-// Block checking interval
-let blockCheckInterval = null;
+// Background validation interval
+let validationInterval = null;
 
 // Authentication check
 function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
   const nameTag = localStorage.getItem('NameTag');
   const shopTag = localStorage.getItem('ShopTag');
+  const mobileTag = localStorage.getItem('MobileTag');
   
-  if (!shopIDTag || !nameTag || !shopTag) {
+  if (!shopIDTag || !nameTag || !shopTag || !mobileTag) {
     // User is not authenticated - redirect to login page
     console.log('User not authenticated, redirecting to login');
     window.location.href = 'login.html';
@@ -980,8 +981,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // Only proceed with normal initialization if authenticated
     updateUserInterface();
     
-    // Start checking for block status every second
-    startBlockChecking();
+    // Start background validation
+    startBackgroundValidation();
   }
 });
 
@@ -1005,106 +1006,78 @@ function updateUserInterface() {
   }
 }
 
-// Function to check if user is blocked
-async function checkUserBlockStatus() {
+// Background validation function
+async function validateUserBlockStatus() {
   try {
+    const mobileTag = localStorage.getItem('MobileTag');
     const shopIDTag = localStorage.getItem('ShopIDTag');
-    const nameTag = localStorage.getItem('NameTag');
     
-    if (!shopIDTag || !nameTag) {
-      return false;
+    if (!mobileTag || !shopIDTag) {
+      console.log('Missing user data for validation');
+      return;
     }
     
-    // Make API call to check block status
-    // Replace this with your actual API endpoint
-    const response = await fetch(`/api/check-user-block?shopId=${encodeURIComponent(shopIDTag)}&username=${encodeURIComponent(nameTag)}`);
+    // Make API call to check user block status
+    const response = await fetch(`/api/check-user-status?mobile=${encodeURIComponent(mobileTag)}&shopId=${encodeURIComponent(shopIDTag)}`);
     
     if (response.ok) {
       const data = await response.json();
-      return data.isBlocked === true;
+      
+      // Check if user is blocked
+      if (data.blocked === true) {
+        console.log('User is blocked, showing block modal');
+        showBlockModal();
+        return;
+      }
+      
+      console.log('User validation successful - not blocked');
+    } else {
+      console.error('Failed to validate user status:', response.status);
     }
-    
-    return false;
   } catch (error) {
-    console.error('Error checking user block status:', error);
-    return false;
+    console.error('Error validating user status:', error);
   }
 }
 
-// Alternative method using direct database check (if you have a different setup)
-async function checkUserBlockStatusAlternative() {
-  try {
-    const shopIDTag = localStorage.getItem('ShopIDTag');
-    const nameTag = localStorage.getItem('NameTag');
-    
-    if (!shopIDTag || !nameTag) {
-      return false;
-    }
-    
-    // This is a placeholder - replace with your actual database check logic
-    // You might need to use a different method based on your backend setup
-    const response = await fetch('/api/user-status', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        shopId: shopIDTag,
-        username: nameTag
-      })
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      return data.blocked === true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Error checking user block status:', error);
-    return false;
+// Start background validation
+function startBackgroundValidation() {
+  // Run immediately on start
+  validateUserBlockStatus();
+  
+  // Then run every second
+  validationInterval = setInterval(validateUserBlockStatus, 1000);
+  
+  console.log('Background validation started');
+}
+
+// Stop background validation
+function stopBackgroundValidation() {
+  if (validationInterval) {
+    clearInterval(validationInterval);
+    validationInterval = null;
+    console.log('Background validation stopped');
   }
 }
 
-// Start checking for block status every second
-function startBlockChecking() {
-  blockCheckInterval = setInterval(async () => {
-    const isBlocked = await checkUserBlockStatus();
-    
-    if (isBlocked) {
-      handleUserBlocked();
-    }
-  }, 1000); // Check every second
-}
-
-// Stop block checking
-function stopBlockChecking() {
-  if (blockCheckInterval) {
-    clearInterval(blockCheckInterval);
-    blockCheckInterval = null;
-  }
-}
-
-// Handle when user is blocked
-function handleUserBlocked() {
-  // Stop further block checking
-  stopBlockChecking();
+// Show block modal and handle user blocking
+function showBlockModal() {
+  // Stop background validation
+  stopBackgroundValidation();
   
   // Hide all navigation and content
   appContainer.classList.add('blocked');
   
   // Show block modal
   blockModal.classList.add('active');
-}
-
-// Handle block modal okay button
-okBlock.addEventListener('click', () => {
-  // Clear all localStorage data
+  
+  // Clear localStorage
   localStorage.clear();
   
-  // Hide the modal
-  blockModal.classList.remove('active');
-  
+  console.log('User blocked - all data cleared');
+}
+
+// Handle block modal OK button
+blockOkBtn.addEventListener('click', () => {
   // Redirect to login page
   window.location.href = 'login.html';
 });
@@ -1122,6 +1095,7 @@ window.addEventListener('message', function(event) {
       localStorage.setItem('NameTag', event.data.userData.name || 'User');
       localStorage.setItem('ShopIDTag', event.data.userData.shopId || '');
       localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
+      localStorage.setItem('MobileTag', event.data.userData.mobile || '');
     }
     
     // Re-check authentication
@@ -1131,8 +1105,8 @@ window.addEventListener('message', function(event) {
       // Update UI
       updateUserInterface();
       
-      // Start block checking
-      startBlockChecking();
+      // Start background validation
+      startBackgroundValidation();
       
       // Redirect to dashboard
       contentFrame.src = 'Dashboard.html';
@@ -1379,8 +1353,8 @@ function hideLogoutModal() {
 
 // Logout functionality
 function performLogout() {
-  // Stop block checking
-  stopBlockChecking();
+  // Stop background validation
+  stopBackgroundValidation();
   
   // Clear all localStorage data
   localStorage.clear();
