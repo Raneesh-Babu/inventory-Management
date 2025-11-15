@@ -871,7 +871,7 @@ const cancelLogout = document.getElementById('cancelLogout');
 const confirmLogout = document.getElementById('confirmLogout');
 
 // Authentication check
-function checkAuthentication() {
+async function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
   const nameTag = localStorage.getItem('NameTag');
   const shopTag = localStorage.getItem('ShopTag');
@@ -883,17 +883,61 @@ function checkAuthentication() {
     return false;
   }
   
-  // User is authenticated
-  console.log('User authenticated');
+  // Check if user is blocked
+  const isBlocked = await checkUserBlockStatus(shopIDTag, nameTag);
+  if (isBlocked) {
+    console.log('User is blocked, redirecting to login');
+    localStorage.clear();
+    window.location.href = 'login.html';
+    return false;
+  }
+  
+  // User is authenticated and not blocked
+  console.log('User authenticated and not blocked');
   appContainer.classList.remove('unauthorized');
   sidebar.style.display = 'flex';
   
   return true;
 }
 
+// Check user block status from database
+async function checkUserBlockStatus(shopID, username) {
+  try {
+    // Replace this with your actual API endpoint or database check
+    const response = await fetch(`/api/checkUserStatus?shopID=${shopID}&username=${username}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.blocked === true; // Return true if user is blocked
+    }
+    return false; // If API fails, assume user is not blocked
+  } catch (error) {
+    console.error('Error checking user block status:', error);
+    return false; // If error, assume user is not blocked
+  }
+}
+
+// Alternative method using localStorage for demo purposes
+function checkUserBlockStatusLocal(shopID, username) {
+  // This is a demo implementation - replace with actual database check
+  try {
+    // Check if blocked users list exists in localStorage
+    const blockedUsers = JSON.parse(localStorage.getItem('blockedUsers') || '[]');
+    
+    // Check if current user is in the blocked list
+    const isBlocked = blockedUsers.some(user => 
+      user.shopID === shopID && user.username === username
+    );
+    
+    return isBlocked;
+  } catch (error) {
+    console.error('Error checking user block status:', error);
+    return false;
+  }
+}
+
 // Initialize authentication check on page load
-window.addEventListener('DOMContentLoaded', () => {
-  const isAuthenticated = checkAuthentication();
+window.addEventListener('DOMContentLoaded', async () => {
+  const isAuthenticated = await checkAuthentication();
   
   if (isAuthenticated) {
     // Only proceed with normal initialization if authenticated
@@ -922,7 +966,7 @@ function updateUserInterface() {
 }
 
 // Listen for authentication changes from iframe (login success)
-window.addEventListener('message', function(event) {
+window.addEventListener('message', async function(event) {
   // Check if the message is from a trusted source (optional)
   // if (event.origin !== "https://your-trusted-domain.com") return;
   
@@ -937,7 +981,7 @@ window.addEventListener('message', function(event) {
     }
     
     // Re-check authentication
-    const isAuthenticated = checkAuthentication();
+    const isAuthenticated = await checkAuthentication();
     
     if (isAuthenticated) {
       // Update UI
@@ -1085,9 +1129,10 @@ contextLogout.addEventListener('click', () => {
 
 // Navigation handling - only if authenticated
 navItems.forEach(item => {
-  item.addEventListener('click', (e) => {
+  item.addEventListener('click', async (e) => {
     // Check authentication before navigation
-    if (!checkAuthentication()) {
+    const isAuthenticated = await checkAuthentication();
+    if (!isAuthenticated) {
       e.preventDefault();
       return;
     }
