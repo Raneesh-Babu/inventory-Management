@@ -69,12 +69,6 @@
     z-index: 10000;
   }
 
-  /* Keyboard active state */
-  .app-container.keyboard-active {
-    height: 100vh;
-    overflow: hidden;
-  }
-
   /* Authentication state */
   .app-container.unauthorized .sidebar,
   .app-container.unauthorized .top-bar {
@@ -87,6 +81,64 @@
 
   .app-container.unauthorized .iframe-container {
     height: 100vh;
+  }
+
+  /* Block Modal */
+  .block-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+    display: none;
+  }
+
+  .block-modal.active {
+    display: flex;
+  }
+
+  .block-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 90%;
+    max-width: 450px;
+    padding: 40px 30px;
+    text-align: center;
+    animation: modalFadeIn 0.3s ease;
+    border-left: 6px solid var(--danger);
+  }
+
+  .block-icon {
+    font-size: 64px;
+    color: var(--danger);
+    margin-bottom: 20px;
+  }
+
+  .block-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--danger);
+  }
+
+  .block-message {
+    color: var(--gray-700);
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  .block-timer {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin-top: 15px;
+    font-weight: 500;
   }
 
   /* Sidebar Navigation */
@@ -267,12 +319,6 @@
     transition: var(--transition);
   }
 
-  /* Keyboard active state for main content */
-  .keyboard-active .main-content {
-    height: 100vh;
-    overflow: visible;
-  }
-
   .top-bar {
     display: flex;
     justify-content: space-between;
@@ -284,14 +330,6 @@
     flex-shrink: 0;
     z-index: 100;
     transition: var(--transition);
-  }
-
-  /* Hide top bar when keyboard is active on mobile */
-  @media (max-width: 768px) {
-    .keyboard-active .top-bar {
-      transform: translateY(-100%);
-      opacity: 0;
-    }
   }
 
   .menu-toggle {
@@ -410,17 +448,6 @@
     transition: var(--transition);
   }
 
-  /* Adjust iframe container when keyboard is active */
-  .keyboard-active .iframe-container {
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
-  }
-
   .content-frame {
     width: 100%;
     height: 100%;
@@ -438,43 +465,6 @@
     overflow-x: hidden;
     position: relative;
     transition: var(--transition);
-  }
-
-  /* Keyboard active adjustments for iframe wrapper */
-  .keyboard-active .iframe-wrapper {
-    height: 100vh;
-    padding-bottom: 0;
-  }
-
-  /* Floating action button for keyboard close */
-  .keyboard-close-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 1001;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    display: none;
-  }
-
-  .keyboard-close-btn.active {
-    display: flex;
-  }
-
-  .keyboard-close-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.1);
   }
 
   .loading-overlay {
@@ -717,15 +707,6 @@
       right: 10px;
     }
 
-    /* Enhanced mobile keyboard handling */
-    .keyboard-active .sidebar {
-      display: none;
-    }
-
-    .keyboard-active .overlay {
-      display: none;
-    }
-
     .modal-actions {
       flex-direction: column;
     }
@@ -774,10 +755,22 @@
 </head>
 <body>
 <div class="app-container" id="appContainer">
-  <!-- Keyboard Close Button -->
-  <button class="keyboard-close-btn" id="keyboardCloseBtn">
-    <i class="fas fa-keyboard"></i>
-  </button>
+  <!-- Block Modal -->
+  <div class="block-modal" id="blockModal">
+    <div class="block-content">
+      <div class="block-icon">
+        <i class="fas fa-ban"></i>
+      </div>
+      <div class="block-title">Account Blocked</div>
+      <div class="block-message">
+        Your account has been temporarily blocked for security reasons. 
+        Please contact your administrator for assistance.
+      </div>
+      <div class="block-timer" id="blockTimer">
+        Redirecting to login in <span id="countdown">5</span> seconds...
+      </div>
+    </div>
+  </div>
 
   <!-- Security Warning -->
   <div class="security-warning" id="securityWarning">
@@ -946,36 +939,35 @@ const iframeWrapper = document.getElementById('iframeWrapper');
 const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
-const keyboardCloseBtn = document.getElementById('keyboardCloseBtn');
+
+// Block Modal elements
+const blockModal = document.getElementById('blockModal');
+const blockTimer = document.getElementById('countdown');
 
 // Logout Modal elements
 const logoutModal = document.getElementById('logoutModal');
 const cancelLogout = document.getElementById('cancelLogout');
 const confirmLogout = document.getElementById('confirmLogout');
 
+// API Configuration
+const BASEROW_API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+const BASEROW_TABLE_ID = '729979';
+const BASEROW_API_URL = `https://api.baserow.io/api/database/rows/table/${BASEROW_TABLE_ID}/?user_field_names=true`;
+
+// Background check interval
+let blockCheckInterval = null;
+
 // Authentication check
 function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
   const nameTag = localStorage.getItem('NameTag');
   const shopTag = localStorage.getItem('ShopTag');
+  const mobileTag = localStorage.getItem('MobileTag');
   
-  if (!shopIDTag || !nameTag || !shopTag) {
-    // User is not authenticated
+  if (!shopIDTag || !nameTag || !shopTag || !mobileTag) {
+    // User is not authenticated - redirect to login page
     console.log('User not authenticated, redirecting to login');
-    appContainer.classList.add('unauthorized');
-    
-    // Load login page in iframe
-    contentFrame.src = 'login.html';
-    
-    // Update loading text
-    const loadingText = loadingOverlay.querySelector('.loading-text');
-    if (loadingText) {
-      loadingText.textContent = 'Loading Login...';
-    }
-    
-    // Hide navigation elements
-    sidebar.style.display = 'none';
-    
+    window.location.href = 'login.html';
     return false;
   }
   
@@ -983,6 +975,9 @@ function checkAuthentication() {
   console.log('User authenticated');
   appContainer.classList.remove('unauthorized');
   sidebar.style.display = 'flex';
+  
+  // Start background block check
+  startBlockCheck();
   
   return true;
 }
@@ -993,9 +988,6 @@ window.addEventListener('DOMContentLoaded', () => {
   
   if (isAuthenticated) {
     // Only proceed with normal initialization if authenticated
-    originalHeight = window.innerHeight;
-    
-    // Update UI with user info
     updateUserInterface();
   }
 });
@@ -1020,6 +1012,110 @@ function updateUserInterface() {
   }
 }
 
+// Background block check function
+async function checkUserBlockStatus() {
+  try {
+    const mobileTag = localStorage.getItem('MobileTag');
+    const shopIDTag = localStorage.getItem('ShopIDTag');
+    
+    if (!mobileTag || !shopIDTag) {
+      console.log('Missing user data in localStorage');
+      return;
+    }
+    
+    // Fetch user data from Baserow
+    const response = await fetch(BASEROW_API_URL, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${BASEROW_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Find user with matching mobile number and shop ID
+    const user = data.results.find(user => 
+      user.Username === mobileTag && user.ShopID === shopIDTag
+    );
+    
+    if (user) {
+      console.log('User found in database:', user);
+      
+      // Check if user is blocked
+      if (user.Block === true) {
+        console.log('User is blocked, showing block modal');
+        showBlockModal();
+        return true;
+      } else {
+        console.log('User is not blocked');
+        return false;
+      }
+    } else {
+      console.log('User not found in database');
+      // User not found in database, block access
+      showBlockModal();
+      return true;
+    }
+  } catch (error) {
+    console.error('Error checking user block status:', error);
+    // In case of error, don't block the user to avoid false positives
+    return false;
+  }
+}
+
+// Start background block check
+function startBlockCheck() {
+  // Run immediately
+  checkUserBlockStatus();
+  
+  // Then run every second
+  blockCheckInterval = setInterval(async () => {
+    const isBlocked = await checkUserBlockStatus();
+    if (isBlocked) {
+      // Stop checking if user is blocked
+      clearInterval(blockCheckInterval);
+    }
+  }, 1000);
+}
+
+// Show block modal and redirect
+function showBlockModal() {
+  // Hide all navigation and sidebar
+  sidebar.style.display = 'none';
+  document.querySelector('.top-bar').style.display = 'none';
+  document.querySelector('.main-content').style.display = 'none';
+  
+  // Show block modal
+  blockModal.classList.add('active');
+  
+  // Clear localStorage
+  localStorage.clear();
+  
+  // Start countdown for redirect
+  let countdown = 5;
+  const countdownElement = document.getElementById('countdown');
+  
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    countdownElement.textContent = countdown;
+    
+    if (countdown <= 0) {
+      clearInterval(countdownInterval);
+      redirectToLogin();
+    }
+  }, 1000);
+}
+
+// Redirect to login page
+function redirectToLogin() {
+  window.location.href = 'login.html';
+}
+
 // Listen for authentication changes from iframe (login success)
 window.addEventListener('message', function(event) {
   // Check if the message is from a trusted source (optional)
@@ -1033,6 +1129,7 @@ window.addEventListener('message', function(event) {
       localStorage.setItem('NameTag', event.data.userData.name || 'User');
       localStorage.setItem('ShopIDTag', event.data.userData.shopId || '');
       localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
+      localStorage.setItem('MobileTag', event.data.userData.mobile || '');
     }
     
     // Re-check authentication
@@ -1050,156 +1147,6 @@ window.addEventListener('message', function(event) {
       navItems.forEach(nav => nav.classList.remove('active'));
       navItems[0].classList.add('active');
     }
-  }
-});
-
-// Keyboard detection and adjustment
-let isKeyboardActive = false;
-let originalHeight = window.innerHeight;
-
-// Detect keyboard appearance
-window.addEventListener('resize', function() {
-  if (window.innerHeight < originalHeight * 0.7) {
-    // Keyboard is likely open
-    if (!isKeyboardActive) {
-      activateKeyboardMode();
-    }
-  } else {
-    // Keyboard is likely closed
-    if (isKeyboardActive) {
-      deactivateKeyboardMode();
-    }
-  }
-});
-
-// Focus and blur events for iframe content
-function setupIframeKeyboardHandling() {
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc) {
-      // Add event listeners to all input elements in iframe
-      const inputs = iframeDoc.querySelectorAll('input, textarea, select');
-      inputs.forEach(input => {
-        input.addEventListener('focus', handleIframeInputFocus);
-        input.addEventListener('blur', handleIframeInputBlur);
-      });
-      
-      // Also handle dynamically added inputs
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          mutation.addedNodes.forEach(function(node) {
-            if (node.nodeType === 1) { // Element node
-              if (node.matches('input, textarea, select')) {
-                node.addEventListener('focus', handleIframeInputFocus);
-                node.addEventListener('blur', handleIframeInputBlur);
-              }
-              node.querySelectorAll('input, textarea, select').forEach(input => {
-                input.addEventListener('focus', handleIframeInputFocus);
-                input.addEventListener('blur', handleIframeInputBlur);
-              });
-            }
-          });
-        });
-      });
-      
-      observer.observe(iframeDoc.body, {
-        childList: true,
-        subtree: true
-      });
-    }
-  } catch (e) {
-    // Cross-origin iframe - use alternative approach
-    console.log('Cross-origin iframe detected, using resize-based keyboard detection');
-  }
-}
-
-function handleIframeInputFocus(event) {
-  activateKeyboardMode();
-  
-  // Scroll the input into view
-  setTimeout(() => {
-    event.target.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    });
-  }, 300);
-}
-
-function handleIframeInputBlur() {
-  // Don't immediately deactivate - wait to see if another input gets focus
-  setTimeout(() => {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc) {
-      const activeElement = iframeDoc.activeElement;
-      if (!activeElement || (activeElement.tagName !== 'INPUT' && 
-          activeElement.tagName !== 'TEXTAREA' && 
-          activeElement.tagName !== 'SELECT')) {
-        deactivateKeyboardMode();
-      }
-    }
-  }, 100);
-}
-
-function activateKeyboardMode() {
-  if (isKeyboardActive) return;
-  
-  isKeyboardActive = true;
-  appContainer.classList.add('keyboard-active');
-  keyboardCloseBtn.classList.add('active');
-  
-  // Store original scroll position
-  iframeWrapper.dataset.originalScrollTop = iframeWrapper.scrollTop;
-  
-  console.log('Keyboard mode activated');
-}
-
-function deactivateKeyboardMode() {
-  if (!isKeyboardActive) return;
-  
-  isKeyboardActive = false;
-  appContainer.classList.remove('keyboard-active');
-  keyboardCloseBtn.classList.remove('active');
-  
-  // Restore original scroll position
-  if (iframeWrapper.dataset.originalScrollTop) {
-    iframeWrapper.scrollTop = iframeWrapper.dataset.originalScrollTop;
-    delete iframeWrapper.dataset.originalScrollTop;
-  }
-  
-  console.log('Keyboard mode deactivated');
-}
-
-// Manual keyboard close button
-keyboardCloseBtn.addEventListener('click', function() {
-  // Blur any active input
-  try {
-    const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-    if (iframeDoc && iframeDoc.activeElement) {
-      iframeDoc.activeElement.blur();
-    }
-  } catch (e) {
-    // Cross-origin iframe
-  }
-  
-  deactivateKeyboardMode();
-});
-
-// Also close keyboard when tapping outside inputs
-document.addEventListener('click', function(event) {
-  if (isKeyboardActive && !event.target.matches('input, textarea, select')) {
-    try {
-      const iframeDoc = contentFrame.contentDocument || contentFrame.contentWindow.document;
-      if (iframeDoc && iframeDoc.activeElement) {
-        const activeTag = iframeDoc.activeElement.tagName;
-        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
-          return; // Don't blur if clicking outside but an input is still focused
-        }
-      }
-    } catch (e) {
-      // Cross-origin iframe
-    }
-    
-    deactivateKeyboardMode();
   }
 });
 
@@ -1403,9 +1350,6 @@ function hideLoading() {
         
         // Apply security to iframe content
         applyIframeSecurity();
-        
-        // Setup keyboard handling for iframe inputs
-        setupIframeKeyboardHandling();
       }
     } catch (e) {
       // Cross-origin iframe
@@ -1443,11 +1387,16 @@ function performLogout() {
   // Clear all localStorage data
   localStorage.clear();
   
+  // Stop block check interval
+  if (blockCheckInterval) {
+    clearInterval(blockCheckInterval);
+  }
+  
   // Hide the modal
   hideLogoutModal();
   
   // Redirect to login page
-  checkAuthentication();
+  window.location.href = 'login.html';
 }
 
 // Logout button event listeners
