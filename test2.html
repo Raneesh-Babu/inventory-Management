@@ -1,916 +1,667 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Dashboard</title>
-    <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --success: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --light-gray: #e9ecef;
-            --danger: #e63946;
-            --warning: #f4a261;
-            --border-radius: 12px;
-            --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product & Inventory</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<style>
+/* Enhanced CSS with better styling and validations */
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --success: #06d6a0;
+  --danger: #ef476f;
+  --warning: #ffd166;
+  --dark: #333;
+  --light: #f8f9fa;
+  --gray: #6c757d;
+  --border: #dee2e6;
+  --border-radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --transition: all 0.3s ease;
+}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+* {
+  box-sizing: border-box;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: var(--dark);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0; 
+  padding: 20px;
+  min-height: 100vh;
+  color: var(--dark);
+}
 
-        h1, h2, h3 {
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
+.container { 
+  max-width: 600px; 
+  margin: auto; 
+  background: white; 
+  padding: 30px; 
+  border-radius: var(--border-radius); 
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
 
-        h1 {
-            font-size: 2.2rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 700;
-        }
+.container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            transition: var(--transition);
-        }
+h2 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
 
-        .container:hover {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-        }
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
+}
 
-        .header-box {
-            display: none; /* Hide header section */
-        }
+.form-group {
+  margin-bottom: 20px;
+}
 
-        .form-section {
-            margin-bottom: 30px;
-        }
+label { 
+  display: block; 
+  margin-bottom: 8px; 
+  font-weight: 500;
+  color: var(--dark);
+}
 
-        .form-section h3 {
-            font-size: 1.4rem;
-            color: var(--primary);
-            border-bottom: 2px solid var(--light-gray);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
+input, select, button, textarea { 
+  width: 100%; 
+  padding: 14px 16px; 
+  margin: 8px 0; 
+  border-radius: var(--border-radius); 
+  border: 2px solid var(--border);
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  transition: var(--transition);
+}
 
-        .input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
 
-        .input-field {
-            flex: 1 1 300px;
-            position: relative;
-        }
+input:invalid, select:invalid, textarea:invalid {
+  border-color: var(--danger);
+}
 
-        .input-field label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--gray);
-        }
+input:valid, select:valid, textarea:valid {
+  border-color: var(--success);
+}
 
-        input, select, button, textarea {
-            padding: 14px 16px;
-            border-radius: var(--border-radius);
-            border: 2px solid var(--light-gray);
-            width: 100%;
-            font-size: 1rem;
-            transition: var(--transition);
-            font-family: inherit;
-        }
+button { 
+  background: var(--primary); 
+  color: white; 
+  border: none; 
+  font-weight: 600; 
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 15px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
 
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
+button:hover { 
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+}
 
-        button {
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            padding: 15px 20px;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
-        }
+button:active {
+  transform: translateY(0);
+}
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
-        }
+button:disabled { 
+  background: var(--gray); 
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
-        button:active {
-            transform: translateY(0);
-        }
+#cameraContainer { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.9); 
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
-        button:disabled {
-            background: var(--light-gray);
-            color: var(--gray);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
+#reader { 
+  width: 90%; 
+  max-width: 500px;
+  height: 60%; 
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
 
-        .staff-list {
-            margin-top: 40px;
-        }
+#switchCameraBtn, #closeCameraBtn { 
+  position: relative;
+  margin: 20px 10px 0;
+  background: white; 
+  color: var(--dark); 
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: var(--border-radius); 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: var(--transition);
+  width: auto;
+}
 
-        .staff-list h3 {
-            font-size: 1.4rem;
-            color: var(--primary);
-            border-bottom: 2px solid var(--light-gray);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
+#switchCameraBtn:hover, #closeCameraBtn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
 
-        .staff-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
+#buttonsRow { 
+  display: flex; 
+  gap: 10px; 
+  align-items: stretch;
+}
 
-        .staff-card {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 20px;
-            transition: var(--transition);
-            border-left: 4px solid var(--primary);
-        }
+#buttonsRow input {
+  margin: 0;
+}
 
-        .staff-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        }
+#buttonsRow button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
+  padding: 12px 16px;
+}
 
-        .staff-card.blocked {
-            border-left-color: var(--danger);
-            background-color: rgba(230, 57, 70, 0.05);
-        }
+#fetchBtn {
+  background: var(--success);
+}
 
-        .staff-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--light-gray);
-        }
+#fetchBtn:hover {
+  background: #05c290;
+}
 
-        .staff-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark);
-        }
+#scanBtn {
+  background: var(--warning);
+  color: var(--dark);
+}
 
-        .staff-role {
-            background: var(--primary);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
+#scanBtn:hover {
+  background: #ffc94d;
+}
 
-        .staff-details {
-            margin-bottom: 15px;
-        }
+#status {
+  color: var(--dark);
+  font-weight: 600;
+  padding: 12px 16px;
+  background: rgba(67, 97, 238, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
 
-        .detail-row {
-            display: flex;
-            margin-bottom: 8px;
-        }
+#loginPrompt {
+  color: var(--danger);
+  display: none;
+  padding: 12px 16px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--danger);
+  font-weight: 500;
+}
 
-        .detail-label {
-            font-weight: 600;
-            color: var(--gray);
-            width: 100px;
-            flex-shrink: 0;
-        }
+.error-message {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
 
-        .detail-value {
-            flex: 1;
-            color: var(--dark);
-        }
+.success-message {
+  color: var(--success);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
+}
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
+.field-required::after {
+  content: " *";
+  color: var(--danger);
+}
 
-        .status-active {
-            background: rgba(76, 201, 240, 0.2);
-            color: var(--success);
-        }
-
-        .status-blocked {
-            background: rgba(230, 57, 70, 0.2);
-            color: var(--danger);
-        }
-
-        .staff-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .update-btn {
-            background: linear-gradient(to right, var(--success), #3a86ff);
-            padding: 10px 15px;
-            font-size: 0.9rem;
-            flex: 2;
-        }
-
-        .update-btn:hover {
-            box-shadow: 0 4px 12px rgba(76, 201, 240, 0.4);
-        }
-
-        .delete-btn {
-            background: linear-gradient(to right, var(--danger), #ff6b6b);
-            padding: 10px 15px;
-            font-size: 0.9rem;
-            flex: 1;
-        }
-
-        .delete-btn:hover {
-            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
-        }
-
-        /* Modal styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            background: white;
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            transform: translateY(-20px);
-            transition: var(--transition);
-        }
-
-        .modal-overlay.active .modal {
-            transform: translateY(0);
-        }
-
-        .modal h3 {
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
-
-        .modal p {
-            margin-bottom: 20px;
-            color: var(--gray);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .confirm-delete-btn {
-            background: linear-gradient(to right, var(--danger), #ff6b6b);
-            flex: 1;
-        }
-
-        .cancel-delete-btn {
-            background: linear-gradient(to right, var(--gray), #adb5bd);
-            flex: 1;
-        }
-
-        /* Loading spinner */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .loading-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(67, 97, 238, 0.2);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .input-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .input-field {
-                flex: 1 1 100%;
-            }
-            
-            input, select, button, textarea {
-                padding: 12px 14px;
-            }
-            
-            .staff-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.6rem;
-            }
-            
-            .container {
-                padding: 15px;
-            }
-            
-            .staff-card {
-                padding: 15px;
-            }
-            
-            .staff-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .staff-actions {
-                flex-direction: column;
-            }
-        }
-
-        /* Animation for cards */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .staff-card {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-dark);
-        }
-    </style>
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  #buttonsRow {
+    flex-direction: column;
+  }
+  
+  #buttonsRow button {
+    width: 100%;
+  }
+}
+</style>
 </head>
 <body>
-    <div class="container" id="mainContainer" style="display:none;">
-        <div class="header-box">
-            <h3 id="welcomeText"></h3>
-            <h4 id="shopNameText"></h4>
-        </div>
-
-        <div class="form-section">
-            <h3>Add New Staff</h3>
-            <div class="input-group">
-                <div class="input-field">
-                    <label for="username">Username (10-digit mobile)</label>
-                    <input type="text" id="username" placeholder="Enter 10-digit mobile number" maxlength="10">
-                </div>
-                <div class="input-field">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" placeholder="Enter full name">
-                </div>
-                <div class="input-field">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter password">
-                </div>
-            </div>
-            <button id="addBtn" disabled>Add Staff</button>
-        </div>
-
-        <div class="staff-list">
-            <h3>Staff Members</h3>
-            <div class="staff-grid" id="staffGrid"></div>
-        </div>
+<div class="container">
+  <div id="status" class="status-message"></div>
+  <div id="loginPrompt" class="error-message">Please login first</div>
+  
+  <div id="app" style="display:none;">
+    <div class="form-group">
+      <label for="productType" class="field-required">Product Type:</label>
+      <select id="productType" required>
+        <option value="existing">Existing Product</option>
+        <option value="new">New Product</option>
+      </select>
     </div>
 
-    <!-- Loading Spinner -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
+    <div class="form-group">
+      <label for="productId" class="field-required">Product ID:</label>
+      <div id="buttonsRow">
+        <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
+        <button id="fetchBtn">Fetch</button>
+        <button id="scanBtn">Scan</button>
+      </div>
+      <div id="productIdError" class="error-message"></div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <h3>Confirm Delete</h3>
-            <p id="deleteMessage">Are you sure you want to delete this staff member? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button class="cancel-delete-btn" id="cancelDelete">Cancel</button>
-                <button class="confirm-delete-btn" id="confirmDelete">Delete</button>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="productName" class="field-required">Product Name:</label>
+      <input type="text" id="productName" required>
+      <div id="productNameError" class="error-message"></div>
     </div>
 
-    <!-- Status Modal -->
-    <div class="modal-overlay" id="statusModal">
-        <div class="modal">
-            <h3 id="statusTitle">Status</h3>
-            <p id="statusMessage"></p>
-            <div class="modal-actions">
-                <button id="statusOkBtn" class="update-btn">OK</button>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="details">Details:</label>
+      <textarea id="details"></textarea>
     </div>
 
-    <!-- Duplicate Username Modal -->
-    <div class="modal-overlay" id="duplicateModal">
-        <div class="modal">
-            <h3 style="color: var(--danger);">Duplicate Username</h3>
-            <p id="duplicateMessage">This mobile number is already in use in your shop.</p>
-            <div class="modal-actions">
-                <button id="duplicateOkBtn" class="update-btn">OK</button>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="price" class="field-required">Price:</label>
+      <input type="number" id="price" min="0" step="0.01" required>
+      <div id="priceError" class="error-message"></div>
     </div>
 
-    <script>
-        const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-        const tableId = 729979;
-        const baseUrl = `https://api.baserow.io/api/database/rows/table/${tableId}/`;
-        const mainContainer = document.getElementById("mainContainer");
-        const loadingOverlay = document.getElementById("loadingOverlay");
-        const deleteModal = document.getElementById("deleteModal");
-        const statusModal = document.getElementById("statusModal");
-        const duplicateModal = document.getElementById("duplicateModal");
-        const cancelDeleteBtn = document.getElementById("cancelDelete");
-        const confirmDeleteBtn = document.getElementById("confirmDelete");
-        const statusOkBtn = document.getElementById("statusOkBtn");
-        const duplicateOkBtn = document.getElementById("duplicateOkBtn");
-        const statusTitle = document.getElementById("statusTitle");
-        const statusMessage = document.getElementById("statusMessage");
-        const deleteMessage = document.getElementById("deleteMessage");
-        const duplicateMessage = document.getElementById("duplicateMessage");
+    <div class="form-group">
+      <label for="count" class="field-required">Count:</label>
+      <input type="number" id="count" min="1" required>
+      <div id="countError" class="error-message"></div>
+    </div>
 
-        let staffToDelete = null;
+    <div class="form-group">
+      <label for="batchNo" class="field-required">Batch No:</label>
+      <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+      <div id="batchNoError" class="error-message"></div>
+    </div>
 
-        // Show loading spinner
-        function showLoading() {
-            loadingOverlay.classList.add('active');
-        }
+    <div class="form-group">
+      <label for="expireDate" class="field-required">Expire Date:</label>
+      <input type="date" id="expireDate" required>
+      <div id="expireDateError" class="error-message"></div>
+    </div>
 
-        // Hide loading spinner
-        function hideLoading() {
-            loadingOverlay.classList.remove('active');
-        }
+    <div class="form-group">
+      <label for="date" class="field-required">Date:</label>
+      <input type="text" id="date" readonly required>
+    </div>
 
-        // Show status modal
-        function showStatus(title, message, isError = false) {
-            statusTitle.textContent = title;
-            statusMessage.textContent = message;
-            statusTitle.style.color = isError ? 'var(--danger)' : 'var(--success)';
-            statusModal.classList.add('active');
-        }
+    <div class="form-group">
+      <label for="location" class="field-required">Location:</label>
+      <input type="text" id="location" required>
+      <div id="locationError" class="error-message"></div>
+    </div>
 
-        // Show duplicate username modal
-        function showDuplicateModal() {
-            duplicateModal.classList.add('active');
-        }
+    <button id="addBtn">Add to Inventory</button>
+  </div>
+</div>
 
-        // Check if username already exists in the same ShopID
-        async function checkUsernameExists(username, shopID) {
-            try {
-                const res = await fetch(baseUrl + "?user_field_names=true", {
-                    headers: { "Authorization": "Token " + apiKey }
-                });
-                const data = await res.json();
-                const users = data.results;
+<!-- Camera Popup -->
+<div id="cameraContainer">
+  <div id="reader"></div>
+  <button id="switchCameraBtn">Switch Camera</button>
+  <button id="closeCameraBtn">Close</button>
+</div>
 
-                // Check if username exists in the same shop
-                return users.some(u => u.Username === username && u.ShopID === shopID);
-            } catch (error) {
-                console.error("Error checking username:", error);
-                return false;
-            }
-        }
+<script>
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const BASEROW = "https://api.baserow.io";
+const USER_TABLE = 729979;
+const PRODUCT_TABLE = 734793;
+const INVENTORY_TABLE = 734795;
 
-        // Validate manager using MobileTag and ShopIDTag from localStorage
-        async function validateManager() {
-            const mobileTag = localStorage.getItem("MobileTag");
-            const shopIDTag = localStorage.getItem("ShopIDTag");
+const MobileTag = localStorage.getItem("MobileTag");
+const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
 
-            if (!mobileTag || !shopIDTag) {
-                showStatus("Login Required", "Please login first.", true);
-                return;
-            }
+const app = document.getElementById("app");
+const status = document.getElementById("status");
+const addBtn = document.getElementById("addBtn");
+const scanBtn = document.getElementById("scanBtn");
+const fetchBtn = document.getElementById("fetchBtn");
+const productIdInput = document.getElementById("productId");
+const productType = document.getElementById("productType");
+const dateInput = document.getElementById("date");
 
-            showLoading();
-            
-            try {
-                const res = await fetch(baseUrl + "?user_field_names=true", {
-                    headers: { "Authorization": "Token " + apiKey }
-                });
-                const data = await res.json();
-                const users = data.results;
+const readerContainer = document.getElementById("cameraContainer");
+let html5QrCode;
+let currentCamera = "environment";
 
-                // Find user with matching MobileTag (Username) AND ShopIDTag (ShopID)
-                const currentUser = users.find(u => 
-                    u.Username === mobileTag && u.ShopID === shopIDTag
-                );
+dateInput.value = new Date().toISOString().split('T')[0];
 
-                if (!currentUser) {
-                    hideLoading();
-                    showStatus(
-                        "User Not Found", 
-                        `No user found with Mobile: ${mobileTag} and Shop ID: ${shopIDTag}`, 
-                        true
-                    );
-                    return;
-                }
+// Field validation functions
+function validateBatchNo(batchNo) {
+  const batchNoRegex = /^[0-9]+$/;
+  return batchNoRegex.test(batchNo);
+}
 
-                // Check if user is blocked
-                if (currentUser.Block) {
-                    hideLoading();
-                    showStatus("Account Blocked", "Your account has been blocked. Please contact administrator.", true);
-                    return;
-                }
+function validateForm() {
+  let isValid = true;
+  
+  // Reset error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Check required fields
+  const requiredFields = [
+    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+  ];
+  
+  requiredFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (!field.value.trim()) {
+      document.getElementById(fieldId + 'Error').textContent = 'This field is required';
+      document.getElementById(fieldId + 'Error').style.display = 'block';
+      isValid = false;
+    }
+  });
+  
+  // Validate batch number
+  const batchNo = document.getElementById('batchNo').value;
+  if (batchNo && !validateBatchNo(batchNo)) {
+    document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
+    document.getElementById('batchNoError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate price
+  const price = document.getElementById('price').value;
+  if (price && parseFloat(price) < 0) {
+    document.getElementById('priceError').textContent = 'Price cannot be negative';
+    document.getElementById('priceError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate count
+  const count = document.getElementById('count').value;
+  if (count && parseInt(count) < 1) {
+    document.getElementById('countError').textContent = 'Count must be at least 1';
+    document.getElementById('countError').style.display = 'block';
+    isValid = false;
+  }
+  
+  return isValid;
+}
 
-                // Check if user has Manager role
-                if (currentUser.Role !== "Manager") {
-                    hideLoading();
-                    showStatus("Access Denied", "You are not authorized to access this page. Manager role required.", true);
-                    return;
-                }
+// Function to clear form fields
+function clearForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
+  
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
+  
+  // Reset product type to existing
+  productType.value = 'existing';
+  
+  // Clear all error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
 
-                // Save manager details to localStorage
-                localStorage.setItem("Role", currentUser.Role);
-                localStorage.setItem("ShopID", currentUser.ShopID);
-                localStorage.setItem("ShopName", currentUser["Shop Name"]);
-                localStorage.setItem("Name", currentUser.Name);
+// Add real-time validation
+document.getElementById('batchNo').addEventListener('input', function() {
+  const batchNoError = document.getElementById('batchNoError');
+  if (this.value && !validateBatchNo(this.value)) {
+    batchNoError.textContent = 'Batch number should contain only numbers';
+    batchNoError.style.display = 'block';
+  } else {
+    batchNoError.style.display = 'none';
+  }
+});
 
-                hideLoading();
-                mainContainer.style.display = "block";
+// ✅ 1. Role Validation
+(async function init(){
+  if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
 
-                // Fetch staff members for this shop
-                fetchStaff(currentUser.ShopID);
-            } catch (error) {
-                hideLoading();
-                showStatus("Error", "Error validating user: " + error.message, true);
-            }
-        }
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
+    const data = await res.json();
+    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
+    if(!user){ status.textContent="User not found."; return; }
 
-        // Enable Add button when fields are valid
-        const addBtn = document.getElementById("addBtn");
-        const usernameInput = document.getElementById("username");
-        const nameInput = document.getElementById("name");
-        const passwordInput = document.getElementById("password");
+    const role = user.Role || "Staff";
+    status.textContent = `Logged in as ${MobileTag} (${role})`;
+    app.style.display = "block";
 
-        [usernameInput, nameInput, passwordInput].forEach(input => {
-            input.addEventListener("input", () => {
-                const valid = usernameInput.value.length === 10 && nameInput.value && passwordInput.value;
-                addBtn.disabled = !valid;
-            });
+    if(role.toLowerCase()!=="manager"){
+      addBtn.disabled = true;
+      Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
+      return;
+    }
+  }catch(e){ console.error(e); status.textContent="Error fetching user."; }
+})();
+
+// ✅ 2. Handle Product Type
+productType.addEventListener("change", ()=>{
+  if(productType.value==="new"){
+    productIdInput.value = "PRD-" + Date.now();
+    document.getElementById("productName").value = "";
+    document.getElementById("details").value = "";
+    document.getElementById("price").value = "";
+  }else{
+    productIdInput.value = "";
+  }
+});
+
+// ✅ 3. Fetch Product Details (manual fetch or scan)
+async function fetchProduct(pid){
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+  
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+      headers:{Authorization:`Token ${API_KEY}`}
+    });
+    const data = await res.json();
+    const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    if(product){
+      document.getElementById("productName").value = product["Product Name"] || "";
+      document.getElementById("details").value = product["Details"] || "";
+      document.getElementById("price").value = product["Price"] || "";
+      
+      // Clear any previous errors
+      document.getElementById("productIdError").style.display = "none";
+      
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = '✅ Product details fetched!';
+      successMsg.style.display = 'block';
+      
+      // Remove any existing success message
+      const existingSuccess = document.querySelector('#productId + .success-message');
+      if (existingSuccess) existingSuccess.remove();
+      
+      // Add success message after product ID input
+      productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    }else{
+      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").style.display = "block";
+    }
+  }catch(err){ 
+    console.error(err); 
+    document.getElementById("productIdError").textContent = "Error fetching product.";
+    document.getElementById("productIdError").style.display = "block";
+  }
+}
+
+fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
+
+// ✅ 4. Camera Scanning
+scanBtn.addEventListener("click", ()=>{
+  readerContainer.style.display="flex";
+  startCamera();
+});
+
+document.getElementById("closeCameraBtn").addEventListener("click", ()=>{
+  stopCamera();
+});
+
+document.getElementById("switchCameraBtn").addEventListener("click", ()=>{
+  currentCamera = currentCamera==="environment" ? "user" : "environment";
+  stopCamera();
+  startCamera();
+});
+
+function startCamera(){
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start({facingMode: currentCamera}, {fps:10, qrbox:250},
+    qrCodeMessage=>{
+      productIdInput.value = qrCodeMessage;
+      stopCamera();
+      fetchProduct(qrCodeMessage);
+    },
+    error=>{}
+  ).catch(err=>console.error("Camera error:", err));
+}
+
+function stopCamera(){
+  if(html5QrCode){
+    html5QrCode.stop().then(()=>{ html5QrCode.clear(); });
+  }
+  readerContainer.style.display="none";
+}
+
+// ✅ 5. Add to Inventory
+addBtn.addEventListener("click", async ()=>{
+  // Validate form before submission
+  if (!validateForm()) {
+    return;
+  }
+  
+  const pid = productIdInput.value.trim();
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
+  }
+
+  // Disable button to prevent duplicate submissions
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding...';
+
+  try {
+    // Add product if it's new (and not duplicate)
+    if(productType.value==="new"){
+      try{
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+          headers:{Authorization:`Token ${API_KEY}`}
         });
-
-        // Add staff (inherits manager's ShopID & Shop Name)
-        addBtn.addEventListener("click", async () => {
-            const username = usernameInput.value.trim();
-            const name = nameInput.value.trim();
-            const password = passwordInput.value.trim();
-            const shopID = localStorage.getItem("ShopID");
-            const shopName = localStorage.getItem("ShopName");
-
-            // Check if username already exists in the same shop
-            showLoading();
-            const usernameExists = await checkUsernameExists(username, shopID);
-            hideLoading();
-
-            if (usernameExists) {
-                showDuplicateModal();
-                return;
-            }
-
-            const data = {
-                field_6136323: username,
-                field_6138249: name,
-                field_6136324: password,
-                field_6136325: "Staff",
-                field_6138245: shopID,
-                field_6138941: shopName,
-                field_6168111: false // Block field (boolean)
-            };
-
-            showLoading();
-            
-            try {
-                await fetch(baseUrl, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "Token " + apiKey,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                hideLoading();
-                showStatus("Success", "Staff added successfully!");
-                
-                fetchStaff(shopID);
-                usernameInput.value = nameInput.value = passwordInput.value = "";
-                addBtn.disabled = true;
-            } catch (error) {
-                hideLoading();
-                showStatus("Error", "Error adding staff: " + error.message, true);
-            }
-        });
-
-        // Fetch staff under same ShopID
-        async function fetchStaff(shopID) {
-            showLoading();
-            
-            try {
-                const res = await fetch(baseUrl + "?user_field_names=true", {
-                    headers: { "Authorization": "Token " + apiKey }
-                });
-                const result = await res.json();
-                const staff = result.results.filter(u => u.ShopID == shopID);
-                const staffGrid = document.getElementById("staffGrid");
-                staffGrid.innerHTML = "";
-
-                staff.forEach(u => {
-                    const staffCard = document.createElement("div");
-                    staffCard.className = "staff-card";
-                    if (u.Block) staffCard.classList.add("blocked");
-
-                    staffCard.innerHTML = `
-                        <div class="staff-header">
-                            <div class="staff-name">${u.Name || "N/A"}</div>
-                            <div class="staff-role">${u.Role || "Staff"}</div>
-                        </div>
-                        <div class="staff-details">
-                            <div class="detail-row">
-                                <div class="detail-label">Username:</div>
-                                <div class="detail-value">${u.Username || "N/A"}</div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Password:</div>
-                                <div class="detail-value">
-                                    <input type="text" value="${u.Password || ""}" data-id="${u.id}" data-field="field_6136324">
-                                </div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Role:</div>
-                                <div class="detail-value">
-                                    <select data-id="${u.id}" data-field="field_6136325">
-                                        <option value="Staff" ${u.Role === "Staff" ? "selected" : ""}>Staff</option>
-                                        <option value="Manager" ${u.Role === "Manager" ? "selected" : ""}>Manager</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="detail-row">
-                                <div class="detail-label">Status:</div>
-                                <div class="detail-value">
-                                    <select data-id="${u.id}" data-field="field_6168111">
-                                        <option value="false" ${!u.Block ? "selected" : ""}>Active</option>
-                                        <option value="true" ${u.Block ? "selected" : ""}>Blocked</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="staff-actions">
-                            <button class="update-btn" onclick="updateUser(${u.id})">Update</button>
-                            <button class="delete-btn" onclick="showDeleteModal(${u.id}, '${u.Name}')">Delete</button>
-                        </div>
-                    `;
-                    staffGrid.appendChild(staffCard);
-                });
-                
-                hideLoading();
-            } catch (error) {
-                hideLoading();
-                showStatus("Error", "Error fetching staff: " + error.message, true);
-            }
+        const data = await res.json();
+        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        if(!existing){
+          const body = {
+            "Product ID": pid,
+            "Product Name": document.getElementById("productName").value,
+            "Details": document.getElementById("details").value,
+            "Price": document.getElementById("price").value,
+            "ShopID": ShopID
+          };
+          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+            method:"POST",
+            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+          });
+          alert("✅ Product added to Product Table!");
+        }else{
+          alert("⚠️ Product ID already exists, skipping Product Table insert.");
         }
+      }catch(e){ console.error(e); alert("Error adding product."); }
+    }
 
-        // Update record in Baserow
-        async function updateUser(id) {
-            showLoading();
-            
-            try {
-                // Get all inputs for this user
-                const inputs = document.querySelectorAll(`[data-id="${id}"]`);
-                const data = {};
-                
-                // Map field names to their values with proper type conversion
-                inputs.forEach(el => {
-                    const fieldName = el.getAttribute("data-field");
-                    let value = el.value;
-                    
-                    // Convert boolean fields
-                    if (fieldName === "field_6168111") {
-                        value = value === "true";
-                    }
-                    
-                    data[fieldName] = value;
-                });
+    // Always add inventory record
+    const invBody = {
+      "Product ID": pid,
+      "Count": parseInt(document.getElementById("count").value),
+      "Batch No": document.getElementById("batchNo").value,
+      "Expire Date": document.getElementById("expireDate").value,
+      "Date": dateInput.value,
+      "Location": document.getElementById("location").value,
+      "ShopID": ShopID
+    };
 
-                // Send PATCH request to update the user
-                const response = await fetch(baseUrl + id + "/", {
-                    method: "PATCH",
-                    headers: {
-                        "Authorization": "Token " + apiKey,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
+    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      method:"POST",
+      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+      body:JSON.stringify(invBody)
+    });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                hideLoading();
-                showStatus("Success", "User updated successfully!");
-                
-                // Refresh the staff list
-                const shopID = localStorage.getItem("ShopID");
-                fetchStaff(shopID);
-            } catch (error) {
-                console.error("Error updating user:", error);
-                hideLoading();
-                showStatus("Error", "Error updating user: " + error.message, true);
-            }
-        }
-
-        // Show delete confirmation modal
-        function showDeleteModal(id, name) {
-            staffToDelete = id;
-            deleteMessage.textContent = `Are you sure you want to delete ${name}? This action cannot be undone.`;
-            deleteModal.classList.add('active');
-        }
-
-        // Delete staff member
-        async function deleteStaff(id) {
-            showLoading();
-            
-            try {
-                const response = await fetch(baseUrl + id + "/", {
-                    method: "DELETE",
-                    headers: {
-                        "Authorization": "Token " + apiKey,
-                        "Content-Type": "application/json"
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                hideLoading();
-                showStatus("Success", "Staff member deleted successfully!");
-                
-                // Refresh the staff list
-                const shopID = localStorage.getItem("ShopID");
-                fetchStaff(shopID);
-            } catch (error) {
-                console.error("Error deleting staff:", error);
-                hideLoading();
-                showStatus("Error", "Error deleting staff: " + error.message, true);
-            }
-        }
-
-        // Modal event listeners
-        cancelDeleteBtn.addEventListener('click', () => {
-            deleteModal.classList.remove('active');
-            staffToDelete = null;
-        });
-
-        confirmDeleteBtn.addEventListener('click', () => {
-            if (staffToDelete) {
-                deleteStaff(staffToDelete);
-                deleteModal.classList.remove('active');
-                staffToDelete = null;
-            }
-        });
-
-        statusOkBtn.addEventListener('click', () => {
-            statusModal.classList.remove('active');
-        });
-
-        duplicateOkBtn.addEventListener('click', () => {
-            duplicateModal.classList.remove('active');
-        });
-
-        // Close modals when clicking outside
-        [deleteModal, statusModal, duplicateModal].forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                    if (modal === deleteModal) {
-                        staffToDelete = null;
-                    }
-                }
-            });
-        });
-
-        // Initialize the dashboard
-        validateManager();
-    </script>
+    alert("✅ Added to Inventory Successfully!");
+    
+    // Clear form after successful submission
+    clearForm();
+    
+  } catch (error) {
+    console.error("Error during submission:", error);
+    alert("❌ Error adding to inventory. Please try again.");
+  } finally {
+    // Re-enable button after operation is complete
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add to Inventory';
+  }
+});
+</script>
 </body>
 </html>
