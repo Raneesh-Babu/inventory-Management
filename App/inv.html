@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Add Product & Inventory</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 /* Enhanced CSS with better styling and validations */
 :root {
@@ -36,7 +37,7 @@ body {
 }
 
 .container { 
-  max-width: 600px; 
+  max-width: 900px; 
   margin: auto; 
   background: white; 
   padding: 30px; 
@@ -70,8 +71,15 @@ h2::after {
   border-radius: 2px;
 }
 
-.form-group {
+.form-row {
+  display: flex;
+  gap: 20px;
   margin-bottom: 20px;
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 label { 
@@ -212,6 +220,14 @@ button:disabled {
   background: #ffc94d;
 }
 
+#searchBtn {
+  background: #8a2be2;
+}
+
+#searchBtn:hover {
+  background: #7b1fa2;
+}
+
 #status {
   display: none; /* Hidden as requested */
 }
@@ -244,6 +260,354 @@ button:disabled {
 .field-required::after {
   content: " *";
   color: var(--danger);
+}
+
+/* Price input with rupee symbol */
+.price-container {
+  position: relative;
+}
+
+.rupee-symbol {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dark);
+  z-index: 1;
+}
+
+.price-input {
+  padding-left: 35px !important;
+}
+
+/* Expire Date Quick Select */
+.expire-date-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.expire-date-input {
+  flex: 1;
+}
+
+.quick-expire-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-expire-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* Expire Date Modal */
+.expire-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.expire-modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  width: 90%;
+  animation: modalFadeIn 0.3s;
+}
+
+.expire-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.expire-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.close-expire-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--gray);
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.period-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.period-btn {
+  flex: 1;
+  min-width: 100px;
+  background: var(--light);
+  color: var(--dark);
+  border: 2px solid var(--border);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.period-btn:hover {
+  background: #e9ecef;
+}
+
+.period-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.slider-container {
+  margin: 25px 0;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.slider-label {
+  font-weight: 500;
+  color: var(--dark);
+}
+
+.slider-value {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: none;
+}
+
+.expire-result {
+  background: rgba(67, 97, 238, 0.1);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin: 20px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.expire-result-date {
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.expire-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.expire-modal-btn {
+  width: auto;
+  min-width: 100px;
+  padding: 12px 20px;
+}
+
+.expire-modal-cancel {
+  background: var(--gray);
+}
+
+.expire-modal-cancel:hover {
+  background: #5a6268;
+}
+
+.expire-modal-apply {
+  background: var(--success);
+}
+
+.expire-modal-apply:hover {
+  background: #05c290;
+}
+
+/* Search Modal Styles */
+.search-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: modalFadeIn 0.3s;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.close-search {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--gray);
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
+}
+
+.search-results {
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.search-result-item:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.product-id {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.product-name {
+  color: var(--dark);
+  margin-top: 5px;
+}
+
+.product-price {
+  color: var(--success);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.product-price::before {
+  content: "₹ ";
+}
+
+.no-results {
+  padding: 20px;
+  text-align: center;
+  color: var(--gray);
+}
+
+/* Hidden shop info sections */
+.shop-info {
+  display: none !important;
 }
 
 /* Modal Styles */
@@ -327,12 +691,87 @@ button:disabled {
     padding: 20px;
   }
   
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
   #buttonsRow {
     flex-direction: column;
   }
   
   #buttonsRow button {
     width: 100%;
+  }
+  
+  .search-input-group {
+    flex-direction: column;
+  }
+  
+  .search-button {
+    width: 100%;
+  }
+  
+  .search-modal-content {
+    padding: 20px;
+  }
+  
+  .expire-modal-content {
+    padding: 20px;
+  }
+  
+  .period-buttons {
+    flex-direction: column;
+  }
+  
+  .period-btn {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  .container {
+    padding: 15px;
+  }
+  
+  input, select, button, textarea {
+    padding: 12px 14px;
+  }
+  
+  #reader {
+    height: 50%;
+  }
+  
+  .price-input {
+    padding-left: 32px !important;
+  }
+  
+  .rupee-symbol {
+    left: 14px;
+    font-size: 16px;
+  }
+}
+
+/* For larger screens - 2 column layout */
+@media (min-width: 769px) {
+  .form-row {
+    flex-wrap: wrap;
+  }
+  
+  .form-group {
+    min-width: calc(50% - 10px);
+  }
+  
+  .full-width {
+    flex: 0 0 100%;
   }
 }
 </style>
@@ -345,71 +784,101 @@ button:disabled {
   <div id="app" style="display:none;">
     <h2>Add Product & Inventory</h2>
     
-    <div class="form-group">
-      <label for="productType" class="field-required">Product Type:</label>
-      <select id="productType" required>
-        <option value="existing">Existing Product</option>
-        <option value="new">New Product</option>
-      </select>
+    <!-- Shop info section is hidden but still present for functionality -->
+    <div class="shop-info">
+      Current Shop: <span id="currentShop">Loading...</span>
     </div>
-
-    <div class="form-group">
-      <label for="productId" class="field-required">Product ID:</label>
-      <div id="buttonsRow">
-        <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
-        <button id="fetchBtn">Fetch</button>
-        <button id="scanBtn">Scan</button>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label for="productType" class="field-required">Product Type:</label>
+        <select id="productType" required>
+          <option value="existing">Existing Product</option>
+          <option value="new">New Product</option>
+        </select>
       </div>
-      <div id="productIdError" class="error-message"></div>
+
+      <div class="form-group">
+        <label for="productId" class="field-required">Product ID:</label>
+        <div id="buttonsRow">
+          <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
+          <button id="fetchBtn">Fetch</button>
+          <button id="scanBtn">Scan</button>
+          <button id="searchBtn">Search</button>
+        </div>
+        <div id="productIdError" class="error-message"></div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="productName" class="field-required">Product Name:</label>
-      <input type="text" id="productName" required>
-      <div id="productNameError" class="error-message"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="productName" class="field-required">Product Name:</label>
+        <input type="text" id="productName" required>
+        <div id="productNameError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="price" class="field-required">Price:</label>
+        <div class="price-container">
+          <span class="rupee-symbol">₹</span>
+          <input type="number" id="price" class="price-input" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+        <div id="priceError" class="error-message"></div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="details">Details:</label>
-      <textarea id="details"></textarea>
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label for="details">Details:</label>
+        <textarea id="details"></textarea>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="price" class="field-required">Price:</label>
-      <input type="number" id="price" min="0" step="0.01" required>
-      <div id="priceError" class="error-message"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="count" class="field-required">Count:</label>
+        <input type="number" id="count" min="1" required>
+        <div id="countError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="batchNo" class="field-required">Batch No:</label>
+        <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+        <div id="batchNoError" class="error-message"></div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="count" class="field-required">Count:</label>
-      <input type="number" id="count" min="1" required>
-      <div id="countError" class="error-message"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="expireDate" class="field-required">Expire Date:</label>
+        <div class="expire-date-container">
+          <input type="date" id="expireDate" class="expire-date-input" required>
+          <button id="quickExpireBtn" class="quick-expire-btn" title="Quick Set Expiry">
+            <i class="fas fa-bolt"></i>
+          </button>
+        </div>
+        <div id="expireDateError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="date" class="field-required">Date:</label>
+        <input type="text" id="date" readonly required>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="batchNo" class="field-required">Batch No:</label>
-      <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
-      <div id="batchNoError" class="error-message"></div>
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label for="location" class="field-required">Location:</label>
+        <input type="text" id="location" required>
+        <div id="locationError" class="error-message"></div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="expireDate" class="field-required">Expire Date:</label>
-      <input type="date" id="expireDate" required>
-      <div id="expireDateError" class="error-message"></div>
+    <div class="form-row">
+      <div class="form-group full-width">
+        <button id="addBtn">Add to Inventory</button>
+      </div>
     </div>
-
-    <div class="form-group">
-      <label for="date" class="field-required">Date:</label>
-      <input type="text" id="date" readonly required>
-    </div>
-
-    <div class="form-group">
-      <label for="location" class="field-required">Location:</label>
-      <input type="text" id="location" required>
-      <div id="locationError" class="error-message"></div>
-    </div>
-
-    <button id="addBtn">Add to Inventory</button>
   </div>
 </div>
 
@@ -418,6 +887,70 @@ button:disabled {
   <div id="reader"></div>
   <button id="switchCameraBtn">Switch Camera</button>
   <button id="closeCameraBtn">Close</button>
+</div>
+
+<!-- Expire Date Modal -->
+<div id="expireModal" class="expire-modal">
+  <div class="expire-modal-content">
+    <div class="expire-modal-header">
+      <div class="expire-modal-title">Quick Set Expiry Date</div>
+      <button class="close-expire-modal">&times;</button>
+    </div>
+    
+    <div class="period-buttons">
+      <button class="period-btn" data-period="days">
+        <i class="fas fa-calendar-day"></i> Days
+      </button>
+      <button class="period-btn" data-period="weeks">
+        <i class="fas fa-calendar-week"></i> Weeks
+      </button>
+      <button class="period-btn" data-period="months">
+        <i class="fas fa-calendar-alt"></i> Months
+      </button>
+      <button class="period-btn" data-period="years">
+        <i class="fas fa-calendar"></i> Years
+      </button>
+    </div>
+    
+    <div class="slider-container">
+      <div class="slider-header">
+        <span class="slider-label">Duration:</span>
+        <span class="slider-value" id="sliderValue">1</span>
+      </div>
+      <input type="range" min="1" max="11" value="1" class="slider" id="durationSlider">
+    </div>
+    
+    <div class="expire-result">
+      <div>Expiry Date:</div>
+      <div class="expire-result-date" id="expireResultDate">Calculating...</div>
+    </div>
+    
+    <div class="expire-modal-actions">
+      <button class="expire-modal-btn expire-modal-cancel">Cancel</button>
+      <button class="expire-modal-btn expire-modal-apply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Search Modal -->
+<div id="searchModal" class="search-modal">
+  <div class="search-modal-content">
+    <div class="search-header">
+      <div class="search-title">Search Products</div>
+      <button class="close-search">&times;</button>
+    </div>
+    <!-- Hidden shop info in search modal -->
+    <div class="shop-info">
+      Showing products for: <span id="searchShopInfo">Loading...</span>
+    </div>
+    <div class="search-input-group">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by Product ID or Name">
+      <button id="searchProductsBtn" class="search-button">Search</button>
+    </div>
+    <div id="searchResults" class="search-results">
+      <div class="no-results">Enter a search term to find products</div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal for alerts -->
@@ -445,9 +978,12 @@ const status = document.getElementById("status");
 const addBtn = document.getElementById("addBtn");
 const scanBtn = document.getElementById("scanBtn");
 const fetchBtn = document.getElementById("fetchBtn");
+const searchBtn = document.getElementById("searchBtn");
 const productIdInput = document.getElementById("productId");
 const productType = document.getElementById("productType");
 const dateInput = document.getElementById("date");
+const currentShopElement = document.getElementById("currentShop");
+const searchShopInfo = document.getElementById("searchShopInfo");
 
 const readerContainer = document.getElementById("cameraContainer");
 const modal = document.getElementById("modal");
@@ -457,10 +993,107 @@ const modalTitle = document.getElementById("modalTitle");
 const modalMessage = document.getElementById("modalMessage");
 const modalButton = document.getElementById("modalButton");
 
+const searchModal = document.getElementById("searchModal");
+const searchInput = document.getElementById("searchInput");
+const searchProductsBtn = document.getElementById("searchProductsBtn");
+const searchResults = document.getElementById("searchResults");
+const closeSearch = document.querySelector(".close-search");
+
+// Expire date modal elements
+const expireModal = document.getElementById("expireModal");
+const quickExpireBtn = document.getElementById("quickExpireBtn");
+const closeExpireModal = document.querySelector(".close-expire-modal");
+const periodButtons = document.querySelectorAll(".period-btn");
+const durationSlider = document.getElementById("durationSlider");
+const sliderValue = document.getElementById("sliderValue");
+const expireResultDate = document.getElementById("expireResultDate");
+const expireModalCancel = document.querySelector(".expire-modal-cancel");
+const expireModalApply = document.querySelector(".expire-modal-apply");
+
 let html5QrCode;
 let currentCamera = "environment";
+let allProducts = [];
+let selectedPeriod = "days";
+let selectedDuration = 1;
 
 dateInput.value = new Date().toISOString().split('T')[0];
+
+// Update shop information (even though it's hidden)
+currentShopElement.textContent = ShopID;
+searchShopInfo.textContent = ShopID;
+
+// Calculate and display expiry date
+function calculateExpiryDate() {
+  const today = new Date();
+  const resultDate = new Date(today);
+  
+  switch(selectedPeriod) {
+    case "days":
+      resultDate.setDate(today.getDate() + selectedDuration);
+      break;
+    case "weeks":
+      resultDate.setDate(today.getDate() + (selectedDuration * 7));
+      break;
+    case "months":
+      resultDate.setMonth(today.getMonth() + selectedDuration);
+      break;
+    case "years":
+      resultDate.setFullYear(today.getFullYear() + selectedDuration);
+      break;
+  }
+  
+  // Format date as YYYY-MM-DD for input field
+  const formattedDate = resultDate.toISOString().split('T')[0];
+  expireResultDate.textContent = formattedDate;
+  
+  return formattedDate;
+}
+
+// Expire date modal functionality
+quickExpireBtn.addEventListener("click", function() {
+  expireModal.style.display = "flex";
+  calculateExpiryDate();
+});
+
+closeExpireModal.addEventListener("click", function() {
+  expireModal.style.display = "none";
+});
+
+expireModalCancel.addEventListener("click", function() {
+  expireModal.style.display = "none";
+});
+
+expireModalApply.addEventListener("click", function() {
+  const expiryDate = calculateExpiryDate();
+  document.getElementById("expireDate").value = expiryDate;
+  expireModal.style.display = "none";
+});
+
+expireModal.addEventListener("click", function(e) {
+  if (e.target === expireModal) {
+    expireModal.style.display = "none";
+  }
+});
+
+// Period button selection
+periodButtons.forEach(button => {
+  button.addEventListener("click", function() {
+    periodButtons.forEach(btn => btn.classList.remove("active"));
+    this.classList.add("active");
+    selectedPeriod = this.getAttribute("data-period");
+    calculateExpiryDate();
+  });
+});
+
+// Set default active period
+document.querySelector('.period-btn[data-period="days"]').classList.add("active");
+
+// Slider functionality
+durationSlider.addEventListener("input", function() {
+  selectedDuration = parseInt(this.value);
+  sliderValue.textContent = selectedDuration;
+  calculateExpiryDate();
+});
 
 // Modal function
 function showModal(type, title, message) {
@@ -491,6 +1124,92 @@ modalButton.addEventListener("click", function() {
 modal.addEventListener("click", function(e) {
   if (e.target === modal) {
     modal.style.display = "none";
+  }
+});
+
+// Search modal functions
+searchBtn.addEventListener("click", function() {
+  searchModal.style.display = "flex";
+  searchInput.focus();
+});
+
+closeSearch.addEventListener("click", function() {
+  searchModal.style.display = "none";
+});
+
+searchModal.addEventListener("click", function(e) {
+  if (e.target === searchModal) {
+    searchModal.style.display = "none";
+  }
+});
+
+// Search products function - Only products from current shop
+async function searchProducts() {
+  const searchTerm = searchInput.value.trim().toLowerCase();
+  
+  if (!searchTerm) {
+    searchResults.innerHTML = '<div class="no-results">Please enter a search term</div>';
+    return;
+  }
+  
+  try {
+    // Fetch products only from the current shop
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    allProducts = data.results;
+    
+    // Filter products by ID or name
+    const filteredProducts = allProducts.filter(product => {
+      const productId = String(product["Product ID"] || "").toLowerCase();
+      const productName = String(product["Product Name"] || "").toLowerCase();
+      
+      return productId.includes(searchTerm) || productName.includes(searchTerm);
+    });
+    
+    // Display results
+    if (filteredProducts.length === 0) {
+      searchResults.innerHTML = '<div class="no-results">No products found matching your search</div>';
+    } else {
+      let resultsHTML = '';
+      filteredProducts.forEach(product => {
+        resultsHTML += `
+          <div class="search-result-item" data-id="${product["Product ID"]}">
+            <div class="product-id">${product["Product ID"]}</div>
+            <div class="product-name">${product["Product Name"] || "No Name"}</div>
+            <div class="product-price">${parseFloat(product["Price"] || 0).toFixed(2)}</div>
+          </div>
+        `;
+      });
+      searchResults.innerHTML = resultsHTML;
+      
+      // Add click event to result items
+      document.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const productId = this.getAttribute('data-id');
+          productIdInput.value = productId;
+          searchModal.style.display = "none";
+          fetchProduct(productId);
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Error searching products:", error);
+    searchResults.innerHTML = '<div class="no-results">Error searching products</div>';
+  }
+}
+
+searchProductsBtn.addEventListener("click", searchProducts);
+
+searchInput.addEventListener("keyup", function(event) {
+  if (event.key === "Enter") {
+    searchProducts();
   }
 });
 
@@ -624,7 +1343,7 @@ productType.addEventListener("change", ()=>{
   }
 });
 
-// ✅ 3. Fetch Product Details (manual fetch or scan)
+// ✅ 3. Fetch Product Details (manual fetch or scan) - Only from current shop
 async function fetchProduct(pid){
   if(!pid){ 
     document.getElementById("productIdError").textContent = "Enter Product ID";
@@ -633,11 +1352,18 @@ async function fetchProduct(pid){
   }
   
   try{
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+    // Fetch product only if it belongs to the current shop
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
       headers:{Authorization:`Token ${API_KEY}`}
     });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
     const data = await res.json();
     const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    
     if(product){
       document.getElementById("productName").value = product["Product Name"] || "";
       document.getElementById("details").value = product["Details"] || "";
@@ -664,7 +1390,7 @@ async function fetchProduct(pid){
         successMsg.style.display = 'none';
       }, 3000);
     }else{
-      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").textContent = "⚠️ Product not found.";
       document.getElementById("productIdError").style.display = "block";
     }
   }catch(err){ 
@@ -733,14 +1459,21 @@ addBtn.addEventListener("click", async ()=>{
   addBtn.textContent = 'Adding...';
 
   try {
-    // Add product if it's new (and not duplicate)
+    // Add product if it's new (and not duplicate in current shop)
     if(productType.value==="new"){
       try{
-        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+        // Check if product already exists in this shop
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
           headers:{Authorization:`Token ${API_KEY}`}
         });
+        
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+        
         const data = await res.json();
         const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        
         if(!existing){
           const body = {
             "Product ID": pid,
@@ -755,22 +1488,24 @@ addBtn.addEventListener("click", async ()=>{
             body:JSON.stringify(body)
           });
           showModal("success", "Product Added", "✅ Product added to Product Table!");
-        }else{
-          showModal("warning", "Product Exists", "⚠️ Product ID already exists, skipping Product Table insert.");
         }
       }catch(e){ 
         console.error(e); 
-        showModal("error", "Error", "Error adding product to database.");
+        showModal("error", "Error", "Error adding product to Product Table.");
+        addBtn.disabled = false;
+        addBtn.textContent = 'Add to Inventory';
+        return;
       }
     }
 
-    // Always add inventory record
-    const invBody = {
+    // Add to inventory
+    const inventoryBody = {
       "Product ID": pid,
-      "Count": parseInt(document.getElementById("count").value),
+      "Product Name": document.getElementById("productName").value,
+      "Count": document.getElementById("count").value,
       "Batch No": document.getElementById("batchNo").value,
       "Expire Date": document.getElementById("expireDate").value,
-      "Date": dateInput.value,
+      "Date": document.getElementById("date").value,
       "Location": document.getElementById("location").value,
       "ShopID": ShopID
     };
@@ -778,19 +1513,15 @@ addBtn.addEventListener("click", async ()=>{
     await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
       method:"POST",
       headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-      body:JSON.stringify(invBody)
+      body:JSON.stringify(inventoryBody)
     });
 
-    showModal("success", "Success", "✅ Added to Inventory Successfully!");
-    
-    // Clear form after successful submission
+    showModal("success", "Success", "✅ Product added to Inventory!");
     clearForm();
-    
-  } catch (error) {
-    console.error("Error during submission:", error);
-    showModal("error", "Error", "❌ Error adding to inventory. Please try again.");
+  } catch (e) {
+    console.error(e);
+    showModal("error", "Error", "Error adding to inventory.");
   } finally {
-    // Re-enable button after operation is complete
     addBtn.disabled = false;
     addBtn.textContent = 'Add to Inventory';
   }
