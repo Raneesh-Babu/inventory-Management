@@ -3,975 +3,1038 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventory Login</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<title>Add Product & Inventory</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
+/* Enhanced CSS with better styling and validations */
 :root {
   --primary: #4361ee;
   --primary-dark: #3a56d4;
-  --secondary: #7209b7;
-  --success: #4cc9f0;
+  --success: #06d6a0;
+  --danger: #ef476f;
+  --warning: #ffd166;
+  --dark: #333;
   --light: #f8f9fa;
-  --dark: #212529;
   --gray: #6c757d;
-  --white: #ffffff;
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --border: #dee2e6;
+  --border-radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
   --transition: all 0.3s ease;
 }
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0; 
   padding: 20px;
+  min-height: 100vh;
+  color: var(--dark);
 }
 
-.container {
-  background: var(--white);
-  padding: 40px;
-  border-radius: 16px;
+.container { 
+  max-width: 600px; 
+  margin: auto; 
+  background: white; 
+  padding: 30px; 
+  border-radius: var(--border-radius); 
   box-shadow: var(--shadow);
-  width: 100%;
-  max-width: 450px;
-  position: relative;
-  overflow: hidden;
+  transition: var(--transition);
 }
 
-.container::before {
+.container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+h2 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h2::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 5px;
-  background: linear-gradient(to right, var(--primary), var(--secondary));
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
 }
 
-h2 {
-  text-align: center;
-  color: var(--dark);
-  margin-bottom: 30px;
-  font-weight: 600;
-  font-size: 28px;
-}
-
-.input-group {
-  position: relative;
+.form-group {
   margin-bottom: 20px;
 }
 
-input, select, textarea {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 16px;
+label { 
+  display: block; 
+  margin-bottom: 8px; 
+  font-weight: 500;
+  color: var(--dark);
+}
+
+input, select, button, textarea { 
+  width: 100%; 
+  padding: 14px 16px; 
+  margin: 8px 0; 
+  border-radius: var(--border-radius); 
+  border: 2px solid var(--border);
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
   transition: var(--transition);
-  background-color: var(--white);
-  font-family: inherit;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
 }
 
-label {
-  position: absolute;
-  top: 50%;
-  left: 16px;
-  transform: translateY(-50%);
-  color: var(--gray);
-  pointer-events: none;
-  transition: var(--transition);
-  background: var(--white);
-  padding: 0 4px;
+input:invalid, select:invalid, textarea:invalid {
+  border-color: var(--danger);
 }
 
-textarea + label {
-  top: 25px;
+input:valid, select:valid, textarea:valid {
+  border-color: var(--success);
 }
 
-input:focus + label,
-input:not(:placeholder-shown) + label,
-textarea:focus + label,
-textarea:not(:placeholder-shown) + label {
-  top: 0;
-  font-size: 12px;
-  color: var(--primary);
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  background: var(--primary);
-  color: var(--white);
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+button { 
+  background: var(--primary); 
+  color: white; 
+  border: none; 
+  font-weight: 600; 
   cursor: pointer;
   transition: var(--transition);
-  margin-top: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 50px;
+  padding: 15px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
 }
 
-button:hover {
+button:hover { 
   background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
 }
 
-button:disabled {
-  background: #b8c2cc;
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled { 
+  background: var(--gray); 
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--white);
-  animation: spin 1s linear infinite;
+#cameraContainer { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.9); 
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+#reader { 
+  width: 90%; 
+  max-width: 500px;
+  height: 60%; 
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255,255,255,0.1);
 }
 
-.link {
-  text-align: center;
-  margin-top: 20px;
-  color: var(--gray);
-}
-
-.link a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
+#switchCameraBtn, #closeCameraBtn { 
+  position: relative;
+  margin: 20px 10px 0;
+  background: white; 
+  color: var(--dark); 
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: var(--border-radius); 
+  font-weight: 600; 
+  cursor: pointer; 
   transition: var(--transition);
+  width: auto;
 }
 
-.link a:hover {
-  color: var(--primary-dark);
-  text-decoration: underline;
+#switchCameraBtn:hover, #closeCameraBtn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
 }
 
-.notice {
-  text-align: center;
-  margin-top: 15px;
-  padding: 10px;
-  border-radius: 8px;
+#buttonsRow { 
+  display: flex; 
+  gap: 10px; 
+  align-items: stretch;
+}
+
+#buttonsRow input {
+  margin: 0;
+}
+
+#buttonsRow button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+#fetchBtn {
+  background: var(--success);
+}
+
+#fetchBtn:hover {
+  background: #05c290;
+}
+
+#scanBtn {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+#scanBtn:hover {
+  background: #ffc94d;
+}
+
+#status {
+  display: none; /* Hidden as requested */
+}
+
+#loginPrompt {
+  color: var(--danger);
+  display: none;
+  padding: 12px 16px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--danger);
   font-weight: 500;
 }
 
-.error {
-  color: #e63946;
-  background-color: rgba(230, 57, 70, 0.1);
+.error-message {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
 }
 
-.success {
-  color: #2a9d8f;
-  background-color: rgba(42, 157, 143, 0.1);
+.success-message {
+  color: var(--success);
+  font-size: 13px;
+  margin-top: 5px;
+  display: none;
 }
 
-/* Popup Styles */
-.popup-overlay {
+.field-required::after {
+  content: " *";
+  color: var(--danger);
+}
+
+/* Search Modal Styles */
+.search-modal {
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition);
 }
 
-.popup-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.popup {
-  background: var(--white);
+.search-modal-content {
+  background-color: white;
   padding: 30px;
-  border-radius: 16px;
+  border-radius: var(--border-radius);
   box-shadow: var(--shadow);
-  max-width: 400px;
+  max-width: 500px;
   width: 90%;
-  text-align: center;
-  transform: translateY(20px);
-  transition: var(--transition);
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: modalFadeIn 0.3s;
 }
 
-.popup-overlay.active .popup {
-  transform: translateY(0);
-}
-
-.popup-icon {
-  font-size: 48px;
-  color: #2a9d8f;
-  margin-bottom: 15px;
-}
-
-.popup h3 {
-  color: var(--dark);
-  margin-bottom: 10px;
-}
-
-.popup p {
-  color: var(--gray);
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.popup-btn {
-  background: var(--primary);
-  color: var(--white);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
+.search-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
 }
 
-.popup-btn:hover {
-  background: var(--primary-dark);
-}
-
-/* Animation for form switching */
-.form-container {
-  transition: var(--transition);
-}
-
-.hidden {
-  display: none;
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.visible {
-  display: block;
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Password toggle button */
-.password-toggle {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+.close-search {
   background: none;
   border: none;
-  color: var(--gray);
+  font-size: 24px;
   cursor: pointer;
+  color: var(--gray);
   width: auto;
-  height: auto;
   padding: 0;
   margin: 0;
 }
 
-.password-toggle:hover {
-  color: var(--primary);
-  background: none;
-  transform: translateY(-50%);
-  box-shadow: none;
-}
-
-/* Password validation styles */
-.password-rules {
-  margin-top: 5px;
-  font-size: 12px;
-  color: var(--gray);
-  display: none; /* Hidden by default */
-}
-
-.password-rule {
+.search-input-group {
   display: flex;
-  align-items: center;
-  margin-bottom: 5px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.password-rule i {
-  margin-right: 5px;
-  font-size: 10px;
+.search-input {
+  flex: 1;
 }
 
-.rule-valid {
-  color: #2a9d8f;
+.search-button {
+  width: auto;
+  min-width: 100px;
+  margin: 0;
 }
 
-.rule-invalid {
-  color: #e63946;
+.search-results {
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-/* Textarea specific styles */
-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-/* Password match indicator */
-.password-match {
-  margin-top: 5px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-}
-
-.password-match i {
-  margin-right: 5px;
-  font-size: 10px;
-}
-
-.match-valid {
-  color: #2a9d8f;
-}
-
-.match-invalid {
-  color: #e63946;
-}
-
-/* Shop Selection Styles */
-.shop-selection {
-  margin: 20px 0;
-}
-
-.shop-option {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  margin-bottom: 10px;
+.search-result-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: var(--transition);
 }
 
-.shop-option:hover {
-  border-color: var(--primary);
+.search-result-item:hover {
   background-color: rgba(67, 97, 238, 0.05);
 }
 
-.shop-option.selected {
-  border-color: var(--primary);
-  background-color: rgba(67, 97, 238, 0.1);
+.search-result-item:last-child {
+  border-bottom: none;
 }
 
-.shop-radio {
-  margin-right: 10px;
-}
-
-.shop-details {
-  flex-grow: 1;
-}
-
-.shop-name {
+.product-id {
   font-weight: 600;
+  color: var(--primary);
+}
+
+.product-name {
+  color: var(--dark);
+  margin-top: 5px;
+}
+
+.no-results {
+  padding: 20px;
+  text-align: center;
+  color: var(--gray);
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.modal-success .modal-icon {
+  color: var(--success);
+}
+
+.modal-warning .modal-icon {
+  color: var(--warning);
+}
+
+.modal-error .modal-icon {
+  color: var(--danger);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.modal-message {
+  margin-bottom: 20px;
   color: var(--dark);
 }
 
-.shop-address {
-  font-size: 14px;
-  color: var(--gray);
-  margin-top: 4px;
+.modal-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  margin: 0 auto;
+}
+
+.modal-button:hover {
+  background: var(--primary-dark);
 }
 
 /* Responsive adjustments */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .container {
-    padding: 30px 20px;
+    padding: 20px;
   }
   
-  h2 {
-    font-size: 24px;
+  #buttonsRow {
+    flex-direction: column;
+  }
+  
+  #buttonsRow button {
+    width: 100%;
+  }
+  
+  .search-input-group {
+    flex-direction: column;
+  }
+  
+  .search-button {
+    width: 100%;
+  }
+  
+  .search-modal-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  .container {
+    padding: 15px;
+  }
+  
+  input, select, button, textarea {
+    padding: 12px 14px;
+  }
+  
+  #reader {
+    height: 50%;
   }
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <h2><i class="fas fa-boxes"></i> Inventory Login</h2>
+  <div id="status" class="status-message"></div>
+  <div id="loginPrompt" class="error-message">Please login first</div>
   
-  <!-- LOGIN FORM -->
-  <div id="loginForm" class="form-container visible">
-    <div class="input-group">
-      <input type="text" id="mobile" placeholder=" " maxlength="10" tabindex="1">
-      <label for="mobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
-    </div>
+  <div id="app" style="display:none;">
+    <h2>Add Product & Inventory</h2>
     
-    <div class="input-group">
-      <input type="password" id="password" placeholder=" " tabindex="2">
-      <label for="password"><i class="fas fa-lock"></i> Password</label>
-      <button type="button" class="password-toggle" onclick="togglePassword('password')" tabindex="3">
-        <i class="fas fa-eye"></i>
-      </button>
-    </div>
-    
-    <button id="loginBtn" onclick="login()" tabindex="4">
-      <span id="loginText"><i class="fas fa-sign-in-alt"></i> Login</span>
-    </button>
-    
-    <div class="link">
-      <p>Don't have an account? <a href="#" onclick="showRegister()" tabindex="5">Register</a></p>
-    </div>
-    
-    <div id="msg" class="notice"></div>
-  </div>
-
-  <!-- REGISTRATION FORM -->
-  <div id="registerForm" class="form-container hidden">
-    <!-- Personal Information -->
-    <div class="input-group">
-      <input type="text" id="rname" placeholder=" " tabindex="1">
-      <label for="rname"><i class="fas fa-user"></i> Full Name</label>
-    </div>
-    
-    <div class="input-group">
-      <input type="text" id="rmobile" placeholder=" " maxlength="10" tabindex="2">
-      <label for="rmobile"><i class="fas fa-mobile-alt"></i> Mobile Number (10 digits)</label>
-    </div>
-    
-    <!-- Shop Information -->
-    <div class="input-group">
-      <input type="text" id="rshopname" placeholder=" " tabindex="3">
-      <label for="rshopname"><i class="fas fa-store"></i> Shop Name</label>
-    </div>
-    
-    <div class="input-group">
-      <textarea id="raddress" placeholder=" " tabindex="4"></textarea>
-      <label for="raddress"><i class="fas fa-map-marker-alt"></i> Shop Address</label>
-    </div>
-    
-    <!-- Password Section -->
-    <div class="input-group">
-      <input type="password" id="rpassword" placeholder=" " onkeyup="validatePassword()" tabindex="5">
-      <label for="rpassword"><i class="fas fa-lock"></i> Password</label>
-      <button type="button" class="password-toggle" onclick="togglePassword('rpassword')" tabindex="6">
-        <i class="fas fa-eye"></i>
-      </button>
-      
-      <!-- Password validation rules - only shown when not obeyed -->
-      <div id="passwordRules" class="password-rules">
-        <div class="password-rule">
-          <i id="lengthRule" class="fas fa-times-circle rule-invalid"></i>
-          <span>At least 8 characters</span>
-        </div>
-        <div class="password-rule">
-          <i id="uppercaseRule" class="fas fa-times-circle rule-invalid"></i>
-          <span>At least one uppercase letter</span>
-        </div>
-        <div class="password-rule">
-          <i id="lowercaseRule" class="fas fa-times-circle rule-invalid"></i>
-          <span>At least one lowercase letter</span>
-        </div>
-        <div class="input-group">
-          <i id="numberRule" class="fas fa-times-circle rule-invalid"></i>
-          <span>At least one number</span>
-        </div>
-        <div class="password-rule">
-          <i id="specialRule" class="fas fa-times-circle rule-invalid"></i>
-          <span>At least one special character</span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="input-group">
-      <input type="password" id="rconfirmpassword" placeholder=" " onkeyup="checkPasswordMatch()" tabindex="7">
-      <label for="rconfirmpassword"><i class="fas fa-lock"></i> Re-enter Password</label>
-      <button type="button" class="password-toggle" onclick="togglePassword('rconfirmpassword')" tabindex="8">
-        <i class="fas fa-eye"></i>
-      </button>
-      
-      <!-- Password match indicator -->
-      <div id="passwordMatch" class="password-match" style="display: none;">
-        <i id="matchIcon" class="fas fa-times-circle match-invalid"></i>
-        <span id="matchText">Passwords do not match</span>
-      </div>
-    </div>
-    
-    <!-- Hidden Role section -->
-    <div class="input-group" style="display: none;">
-      <select id="rrole">
-        <option value="Manager">Manager</option>
+    <div class="form-group">
+      <label for="productType" class="field-required">Product Type:</label>
+      <select id="productType" required>
+        <option value="existing">Existing Product</option>
+        <option value="new">New Product</option>
       </select>
     </div>
-    
-    <button id="registerBtn" onclick="register()" tabindex="9">
-      <span id="registerText"><i class="fas fa-user-plus"></i> Register</span>
-    </button>
-    
-    <div class="link">
-      <p>Already have an account? <a href="#" onclick="showLogin()" tabindex="10">Login</a></p>
+
+    <div class="form-group">
+      <label for="productId" class="field-required">Product ID:</label>
+      <div id="buttonsRow">
+        <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
+        <button id="fetchBtn">Fetch</button>
+        <button id="scanBtn">Scan</button>
+        <button id="searchBtn">Search</button>
+      </div>
+      <div id="productIdError" class="error-message"></div>
     </div>
-    
-    <div id="rmsg" class="notice"></div>
+
+    <div class="form-group">
+      <label for="productName" class="field-required">Product Name:</label>
+      <input type="text" id="productName" required>
+      <div id="productNameError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="details">Details:</label>
+      <textarea id="details"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="price" class="field-required">Price:</label>
+      <input type="number" id="price" min="0" step="0.01" required>
+      <div id="priceError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="count" class="field-required">Count:</label>
+      <input type="number" id="count" min="1" required>
+      <div id="countError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="batchNo" class="field-required">Batch No:</label>
+      <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+      <div id="batchNoError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="expireDate" class="field-required">Expire Date:</label>
+      <input type="date" id="expireDate" required>
+      <div id="expireDateError" class="error-message"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="date" class="field-required">Date:</label>
+      <input type="text" id="date" readonly required>
+    </div>
+
+    <div class="form-group">
+      <label for="location" class="field-required">Location:</label>
+      <input type="text" id="location" required>
+      <div id="locationError" class="error-message"></div>
+    </div>
+
+    <button id="addBtn">Add to Inventory</button>
   </div>
 </div>
 
-<!-- Success Popup -->
-<div class="popup-overlay" id="successPopup">
-  <div class="popup">
-    <div class="popup-icon"><i class="fas fa-check-circle"></i></div>
-    <h3>Registration Successful!</h3>
-    <p>Your account has been created successfully. You can now login with your credentials.</p>
-    <button class="popup-btn" onclick="closePopup()" tabindex="1">Continue to Login</button>
+<!-- Camera Popup -->
+<div id="cameraContainer">
+  <div id="reader"></div>
+  <button id="switchCameraBtn">Switch Camera</button>
+  <button id="closeCameraBtn">Close</button>
+</div>
+
+<!-- Search Modal -->
+<div id="searchModal" class="search-modal">
+  <div class="search-modal-content">
+    <div class="search-header">
+      <div class="search-title">Search Products</div>
+      <button class="close-search">&times;</button>
+    </div>
+    <div class="search-input-group">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by Product ID or Name">
+      <button id="searchProductsBtn" class="search-button">Search</button>
+    </div>
+    <div id="searchResults" class="search-results">
+      <div class="no-results">Enter a search term to find products</div>
+    </div>
   </div>
 </div>
 
-<!-- Shop Selection Popup -->
-<div class="popup-overlay" id="shopSelectionPopup">
-  <div class="popup">
-    <div class="popup-icon"><i class="fas fa-store"></i></div>
-    <h3>Select Your Shop</h3>
-    <p>This mobile number is registered with multiple shops. Please select which shop you want to access:</p>
-    
-    <div id="shopOptions" class="shop-selection">
-      <!-- Shop options will be dynamically inserted here -->
-    </div>
-    
-    <button class="popup-btn" onclick="confirmShopSelection()" tabindex="1">Continue</button>
+<!-- Modal for alerts -->
+<div id="modal" class="modal">
+  <div class="modal-content" id="modalContent">
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-message" id="modalMessage"></div>
+    <button class="modal-button" id="modalButton">OK</button>
   </div>
 </div>
 
 <script>
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const TABLE_ID = 729979;
-const BASE_URL = "https://api.baserow.io/api/database/rows/table/";
+const BASEROW = "https://api.baserow.io";
+const USER_TABLE = 729979;
+const PRODUCT_TABLE = 734793;
+const INVENTORY_TABLE = 734795;
 
-// Variables to store user data for shop selection
-let matchingUsers = [];
-let selectedShopId = "";
+const MobileTag = localStorage.getItem("MobileTag");
+const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
 
-// Check if user is already logged in
-window.onload = function() {
-  const shopIdTag = localStorage.getItem("ShopIDTag");
-  if (shopIdTag) {
-    window.location.href = "dashboard.html";
-  }
-};
+const app = document.getElementById("app");
+const status = document.getElementById("status");
+const addBtn = document.getElementById("addBtn");
+const scanBtn = document.getElementById("scanBtn");
+const fetchBtn = document.getElementById("fetchBtn");
+const searchBtn = document.getElementById("searchBtn");
+const productIdInput = document.getElementById("productId");
+const productType = document.getElementById("productType");
+const dateInput = document.getElementById("date");
 
-function showRegister() {
-  document.getElementById('loginForm').classList.remove('visible');
-  document.getElementById('loginForm').classList.add('hidden');
+const readerContainer = document.getElementById("cameraContainer");
+const modal = document.getElementById("modal");
+const modalContent = document.getElementById("modalContent");
+const modalIcon = document.getElementById("modalIcon");
+const modalTitle = document.getElementById("modalTitle");
+const modalMessage = document.getElementById("modalMessage");
+const modalButton = document.getElementById("modalButton");
+
+const searchModal = document.getElementById("searchModal");
+const searchInput = document.getElementById("searchInput");
+const searchProductsBtn = document.getElementById("searchProductsBtn");
+const searchResults = document.getElementById("searchResults");
+const closeSearch = document.querySelector(".close-search");
+
+let html5QrCode;
+let currentCamera = "environment";
+let allProducts = [];
+
+dateInput.value = new Date().toISOString().split('T')[0];
+
+// Modal function
+function showModal(type, title, message) {
+  modalContent.className = "modal-content";
+  modalIcon.innerHTML = "";
   
-  setTimeout(() => {
-    document.getElementById('registerForm').classList.remove('hidden');
-    document.getElementById('registerForm').classList.add('visible');
-    // Focus on first field when switching to register form
-    document.getElementById('rname').focus();
-  }, 150);
-}
-
-function showLogin() {
-  document.getElementById('registerForm').classList.remove('visible');
-  document.getElementById('registerForm').classList.add('hidden');
-  
-  setTimeout(() => {
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('loginForm').classList.add('visible');
-    // Focus on first field when switching to login form
-    document.getElementById('mobile').focus();
-  }, 150);
-}
-
-function showPopup() {
-  document.getElementById('successPopup').classList.add('active');
-}
-
-function closePopup() {
-  document.getElementById('successPopup').classList.remove('active');
-  showLogin();
-}
-
-// Toggle password visibility
-function togglePassword(fieldId) {
-  const passwordField = document.getElementById(fieldId);
-  const toggleButton = passwordField.nextElementSibling;
-  const icon = toggleButton.querySelector('i');
-  
-  if (passwordField.type === 'password') {
-    passwordField.type = 'text';
-    icon.className = 'fas fa-eye-slash';
-  } else {
-    passwordField.type = 'password';
-    icon.className = 'fas fa-eye';
-  }
-}
-
-// Password validation function
-function validatePassword() {
-  const password = document.getElementById('rpassword').value;
-  const passwordRules = document.getElementById('passwordRules');
-  
-  // Validation rules
-  const hasMinLength = password.length >= 8;
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  
-  // Update UI for each rule
-  updateRuleIcon('lengthRule', hasMinLength);
-  updateRuleIcon('uppercaseRule', hasUppercase);
-  updateRuleIcon('lowercaseRule', hasLowercase);
-  updateRuleIcon('numberRule', hasNumber);
-  updateRuleIcon('specialRule', hasSpecial);
-  
-  // Show password rules only if password is not empty and not all rules are met
-  if (password.length > 0 && !(hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial)) {
-    passwordRules.style.display = 'block';
-  } else {
-    passwordRules.style.display = 'none';
+  if (type === "success") {
+    modalContent.classList.add("modal-success");
+    modalIcon.innerHTML = "✅";
+  } else if (type === "warning") {
+    modalContent.classList.add("modal-warning");
+    modalIcon.innerHTML = "⚠️";
+  } else if (type === "error") {
+    modalContent.classList.add("modal-error");
+    modalIcon.innerHTML = "❌";
   }
   
-  // Return overall validation status
-  return hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  modal.style.display = "flex";
 }
 
-function updateRuleIcon(ruleId, isValid) {
-  const ruleIcon = document.getElementById(ruleId);
-  if (isValid) {
-    ruleIcon.className = 'fas fa-check-circle rule-valid';
-  } else {
-    ruleIcon.className = 'fas fa-times-circle rule-invalid';
-  }
-}
+modalButton.addEventListener("click", function() {
+  modal.style.display = "none";
+});
 
-// Check if passwords match
-function checkPasswordMatch() {
-  const password = document.getElementById('rpassword').value;
-  const confirmPassword = document.getElementById('rconfirmpassword').value;
-  const passwordMatch = document.getElementById('passwordMatch');
-  
-  if (confirmPassword.length === 0) {
-    passwordMatch.style.display = 'none';
-    return false;
-  }
-  
-  const passwordsMatch = password === confirmPassword;
-  
-  if (passwordsMatch) {
-    document.getElementById('matchIcon').className = 'fas fa-check-circle match-valid';
-    document.getElementById('matchText').textContent = 'Passwords match';
-    document.getElementById('matchText').className = 'match-valid';
-  } else {
-    document.getElementById('matchIcon').className = 'fas fa-times-circle match-invalid';
-    document.getElementById('matchText').textContent = 'Passwords do not match';
-    document.getElementById('matchText').className = 'match-invalid';
-  }
-  
-  passwordMatch.style.display = 'block';
-  return passwordsMatch;
-}
-
-// Enter key support for forms
-document.addEventListener('keydown', function(event) {
-  // Login form enter key
-  if (event.key === 'Enter' && document.getElementById('loginForm').classList.contains('visible')) {
-    if (document.activeElement.id === 'mobile' || document.activeElement.id === 'password') {
-      login();
-    }
-  }
-  
-  // Register form enter key
-  if (event.key === 'Enter' && document.getElementById('registerForm').classList.contains('visible')) {
-    const activeElement = document.activeElement;
-    const registerFields = ['rname', 'rmobile', 'rshopname', 'raddress', 'rpassword', 'rconfirmpassword'];
-    if (registerFields.includes(activeElement.id)) {
-      register();
-    }
+// Close modal when clicking outside
+modal.addEventListener("click", function(e) {
+  if (e.target === modal) {
+    modal.style.display = "none";
   }
 });
 
-// Show shop selection popup
-function showShopSelectionPopup(users) {
-  matchingUsers = users;
-  const shopOptions = document.getElementById('shopOptions');
-  shopOptions.innerHTML = '';
+// Search modal functions
+searchBtn.addEventListener("click", function() {
+  searchModal.style.display = "flex";
+  searchInput.focus();
+});
+
+closeSearch.addEventListener("click", function() {
+  searchModal.style.display = "none";
+});
+
+searchModal.addEventListener("click", function(e) {
+  if (e.target === searchModal) {
+    searchModal.style.display = "none";
+  }
+});
+
+// Search products function
+async function searchProducts() {
+  const searchTerm = searchInput.value.trim().toLowerCase();
   
-  // Create shop selection options
-  users.forEach((user, index) => {
-    // Parse shop name from the formatted string (ShopName-Address/Mobile)
-    const shopInfo = parseShopInfo(user["Shop Name"]);
+  if (!searchTerm) {
+    searchResults.innerHTML = '<div class="no-results">Please enter a search term</div>';
+    return;
+  }
+  
+  try {
+    // If we haven't fetched all products yet, do it now
+    if (allProducts.length === 0) {
+      const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+        headers: { Authorization: `Token ${API_KEY}` }
+      });
+      const data = await res.json();
+      allProducts = data.results;
+    }
     
-    const shopOption = document.createElement('div');
-    shopOption.className = 'shop-option';
-    shopOption.innerHTML = `
-      <div class="shop-radio">
-        <input type="radio" id="shop-${index}" name="shop" value="${user["ShopID"]}" ${index === 0 ? 'checked' : ''}>
-      </div>
-      <div class="shop-details">
-        <div class="shop-name">${shopInfo.name}</div>
-        <div class="shop-address">${shopInfo.address}</div>
-      </div>
-    `;
-    
-    shopOption.addEventListener('click', function() {
-      document.querySelectorAll('.shop-option').forEach(opt => opt.classList.remove('selected'));
-      this.classList.add('selected');
-      const radio = this.querySelector('input[type="radio"]');
-      radio.checked = true;
-      selectedShopId = radio.value;
+    // Filter products by ID or name
+    const filteredProducts = allProducts.filter(product => {
+      const productId = String(product["Product ID"] || "").toLowerCase();
+      const productName = String(product["Product Name"] || "").toLowerCase();
+      
+      return productId.includes(searchTerm) || productName.includes(searchTerm);
     });
     
-    shopOptions.appendChild(shopOption);
+    // Display results
+    if (filteredProducts.length === 0) {
+      searchResults.innerHTML = '<div class="no-results">No products found matching your search</div>';
+    } else {
+      let resultsHTML = '';
+      filteredProducts.forEach(product => {
+        resultsHTML += `
+          <div class="search-result-item" data-id="${product["Product ID"]}">
+            <div class="product-id">${product["Product ID"]}</div>
+            <div class="product-name">${product["Product Name"] || "No Name"}</div>
+          </div>
+        `;
+      });
+      searchResults.innerHTML = resultsHTML;
+      
+      // Add click event to result items
+      document.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const productId = this.getAttribute('data-id');
+          productIdInput.value = productId;
+          searchModal.style.display = "none";
+          fetchProduct(productId);
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Error searching products:", error);
+    searchResults.innerHTML = '<div class="no-results">Error searching products</div>';
+  }
+}
+
+searchProductsBtn.addEventListener("click", searchProducts);
+
+searchInput.addEventListener("keyup", function(event) {
+  if (event.key === "Enter") {
+    searchProducts();
+  }
+});
+
+// Field validation functions
+function validateBatchNo(batchNo) {
+  const batchNoRegex = /^[0-9]+$/;
+  return batchNoRegex.test(batchNo);
+}
+
+function validateForm() {
+  let isValid = true;
+  
+  // Reset error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
   });
   
-  // Set the first shop as selected by default
-  if (users.length > 0) {
-    selectedShopId = users[0]["ShopID"];
-    shopOptions.firstChild.classList.add('selected');
+  // Check required fields
+  const requiredFields = [
+    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+  ];
+  
+  requiredFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (!field.value.trim()) {
+      document.getElementById(fieldId + 'Error').textContent = 'This field is required';
+      document.getElementById(fieldId + 'Error').style.display = 'block';
+      isValid = false;
+    }
+  });
+  
+  // Validate batch number
+  const batchNo = document.getElementById('batchNo').value;
+  if (batchNo && !validateBatchNo(batchNo)) {
+    document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
+    document.getElementById('batchNoError').style.display = 'block';
+    isValid = false;
   }
   
-  // Show the popup
-  document.getElementById('shopSelectionPopup').classList.add('active');
+  // Validate price
+  const price = document.getElementById('price').value;
+  if (price && parseFloat(price) < 0) {
+    document.getElementById('priceError').textContent = 'Price cannot be negative';
+    document.getElementById('priceError').style.display = 'block';
+    isValid = false;
+  }
+  
+  // Validate count
+  const count = document.getElementById('count').value;
+  if (count && parseInt(count) < 1) {
+    document.getElementById('countError').textContent = 'Count must be at least 1';
+    document.getElementById('countError').style.display = 'block';
+    isValid = false;
+  }
+  
+  return isValid;
 }
 
-// Parse shop information from the formatted string
-function parseShopInfo(shopString) {
-  // Format: ShopName-Address/Mobile
-  const parts = shopString.split('-');
-  const name = parts[0];
+// Function to clear form fields
+function clearForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
   
-  let address = '';
-  if (parts.length > 1) {
-    const addressMobile = parts[1].split('/');
-    address = addressMobile[0];
-  }
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
   
-  return { name, address };
+  // Reset product type to existing
+  productType.value = 'existing';
+  
+  // Clear all error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
 }
 
-// Confirm shop selection and proceed with login
-function confirmShopSelection() {
-  if (!selectedShopId) {
-    alert('Please select a shop');
-    return;
+// Add real-time validation
+document.getElementById('batchNo').addEventListener('input', function() {
+  const batchNoError = document.getElementById('batchNoError');
+  if (this.value && !validateBatchNo(this.value)) {
+    batchNoError.textContent = 'Batch number should contain only numbers';
+    batchNoError.style.display = 'block';
+  } else {
+    batchNoError.style.display = 'none';
   }
-  
-  // Find the selected user
-  const selectedUser = matchingUsers.find(user => user["ShopID"] === selectedShopId);
-  
-  if (selectedUser) {
-    // Store user data and redirect
-    localStorage.setItem("NameTag", selectedUser["Name"]);
-    localStorage.setItem("ShopTag", selectedUser["Shop Name"]);
-    localStorage.setItem("ShopIDTag", selectedUser["ShopID"]);
-    localStorage.setItem("MobileTag", selectedUser["Username"]);
-    localStorage.setItem("LastLogin", new Date().toISOString());
-    localStorage.setItem("ActiveTime", Date.now());
+});
 
-    // Close the popup
-    document.getElementById('shopSelectionPopup').classList.remove('active');
-    
-    // Redirect to dashboard
-    window.location.href = "app.html";
-  }
-}
+// ✅ 1. Role Validation
+(async function init(){
+  if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
 
-async function login() {
-  const mobile = document.getElementById('mobile').value.trim();
-  const password = document.getElementById('password').value.trim();
-  const msg = document.getElementById('msg');
-  const loginBtn = document.getElementById('loginBtn');
-  const loginText = document.getElementById('loginText');
-  
-  msg.textContent = '';
-  msg.className = 'notice';
-  
-  if (!mobile || !password) {
-    msg.textContent = "Please enter all fields.";
-    msg.className = 'notice error';
-    return;
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
+    const data = await res.json();
+    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
+    if(!user){ 
+      showModal("error", "User Not Found", "User not found in the system.");
+      return; 
+    }
+
+    const role = user.Role || "Staff";
+    // Status is hidden as requested
+    app.style.display = "block";
+
+    if(role.toLowerCase()!=="manager"){
+      addBtn.disabled = true;
+      Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
+      showModal("error", "Access Denied", "Only managers can add products and inventory.");
+      return;
+    }
+  }catch(e){ 
+    console.error(e); 
+    showModal("error", "Error", "Error fetching user information.");
+  }
+})();
+
+// ✅ 2. Handle Product Type
+productType.addEventListener("change", ()=>{
+  if(productType.value==="new"){
+    productIdInput.value = "PRD-" + Date.now();
+    document.getElementById("productName").value = "";
+    document.getElementById("details").value = "";
+    document.getElementById("price").value = "";
+  }else{
+    productIdInput.value = "";
+  }
+});
+
+// ✅ 3. Fetch Product Details (manual fetch or scan)
+async function fetchProduct(pid){
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
   }
   
-  // Disable button and show spinner only (no text)
-  loginBtn.disabled = true;
-  loginText.innerHTML = '<div class="spinner"></div>';
-  
-  try {
-    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
-      headers: { Authorization: `Token ${API_KEY}` }
+  try{
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+      headers:{Authorization:`Token ${API_KEY}`}
     });
     const data = await res.json();
-
-    // Find all users with this mobile number
-    const users = data.results.filter(u => u["Username"] === mobile);
-    
-    if (users.length === 0) {
-      msg.textContent = "Invalid mobile number or password.";
-      msg.className = 'notice error';
-      return;
-    }
-
-    // Check if any user is blocked
-    const blockedUser = users.find(u => u["Block"]);
-    if (blockedUser) {
-      msg.textContent = `Blocked: ${blockedUser["Notice"] || "No notice provided"}`;
-      msg.className = 'notice error';
-      return;
-    }
-
-    // Check if password matches for any user
-    const validUsers = users.filter(u => u["Password"] === password);
-    
-    if (validUsers.length === 0) {
-      msg.textContent = "Invalid mobile number or password.";
-      msg.className = 'notice error';
-      return;
-    }
-
-    // If only one valid user, log them in directly
-    if (validUsers.length === 1) {
-      const user = validUsers[0];
+    const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    if(product){
+      document.getElementById("productName").value = product["Product Name"] || "";
+      document.getElementById("details").value = product["Details"] || "";
+      document.getElementById("price").value = product["Price"] || "";
       
-      // Successful login
-      localStorage.setItem("NameTag", user["Name"]);
-      localStorage.setItem("ShopTag", user["Shop Name"]);
-      localStorage.setItem("ShopIDTag", user["ShopID"]);
-      localStorage.setItem("MobileTag", user["Username"]);
-      localStorage.setItem("LastLogin", new Date().toISOString());
-      localStorage.setItem("ActiveTime", Date.now());
-
-      window.location.href = "app.html";
-    } 
-    // If multiple valid users with same password, show shop selection
-    else {
-      showShopSelectionPopup(validUsers);
+      // Clear any previous errors
+      document.getElementById("productIdError").style.display = "none";
+      
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = '✅ Product details fetched!';
+      successMsg.style.display = 'block';
+      
+      // Remove any existing success message
+      const existingSuccess = document.querySelector('#productId + .success-message');
+      if (existingSuccess) existingSuccess.remove();
+      
+      // Add success message after product ID input
+      productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 3000);
+    }else{
+      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").style.display = "block";
     }
-  } catch (error) {
-    msg.textContent = "An error occurred. Please try again.";
-    msg.className = 'notice error';
-  } finally {
-    // Re-enable button
-    loginBtn.disabled = false;
-    loginText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+  }catch(err){ 
+    console.error(err); 
+    document.getElementById("productIdError").textContent = "Error fetching product.";
+    document.getElementById("productIdError").style.display = "block";
   }
 }
 
-async function register() {
-  const name = document.getElementById('rname').value.trim();
-  const role = document.getElementById('rrole').value;
-  const shopname = document.getElementById('rshopname').value.trim();
-  const address = document.getElementById('raddress').value.trim();
-  const mobile = document.getElementById('rmobile').value.trim();
-  const password = document.getElementById('rpassword').value.trim();
-  const confirmPassword = document.getElementById('rconfirmpassword').value.trim();
-  const rmsg = document.getElementById('rmsg');
-  const registerBtn = document.getElementById('registerBtn');
-  const registerText = document.getElementById('registerText');
-  
-  rmsg.textContent = '';
-  rmsg.className = 'notice';
-  
-  if (!name || !shopname || !address || !mobile || !password || !confirmPassword) {
-    rmsg.textContent = "Please fill all fields.";
-    rmsg.className = 'notice error';
+fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
+
+// ✅ 4. Camera Scanning
+scanBtn.addEventListener("click", ()=>{
+  readerContainer.style.display="flex";
+  startCamera();
+});
+
+document.getElementById("closeCameraBtn").addEventListener("click", ()=>{
+  stopCamera();
+});
+
+document.getElementById("switchCameraBtn").addEventListener("click", ()=>{
+  currentCamera = currentCamera==="environment" ? "user" : "environment";
+  stopCamera();
+  startCamera();
+});
+
+function startCamera(){
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start({facingMode: currentCamera}, {fps:10, qrbox:250},
+    qrCodeMessage=>{
+      productIdInput.value = qrCodeMessage;
+      stopCamera();
+      fetchProduct(qrCodeMessage);
+    },
+    error=>{}
+  ).catch(err=>{
+    console.error("Camera error:", err);
+    showModal("error", "Camera Error", "Failed to start camera. Please check permissions.");
+  });
+}
+
+function stopCamera(){
+  if(html5QrCode){
+    html5QrCode.stop().then(()=>{ html5QrCode.clear(); });
+  }
+  readerContainer.style.display="none";
+}
+
+// ✅ 5. Add to Inventory
+addBtn.addEventListener("click", async ()=>{
+  // Validate form before submission
+  if (!validateForm()) {
     return;
   }
   
-  if (mobile.length !== 10 || isNaN(mobile)) {
-    rmsg.textContent = "Enter valid 10-digit mobile number.";
-    rmsg.className = 'notice error';
-    return;
+  const pid = productIdInput.value.trim();
+  if(!pid){ 
+    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
+    document.getElementById("productIdError").style.display = "block";
+    return; 
   }
 
-  // Validate password
-  if (!validatePassword()) {
-    rmsg.textContent = "Please ensure your password meets all requirements.";
-    rmsg.className = 'notice error';
-    return;
-  }
+  // Disable button to prevent duplicate submissions
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding...';
 
-  // Check if passwords match
-  if (!checkPasswordMatch()) {
-    rmsg.textContent = "Passwords do not match.";
-    rmsg.className = 'notice error';
-    return;
-  }
-
-  // Disable button and show spinner only (no text)
-  registerBtn.disabled = true;
-  registerText.innerHTML = '<div class="spinner"></div>';
-  
   try {
-    // Check duplicates
-    const res = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    const data = await res.json();
-    
-    if (data.results.find(u => u["Username"] === mobile && u["Shop Name"] === `${shopname}-${address}/${mobile}`)) {
-      rmsg.textContent = "This shop with the same mobile number is already registered.";
-      rmsg.className = 'notice error';
-      return;
+    // Add product if it's new (and not duplicate)
+    if(productType.value==="new"){
+      try{
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+          headers:{Authorization:`Token ${API_KEY}`}
+        });
+        const data = await res.json();
+        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        if(!existing){
+          const body = {
+            "Product ID": pid,
+            "Product Name": document.getElementById("productName").value,
+            "Details": document.getElementById("details").value,
+            "Price": document.getElementById("price").value,
+            "ShopID": ShopID
+          };
+          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+            method:"POST",
+            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+            body:JSON.stringify(body)
+          });
+          showModal("success", "Product Added", "✅ Product added to Product Table!");
+        }
+      }catch(e){ 
+        console.error(e); 
+        showModal("error", "Error", "Error adding product to Product Table.");
+        addBtn.disabled = false;
+        addBtn.textContent = 'Add to Inventory';
+        return;
+      }
     }
 
-    const shopId = "SHOP-" + Date.now();
-    
-    // Create the formatted string: ShopName,Address/Username
-    const formattedShopName = `${shopname}-${address}/${mobile}`;
+    // Add to inventory
+    const inventoryBody = {
+      "Product ID": pid,
+      "Product Name": document.getElementById("productName").value,
+      "Count": document.getElementById("count").value,
+      "Batch No": document.getElementById("batchNo").value,
+      "Expire Date": document.getElementById("expireDate").value,
+      "Date": document.getElementById("date").value,
+      "Location": document.getElementById("location").value,
+      "ShopID": ShopID
+    };
 
-    const createRes = await fetch(`${BASE_URL}${TABLE_ID}/?user_field_names=true`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Token ${API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "Name": name,
-        "Role": role,
-        "Username": mobile,
-        "Password": password,
-        "ShopID": shopId,
-        "Shop Name": formattedShopName,
-        "Block": false,
-        "Notice": "",
-        "Last Login": new Date().toISOString()
-      })
+    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      method:"POST",
+      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+      body:JSON.stringify(inventoryBody)
     });
 
-    if (createRes.ok) {
-      // Show success popup
-      showPopup();
-    } else {
-      rmsg.textContent = "Registration failed. Try again.";
-      rmsg.className = 'notice error';
-    }
-  } catch (error) {
-    rmsg.textContent = "An error occurred. Please try again.";
-    rmsg.className = 'notice error';
+    showModal("success", "Success", "✅ Product added to Inventory!");
+    clearForm();
+  } catch (e) {
+    console.error(e);
+    showModal("error", "Error", "Error adding to inventory.");
   } finally {
-    // Re-enable button
-    registerBtn.disabled = false;
-    registerText.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add to Inventory';
   }
-}
+});
 </script>
 </body>
 </html>
