@@ -212,6 +212,14 @@ button:disabled {
   background: #ffc94d;
 }
 
+#searchBtn {
+  background: #8a2be2;
+}
+
+#searchBtn:hover {
+  background: #7b1fa2;
+}
+
 #status {
   display: none; /* Hidden as requested */
 }
@@ -344,10 +352,25 @@ button:disabled {
   margin-top: 5px;
 }
 
+.product-price {
+  color: var(--success);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
 .no-results {
   padding: 20px;
   text-align: center;
   color: var(--gray);
+}
+
+.shop-info {
+  background: rgba(67, 97, 238, 0.1);
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+  font-weight: 500;
 }
 
 /* Modal Styles */
@@ -479,6 +502,10 @@ button:disabled {
   <div id="app" style="display:none;">
     <h2>Add Product & Inventory</h2>
     
+    <div class="shop-info">
+      Current Shop: <span id="currentShop">Loading...</span>
+    </div>
+    
     <div class="form-group">
       <label for="productType" class="field-required">Product Type:</label>
       <select id="productType" required>
@@ -562,6 +589,9 @@ button:disabled {
       <div class="search-title">Search Products</div>
       <button class="close-search">&times;</button>
     </div>
+    <div class="shop-info">
+      Showing products for: <span id="searchShopInfo">Loading...</span>
+    </div>
     <div class="search-input-group">
       <input type="text" id="searchInput" class="search-input" placeholder="Search by Product ID or Name">
       <button id="searchProductsBtn" class="search-button">Search</button>
@@ -601,6 +631,8 @@ const searchBtn = document.getElementById("searchBtn");
 const productIdInput = document.getElementById("productId");
 const productType = document.getElementById("productType");
 const dateInput = document.getElementById("date");
+const currentShopElement = document.getElementById("currentShop");
+const searchShopInfo = document.getElementById("searchShopInfo");
 
 const readerContainer = document.getElementById("cameraContainer");
 const modal = document.getElementById("modal");
@@ -621,6 +653,10 @@ let currentCamera = "environment";
 let allProducts = [];
 
 dateInput.value = new Date().toISOString().split('T')[0];
+
+// Update shop information display
+currentShopElement.textContent = ShopID;
+searchShopInfo.textContent = ShopID;
 
 // Modal function
 function showModal(type, title, message) {
@@ -670,7 +706,7 @@ searchModal.addEventListener("click", function(e) {
   }
 });
 
-// Search products function
+// Search products function - Only products from current shop
 async function searchProducts() {
   const searchTerm = searchInput.value.trim().toLowerCase();
   
@@ -680,14 +716,17 @@ async function searchProducts() {
   }
   
   try {
-    // If we haven't fetched all products yet, do it now
-    if (allProducts.length === 0) {
-      const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-        headers: { Authorization: `Token ${API_KEY}` }
-      });
-      const data = await res.json();
-      allProducts = data.results;
+    // Fetch products only from the current shop
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
     }
+    
+    const data = await res.json();
+    allProducts = data.results;
     
     // Filter products by ID or name
     const filteredProducts = allProducts.filter(product => {
@@ -699,7 +738,7 @@ async function searchProducts() {
     
     // Display results
     if (filteredProducts.length === 0) {
-      searchResults.innerHTML = '<div class="no-results">No products found matching your search</div>';
+      searchResults.innerHTML = '<div class="no-results">No products found matching your search in this shop</div>';
     } else {
       let resultsHTML = '';
       filteredProducts.forEach(product => {
@@ -707,6 +746,7 @@ async function searchProducts() {
           <div class="search-result-item" data-id="${product["Product ID"]}">
             <div class="product-id">${product["Product ID"]}</div>
             <div class="product-name">${product["Product Name"] || "No Name"}</div>
+            <div class="product-price">$${parseFloat(product["Price"] || 0).toFixed(2)}</div>
           </div>
         `;
       });
@@ -866,7 +906,7 @@ productType.addEventListener("change", ()=>{
   }
 });
 
-// ✅ 3. Fetch Product Details (manual fetch or scan)
+// ✅ 3. Fetch Product Details (manual fetch or scan) - Only from current shop
 async function fetchProduct(pid){
   if(!pid){ 
     document.getElementById("productIdError").textContent = "Enter Product ID";
@@ -875,11 +915,18 @@ async function fetchProduct(pid){
   }
   
   try{
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+    // Fetch product only if it belongs to the current shop
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
       headers:{Authorization:`Token ${API_KEY}`}
     });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
     const data = await res.json();
     const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    
     if(product){
       document.getElementById("productName").value = product["Product Name"] || "";
       document.getElementById("details").value = product["Details"] || "";
@@ -906,7 +953,7 @@ async function fetchProduct(pid){
         successMsg.style.display = 'none';
       }, 3000);
     }else{
-      document.getElementById("productIdError").textContent = "⚠️ Product not found in table.";
+      document.getElementById("productIdError").textContent = "⚠️ Product not found in this shop.";
       document.getElementById("productIdError").style.display = "block";
     }
   }catch(err){ 
@@ -975,14 +1022,21 @@ addBtn.addEventListener("click", async ()=>{
   addBtn.textContent = 'Adding...';
 
   try {
-    // Add product if it's new (and not duplicate)
+    // Add product if it's new (and not duplicate in current shop)
     if(productType.value==="new"){
       try{
-        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+        // Check if product already exists in this shop
+        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
           headers:{Authorization:`Token ${API_KEY}`}
         });
+        
+        if (!res.ok) {
+          throw new Error(`API error: ${res.status}`);
+        }
+        
         const data = await res.json();
         const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
+        
         if(!existing){
           const body = {
             "Product ID": pid,
