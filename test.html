@@ -364,13 +364,9 @@ button:disabled {
   color: var(--gray);
 }
 
+/* Hidden shop info sections */
 .shop-info {
-  background: rgba(67, 97, 238, 0.1);
-  padding: 10px 15px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-  border-left: 4px solid var(--primary);
-  font-weight: 500;
+  display: none !important;
 }
 
 /* Modal Styles */
@@ -502,6 +498,7 @@ button:disabled {
   <div id="app" style="display:none;">
     <h2>Add Product & Inventory</h2>
     
+    <!-- Shop info section is hidden but still present for functionality -->
     <div class="shop-info">
       Current Shop: <span id="currentShop">Loading...</span>
     </div>
@@ -589,6 +586,7 @@ button:disabled {
       <div class="search-title">Search Products</div>
       <button class="close-search">&times;</button>
     </div>
+    <!-- Hidden shop info in search modal -->
     <div class="shop-info">
       Showing products for: <span id="searchShopInfo">Loading...</span>
     </div>
@@ -654,7 +652,7 @@ let allProducts = [];
 
 dateInput.value = new Date().toISOString().split('T')[0];
 
-// Update shop information display
+// Update shop information (even though it's hidden)
 currentShopElement.textContent = ShopID;
 searchShopInfo.textContent = ShopID;
 
@@ -738,7 +736,7 @@ async function searchProducts() {
     
     // Display results
     if (filteredProducts.length === 0) {
-      searchResults.innerHTML = '<div class="no-results">No products found matching your search in this shop</div>';
+      searchResults.innerHTML = '<div class="no-results">No products found matching your search</div>';
     } else {
       let resultsHTML = '';
       filteredProducts.forEach(product => {
@@ -953,7 +951,7 @@ async function fetchProduct(pid){
         successMsg.style.display = 'none';
       }, 3000);
     }else{
-      document.getElementById("productIdError").textContent = "⚠️ Product not found in this shop.";
+      document.getElementById("productIdError").textContent = "⚠️ Product not found.";
       document.getElementById("productIdError").style.display = "block";
     }
   }catch(err){ 
