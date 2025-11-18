@@ -1464,12 +1464,63 @@ button:disabled {
 </div>
 
 <script>
+// Table IDs and Field Names Configuration
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const BASEROW = "https://api.baserow.io";
+
+// Table IDs
 const USER_TABLE = 729979;
 const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
-const SUPPLIER_TABLE = 734800; // New table for suppliers
+const SUPPLIER_TABLE = 744412;
+
+// Field Names Configuration
+const FIELD_NAMES = {
+  // User Table Fields
+  USER: {
+    USERNAME: "Username",
+    ROLE: "Role",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Product Table Fields
+  PRODUCT: {
+    PRODUCT_ID: "Product ID",
+    PRODUCT_NAME: "Product Name",
+    DETAILS: "Details",
+    PRICE: "Price",
+    PURCHASE_PRICE: "Purchase Price",
+    TAX_INCLUDED: "Tax Included",
+    TAX_PERCENTAGE: "Tax Percentage",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Inventory Table Fields
+  INVENTORY: {
+    PRODUCT_ID: "Product ID",
+    PRODUCT_NAME: "Product Name",
+    COUNT: "Count",
+    BATCH_NO: "Batch No",
+    EXPIRE_DATE: "Expire Date",
+    DATE: "Date",
+    LOCATION: "Location",
+    PURCHASE_PRICE: "Purchase Price",
+    TAX_INCLUDED: "Tax Included",
+    TAX_PERCENTAGE: "Tax Percentage",
+    SUPPLIER_ID: "Supplier ID",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Supplier Table Fields
+  SUPPLIER: {
+    SUPPLIER_NAME: "Supplier Name",
+    SUPPLIER_DETAILS: "Supplier Details",
+    PURCHASE_INVOICE: "Purchase Invoice",
+    PURCHASE_DATE: "Purchase Date",
+    TOTAL_INVOICE_VALUE: "Total Invoice Value",
+    SHOP_ID: "ShopID"
+  }
+};
 
 const MobileTag = localStorage.getItem("MobileTag");
 const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
@@ -1551,6 +1602,7 @@ let selectedDuration = 1;
 let batchNumbers = {}; // Store batch numbers per product
 let productsInPurchase = []; // Store products for current purchase
 let currentSupplierId = null; // Store supplier ID for current purchase
+let totalInvoiceValue = 0; // Store total invoice value for the purchase
 
 // Set default dates
 dateInput.value = new Date().toISOString().split('T')[0];
@@ -1630,12 +1682,13 @@ function calculateTaxBreakdown() {
 function calculatePurchaseTotals() {
   if (productsInPurchase.length === 0) {
     purchaseSummary.style.display = 'none';
+    totalInvoiceValue = 0;
     return;
   }
   
   let totalPriceExclTax = 0;
   let totalTaxAmount = 0;
-  let totalInvoiceValue = 0;
+  totalInvoiceValue = 0;
   
   // Group tax amounts by percentage
   const taxGroups = {};
@@ -1703,19 +1756,6 @@ function calculatePurchaseTotals() {
   purchaseSummary.style.display = 'block';
 }
 
-// Calculate purchase price with tax
-function calculatePurchasePriceWithTax() {
-  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
-  const taxPercentage = parseFloat(taxPercentageSelect.value) || 0;
-  
-  if (taxPercentage > 0) {
-    const taxAmount = purchasePrice * (taxPercentage / 100);
-    return purchasePrice + taxAmount;
-  }
-  
-  return purchasePrice;
-}
-
 // Get next batch number for a product
 async function getNextBatchNumber(productId) {
   if (!productId) return 1;
@@ -1727,7 +1767,7 @@ async function getNextBatchNumber(productId) {
   
   try {
     // Fetch existing inventory for this product to determine the next batch number
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${productId}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.INVENTORY.PRODUCT_ID}","type":"contains","value":"${productId}"},{"field":"${FIELD_NAMES.INVENTORY.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
       headers: { Authorization: `Token ${API_KEY}` }
     });
     
@@ -1737,8 +1777,8 @@ async function getNextBatchNumber(productId) {
     
     const data = await res.json();
     const existingBatches = data.results
-      .filter(item => item["Batch No"])
-      .map(item => parseInt(item["Batch No"]))
+      .filter(item => item[FIELD_NAMES.INVENTORY.BATCH_NO])
+      .map(item => parseInt(item[FIELD_NAMES.INVENTORY.BATCH_NO]))
       .filter(num => !isNaN(num));
     
     const maxBatch = existingBatches.length > 0 ? Math.max(...existingBatches) : 0;
@@ -1941,6 +1981,7 @@ function clearEntireForm() {
   
   // Reset current supplier
   currentSupplierId = null;
+  totalInvoiceValue = 0;
 }
 
 // Expire date modal functionality
@@ -2078,7 +2119,7 @@ async function searchProducts() {
   
   try {
     // Fetch products only from the current shop
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
       headers: { Authorization: `Token ${API_KEY}` }
     });
     
@@ -2091,8 +2132,8 @@ async function searchProducts() {
     
     // Filter products by ID or name
     const filteredProducts = allProducts.filter(product => {
-      const productId = String(product["Product ID"] || "").toLowerCase();
-      const productName = String(product["Product Name"] || "").toLowerCase();
+      const productId = String(product[FIELD_NAMES.PRODUCT.PRODUCT_ID] || "").toLowerCase();
+      const productName = String(product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "").toLowerCase();
       
       return productId.includes(searchTerm) || productName.includes(searchTerm);
     });
@@ -2104,10 +2145,10 @@ async function searchProducts() {
       let resultsHTML = '';
       filteredProducts.forEach(product => {
         resultsHTML += `
-          <div class="search-result-item" data-id="${product["Product ID"]}">
-            <div class="product-id">${product["Product ID"]}</div>
-            <div class="product-name">${product["Product Name"] || "No Name"}</div>
-            <div class="product-price">${parseFloat(product["Price"] || 0).toFixed(2)}</div>
+          <div class="search-result-item" data-id="${product[FIELD_NAMES.PRODUCT.PRODUCT_ID]}">
+            <div class="product-id">${product[FIELD_NAMES.PRODUCT.PRODUCT_ID]}</div>
+            <div class="product-name">${product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "No Name"}</div>
+            <div class="product-price">${parseFloat(product[FIELD_NAMES.PRODUCT.PRICE] || 0).toFixed(2)}</div>
           </div>
         `;
       });
@@ -2248,17 +2289,18 @@ finishPurchaseBtn.addEventListener("click", async function() {
   finishPurchaseBtn.textContent = 'Uploading...';
 
   try {
-    // First, create or get supplier
+    // First, create or get supplier with total invoice value
     const supplierBody = {
-      "Supplier Name": supplierNameInput.value,
-      "Supplier Details": supplierDetailsInput.value,
-      "Purchase Invoice": purchaseInvoiceInput.value,
-      "Purchase Date": purchaseDateInput.value,
-      "ShopID": ShopID
+      [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: supplierNameInput.value,
+      [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
+      [FIELD_NAMES.SUPPLIER.PURCHASE_INVOICE]: purchaseInvoiceInput.value,
+      [FIELD_NAMES.SUPPLIER.PURCHASE_DATE]: purchaseDateInput.value,
+      [FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE]: totalInvoiceValue,
+      [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
     };
     
     // Check if supplier already exists
-    const supplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Supplier Name","type":"contains","value":"${supplierNameInput.value}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+    const supplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SUPPLIER_NAME}","type":"contains","value":"${supplierNameInput.value}"},{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
       headers:{Authorization:`Token ${API_KEY}`}
     });
     
@@ -2270,8 +2312,19 @@ finishPurchaseBtn.addEventListener("click", async function() {
     let supplierId;
     
     if (supplierData.results.length > 0) {
-      // Use existing supplier
+      // Use existing supplier and update total invoice value
       supplierId = supplierData.results[0].id;
+      const updateSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/${supplierId}/?user_field_names=true`, {
+        method:"PATCH",
+        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+        body:JSON.stringify({
+          [FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE]: totalInvoiceValue
+        })
+      });
+      
+      if (!updateSupplierRes.ok) {
+        throw new Error(`API error: ${updateSupplierRes.status}`);
+      }
     } else {
       // Create new supplier
       const createSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true`, {
@@ -2294,7 +2347,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
       if(productType.value==="new"){
         try{
           // Check if product already exists in this shop
-          const productRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${product.productId}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+          const productRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${product.productId}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
             headers:{Authorization:`Token ${API_KEY}`}
           });
           
@@ -2303,18 +2356,18 @@ finishPurchaseBtn.addEventListener("click", async function() {
           }
           
           const productData = await productRes.json();
-          const existing = productData.results.find(p=>String(p["Product ID"])===String(product.productId));
+          const existing = productData.results.find(p=>String(p[FIELD_NAMES.PRODUCT.PRODUCT_ID])===String(product.productId));
           
           if(!existing){
             const productBody = {
-              "Product ID": product.productId,
-              "Product Name": product.productName,
-              "Details": product.details,
-              "Price": product.price,
-              "Purchase Price": product.purchasePrice,
-              "Tax Included": product.taxIncluded,
-              "Tax Percentage": product.taxPercentage,
-              "ShopID": ShopID
+              [FIELD_NAMES.PRODUCT.PRODUCT_ID]: product.productId,
+              [FIELD_NAMES.PRODUCT.PRODUCT_NAME]: product.productName,
+              [FIELD_NAMES.PRODUCT.DETAILS]: product.details,
+              [FIELD_NAMES.PRODUCT.PRICE]: product.price,
+              [FIELD_NAMES.PRODUCT.PURCHASE_PRICE]: product.purchasePrice,
+              [FIELD_NAMES.PRODUCT.TAX_INCLUDED]: product.taxIncluded,
+              [FIELD_NAMES.PRODUCT.TAX_PERCENTAGE]: product.taxPercentage,
+              [FIELD_NAMES.PRODUCT.SHOP_ID]: ShopID
             };
             await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
               method:"POST",
@@ -2330,18 +2383,18 @@ finishPurchaseBtn.addEventListener("click", async function() {
 
       // Add to inventory with supplier reference
       const inventoryBody = {
-        "Product ID": product.productId,
-        "Product Name": product.productName,
-        "Count": product.count,
-        "Batch No": product.batchNo,
-        "Expire Date": product.expireDate,
-        "Date": product.date,
-        "Location": product.location,
-        "Purchase Price": product.purchasePrice,
-        "Tax Included": product.taxIncluded,
-        "Tax Percentage": product.taxPercentage,
-        "Supplier ID": supplierId,
-        "ShopID": ShopID
+        [FIELD_NAMES.INVENTORY.PRODUCT_ID]: product.productId,
+        [FIELD_NAMES.INVENTORY.PRODUCT_NAME]: product.productName,
+        [FIELD_NAMES.INVENTORY.COUNT]: product.count,
+        [FIELD_NAMES.INVENTORY.BATCH_NO]: product.batchNo,
+        [FIELD_NAMES.INVENTORY.EXPIRE_DATE]: product.expireDate,
+        [FIELD_NAMES.INVENTORY.DATE]: product.date,
+        [FIELD_NAMES.INVENTORY.LOCATION]: product.location,
+        [FIELD_NAMES.INVENTORY.PURCHASE_PRICE]: product.purchasePrice,
+        [FIELD_NAMES.INVENTORY.TAX_INCLUDED]: product.taxIncluded,
+        [FIELD_NAMES.INVENTORY.TAX_PERCENTAGE]: product.taxPercentage,
+        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierId,
+        [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
       };
 
       await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
@@ -2351,7 +2404,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
       });
     }
 
-    showModal("success", "Purchase Complete", `✅ ${productsInPurchase.length} products added to inventory with supplier information!`);
+    showModal("success", "Purchase Complete", `✅ ${productsInPurchase.length} products added to inventory with supplier information! Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}`);
     clearEntireForm();
   } catch (e) {
     console.error(e);
@@ -2380,13 +2433,13 @@ document.getElementById('batchNo').addEventListener('input', function() {
   try{
     const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
     const data = await res.json();
-    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
+    const user = data.results.find(u=>String(u[FIELD_NAMES.USER.USERNAME])===String(MobileTag));
     if(!user){ 
       showModal("error", "User Not Found", "User not found in the system.");
       return; 
     }
 
-    const role = user.Role || "Staff";
+    const role = user[FIELD_NAMES.USER.ROLE] || "Staff";
     // Status is hidden as requested
     app.style.display = "block";
 
@@ -2429,7 +2482,7 @@ async function fetchProduct(pid){
   
   try{
     // Fetch product only if it belongs to the current shop
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${pid}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
       headers:{Authorization:`Token ${API_KEY}`}
     });
     
@@ -2438,21 +2491,21 @@ async function fetchProduct(pid){
     }
     
     const data = await res.json();
-    const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    const product = data.results.find(p=>String(p[FIELD_NAMES.PRODUCT.PRODUCT_ID])===String(pid));
     
     if(product){
-      document.getElementById("productName").value = product["Product Name"] || "";
-      document.getElementById("details").value = product["Details"] || "";
-      document.getElementById("price").value = product["Price"] || "";
-      document.getElementById("purchasePrice").value = product["Purchase Price"] || "";
+      document.getElementById("productName").value = product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "";
+      document.getElementById("details").value = product[FIELD_NAMES.PRODUCT.DETAILS] || "";
+      document.getElementById("price").value = product[FIELD_NAMES.PRODUCT.PRICE] || "";
+      document.getElementById("purchasePrice").value = product[FIELD_NAMES.PRODUCT.PURCHASE_PRICE] || "";
       
       // Set tax options if available
-      if (product["Tax Included"] === "Yes") {
+      if (product[FIELD_NAMES.PRODUCT.TAX_INCLUDED] === "Yes") {
         document.getElementById("taxYes").checked = true;
         taxYesOption.classList.add("selected");
         taxNoOption.classList.remove("selected");
         taxInputContainer.classList.add("show");
-        taxPercentageSelect.value = product["Tax Percentage"] || "0";
+        taxPercentageSelect.value = product[FIELD_NAMES.PRODUCT.TAX_PERCENTAGE] || "0";
       } else {
         document.getElementById("taxNo").checked = true;
         taxNoOption.classList.add("selected");
