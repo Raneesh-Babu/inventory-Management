@@ -685,6 +685,77 @@ button:disabled {
   background: var(--primary-dark);
 }
 
+/* New styles for purchase price, tax and margin */
+.purchase-price-container {
+  position: relative;
+}
+
+.tax-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.tax-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  flex: 1;
+}
+
+.tax-option:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.tax-option.selected {
+  background-color: rgba(67, 97, 238, 0.1);
+  border-color: var(--primary);
+}
+
+.tax-option input {
+  margin: 0;
+  width: auto;
+}
+
+.tax-option label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.tax-input-container {
+  display: none;
+  margin-top: 8px;
+}
+
+.tax-input-container.show {
+  display: block;
+}
+
+.margin-display {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: rgba(6, 214, 160, 0.1);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--success);
+  font-weight: 500;
+}
+
+.margin-display .margin-value {
+  font-weight: 600;
+  color: var(--success);
+}
+
+.margin-display .margin-percentage {
+  font-weight: 600;
+  color: var(--primary);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -730,6 +801,10 @@ button:disabled {
   
   .period-btn {
     min-width: auto;
+  }
+  
+  .tax-options {
+    flex-direction: column;
   }
 }
 
@@ -817,12 +892,56 @@ button:disabled {
       </div>
 
       <div class="form-group">
-        <label for="price" class="field-required">Price:</label>
+        <label for="price" class="field-required">Selling Price:</label>
         <div class="price-container">
           <span class="rupee-symbol">₹</span>
           <input type="number" id="price" class="price-input" min="0" step="0.01" placeholder="0.00" required>
         </div>
         <div id="priceError" class="error-message"></div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="purchasePrice" class="field-required">Purchase Price:</label>
+        <div class="purchase-price-container">
+          <span class="rupee-symbol">₹</span>
+          <input type="number" id="purchasePrice" class="price-input" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+        <div id="purchasePriceError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Tax Included:</label>
+        <div class="tax-options">
+          <div class="tax-option" id="taxYesOption">
+            <input type="radio" id="taxYes" name="taxIncluded" value="yes">
+            <label for="taxYes">Yes</label>
+          </div>
+          <div class="tax-option" id="taxNoOption">
+            <input type="radio" id="taxNo" name="taxIncluded" value="no" checked>
+            <label for="taxNo">No</label>
+          </div>
+        </div>
+        
+        <div class="tax-input-container" id="taxInputContainer">
+          <label for="taxPercentage">GST Percentage:</label>
+          <select id="taxPercentage">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18">18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <div class="margin-display" id="marginDisplay">
+          Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)
+        </div>
       </div>
     </div>
 
@@ -842,7 +961,7 @@ button:disabled {
 
       <div class="form-group">
         <label for="batchNo" class="field-required">Batch No:</label>
-        <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+        <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required readonly>
         <div id="batchNoError" class="error-message"></div>
       </div>
     </div>
@@ -1009,11 +1128,22 @@ const expireResultDate = document.getElementById("expireResultDate");
 const expireModalCancel = document.querySelector(".expire-modal-cancel");
 const expireModalApply = document.querySelector(".expire-modal-apply");
 
+// New elements for purchase price, tax and margin
+const purchasePriceInput = document.getElementById("purchasePrice");
+const priceInput = document.getElementById("price");
+const taxYesOption = document.getElementById("taxYesOption");
+const taxNoOption = document.getElementById("taxNoOption");
+const taxInputContainer = document.getElementById("taxInputContainer");
+const taxPercentageSelect = document.getElementById("taxPercentage");
+const marginDisplay = document.getElementById("marginDisplay");
+const batchNoInput = document.getElementById("batchNo");
+
 let html5QrCode;
 let currentCamera = "environment";
 let allProducts = [];
 let selectedPeriod = "days";
 let selectedDuration = 1;
+let batchNumbers = {}; // Store batch numbers per product
 
 dateInput.value = new Date().toISOString().split('T')[0];
 
@@ -1046,6 +1176,70 @@ function calculateExpiryDate() {
   expireResultDate.textContent = formattedDate;
   
   return formattedDate;
+}
+
+// Calculate and display margin
+function calculateMargin() {
+  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
+  const sellingPrice = parseFloat(priceInput.value) || 0;
+  
+  if (purchasePrice <= 0 || sellingPrice <= 0) {
+    marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
+    return;
+  }
+  
+  const marginValue = sellingPrice - purchasePrice;
+  const marginPercentage = ((marginValue / purchasePrice) * 100).toFixed(2);
+  
+  marginDisplay.innerHTML = `Margin: <span class="margin-value">₹ ${marginValue.toFixed(2)}</span> (<span class="margin-percentage">${marginPercentage}%</span>)`;
+}
+
+// Calculate purchase price with tax
+function calculatePurchasePriceWithTax() {
+  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
+  const taxPercentage = parseFloat(taxPercentageSelect.value) || 0;
+  
+  if (taxPercentage > 0) {
+    const taxAmount = purchasePrice * (taxPercentage / 100);
+    return purchasePrice + taxAmount;
+  }
+  
+  return purchasePrice;
+}
+
+// Get next batch number for a product
+async function getNextBatchNumber(productId) {
+  if (!productId) return 1;
+  
+  // If we already have batch numbers for this product in memory, use them
+  if (batchNumbers[productId]) {
+    return batchNumbers[productId] + 1;
+  }
+  
+  try {
+    // Fetch existing inventory for this product to determine the next batch number
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${productId}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    const existingBatches = data.results
+      .filter(item => item["Batch No"])
+      .map(item => parseInt(item["Batch No"]))
+      .filter(num => !isNaN(num));
+    
+    const maxBatch = existingBatches.length > 0 ? Math.max(...existingBatches) : 0;
+    batchNumbers[productId] = maxBatch;
+    
+    return maxBatch + 1;
+  } catch (error) {
+    console.error("Error fetching batch numbers:", error);
+    return 1;
+  }
 }
 
 // Expire date modal functionality
@@ -1093,6 +1287,29 @@ durationSlider.addEventListener("input", function() {
   sliderValue.textContent = selectedDuration;
   calculateExpiryDate();
 });
+
+// Tax option selection
+taxYesOption.addEventListener("click", function() {
+  document.getElementById("taxYes").checked = true;
+  taxYesOption.classList.add("selected");
+  taxNoOption.classList.remove("selected");
+  taxInputContainer.classList.add("show");
+});
+
+taxNoOption.addEventListener("click", function() {
+  document.getElementById("taxNo").checked = true;
+  taxNoOption.classList.add("selected");
+  taxYesOption.classList.remove("selected");
+  taxInputContainer.classList.remove("show");
+});
+
+// Set default tax option
+taxNoOption.classList.add("selected");
+
+// Calculate margin when prices change
+purchasePriceInput.addEventListener("input", calculateMargin);
+priceInput.addEventListener("input", calculateMargin);
+taxPercentageSelect.addEventListener("change", calculateMargin);
 
 // Modal function
 function showModal(type, title, message) {
@@ -1228,7 +1445,7 @@ function validateForm() {
   
   // Check required fields
   const requiredFields = [
-    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+    'productId', 'productName', 'price', 'purchasePrice', 'count', 'batchNo', 'expireDate', 'location'
   ];
   
   requiredFields.forEach(fieldId => {
@@ -1256,6 +1473,14 @@ function validateForm() {
     isValid = false;
   }
   
+  // Validate purchase price
+  const purchasePrice = document.getElementById('purchasePrice').value;
+  if (purchasePrice && parseFloat(purchasePrice) < 0) {
+    document.getElementById('purchasePriceError').textContent = 'Purchase price cannot be negative';
+    document.getElementById('purchasePriceError').style.display = 'block';
+    isValid = false;
+  }
+  
   // Validate count
   const count = document.getElementById('count').value;
   if (count && parseInt(count) < 1) {
@@ -1270,7 +1495,7 @@ function validateForm() {
 // Function to clear form fields
 function clearForm() {
   const fieldsToClear = [
-    'productId', 'productName', 'details', 'price', 'count', 
+    'productId', 'productName', 'details', 'price', 'purchasePrice', 'count', 
     'batchNo', 'expireDate', 'location'
   ];
   
@@ -1281,8 +1506,17 @@ function clearForm() {
     }
   });
   
+  // Reset tax options
+  document.getElementById("taxNo").checked = true;
+  taxNoOption.classList.add("selected");
+  taxYesOption.classList.remove("selected");
+  taxInputContainer.classList.remove("show");
+  
   // Reset product type to existing
   productType.value = 'existing';
+  
+  // Reset margin display
+  marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
   
   // Clear all error messages
   document.querySelectorAll('.error-message').forEach(el => {
@@ -1337,8 +1571,11 @@ productType.addEventListener("change", ()=>{
     document.getElementById("productName").value = "";
     document.getElementById("details").value = "";
     document.getElementById("price").value = "";
+    document.getElementById("purchasePrice").value = "";
+    batchNoInput.value = "1"; // Default batch number for new products
   }else{
     productIdInput.value = "";
+    batchNoInput.value = "";
   }
 });
 
@@ -1367,6 +1604,28 @@ async function fetchProduct(pid){
       document.getElementById("productName").value = product["Product Name"] || "";
       document.getElementById("details").value = product["Details"] || "";
       document.getElementById("price").value = product["Price"] || "";
+      document.getElementById("purchasePrice").value = product["Purchase Price"] || "";
+      
+      // Set tax options if available
+      if (product["Tax Included"] === "Yes") {
+        document.getElementById("taxYes").checked = true;
+        taxYesOption.classList.add("selected");
+        taxNoOption.classList.remove("selected");
+        taxInputContainer.classList.add("show");
+        taxPercentageSelect.value = product["Tax Percentage"] || "0";
+      } else {
+        document.getElementById("taxNo").checked = true;
+        taxNoOption.classList.add("selected");
+        taxYesOption.classList.remove("selected");
+        taxInputContainer.classList.remove("show");
+      }
+      
+      // Calculate margin
+      calculateMargin();
+      
+      // Get next batch number for this product
+      const nextBatchNo = await getNextBatchNumber(pid);
+      batchNoInput.value = nextBatchNo;
       
       // Clear any previous errors
       document.getElementById("productIdError").style.display = "none";
@@ -1479,6 +1738,9 @@ addBtn.addEventListener("click", async ()=>{
             "Product Name": document.getElementById("productName").value,
             "Details": document.getElementById("details").value,
             "Price": document.getElementById("price").value,
+            "Purchase Price": document.getElementById("purchasePrice").value,
+            "Tax Included": document.getElementById("taxYes").checked ? "Yes" : "No",
+            "Tax Percentage": document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
             "ShopID": ShopID
           };
           await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
@@ -1506,6 +1768,9 @@ addBtn.addEventListener("click", async ()=>{
       "Expire Date": document.getElementById("expireDate").value,
       "Date": document.getElementById("date").value,
       "Location": document.getElementById("location").value,
+      "Purchase Price": document.getElementById("purchasePrice").value,
+      "Tax Included": document.getElementById("taxYes").checked ? "Yes" : "No",
+      "Tax Percentage": document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
       "ShopID": ShopID
     };
 
