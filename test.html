@@ -917,6 +917,98 @@ button:disabled {
   font-style: italic;
 }
 
+/* Purchase Summary Styles */
+.purchase-summary {
+  background-color: rgba(67, 97, 238, 0.05);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin-top: 20px;
+  border-left: 4px solid var(--success);
+}
+
+.summary-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.summary-item {
+  background: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.summary-value.total-invoice {
+  color: var(--success);
+  font-size: 22px;
+}
+
+.summary-breakdown {
+  background: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.breakdown-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+  font-weight: 600;
+  color: var(--success);
+  font-size: 16px;
+}
+
+.breakdown-label {
+  color: var(--dark);
+}
+
+.breakdown-value {
+  color: var(--primary);
+  font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -986,6 +1078,11 @@ button:disabled {
     border: 1px solid var(--border);
     border-radius: var(--border-radius);
     margin-bottom: 10px;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
@@ -1251,6 +1348,37 @@ button:disabled {
         <div class="no-products">No products added yet</div>
       </div>
     </div>
+
+    <!-- Purchase Summary Section -->
+    <div class="purchase-summary" id="purchaseSummary" style="display: none;">
+      <div class="summary-title">
+        <i class="fas fa-file-invoice-dollar"></i> Purchase Summary
+      </div>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Total Price (Excl. Tax)</div>
+          <div class="summary-value" id="totalPriceExclTax">₹ 0.00</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Tax Amount</div>
+          <div class="summary-value" id="totalTaxAmount">₹ 0.00</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Invoice Value</div>
+          <div class="summary-value total-invoice" id="totalInvoiceValue">₹ 0.00</div>
+        </div>
+      </div>
+      
+      <div class="summary-breakdown">
+        <div class="breakdown-title">
+          <i class="fas fa-receipt"></i> Tax Breakdown
+        </div>
+        <div id="taxBreakdownDetails">
+          <!-- Tax breakdown will be populated here -->
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1360,6 +1488,7 @@ const dateInput = document.getElementById("date");
 const currentShopElement = document.getElementById("currentShop");
 const searchShopInfo = document.getElementById("searchShopInfo");
 const productsListBody = document.getElementById("productsListBody");
+const purchaseSummary = document.getElementById("purchaseSummary");
 
 const readerContainer = document.getElementById("cameraContainer");
 const modal = document.getElementById("modal");
@@ -1401,6 +1530,12 @@ const taxBreakdown = document.getElementById("taxBreakdown");
 const priceWithoutTaxElement = document.getElementById("priceWithoutTax");
 const taxAmountElement = document.getElementById("taxAmount");
 const totalWithTaxElement = document.getElementById("totalWithTax");
+
+// Purchase summary elements
+const totalPriceExclTaxElement = document.getElementById("totalPriceExclTax");
+const totalTaxAmountElement = document.getElementById("totalTaxAmount");
+const totalInvoiceValueElement = document.getElementById("totalInvoiceValue");
+const taxBreakdownDetails = document.getElementById("taxBreakdownDetails");
 
 // Supplier elements
 const supplierNameInput = document.getElementById("supplierName");
@@ -1491,6 +1626,83 @@ function calculateTaxBreakdown() {
   }
 }
 
+// Calculate purchase totals for the entire purchase
+function calculatePurchaseTotals() {
+  if (productsInPurchase.length === 0) {
+    purchaseSummary.style.display = 'none';
+    return;
+  }
+  
+  let totalPriceExclTax = 0;
+  let totalTaxAmount = 0;
+  let totalInvoiceValue = 0;
+  
+  // Group tax amounts by percentage
+  const taxGroups = {};
+  
+  productsInPurchase.forEach(product => {
+    const productTotalPrice = product.purchasePrice * product.count;
+    
+    if (product.taxIncluded === "Yes" && parseFloat(product.taxPercentage) > 0) {
+      const taxPercentage = parseFloat(product.taxPercentage);
+      const priceWithoutTax = productTotalPrice / (1 + (taxPercentage / 100));
+      const taxAmount = productTotalPrice - priceWithoutTax;
+      
+      totalPriceExclTax += priceWithoutTax;
+      totalTaxAmount += taxAmount;
+      
+      // Group by tax percentage
+      if (!taxGroups[taxPercentage]) {
+        taxGroups[taxPercentage] = 0;
+      }
+      taxGroups[taxPercentage] += taxAmount;
+    } else {
+      totalPriceExclTax += productTotalPrice;
+    }
+    
+    totalInvoiceValue += productTotalPrice;
+  });
+  
+  // Update summary display
+  totalPriceExclTaxElement.textContent = `₹ ${totalPriceExclTax.toFixed(2)}`;
+  totalTaxAmountElement.textContent = `₹ ${totalTaxAmount.toFixed(2)}`;
+  totalInvoiceValueElement.textContent = `₹ ${totalInvoiceValue.toFixed(2)}`;
+  
+  // Update tax breakdown details
+  let breakdownHTML = '';
+  
+  if (Object.keys(taxGroups).length > 0) {
+    Object.keys(taxGroups).sort((a, b) => parseFloat(b) - parseFloat(a)).forEach(percentage => {
+      breakdownHTML += `
+        <div class="breakdown-item">
+          <span class="breakdown-label">GST ${percentage}%</span>
+          <span class="breakdown-value">₹ ${taxGroups[percentage].toFixed(2)}</span>
+        </div>
+      `;
+    });
+  } else {
+    breakdownHTML = `
+      <div class="breakdown-item">
+        <span class="breakdown-label">No Tax Applied</span>
+        <span class="breakdown-value">₹ 0.00</span>
+      </div>
+    `;
+  }
+  
+  // Add total line
+  breakdownHTML += `
+    <div class="breakdown-item">
+      <span class="breakdown-label">Total Invoice Value</span>
+      <span class="breakdown-value">₹ ${totalInvoiceValue.toFixed(2)}</span>
+    </div>
+  `;
+  
+  taxBreakdownDetails.innerHTML = breakdownHTML;
+  
+  // Show purchase summary
+  purchaseSummary.style.display = 'block';
+}
+
 // Calculate purchase price with tax
 function calculatePurchasePriceWithTax() {
   const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
@@ -1571,6 +1783,9 @@ function addProductToList() {
   productsInPurchase.push(product);
   updateProductsList();
   
+  // Calculate and update purchase totals
+  calculatePurchaseTotals();
+  
   // Show success message
   showModal("success", "Product Added", "Product added to purchase list!");
   
@@ -1582,6 +1797,7 @@ function addProductToList() {
 function updateProductsList() {
   if (productsInPurchase.length === 0) {
     productsListBody.innerHTML = '<div class="no-products">No products added yet</div>';
+    purchaseSummary.style.display = 'none';
     return;
   }
   
@@ -1662,6 +1878,9 @@ function editProduct(index) {
   productsInPurchase.splice(index, 1);
   updateProductsList();
   
+  // Recalculate totals
+  calculatePurchaseTotals();
+  
   showModal("warning", "Edit Product", "Product loaded for editing. Make changes and click 'Add Product to List' to save.");
 }
 
@@ -1669,6 +1888,7 @@ function editProduct(index) {
 function removeProduct(index) {
   productsInPurchase.splice(index, 1);
   updateProductsList();
+  calculatePurchaseTotals();
   showModal("success", "Product Removed", "Product removed from purchase list.");
 }
 
