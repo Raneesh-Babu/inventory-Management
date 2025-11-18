@@ -37,7 +37,7 @@ body {
 }
 
 .container { 
-  max-width: 900px; 
+  max-width: 1200px; 
   margin: auto; 
   background: white; 
   padding: 30px; 
@@ -756,6 +756,131 @@ button:disabled {
   color: var(--primary);
 }
 
+/* New styles for supplier section */
+.supplier-section {
+  background-color: rgba(67, 97, 238, 0.05);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title i {
+  font-size: 20px;
+}
+
+.supplier-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.supplier-actions button {
+  width: auto;
+  min-width: 150px;
+}
+
+#addAnotherProductBtn {
+  background: var(--success);
+}
+
+#addAnotherProductBtn:hover {
+  background: #05c290;
+}
+
+#finishPurchaseBtn {
+  background: #8a2be2;
+}
+
+#finishPurchaseBtn:hover {
+  background: #7b1fa2;
+}
+
+/* Products list styles */
+.products-list {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.products-list-header {
+  background-color: var(--primary);
+  color: white;
+  padding: 12px 15px;
+  font-weight: 600;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.products-list-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.product-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-item:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.product-item-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.product-item-actions button {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.edit-product-btn {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+.edit-product-btn:hover {
+  background: #ffc94d;
+}
+
+.remove-product-btn {
+  background: var(--danger);
+}
+
+.remove-product-btn:hover {
+  background: #e0355f;
+}
+
+.no-products {
+  padding: 20px;
+  text-align: center;
+  color: var(--gray);
+  font-style: italic;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -805,6 +930,26 @@ button:disabled {
   
   .tax-options {
     flex-direction: column;
+  }
+  
+  .supplier-actions {
+    flex-direction: column;
+  }
+  
+  .products-list-header, .product-item {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  
+  .products-list-header {
+    display: none;
+  }
+  
+  .product-item {
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
   }
 }
 
@@ -861,6 +1006,43 @@ button:disabled {
     <!-- Shop info section is hidden but still present for functionality -->
     <div class="shop-info">
       Current Shop: <span id="currentShop">Loading...</span>
+    </div>
+    
+    <!-- Supplier Section -->
+    <div class="supplier-section">
+      <div class="section-title">
+        <i class="fas fa-truck"></i> Supplier Information
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="supplierName" class="field-required">Supplier Name:</label>
+          <input type="text" id="supplierName" placeholder="Enter supplier name" required>
+          <div id="supplierNameError" class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="supplierDetails">Supplier Details:</label>
+          <textarea id="supplierDetails" placeholder="Supplier address, contact info, etc."></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="purchaseInvoice">Purchase Invoice No:</label>
+          <input type="text" id="purchaseInvoice" placeholder="Invoice number (if applicable)">
+        </div>
+
+        <div class="form-group">
+          <label for="purchaseDate" class="field-required">Purchase Date:</label>
+          <input type="date" id="purchaseDate" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Information Section -->
+    <div class="section-title">
+      <i class="fas fa-box"></i> Product Information
     </div>
     
     <div class="form-row">
@@ -947,7 +1129,7 @@ button:disabled {
 
     <div class="form-row">
       <div class="form-group full-width">
-        <label for="details">Details:</label>
+        <label for="details">Product Details:</label>
         <textarea id="details"></textarea>
       </div>
     </div>
@@ -979,7 +1161,7 @@ button:disabled {
       </div>
 
       <div class="form-group">
-        <label for="date" class="field-required">Date:</label>
+        <label for="date" class="field-required">Date Added:</label>
         <input type="text" id="date" readonly required>
       </div>
     </div>
@@ -992,9 +1174,29 @@ button:disabled {
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group full-width">
-        <button id="addBtn">Add to Inventory</button>
+    <div class="supplier-actions">
+      <button id="addProductToListBtn">Add Product to List</button>
+      <button id="addAnotherProductBtn">Add Another Product</button>
+      <button id="finishPurchaseBtn">Finish & Upload Purchase</button>
+    </div>
+
+    <!-- Products List Section -->
+    <div class="section-title">
+      <i class="fas fa-list"></i> Products in Current Purchase
+    </div>
+    
+    <div class="products-list">
+      <div class="products-list-header">
+        <div>Product Name</div>
+        <div>Batch No</div>
+        <div>Count</div>
+        <div>Purchase Price</div>
+        <div>Selling Price</div>
+        <div>Margin</div>
+        <div>Actions</div>
+      </div>
+      <div class="products-list-body" id="productsListBody">
+        <div class="no-products">No products added yet</div>
       </div>
     </div>
   </div>
@@ -1087,13 +1289,16 @@ const BASEROW = "https://api.baserow.io";
 const USER_TABLE = 729979;
 const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
+const SUPPLIER_TABLE = 734800; // New table for suppliers
 
 const MobileTag = localStorage.getItem("MobileTag");
 const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
 
 const app = document.getElementById("app");
 const status = document.getElementById("status");
-const addBtn = document.getElementById("addBtn");
+const addProductToListBtn = document.getElementById("addProductToListBtn");
+const addAnotherProductBtn = document.getElementById("addAnotherProductBtn");
+const finishPurchaseBtn = document.getElementById("finishPurchaseBtn");
 const scanBtn = document.getElementById("scanBtn");
 const fetchBtn = document.getElementById("fetchBtn");
 const searchBtn = document.getElementById("searchBtn");
@@ -1102,6 +1307,7 @@ const productType = document.getElementById("productType");
 const dateInput = document.getElementById("date");
 const currentShopElement = document.getElementById("currentShop");
 const searchShopInfo = document.getElementById("searchShopInfo");
+const productsListBody = document.getElementById("productsListBody");
 
 const readerContainer = document.getElementById("cameraContainer");
 const modal = document.getElementById("modal");
@@ -1138,14 +1344,24 @@ const taxPercentageSelect = document.getElementById("taxPercentage");
 const marginDisplay = document.getElementById("marginDisplay");
 const batchNoInput = document.getElementById("batchNo");
 
+// Supplier elements
+const supplierNameInput = document.getElementById("supplierName");
+const supplierDetailsInput = document.getElementById("supplierDetails");
+const purchaseInvoiceInput = document.getElementById("purchaseInvoice");
+const purchaseDateInput = document.getElementById("purchaseDate");
+
 let html5QrCode;
 let currentCamera = "environment";
 let allProducts = [];
 let selectedPeriod = "days";
 let selectedDuration = 1;
 let batchNumbers = {}; // Store batch numbers per product
+let productsInPurchase = []; // Store products for current purchase
+let currentSupplierId = null; // Store supplier ID for current purchase
 
+// Set default dates
 dateInput.value = new Date().toISOString().split('T')[0];
+purchaseDateInput.value = new Date().toISOString().split('T')[0];
 
 // Update shop information (even though it's hidden)
 currentShopElement.textContent = ShopID;
@@ -1240,6 +1456,188 @@ async function getNextBatchNumber(productId) {
     console.error("Error fetching batch numbers:", error);
     return 1;
   }
+}
+
+// Add product to the current purchase list
+function addProductToList() {
+  // Validate form before adding to list
+  if (!validateProductForm()) {
+    return;
+  }
+  
+  const product = {
+    id: Date.now(), // Unique ID for this product in the list
+    productId: productIdInput.value.trim(),
+    productName: document.getElementById("productName").value,
+    details: document.getElementById("details").value,
+    price: parseFloat(document.getElementById("price").value),
+    purchasePrice: parseFloat(document.getElementById("purchasePrice").value),
+    taxIncluded: document.getElementById("taxYes").checked ? "Yes" : "No",
+    taxPercentage: document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
+    count: parseInt(document.getElementById("count").value),
+    batchNo: document.getElementById("batchNo").value,
+    expireDate: document.getElementById("expireDate").value,
+    date: document.getElementById("date").value,
+    location: document.getElementById("location").value
+  };
+  
+  // Calculate margin for display
+  const marginValue = product.price - product.purchasePrice;
+  const marginPercentage = ((marginValue / product.purchasePrice) * 100).toFixed(2);
+  product.marginValue = marginValue;
+  product.marginPercentage = marginPercentage;
+  
+  productsInPurchase.push(product);
+  updateProductsList();
+  
+  // Show success message
+  showModal("success", "Product Added", "Product added to purchase list!");
+  
+  // Clear form for next product
+  clearProductForm();
+}
+
+// Update the products list display
+function updateProductsList() {
+  if (productsInPurchase.length === 0) {
+    productsListBody.innerHTML = '<div class="no-products">No products added yet</div>';
+    return;
+  }
+  
+  let html = '';
+  productsInPurchase.forEach((product, index) => {
+    html += `
+      <div class="product-item">
+        <div>${product.productName}</div>
+        <div>${product.batchNo}</div>
+        <div>${product.count}</div>
+        <div>₹ ${product.purchasePrice.toFixed(2)}</div>
+        <div>₹ ${product.price.toFixed(2)}</div>
+        <div>₹ ${product.marginValue.toFixed(2)} (${product.marginPercentage}%)</div>
+        <div class="product-item-actions">
+          <button class="edit-product-btn" data-index="${index}">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="remove-product-btn" data-index="${index}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  productsListBody.innerHTML = html;
+  
+  // Add event listeners for edit and remove buttons
+  document.querySelectorAll('.edit-product-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const index = parseInt(this.getAttribute('data-index'));
+      editProduct(index);
+    });
+  });
+  
+  document.querySelectorAll('.remove-product-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const index = parseInt(this.getAttribute('data-index'));
+      removeProduct(index);
+    });
+  });
+}
+
+// Edit a product from the list
+function editProduct(index) {
+  const product = productsInPurchase[index];
+  
+  // Fill form with product data
+  productIdInput.value = product.productId;
+  document.getElementById("productName").value = product.productName;
+  document.getElementById("details").value = product.details;
+  document.getElementById("price").value = product.price;
+  document.getElementById("purchasePrice").value = product.purchasePrice;
+  
+  if (product.taxIncluded === "Yes") {
+    document.getElementById("taxYes").checked = true;
+    taxYesOption.classList.add("selected");
+    taxNoOption.classList.remove("selected");
+    taxInputContainer.classList.add("show");
+    taxPercentageSelect.value = product.taxPercentage;
+  } else {
+    document.getElementById("taxNo").checked = true;
+    taxNoOption.classList.add("selected");
+    taxYesOption.classList.remove("selected");
+    taxInputContainer.classList.remove("show");
+  }
+  
+  document.getElementById("count").value = product.count;
+  document.getElementById("batchNo").value = product.batchNo;
+  document.getElementById("expireDate").value = product.expireDate;
+  document.getElementById("location").value = product.location;
+  
+  // Calculate and display margin
+  calculateMargin();
+  
+  // Remove product from list (will be re-added if saved)
+  productsInPurchase.splice(index, 1);
+  updateProductsList();
+  
+  showModal("warning", "Edit Product", "Product loaded for editing. Make changes and click 'Add Product to List' to save.");
+}
+
+// Remove a product from the list
+function removeProduct(index) {
+  productsInPurchase.splice(index, 1);
+  updateProductsList();
+  showModal("success", "Product Removed", "Product removed from purchase list.");
+}
+
+// Clear only the product form (not supplier info)
+function clearProductForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'purchasePrice', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
+  
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
+  
+  // Reset tax options
+  document.getElementById("taxNo").checked = true;
+  taxNoOption.classList.add("selected");
+  taxYesOption.classList.remove("selected");
+  taxInputContainer.classList.remove("show");
+  
+  // Reset product type to existing
+  productType.value = 'existing';
+  
+  // Reset margin display
+  marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
+  
+  // Clear all error messages
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
+// Clear entire form including supplier info
+function clearEntireForm() {
+  clearProductForm();
+  
+  // Clear supplier fields
+  supplierNameInput.value = '';
+  supplierDetailsInput.value = '';
+  purchaseInvoiceInput.value = '';
+  purchaseDateInput.value = new Date().toISOString().split('T')[0];
+  
+  // Clear products list
+  productsInPurchase = [];
+  updateProductsList();
+  
+  // Reset current supplier
+  currentSupplierId = null;
 }
 
 // Expire date modal functionality
@@ -1435,7 +1833,7 @@ function validateBatchNo(batchNo) {
   return batchNoRegex.test(batchNo);
 }
 
-function validateForm() {
+function validateProductForm() {
   let isValid = true;
   
   // Reset error messages
@@ -1492,37 +1890,167 @@ function validateForm() {
   return isValid;
 }
 
-// Function to clear form fields
-function clearForm() {
-  const fieldsToClear = [
-    'productId', 'productName', 'details', 'price', 'purchasePrice', 'count', 
-    'batchNo', 'expireDate', 'location'
-  ];
+function validateSupplierForm() {
+  let isValid = true;
   
-  fieldsToClear.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (fieldId !== 'productId' || productType.value === 'existing') {
-      field.value = '';
-    }
-  });
+  // Reset error messages
+  document.getElementById('supplierNameError').style.display = 'none';
   
-  // Reset tax options
-  document.getElementById("taxNo").checked = true;
-  taxNoOption.classList.add("selected");
-  taxYesOption.classList.remove("selected");
-  taxInputContainer.classList.remove("show");
+  // Check required fields
+  if (!supplierNameInput.value.trim()) {
+    document.getElementById('supplierNameError').textContent = 'Supplier name is required';
+    document.getElementById('supplierNameError').style.display = 'block';
+    isValid = false;
+  }
   
-  // Reset product type to existing
-  productType.value = 'existing';
+  if (!purchaseDateInput.value) {
+    showModal("error", "Validation Error", "Purchase date is required");
+    isValid = false;
+  }
   
-  // Reset margin display
-  marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
-  
-  // Clear all error messages
-  document.querySelectorAll('.error-message').forEach(el => {
-    el.style.display = 'none';
-  });
+  return isValid;
 }
+
+// Add product to list button
+addProductToListBtn.addEventListener("click", addProductToList);
+
+// Add another product button
+addAnotherProductBtn.addEventListener("click", function() {
+  clearProductForm();
+  showModal("success", "Form Cleared", "Product form cleared. You can now add another product.");
+});
+
+// Finish purchase and upload all data
+finishPurchaseBtn.addEventListener("click", async function() {
+  // Validate supplier form
+  if (!validateSupplierForm()) {
+    return;
+  }
+  
+  // Check if there are products in the purchase
+  if (productsInPurchase.length === 0) {
+    showModal("error", "No Products", "Please add at least one product to the purchase.");
+    return;
+  }
+  
+  // Disable button to prevent duplicate submissions
+  finishPurchaseBtn.disabled = true;
+  finishPurchaseBtn.textContent = 'Uploading...';
+
+  try {
+    // First, create or get supplier
+    const supplierBody = {
+      "Supplier Name": supplierNameInput.value,
+      "Supplier Details": supplierDetailsInput.value,
+      "Purchase Invoice": purchaseInvoiceInput.value,
+      "Purchase Date": purchaseDateInput.value,
+      "ShopID": ShopID
+    };
+    
+    // Check if supplier already exists
+    const supplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Supplier Name","type":"contains","value":"${supplierNameInput.value}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+      headers:{Authorization:`Token ${API_KEY}`}
+    });
+    
+    if (!supplierRes.ok) {
+      throw new Error(`API error: ${supplierRes.status}`);
+    }
+    
+    const supplierData = await supplierRes.json();
+    let supplierId;
+    
+    if (supplierData.results.length > 0) {
+      // Use existing supplier
+      supplierId = supplierData.results[0].id;
+    } else {
+      // Create new supplier
+      const createSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true`, {
+        method:"POST",
+        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+        body:JSON.stringify(supplierBody)
+      });
+      
+      if (!createSupplierRes.ok) {
+        throw new Error(`API error: ${createSupplierRes.status}`);
+      }
+      
+      const newSupplier = await createSupplierRes.json();
+      supplierId = newSupplier.id;
+    }
+    
+    // Now add all products to inventory with supplier reference
+    for (const product of productsInPurchase) {
+      // Add product if it's new
+      if(productType.value==="new"){
+        try{
+          // Check if product already exists in this shop
+          const productRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${product.productId}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+            headers:{Authorization:`Token ${API_KEY}`}
+          });
+          
+          if (!productRes.ok) {
+            throw new Error(`API error: ${productRes.status}`);
+          }
+          
+          const productData = await productRes.json();
+          const existing = productData.results.find(p=>String(p["Product ID"])===String(product.productId));
+          
+          if(!existing){
+            const productBody = {
+              "Product ID": product.productId,
+              "Product Name": product.productName,
+              "Details": product.details,
+              "Price": product.price,
+              "Purchase Price": product.purchasePrice,
+              "Tax Included": product.taxIncluded,
+              "Tax Percentage": product.taxPercentage,
+              "ShopID": ShopID
+            };
+            await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+              method:"POST",
+              headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+              body:JSON.stringify(productBody)
+            });
+          }
+        }catch(e){ 
+          console.error(e); 
+          // Continue with inventory even if product creation fails
+        }
+      }
+
+      // Add to inventory with supplier reference
+      const inventoryBody = {
+        "Product ID": product.productId,
+        "Product Name": product.productName,
+        "Count": product.count,
+        "Batch No": product.batchNo,
+        "Expire Date": product.expireDate,
+        "Date": product.date,
+        "Location": product.location,
+        "Purchase Price": product.purchasePrice,
+        "Tax Included": product.taxIncluded,
+        "Tax Percentage": product.taxPercentage,
+        "Supplier ID": supplierId,
+        "ShopID": ShopID
+      };
+
+      await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+        method:"POST",
+        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+        body:JSON.stringify(inventoryBody)
+      });
+    }
+
+    showModal("success", "Purchase Complete", `✅ ${productsInPurchase.length} products added to inventory with supplier information!`);
+    clearEntireForm();
+  } catch (e) {
+    console.error(e);
+    showModal("error", "Error", "Error completing purchase.");
+  } finally {
+    finishPurchaseBtn.disabled = false;
+    finishPurchaseBtn.textContent = 'Finish & Upload Purchase';
+  }
+});
 
 // Add real-time validation
 document.getElementById('batchNo').addEventListener('input', function() {
@@ -1553,7 +2081,9 @@ document.getElementById('batchNo').addEventListener('input', function() {
     app.style.display = "block";
 
     if(role.toLowerCase()!=="manager"){
-      addBtn.disabled = true;
+      addProductToListBtn.disabled = true;
+      addAnotherProductBtn.disabled = true;
+      finishPurchaseBtn.disabled = true;
       Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
       showModal("error", "Access Denied", "Only managers can add products and inventory.");
       return;
@@ -1628,7 +2158,7 @@ async function fetchProduct(pid){
       batchNoInput.value = nextBatchNo;
       
       // Clear any previous errors
-      document.getElementById("productIdError").style.display = "none";
+      document.getElementById("productIdError").style.display = 'none';
       
       // Show success message
       const successMsg = document.createElement('div');
@@ -1697,99 +2227,6 @@ function stopCamera(){
   }
   readerContainer.style.display="none";
 }
-
-// ✅ 5. Add to Inventory
-addBtn.addEventListener("click", async ()=>{
-  // Validate form before submission
-  if (!validateForm()) {
-    return;
-  }
-  
-  const pid = productIdInput.value.trim();
-  if(!pid){ 
-    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
-    document.getElementById("productIdError").style.display = "block";
-    return; 
-  }
-
-  // Disable button to prevent duplicate submissions
-  addBtn.disabled = true;
-  addBtn.textContent = 'Adding...';
-
-  try {
-    // Add product if it's new (and not duplicate in current shop)
-    if(productType.value==="new"){
-      try{
-        // Check if product already exists in this shop
-        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
-          headers:{Authorization:`Token ${API_KEY}`}
-        });
-        
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
-        
-        if(!existing){
-          const body = {
-            "Product ID": pid,
-            "Product Name": document.getElementById("productName").value,
-            "Details": document.getElementById("details").value,
-            "Price": document.getElementById("price").value,
-            "Purchase Price": document.getElementById("purchasePrice").value,
-            "Tax Included": document.getElementById("taxYes").checked ? "Yes" : "No",
-            "Tax Percentage": document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
-            "ShopID": ShopID
-          };
-          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-            method:"POST",
-            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-            body:JSON.stringify(body)
-          });
-          showModal("success", "Product Added", "✅ Product added to Product Table!");
-        }
-      }catch(e){ 
-        console.error(e); 
-        showModal("error", "Error", "Error adding product to Product Table.");
-        addBtn.disabled = false;
-        addBtn.textContent = 'Add to Inventory';
-        return;
-      }
-    }
-
-    // Add to inventory
-    const inventoryBody = {
-      "Product ID": pid,
-      "Product Name": document.getElementById("productName").value,
-      "Count": document.getElementById("count").value,
-      "Batch No": document.getElementById("batchNo").value,
-      "Expire Date": document.getElementById("expireDate").value,
-      "Date": document.getElementById("date").value,
-      "Location": document.getElementById("location").value,
-      "Purchase Price": document.getElementById("purchasePrice").value,
-      "Tax Included": document.getElementById("taxYes").checked ? "Yes" : "No",
-      "Tax Percentage": document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
-      "ShopID": ShopID
-    };
-
-    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-      method:"POST",
-      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-      body:JSON.stringify(inventoryBody)
-    });
-
-    showModal("success", "Success", "✅ Product added to Inventory!");
-    clearForm();
-  } catch (e) {
-    console.error(e);
-    showModal("error", "Error", "Error adding to inventory.");
-  } finally {
-    addBtn.disabled = false;
-    addBtn.textContent = 'Add to Inventory';
-  }
-});
 </script>
 </body>
 </html>
