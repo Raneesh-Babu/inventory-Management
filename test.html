@@ -737,6 +737,42 @@ button:disabled {
   display: block;
 }
 
+.tax-breakdown {
+  display: none;
+  margin-top: 10px;
+  padding: 12px;
+  background-color: rgba(67, 97, 238, 0.05);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary);
+}
+
+.tax-breakdown.show {
+  display: block;
+}
+
+.tax-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.tax-breakdown-row:last-child {
+  margin-bottom: 0;
+  font-weight: 600;
+  border-top: 1px solid var(--border);
+  padding-top: 5px;
+}
+
+.tax-breakdown-label {
+  color: var(--dark);
+}
+
+.tax-breakdown-value {
+  color: var(--primary);
+  font-weight: 500;
+}
+
 .margin-display {
   margin-top: 8px;
   padding: 10px;
@@ -1091,6 +1127,22 @@ button:disabled {
           <input type="number" id="purchasePrice" class="price-input" min="0" step="0.01" placeholder="0.00" required>
         </div>
         <div id="purchasePriceError" class="error-message"></div>
+        
+        <!-- Tax Breakdown -->
+        <div class="tax-breakdown" id="taxBreakdown">
+          <div class="tax-breakdown-row">
+            <span class="tax-breakdown-label">Price without Tax:</span>
+            <span class="tax-breakdown-value" id="priceWithoutTax">₹ 0.00</span>
+          </div>
+          <div class="tax-breakdown-row">
+            <span class="tax-breakdown-label">Tax Amount:</span>
+            <span class="tax-breakdown-value" id="taxAmount">₹ 0.00</span>
+          </div>
+          <div class="tax-breakdown-row">
+            <span class="tax-breakdown-label">Total Purchase Price:</span>
+            <span class="tax-breakdown-value" id="totalWithTax">₹ 0.00</span>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -1344,6 +1396,12 @@ const taxPercentageSelect = document.getElementById("taxPercentage");
 const marginDisplay = document.getElementById("marginDisplay");
 const batchNoInput = document.getElementById("batchNo");
 
+// Tax breakdown elements
+const taxBreakdown = document.getElementById("taxBreakdown");
+const priceWithoutTaxElement = document.getElementById("priceWithoutTax");
+const taxAmountElement = document.getElementById("taxAmount");
+const totalWithTaxElement = document.getElementById("totalWithTax");
+
 // Supplier elements
 const supplierNameInput = document.getElementById("supplierName");
 const supplierDetailsInput = document.getElementById("supplierDetails");
@@ -1408,6 +1466,29 @@ function calculateMargin() {
   const marginPercentage = ((marginValue / purchasePrice) * 100).toFixed(2);
   
   marginDisplay.innerHTML = `Margin: <span class="margin-value">₹ ${marginValue.toFixed(2)}</span> (<span class="margin-percentage">${marginPercentage}%</span>)`;
+}
+
+// Calculate and display tax breakdown
+function calculateTaxBreakdown() {
+  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
+  const taxPercentage = parseFloat(taxPercentageSelect.value) || 0;
+  
+  if (taxPercentage > 0 && document.getElementById("taxYes").checked) {
+    // Show tax breakdown
+    taxBreakdown.classList.add('show');
+    
+    // Calculate values
+    const priceWithoutTax = purchasePrice / (1 + (taxPercentage / 100));
+    const taxAmount = purchasePrice - priceWithoutTax;
+    
+    // Update display
+    priceWithoutTaxElement.textContent = `₹ ${priceWithoutTax.toFixed(2)}`;
+    taxAmountElement.textContent = `₹ ${taxAmount.toFixed(2)} (${taxPercentage}%)`;
+    totalWithTaxElement.textContent = `₹ ${purchasePrice.toFixed(2)}`;
+  } else {
+    // Hide tax breakdown
+    taxBreakdown.classList.remove('show');
+  }
 }
 
 // Calculate purchase price with tax
@@ -1573,8 +1654,9 @@ function editProduct(index) {
   document.getElementById("expireDate").value = product.expireDate;
   document.getElementById("location").value = product.location;
   
-  // Calculate and display margin
+  // Calculate and display margin and tax breakdown
   calculateMargin();
+  calculateTaxBreakdown();
   
   // Remove product from list (will be re-added if saved)
   productsInPurchase.splice(index, 1);
@@ -1609,6 +1691,7 @@ function clearProductForm() {
   taxNoOption.classList.add("selected");
   taxYesOption.classList.remove("selected");
   taxInputContainer.classList.remove("show");
+  taxBreakdown.classList.remove("show");
   
   // Reset product type to existing
   productType.value = 'existing';
@@ -1692,6 +1775,7 @@ taxYesOption.addEventListener("click", function() {
   taxYesOption.classList.add("selected");
   taxNoOption.classList.remove("selected");
   taxInputContainer.classList.add("show");
+  calculateTaxBreakdown();
 });
 
 taxNoOption.addEventListener("click", function() {
@@ -1699,15 +1783,21 @@ taxNoOption.addEventListener("click", function() {
   taxNoOption.classList.add("selected");
   taxYesOption.classList.remove("selected");
   taxInputContainer.classList.remove("show");
+  taxBreakdown.classList.remove("show");
 });
 
 // Set default tax option
 taxNoOption.classList.add("selected");
 
 // Calculate margin when prices change
-purchasePriceInput.addEventListener("input", calculateMargin);
+purchasePriceInput.addEventListener("input", function() {
+  calculateMargin();
+  calculateTaxBreakdown();
+});
+
 priceInput.addEventListener("input", calculateMargin);
-taxPercentageSelect.addEventListener("change", calculateMargin);
+
+taxPercentageSelect.addEventListener("change", calculateTaxBreakdown);
 
 // Modal function
 function showModal(type, title, message) {
@@ -2150,8 +2240,9 @@ async function fetchProduct(pid){
         taxInputContainer.classList.remove("show");
       }
       
-      // Calculate margin
+      // Calculate margin and tax breakdown
       calculateMargin();
+      calculateTaxBreakdown();
       
       // Get next batch number for this product
       const nextBatchNo = await getNextBatchNumber(pid);
