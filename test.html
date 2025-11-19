@@ -7,7 +7,7 @@
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* All the previous CSS remains the same, just updating the JavaScript */
+/* All CSS remains the same as previous version */
 :root {
   --primary: #4361ee;
   --primary-dark: #3a56d4;
@@ -1592,7 +1592,7 @@ const INVENTORY_TABLE = 734795;
 const SUPPLIER_TABLE = 744412;
 const TRANSACTION_TABLE = 745465;
 
-// Field Names Configuration - UPDATED with Supplier ID field
+// Field Names Configuration
 const FIELD_NAMES = {
   // User Table Fields
   USER: {
@@ -1629,9 +1629,9 @@ const FIELD_NAMES = {
     SHOP_ID: "ShopID"
   },
   
-  // Supplier Table Fields - UPDATED with Supplier ID field
+  // Supplier Table Fields
   SUPPLIER: {
-    SUPPLIER_ID: "Supplier ID", // NEW: Supplier ID column
+    SUPPLIER_ID: "Supplier ID",
     SUPPLIER_NAME: "Supplier Name",
     SUPPLIER_DETAILS: "Supplier Details",
     SHOP_ID: "ShopID"
@@ -1747,7 +1747,10 @@ purchaseDateInput.value = new Date().toISOString().split('T')[0];
 currentShopElement.textContent = ShopID;
 searchShopInfo.textContent = ShopID;
 
-// Fetch suppliers from the supplier table - UPDATED to include Supplier ID
+// Track if we're adding a new product
+let isNewProduct = false;
+
+// Fetch suppliers from the supplier table
 async function fetchSuppliers() {
   try {
     supplierSelection.innerHTML = '<option value="">Loading suppliers...</option>';
@@ -1783,9 +1786,6 @@ async function fetchSuppliers() {
     
     supplierSelection.innerHTML = optionsHTML;
     
-    // Show success message
-    showModal("success", "Suppliers Loaded", `Loaded ${allSuppliers.length} suppliers successfully.`);
-    
   } catch (error) {
     console.error("Error fetching suppliers:", error);
     supplierSelection.innerHTML = '<option value="">Error loading suppliers</option>';
@@ -1793,7 +1793,7 @@ async function fetchSuppliers() {
   }
 }
 
-// Update supplier details panel when a supplier is selected - UPDATED to show Supplier ID
+// Update supplier details panel when a supplier is selected
 function updateSupplierDetailsPanel(supplierId) {
   const selectedOption = supplierSelection.querySelector(`option[value="${supplierId}"]`);
   
@@ -2013,7 +2013,8 @@ function addProductToList() {
     batchNo: document.getElementById("batchNo").value,
     expireDate: document.getElementById("expireDate").value,
     date: document.getElementById("date").value,
-    location: document.getElementById("location").value
+    location: document.getElementById("location").value,
+    isNewProduct: isNewProduct // Track if this is a new product
   };
   
   const marginValue = product.price - product.purchasePrice;
@@ -2104,6 +2105,10 @@ function editProduct(index) {
   document.getElementById("expireDate").value = product.expireDate;
   document.getElementById("location").value = product.location;
   
+  // Set product type based on whether it was marked as new
+  productType.value = product.isNewProduct ? "new" : "existing";
+  isNewProduct = product.isNewProduct;
+  
   calculateMargin();
   calculateTaxBreakdown();
   
@@ -2143,6 +2148,7 @@ function clearProductForm() {
   taxBreakdown.classList.remove("show");
   
   productType.value = 'existing';
+  isNewProduct = false;
   marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
   
   document.querySelectorAll('.error-message').forEach(el => {
@@ -2472,7 +2478,23 @@ addAnotherProductBtn.addEventListener("click", function() {
   showModal("success", "Form Cleared", "Product form cleared. You can now add another product.");
 });
 
-// Finish purchase and upload all data - UPDATED to use Supplier ID from the table
+// Handle product type change
+productType.addEventListener("change", function() {
+  isNewProduct = this.value === "new";
+  if (isNewProduct) {
+    productIdInput.value = "PRD-" + Date.now();
+    document.getElementById("productName").value = "";
+    document.getElementById("details").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("purchasePrice").value = "";
+    batchNoInput.value = "1";
+  } else {
+    productIdInput.value = "";
+    batchNoInput.value = "";
+  }
+});
+
+// Finish purchase and upload all data - FIXED VERSION
 finishPurchaseBtn.addEventListener("click", async function() {
   if (!validateSupplierForm()) {
     return;
@@ -2489,7 +2511,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
   try {
     let supplierId = currentSupplierId;
     let supplierName = "";
-    let supplierCustomId = ""; // This will store the Supplier ID from the table
+    let supplierCustomId = "";
     const selectedSupplierId = supplierSelection.value;
     const newSupplierName = supplierNameInput.value.trim();
     
@@ -2500,7 +2522,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
       if (selectedOption && selectedOption.dataset.supplier) {
         const supplier = JSON.parse(selectedOption.dataset.supplier);
         supplierName = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '';
-        supplierCustomId = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || ''; // Get Supplier ID from table
+        supplierCustomId = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || '';
       }
     } 
     // If new supplier name is provided, create new supplier
@@ -2509,7 +2531,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
       supplierCustomId = "SUP-" + Date.now();
       
       const supplierBody = {
-        [FIELD_NAMES.SUPPLIER.SUPPLIER_ID]: supplierCustomId, // Set the Supplier ID
+        [FIELD_NAMES.SUPPLIER.SUPPLIER_ID]: supplierCustomId,
         [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: newSupplierName,
         [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
         [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
@@ -2528,14 +2550,15 @@ finishPurchaseBtn.addEventListener("click", async function() {
       const newSupplier = await createSupplierRes.json();
       supplierId = newSupplier.id;
       supplierName = newSupplierName;
-      supplierCustomId = supplierCustomId; // Use the generated Supplier ID
+      supplierCustomId = supplierCustomId;
     }
     
-    // Now add all products to inventory with supplier reference
+    // Now add all products to inventory and product tables
     for (const product of productsInPurchase) {
-      // Add product if it's new
-      if(productType.value==="new"){
-        try{
+      // Add product to Product table if it's new
+      if (product.isNewProduct) {
+        try {
+          // Check if product already exists in this shop
           const productRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${product.productId}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
             headers:{Authorization:`Token ${API_KEY}`}
           });
@@ -2558,14 +2581,21 @@ finishPurchaseBtn.addEventListener("click", async function() {
               [FIELD_NAMES.PRODUCT.TAX_PERCENTAGE]: product.taxPercentage,
               [FIELD_NAMES.PRODUCT.SHOP_ID]: ShopID
             };
-            await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+            
+            const createProductRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
               method:"POST",
               headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
               body:JSON.stringify(productBody)
             });
+            
+            if (!createProductRes.ok) {
+              throw new Error(`API error: ${createProductRes.status}`);
+            }
+            
+            console.log("New product added to Product table:", product.productId);
           }
-        }catch(e){ 
-          console.error(e); 
+        } catch(e) { 
+          console.error("Error adding product to Product table:", e); 
         }
       }
 
@@ -2585,16 +2615,22 @@ finishPurchaseBtn.addEventListener("click", async function() {
         [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
       };
 
-      await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      const inventoryRes = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
         method:"POST",
         headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
         body:JSON.stringify(inventoryBody)
       });
+
+      if (!inventoryRes.ok) {
+        throw new Error(`API error: ${inventoryRes.status}`);
+      }
+
+      console.log("Product added to Inventory table:", product.productId);
     }
 
     // Create transaction record with Supplier ID from the table
     const transactionBody = {
-      [FIELD_NAMES.TRANSACTION.SUPPLIER_ID]: supplierCustomId, // Use the Supplier ID from the table
+      [FIELD_NAMES.TRANSACTION.SUPPLIER_ID]: supplierCustomId,
       [FIELD_NAMES.TRANSACTION.SUPPLIER_NAME]: supplierName,
       [FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE]: "Purchase",
       [FIELD_NAMES.TRANSACTION.INVOICE_NUMBER]: purchaseInvoiceInput.value,
@@ -2603,21 +2639,32 @@ finishPurchaseBtn.addEventListener("click", async function() {
       [FIELD_NAMES.TRANSACTION.SHOP_ID]: ShopID
     };
 
-    await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true`, {
+    const transactionRes = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true`, {
       method:"POST",
       headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
       body:JSON.stringify(transactionBody)
     });
 
-    showModal("success", "Purchase Complete", `✅ ${productsInPurchase.length} products added to inventory! Supplier: ${supplierCustomId} - ${supplierName}. Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}. Transaction recorded successfully.`);
+    if (!transactionRes.ok) {
+      throw new Error(`API error: ${transactionRes.status}`);
+    }
+
+    showModal("success", "Purchase Complete", 
+      `✅ Successfully uploaded ${productsInPurchase.length} products!<br>
+       - Added to Inventory table: ${productsInPurchase.length} items<br>
+       - Added to Product table: ${productsInPurchase.filter(p => p.isNewProduct).length} new products<br>
+       - Supplier: ${supplierCustomId} - ${supplierName}<br>
+       - Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}<br>
+       - Transaction recorded successfully.`);
+    
     clearEntireForm();
     
     // Refresh suppliers list
     fetchSuppliers();
     
   } catch (e) {
-    console.error(e);
-    showModal("error", "Error", "Error completing purchase.");
+    console.error("Error completing purchase:", e);
+    showModal("error", "Upload Error", "Error completing purchase. Please check console for details.");
   } finally {
     finishPurchaseBtn.disabled = false;
     finishPurchaseBtn.textContent = 'Finish & Upload Purchase';
@@ -2667,21 +2714,6 @@ document.getElementById('batchNo').addEventListener('input', function() {
     showModal("error", "Error", "Error fetching user information.");
   }
 })();
-
-// Handle Product Type
-productType.addEventListener("change", ()=>{
-  if(productType.value==="new"){
-    productIdInput.value = "PRD-" + Date.now();
-    document.getElementById("productName").value = "";
-    document.getElementById("details").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("purchasePrice").value = "";
-    batchNoInput.value = "1";
-  }else{
-    productIdInput.value = "";
-    batchNoInput.value = "";
-  }
-});
 
 // Fetch Product Details (manual fetch or scan) - Only from current shop
 async function fetchProduct(pid){
