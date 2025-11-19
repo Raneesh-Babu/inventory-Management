@@ -7,7 +7,7 @@
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* Enhanced CSS with better styling and validations */
+/* All CSS remains the same as previous version */
 :root {
   --primary: #4361ee;
   --primary-dark: #3a56d4;
@@ -37,7 +37,7 @@ body {
 }
 
 .container { 
-  max-width: 900px; 
+  max-width: 1200px; 
   margin: auto; 
   background: white; 
   padding: 30px; 
@@ -229,7 +229,7 @@ button:disabled {
 }
 
 #status {
-  display: none; /* Hidden as requested */
+  display: none;
 }
 
 #loginPrompt {
@@ -262,7 +262,6 @@ button:disabled {
   color: var(--danger);
 }
 
-/* Price input with rupee symbol */
 .price-container {
   position: relative;
 }
@@ -282,7 +281,6 @@ button:disabled {
   padding-left: 35px !important;
 }
 
-/* Expire Date Quick Select */
 .expire-date-container {
   display: flex;
   gap: 10px;
@@ -313,7 +311,6 @@ button:disabled {
   transform: translateY(-2px);
 }
 
-/* Expire Date Modal */
 .expire-modal {
   display: none;
   position: fixed;
@@ -491,7 +488,6 @@ button:disabled {
   background: #05c290;
 }
 
-/* Search Modal Styles */
 .search-modal {
   display: none;
   position: fixed;
@@ -605,12 +601,10 @@ button:disabled {
   color: var(--gray);
 }
 
-/* Hidden shop info sections */
 .shop-info {
   display: none !important;
 }
 
-/* Modal Styles */
 .modal {
   display: none;
   position: fixed;
@@ -685,7 +679,410 @@ button:disabled {
   background: var(--primary-dark);
 }
 
-/* Responsive adjustments */
+.purchase-price-container {
+  position: relative;
+}
+
+.tax-options {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.tax-option {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  flex: 1;
+}
+
+.tax-option:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.tax-option.selected {
+  background-color: rgba(67, 97, 238, 0.1);
+  border-color: var(--primary);
+}
+
+.tax-option input {
+  margin: 0;
+  width: auto;
+}
+
+.tax-option label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.tax-input-container {
+  display: none;
+  margin-top: 8px;
+}
+
+.tax-input-container.show {
+  display: block;
+}
+
+.tax-breakdown {
+  display: none;
+  margin-top: 10px;
+  padding: 12px;
+  background-color: rgba(67, 97, 238, 0.05);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary);
+}
+
+.tax-breakdown.show {
+  display: block;
+}
+
+.tax-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.tax-breakdown-row:last-child {
+  margin-bottom: 0;
+  font-weight: 600;
+  border-top: 1px solid var(--border);
+  padding-top: 5px;
+}
+
+.tax-breakdown-label {
+  color: var(--dark);
+}
+
+.tax-breakdown-value {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.margin-display {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: rgba(6, 214, 160, 0.1);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--success);
+  font-weight: 500;
+}
+
+.margin-display .margin-value {
+  font-weight: 600;
+  color: var(--success);
+}
+
+.margin-display .margin-percentage {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.supplier-section {
+  background-color: rgba(67, 97, 238, 0.05);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title i {
+  font-size: 20px;
+}
+
+.supplier-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.supplier-actions button {
+  width: auto;
+  min-width: 150px;
+}
+
+#addAnotherProductBtn {
+  background: var(--success);
+}
+
+#addAnotherProductBtn:hover {
+  background: #05c290;
+}
+
+#finishPurchaseBtn {
+  background: #8a2be2;
+}
+
+#finishPurchaseBtn:hover {
+  background: #7b1fa2;
+}
+
+.products-list {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.products-list-header {
+  background-color: var(--primary);
+  color: white;
+  padding: 12px 15px;
+  font-weight: 600;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.products-list-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.product-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-item:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.product-item-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.product-item-actions button {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.edit-product-btn {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+.edit-product-btn:hover {
+  background: #ffc94d;
+}
+
+.remove-product-btn {
+  background: var(--danger);
+}
+
+.remove-product-btn:hover {
+  background: #e0355f;
+}
+
+.no-products {
+  padding: 20px;
+  text-align: center;
+  color: var(--gray);
+  font-style: italic;
+}
+
+.purchase-summary {
+  background-color: rgba(67, 97, 238, 0.05);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin-top: 20px;
+  border-left: 4px solid var(--success);
+}
+
+.summary-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.summary-item {
+  background: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.summary-value.total-invoice {
+  color: var(--success);
+  font-size: 22px;
+}
+
+.summary-breakdown {
+  background: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.breakdown-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+  font-weight: 600;
+  color: var(--success);
+  font-size: 16px;
+}
+
+.breakdown-label {
+  color: var(--dark);
+}
+
+.breakdown-value {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.supplier-selection-container {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.supplier-select-group {
+  flex: 1;
+}
+
+.supplier-refresh-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.supplier-refresh-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.supplier-details-panel {
+  background: rgba(67, 97, 238, 0.05);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-top: 10px;
+  border-left: 4px solid var(--primary);
+  display: none;
+}
+
+.supplier-details-panel.show {
+  display: block;
+}
+
+.supplier-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.supplier-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.supplier-detail-label {
+  color: var(--dark);
+  font-weight: 500;
+}
+
+.supplier-detail-value {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.new-supplier-btn {
+  background: var(--success);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-supplier-btn:hover {
+  background: #05c290;
+  transform: translateY(-2px);
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 20px;
@@ -731,6 +1128,44 @@ button:disabled {
   .period-btn {
     min-width: auto;
   }
+  
+  .tax-options {
+    flex-direction: column;
+  }
+  
+  .supplier-actions {
+    flex-direction: column;
+  }
+  
+  .products-list-header, .product-item {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  
+  .products-list-header {
+    display: none;
+  }
+  
+  .product-item {
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .supplier-selection-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .supplier-refresh-btn, .new-supplier-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -760,7 +1195,6 @@ button:disabled {
   }
 }
 
-/* For larger screens - 2 column layout */
 @media (min-width: 769px) {
   .form-row {
     flex-wrap: wrap;
@@ -786,6 +1220,79 @@ button:disabled {
     <!-- Shop info section is hidden but still present for functionality -->
     <div class="shop-info">
       Current Shop: <span id="currentShop">Loading...</span>
+    </div>
+    
+    <!-- Supplier Section -->
+    <div class="supplier-section">
+      <div class="section-title">
+        <i class="fas fa-truck"></i> Supplier Information
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="supplierSelection" class="field-required">Select Supplier:</label>
+          <div class="supplier-selection-container">
+            <div class="supplier-select-group">
+              <select id="supplierSelection" required>
+                <option value="">Loading suppliers...</option>
+              </select>
+              <div id="supplierSelectionError" class="error-message"></div>
+            </div>
+            <button id="refreshSuppliersBtn" class="supplier-refresh-btn" title="Refresh Suppliers">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <button id="newSupplierBtn" class="new-supplier-btn" title="Add New Supplier">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          
+          <!-- Supplier Details Panel -->
+          <div class="supplier-details-panel" id="supplierDetailsPanel">
+            <div class="supplier-detail-row">
+              <span class="supplier-detail-label">Supplier ID:</span>
+              <span class="supplier-detail-value" id="selectedSupplierId">-</span>
+            </div>
+            <div class="supplier-detail-row">
+              <span class="supplier-detail-label">Supplier Name:</span>
+              <span class="supplier-detail-value" id="selectedSupplierName">-</span>
+            </div>
+            <div class="supplier-detail-row">
+              <span class="supplier-detail-label">Details:</span>
+              <span class="supplier-detail-value" id="selectedSupplierDetails">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="supplierName">Or Add New Supplier:</label>
+          <input type="text" id="supplierName" placeholder="Enter new supplier name">
+          <div id="supplierNameError" class="error-message"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="supplierDetails">Supplier Details:</label>
+          <textarea id="supplierDetails" placeholder="Supplier address, contact info, etc."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="purchaseInvoice" class="field-required">Purchase Invoice No:</label>
+          <input type="text" id="purchaseInvoice" placeholder="Invoice number (required)" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="purchaseDate" class="field-required">Purchase Date:</label>
+          <input type="date" id="purchaseDate" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Information Section -->
+    <div class="section-title">
+      <i class="fas fa-box"></i> Product Information
     </div>
     
     <div class="form-row">
@@ -817,7 +1324,7 @@ button:disabled {
       </div>
 
       <div class="form-group">
-        <label for="price" class="field-required">Price:</label>
+        <label for="price" class="field-required">Selling Price:</label>
         <div class="price-container">
           <span class="rupee-symbol">₹</span>
           <input type="number" id="price" class="price-input" min="0" step="0.01" placeholder="0.00" required>
@@ -827,8 +1334,68 @@ button:disabled {
     </div>
 
     <div class="form-row">
+      <div class="form-group">
+        <label for="purchasePrice" class="field-required">Purchase Price:</label>
+        <div class="purchase-price-container">
+          <span class="rupee-symbol">₹</span>
+          <input type="number" id="purchasePrice" class="price-input" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+        <div id="purchasePriceError" class="error-message"></div>
+        
+        <!-- Tax Breakdown -->
+        <div class="tax-breakdown" id="taxBreakdown">
+          <div class="tax-breakdown-row">
+            <span class="tax-breakdown-label">Price without Tax:</span>
+            <span class="tax-breakdown-value" id="priceWithoutTax">₹ 0.00</span>
+          </div>
+          <div class="tax-breakdown-row">
+            <span class="tax-breakdown-label">Tax Amount:</span>
+            <span class="tax-breakdown-value" id="taxAmount">₹ 0.00</span>
+          </div>
+          <div class="tax-breakdown-row">
+            <span class="tax-breakdown-label">Total Purchase Price:</span>
+            <span class="tax-breakdown-value" id="totalWithTax">₹ 0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Tax Included:</label>
+        <div class="tax-options">
+          <div class="tax-option" id="taxYesOption">
+            <input type="radio" id="taxYes" name="taxIncluded" value="yes">
+            <label for="taxYes">Yes</label>
+          </div>
+          <div class="tax-option" id="taxNoOption">
+            <input type="radio" id="taxNo" name="taxIncluded" value="no" checked>
+            <label for="taxNo">No</label>
+          </div>
+        </div>
+        
+        <div class="tax-input-container" id="taxInputContainer">
+          <label for="taxPercentage">GST Percentage:</label>
+          <select id="taxPercentage">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18">18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <div class="margin-display" id="marginDisplay">
+          Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
       <div class="form-group full-width">
-        <label for="details">Details:</label>
+        <label for="details">Product Details:</label>
         <textarea id="details"></textarea>
       </div>
     </div>
@@ -842,7 +1409,7 @@ button:disabled {
 
       <div class="form-group">
         <label for="batchNo" class="field-required">Batch No:</label>
-        <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required>
+        <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required readonly>
         <div id="batchNoError" class="error-message"></div>
       </div>
     </div>
@@ -860,7 +1427,7 @@ button:disabled {
       </div>
 
       <div class="form-group">
-        <label for="date" class="field-required">Date:</label>
+        <label for="date" class="field-required">Date Added:</label>
         <input type="text" id="date" readonly required>
       </div>
     </div>
@@ -873,9 +1440,60 @@ button:disabled {
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group full-width">
-        <button id="addBtn">Add to Inventory</button>
+    <div class="supplier-actions">
+      <button id="addProductToListBtn">Add Product to List</button>
+      <button id="addAnotherProductBtn">Add Another Product</button>
+      <button id="finishPurchaseBtn">Finish & Upload Purchase</button>
+    </div>
+
+    <!-- Products List Section -->
+    <div class="section-title">
+      <i class="fas fa-list"></i> Products in Current Purchase
+    </div>
+    
+    <div class="products-list">
+      <div class="products-list-header">
+        <div>Product ID</div>
+        <div>Product Name</div>
+        <div>Batch No</div>
+        <div>Count</div>
+        <div>Purchase Price</div>
+        <div>Selling Price</div>
+        <div>Actions</div>
+      </div>
+      <div class="products-list-body" id="productsListBody">
+        <div class="no-products">No products added yet</div>
+      </div>
+    </div>
+
+    <!-- Purchase Summary Section -->
+    <div class="purchase-summary" id="purchaseSummary" style="display: none;">
+      <div class="summary-title">
+        <i class="fas fa-file-invoice-dollar"></i> Purchase Summary
+      </div>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Total Price (Excl. Tax)</div>
+          <div class="summary-value" id="totalPriceExclTax">₹ 0.00</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Tax Amount</div>
+          <div class="summary-value" id="totalTaxAmount">₹ 0.00</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Invoice Value</div>
+          <div class="summary-value total-invoice" id="totalInvoiceValue">₹ 0.00</div>
+        </div>
+      </div>
+      
+      <div class="summary-breakdown">
+        <div class="breakdown-title">
+          <i class="fas fa-receipt"></i> Tax Breakdown
+        </div>
+        <div id="taxBreakdownDetails">
+          <!-- Tax breakdown will be populated here -->
+        </div>
       </div>
     </div>
   </div>
@@ -916,7 +1534,7 @@ button:disabled {
         <span class="slider-label">Duration:</span>
         <span class="slider-value" id="sliderValue">1</span>
       </div>
-      <input type="range" min="1" max="11" value="1" class="slider" id="durationSlider">
+      <input type="range" min="1" max="31" value="1" class="slider" id="durationSlider">
     </div>
     
     <div class="expire-result">
@@ -963,18 +1581,83 @@ button:disabled {
 </div>
 
 <script>
+// Table IDs and Field Names Configuration
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const BASEROW = "https://api.baserow.io";
+
+// Table IDs
 const USER_TABLE = 729979;
 const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
+const SUPPLIER_TABLE = 744412;
+const TRANSACTION_TABLE = 745465;
+
+// Field Names Configuration - ADDED REMARK FIELD
+const FIELD_NAMES = {
+  // User Table Fields
+  USER: {
+    USERNAME: "Username",
+    ROLE: "Role",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Product Table Fields
+  PRODUCT: {
+    PRODUCT_ID: "Product ID",
+    PRODUCT_NAME: "Product Name",
+    DETAILS: "Details",
+    PRICE: "Price",
+    PURCHASE_PRICE: "Purchase Price",
+    TAX_INCLUDED: "Tax Included",
+    TAX_PERCENTAGE: "Tax Percentage",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Inventory Table Fields
+  INVENTORY: {
+    PRODUCT_ID: "Product ID",
+    PRODUCT_NAME: "Product Name",
+    COUNT: "Count",
+    BATCH_NO: "Batch No",
+    EXPIRE_DATE: "Expire Date",
+    DATE: "Date",
+    LOCATION: "Location",
+    PURCHASE_PRICE: "Purchase Price",
+    TAX_INCLUDED: "Tax Included",
+    TAX_PERCENTAGE: "Tax Percentage",
+    SUPPLIER_ID: "Supplier ID",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Supplier Table Fields
+  SUPPLIER: {
+    SUPPLIER_ID: "Supplier ID",
+    SUPPLIER_NAME: "Supplier Name",
+    SUPPLIER_DETAILS: "Supplier Details",
+    SHOP_ID: "ShopID"
+  },
+  
+  // Transaction Table Fields - ADDED REMARK FIELD
+  TRANSACTION: {
+    SUPPLIER_ID: "Supplier ID",
+    SUPPLIER_NAME: "Supplier Name",
+    TRANSACTION_TYPE: "Transaction Type",
+    INVOICE_NUMBER: "Invoice Number",
+    TOTAL_INVOICE_VALUE: "Total Invoice Value",
+    DATE: "Date",
+    SHOP_ID: "ShopID",
+    REMARK: "Remark" // NEW: Added Remark field for product details
+  }
+};
 
 const MobileTag = localStorage.getItem("MobileTag");
 const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
 
 const app = document.getElementById("app");
 const status = document.getElementById("status");
-const addBtn = document.getElementById("addBtn");
+const addProductToListBtn = document.getElementById("addProductToListBtn");
+const addAnotherProductBtn = document.getElementById("addAnotherProductBtn");
+const finishPurchaseBtn = document.getElementById("finishPurchaseBtn");
 const scanBtn = document.getElementById("scanBtn");
 const fetchBtn = document.getElementById("fetchBtn");
 const searchBtn = document.getElementById("searchBtn");
@@ -983,6 +1666,21 @@ const productType = document.getElementById("productType");
 const dateInput = document.getElementById("date");
 const currentShopElement = document.getElementById("currentShop");
 const searchShopInfo = document.getElementById("searchShopInfo");
+const productsListBody = document.getElementById("productsListBody");
+const purchaseSummary = document.getElementById("purchaseSummary");
+
+// Supplier elements
+const supplierSelection = document.getElementById("supplierSelection");
+const refreshSuppliersBtn = document.getElementById("refreshSuppliersBtn");
+const newSupplierBtn = document.getElementById("newSupplierBtn");
+const supplierDetailsPanel = document.getElementById("supplierDetailsPanel");
+const selectedSupplierId = document.getElementById("selectedSupplierId");
+const selectedSupplierName = document.getElementById("selectedSupplierName");
+const selectedSupplierDetails = document.getElementById("selectedSupplierDetails");
+const supplierNameInput = document.getElementById("supplierName");
+const supplierDetailsInput = document.getElementById("supplierDetails");
+const purchaseInvoiceInput = document.getElementById("purchaseInvoice");
+const purchaseDateInput = document.getElementById("purchaseDate");
 
 const readerContainer = document.getElementById("cameraContainer");
 const modal = document.getElementById("modal");
@@ -1009,17 +1707,128 @@ const expireResultDate = document.getElementById("expireResultDate");
 const expireModalCancel = document.querySelector(".expire-modal-cancel");
 const expireModalApply = document.querySelector(".expire-modal-apply");
 
+// New elements for purchase price, tax and margin
+const purchasePriceInput = document.getElementById("purchasePrice");
+const priceInput = document.getElementById("price");
+const taxYesOption = document.getElementById("taxYesOption");
+const taxNoOption = document.getElementById("taxNoOption");
+const taxInputContainer = document.getElementById("taxInputContainer");
+const taxPercentageSelect = document.getElementById("taxPercentage");
+const marginDisplay = document.getElementById("marginDisplay");
+const batchNoInput = document.getElementById("batchNo");
+
+// Tax breakdown elements
+const taxBreakdown = document.getElementById("taxBreakdown");
+const priceWithoutTaxElement = document.getElementById("priceWithoutTax");
+const taxAmountElement = document.getElementById("taxAmount");
+const totalWithTaxElement = document.getElementById("totalWithTax");
+
+// Purchase summary elements
+const totalPriceExclTaxElement = document.getElementById("totalPriceExclTax");
+const totalTaxAmountElement = document.getElementById("totalTaxAmount");
+const totalInvoiceValueElement = document.getElementById("totalInvoiceValue");
+const taxBreakdownDetails = document.getElementById("taxBreakdownDetails");
+
 let html5QrCode;
 let currentCamera = "environment";
 let allProducts = [];
+let allSuppliers = [];
 let selectedPeriod = "days";
 let selectedDuration = 1;
+let batchNumbers = {};
+let productsInPurchase = [];
+let currentSupplierId = null;
+let totalInvoiceValue = 0;
 
+// Set default dates
 dateInput.value = new Date().toISOString().split('T')[0];
+purchaseDateInput.value = new Date().toISOString().split('T')[0];
 
-// Update shop information (even though it's hidden)
+// Update shop information
 currentShopElement.textContent = ShopID;
 searchShopInfo.textContent = ShopID;
+
+// Track if we're adding a new product
+let isNewProduct = false;
+
+// Fetch suppliers from the supplier table
+async function fetchSuppliers() {
+  try {
+    supplierSelection.innerHTML = '<option value="">Loading suppliers...</option>';
+    
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    allSuppliers = data.results;
+    
+    if (allSuppliers.length === 0) {
+      supplierSelection.innerHTML = '<option value="">No suppliers found</option>';
+      showModal("info", "No Suppliers", "No suppliers found for your shop. Please add a new supplier.");
+      return;
+    }
+    
+    // Populate the supplier dropdown with Supplier ID
+    let optionsHTML = '<option value="">Select a supplier</option>';
+    allSuppliers.forEach(supplier => {
+      const supplierId = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || 'No ID';
+      const supplierName = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || 'Unnamed Supplier';
+      
+      // Display both Supplier ID and Name in dropdown
+      const displayText = `${supplierId} - ${supplierName}`;
+      
+      optionsHTML += `<option value="${supplier.id}" data-supplier='${JSON.stringify(supplier)}'>${displayText}</option>`;
+    });
+    
+    supplierSelection.innerHTML = optionsHTML;
+    
+  } catch (error) {
+    console.error("Error fetching suppliers:", error);
+    supplierSelection.innerHTML = '<option value="">Error loading suppliers</option>';
+    showModal("error", "Error", "Failed to load suppliers. Please try again.");
+  }
+}
+
+// Update supplier details panel when a supplier is selected
+function updateSupplierDetailsPanel(supplierId) {
+  const selectedOption = supplierSelection.querySelector(`option[value="${supplierId}"]`);
+  
+  if (!selectedOption || !selectedOption.dataset.supplier) {
+    supplierDetailsPanel.classList.remove('show');
+    return;
+  }
+  
+  const supplier = JSON.parse(selectedOption.dataset.supplier);
+  
+  // Update the details panel with Supplier ID
+  selectedSupplierId.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || '-';
+  selectedSupplierName.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '-';
+  selectedSupplierDetails.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] || 'No details available';
+  
+  // Auto-fill the new supplier name field
+  supplierNameInput.value = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '';
+  supplierDetailsInput.value = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] || '';
+  
+  // Show the details panel
+  supplierDetailsPanel.classList.add('show');
+  
+  // Store the current supplier ID
+  currentSupplierId = supplierId;
+}
+
+// Reset supplier form for new supplier
+function resetSupplierForm() {
+  supplierSelection.value = "";
+  supplierNameInput.value = "";
+  supplierDetailsInput.value = "";
+  supplierDetailsPanel.classList.remove('show');
+  currentSupplierId = null;
+}
 
 // Calculate and display expiry date
 function calculateExpiryDate() {
@@ -1041,14 +1850,325 @@ function calculateExpiryDate() {
       break;
   }
   
-  // Format date as YYYY-MM-DD for input field
   const formattedDate = resultDate.toISOString().split('T')[0];
   expireResultDate.textContent = formattedDate;
   
   return formattedDate;
 }
 
-// Expire date modal functionality
+// Calculate and display margin
+function calculateMargin() {
+  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
+  const sellingPrice = parseFloat(priceInput.value) || 0;
+  
+  if (purchasePrice <= 0 || sellingPrice <= 0) {
+    marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
+    return;
+  }
+  
+  const marginValue = sellingPrice - purchasePrice;
+  const marginPercentage = ((marginValue / purchasePrice) * 100).toFixed(2);
+  
+  marginDisplay.innerHTML = `Margin: <span class="margin-value">₹ ${marginValue.toFixed(2)}</span> (<span class="margin-percentage">${marginPercentage}%</span>)`;
+}
+
+// Calculate and display tax breakdown
+function calculateTaxBreakdown() {
+  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
+  const taxPercentage = parseFloat(taxPercentageSelect.value) || 0;
+  
+  if (taxPercentage > 0 && document.getElementById("taxYes").checked) {
+    taxBreakdown.classList.add('show');
+    
+    const priceWithoutTax = purchasePrice / (1 + (taxPercentage / 100));
+    const taxAmount = purchasePrice - priceWithoutTax;
+    
+    priceWithoutTaxElement.textContent = `₹ ${priceWithoutTax.toFixed(2)}`;
+    taxAmountElement.textContent = `₹ ${taxAmount.toFixed(2)} (${taxPercentage}%)`;
+    totalWithTaxElement.textContent = `₹ ${purchasePrice.toFixed(2)}`;
+  } else {
+    taxBreakdown.classList.remove('show');
+  }
+}
+
+// Calculate purchase totals for the entire purchase
+function calculatePurchaseTotals() {
+  if (productsInPurchase.length === 0) {
+    purchaseSummary.style.display = 'none';
+    totalInvoiceValue = 0;
+    return;
+  }
+  
+  let totalPriceExclTax = 0;
+  let totalTaxAmount = 0;
+  totalInvoiceValue = 0;
+  
+  const taxGroups = {};
+  
+  productsInPurchase.forEach(product => {
+    const productTotalPrice = product.purchasePrice * product.count;
+    
+    if (product.taxIncluded === "Yes" && parseFloat(product.taxPercentage) > 0) {
+      const taxPercentage = parseFloat(product.taxPercentage);
+      const priceWithoutTax = productTotalPrice / (1 + (taxPercentage / 100));
+      const taxAmount = productTotalPrice - priceWithoutTax;
+      
+      totalPriceExclTax += priceWithoutTax;
+      totalTaxAmount += taxAmount;
+      
+      if (!taxGroups[taxPercentage]) {
+        taxGroups[taxPercentage] = 0;
+      }
+      taxGroups[taxPercentage] += taxAmount;
+    } else {
+      totalPriceExclTax += productTotalPrice;
+    }
+    
+    totalInvoiceValue += productTotalPrice;
+  });
+  
+  totalPriceExclTaxElement.textContent = `₹ ${totalPriceExclTax.toFixed(2)}`;
+  totalTaxAmountElement.textContent = `₹ ${totalTaxAmount.toFixed(2)}`;
+  totalInvoiceValueElement.textContent = `₹ ${totalInvoiceValue.toFixed(2)}`;
+  
+  let breakdownHTML = '';
+  
+  if (Object.keys(taxGroups).length > 0) {
+    Object.keys(taxGroups).sort((a, b) => parseFloat(b) - parseFloat(a)).forEach(percentage => {
+      breakdownHTML += `
+        <div class="breakdown-item">
+          <span class="breakdown-label">GST ${percentage}%</span>
+          <span class="breakdown-value">₹ ${taxGroups[percentage].toFixed(2)}</span>
+        </div>
+      `;
+    });
+  } else {
+    breakdownHTML = `
+      <div class="breakdown-item">
+        <span class="breakdown-label">No Tax Applied</span>
+        <span class="breakdown-value">₹ 0.00</span>
+      </div>
+    `;
+  }
+  
+  breakdownHTML += `
+    <div class="breakdown-item">
+      <span class="breakdown-label">Total Invoice Value</span>
+      <span class="breakdown-value">₹ ${totalInvoiceValue.toFixed(2)}</span>
+    </div>
+  `;
+  
+  taxBreakdownDetails.innerHTML = breakdownHTML;
+  purchaseSummary.style.display = 'block';
+}
+
+// Get next batch number for a product
+async function getNextBatchNumber(productId) {
+  if (!productId) return 1;
+  
+  if (batchNumbers[productId]) {
+    return batchNumbers[productId] + 1;
+  }
+  
+  try {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.INVENTORY.PRODUCT_ID}","type":"contains","value":"${productId}"},{"field":"${FIELD_NAMES.INVENTORY.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    const existingBatches = data.results
+      .filter(item => item[FIELD_NAMES.INVENTORY.BATCH_NO])
+      .map(item => parseInt(item[FIELD_NAMES.INVENTORY.BATCH_NO]))
+      .filter(num => !isNaN(num));
+    
+    const maxBatch = existingBatches.length > 0 ? Math.max(...existingBatches) : 0;
+    batchNumbers[productId] = maxBatch;
+    
+    return maxBatch + 1;
+  } catch (error) {
+    console.error("Error fetching batch numbers:", error);
+    return 1;
+  }
+}
+
+// Add product to the current purchase list
+function addProductToList() {
+  if (!validateProductForm()) {
+    return;
+  }
+  
+  const product = {
+    id: Date.now(),
+    productId: productIdInput.value.trim(),
+    productName: document.getElementById("productName").value,
+    details: document.getElementById("details").value,
+    price: parseFloat(document.getElementById("price").value),
+    purchasePrice: parseFloat(document.getElementById("purchasePrice").value),
+    taxIncluded: document.getElementById("taxYes").checked ? "Yes" : "No",
+    taxPercentage: document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
+    count: parseInt(document.getElementById("count").value),
+    batchNo: document.getElementById("batchNo").value,
+    expireDate: document.getElementById("expireDate").value,
+    date: document.getElementById("date").value,
+    location: document.getElementById("location").value,
+    isNewProduct: isNewProduct // Track if this is a new product
+  };
+  
+  const marginValue = product.price - product.purchasePrice;
+  const marginPercentage = ((marginValue / product.purchasePrice) * 100).toFixed(2);
+  product.marginValue = marginValue;
+  product.marginPercentage = marginPercentage;
+  
+  productsInPurchase.push(product);
+  updateProductsList();
+  calculatePurchaseTotals();
+  
+  showModal("success", "Product Added", `Product "${product.productId}" added to purchase list!`);
+  clearProductForm();
+}
+
+// Update the products list display
+function updateProductsList() {
+  if (productsInPurchase.length === 0) {
+    productsListBody.innerHTML = '<div class="no-products">No products added yet</div>';
+    purchaseSummary.style.display = 'none';
+    return;
+  }
+  
+  let html = '';
+  productsInPurchase.forEach((product, index) => {
+    html += `
+      <div class="product-item">
+        <div>${product.productId}</div>
+        <div>${product.productName}</div>
+        <div>${product.batchNo}</div>
+        <div>${product.count}</div>
+        <div>₹ ${product.purchasePrice.toFixed(2)}</div>
+        <div>₹ ${product.price.toFixed(2)}</div>
+        <div class="product-item-actions">
+          <button class="edit-product-btn" data-index="${index}">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="remove-product-btn" data-index="${index}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  productsListBody.innerHTML = html;
+  
+  document.querySelectorAll('.edit-product-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const index = parseInt(this.getAttribute('data-index'));
+      editProduct(index);
+    });
+  });
+  
+  document.querySelectorAll('.remove-product-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const index = parseInt(this.getAttribute('data-index'));
+      removeProduct(index);
+    });
+  });
+}
+
+// Edit a product from the list
+function editProduct(index) {
+  const product = productsInPurchase[index];
+  
+  productIdInput.value = product.productId;
+  document.getElementById("productName").value = product.productName;
+  document.getElementById("details").value = product.details;
+  document.getElementById("price").value = product.price;
+  document.getElementById("purchasePrice").value = product.purchasePrice;
+  
+  if (product.taxIncluded === "Yes") {
+    document.getElementById("taxYes").checked = true;
+    taxYesOption.classList.add("selected");
+    taxNoOption.classList.remove("selected");
+    taxInputContainer.classList.add("show");
+    taxPercentageSelect.value = product.taxPercentage;
+  } else {
+    document.getElementById("taxNo").checked = true;
+    taxNoOption.classList.add("selected");
+    taxYesOption.classList.remove("selected");
+    taxInputContainer.classList.remove("show");
+  }
+  
+  document.getElementById("count").value = product.count;
+  document.getElementById("batchNo").value = product.batchNo;
+  document.getElementById("expireDate").value = product.expireDate;
+  document.getElementById("location").value = product.location;
+  
+  // Set product type based on whether it was marked as new
+  productType.value = product.isNewProduct ? "new" : "existing";
+  isNewProduct = product.isNewProduct;
+  
+  calculateMargin();
+  calculateTaxBreakdown();
+  
+  productsInPurchase.splice(index, 1);
+  updateProductsList();
+  calculatePurchaseTotals();
+  
+  showModal("warning", "Edit Product", "Product loaded for editing. Make changes and click 'Add Product to List' to save.");
+}
+
+// Remove a product from the list
+function removeProduct(index) {
+  productsInPurchase.splice(index, 1);
+  updateProductsList();
+  calculatePurchaseTotals();
+  showModal("success", "Product Removed", "Product removed from purchase list.");
+}
+
+// Clear only the product form (not supplier info)
+function clearProductForm() {
+  const fieldsToClear = [
+    'productId', 'productName', 'details', 'price', 'purchasePrice', 'count', 
+    'batchNo', 'expireDate', 'location'
+  ];
+  
+  fieldsToClear.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (fieldId !== 'productId' || productType.value === 'existing') {
+      field.value = '';
+    }
+  });
+  
+  document.getElementById("taxNo").checked = true;
+  taxNoOption.classList.add("selected");
+  taxYesOption.classList.remove("selected");
+  taxInputContainer.classList.remove("show");
+  taxBreakdown.classList.remove("show");
+  
+  productType.value = 'existing';
+  isNewProduct = false;
+  marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
+  
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.style.display = 'none';
+  });
+}
+
+// Clear entire form including supplier info
+function clearEntireForm() {
+  clearProductForm();
+  supplierDetailsInput.value = '';
+  purchaseInvoiceInput.value = '';
+  purchaseDateInput.value = new Date().toISOString().split('T')[0];
+  productsInPurchase = [];
+  updateProductsList();
+  totalInvoiceValue = 0;
+}
+
+// Event listeners for expire date modal
 quickExpireBtn.addEventListener("click", function() {
   expireModal.style.display = "flex";
   calculateExpiryDate();
@@ -1094,6 +2214,61 @@ durationSlider.addEventListener("input", function() {
   calculateExpiryDate();
 });
 
+// Tax option selection
+taxYesOption.addEventListener("click", function() {
+  document.getElementById("taxYes").checked = true;
+  taxYesOption.classList.add("selected");
+  taxNoOption.classList.remove("selected");
+  taxInputContainer.classList.add("show");
+  calculateTaxBreakdown();
+});
+
+taxNoOption.addEventListener("click", function() {
+  document.getElementById("taxNo").checked = true;
+  taxNoOption.classList.add("selected");
+  taxYesOption.classList.remove("selected");
+  taxInputContainer.classList.remove("show");
+  taxBreakdown.classList.remove("show");
+});
+
+// Set default tax option
+taxNoOption.classList.add("selected");
+
+// Calculate margin when prices change
+purchasePriceInput.addEventListener("input", function() {
+  calculateMargin();
+  calculateTaxBreakdown();
+});
+
+priceInput.addEventListener("input", calculateMargin);
+taxPercentageSelect.addEventListener("change", calculateTaxBreakdown);
+
+// Supplier selection change event
+supplierSelection.addEventListener("change", function() {
+  const selectedSupplierId = this.value;
+  if (selectedSupplierId) {
+    updateSupplierDetailsPanel(selectedSupplierId);
+  } else {
+    supplierDetailsPanel.classList.remove('show');
+    currentSupplierId = null;
+  }
+});
+
+// Refresh suppliers button
+refreshSuppliersBtn.addEventListener("click", function() {
+  fetchSuppliers();
+  this.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
+  setTimeout(() => {
+    this.innerHTML = '<i class="fas fa-sync-alt"></i>';
+  }, 1000);
+});
+
+// New supplier button
+newSupplierBtn.addEventListener("click", function() {
+  resetSupplierForm();
+  showModal("info", "New Supplier", "Please enter the new supplier details below.");
+});
+
 // Modal function
 function showModal(type, title, message) {
   modalContent.className = "modal-content";
@@ -1108,6 +2283,9 @@ function showModal(type, title, message) {
   } else if (type === "error") {
     modalContent.classList.add("modal-error");
     modalIcon.innerHTML = "❌";
+  } else if (type === "info") {
+    modalContent.classList.add("modal-success");
+    modalIcon.innerHTML = "ℹ️";
   }
   
   modalTitle.textContent = title;
@@ -1119,7 +2297,6 @@ modalButton.addEventListener("click", function() {
   modal.style.display = "none";
 });
 
-// Close modal when clicking outside
 modal.addEventListener("click", function(e) {
   if (e.target === modal) {
     modal.style.display = "none";
@@ -1152,8 +2329,7 @@ async function searchProducts() {
   }
   
   try {
-    // Fetch products only from the current shop
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
       headers: { Authorization: `Token ${API_KEY}` }
     });
     
@@ -1164,31 +2340,28 @@ async function searchProducts() {
     const data = await res.json();
     allProducts = data.results;
     
-    // Filter products by ID or name
     const filteredProducts = allProducts.filter(product => {
-      const productId = String(product["Product ID"] || "").toLowerCase();
-      const productName = String(product["Product Name"] || "").toLowerCase();
+      const productId = String(product[FIELD_NAMES.PRODUCT.PRODUCT_ID] || "").toLowerCase();
+      const productName = String(product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "").toLowerCase();
       
       return productId.includes(searchTerm) || productName.includes(searchTerm);
     });
     
-    // Display results
     if (filteredProducts.length === 0) {
       searchResults.innerHTML = '<div class="no-results">No products found matching your search</div>';
     } else {
       let resultsHTML = '';
       filteredProducts.forEach(product => {
         resultsHTML += `
-          <div class="search-result-item" data-id="${product["Product ID"]}">
-            <div class="product-id">${product["Product ID"]}</div>
-            <div class="product-name">${product["Product Name"] || "No Name"}</div>
-            <div class="product-price">${parseFloat(product["Price"] || 0).toFixed(2)}</div>
+          <div class="search-result-item" data-id="${product[FIELD_NAMES.PRODUCT.PRODUCT_ID]}">
+            <div class="product-id">${product[FIELD_NAMES.PRODUCT.PRODUCT_ID]}</div>
+            <div class="product-name">${product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "No Name"}</div>
+            <div class="product-price">${parseFloat(product[FIELD_NAMES.PRODUCT.PRICE] || 0).toFixed(2)}</div>
           </div>
         `;
       });
       searchResults.innerHTML = resultsHTML;
       
-      // Add click event to result items
       document.querySelectorAll('.search-result-item').forEach(item => {
         item.addEventListener('click', function() {
           const productId = this.getAttribute('data-id');
@@ -1218,17 +2391,15 @@ function validateBatchNo(batchNo) {
   return batchNoRegex.test(batchNo);
 }
 
-function validateForm() {
+function validateProductForm() {
   let isValid = true;
   
-  // Reset error messages
   document.querySelectorAll('.error-message').forEach(el => {
     el.style.display = 'none';
   });
   
-  // Check required fields
   const requiredFields = [
-    'productId', 'productName', 'price', 'count', 'batchNo', 'expireDate', 'location'
+    'productId', 'productName', 'price', 'purchasePrice', 'count', 'batchNo', 'expireDate', 'location'
   ];
   
   requiredFields.forEach(fieldId => {
@@ -1240,7 +2411,6 @@ function validateForm() {
     }
   });
   
-  // Validate batch number
   const batchNo = document.getElementById('batchNo').value;
   if (batchNo && !validateBatchNo(batchNo)) {
     document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
@@ -1248,7 +2418,6 @@ function validateForm() {
     isValid = false;
   }
   
-  // Validate price
   const price = document.getElementById('price').value;
   if (price && parseFloat(price) < 0) {
     document.getElementById('priceError').textContent = 'Price cannot be negative';
@@ -1256,7 +2425,13 @@ function validateForm() {
     isValid = false;
   }
   
-  // Validate count
+  const purchasePrice = document.getElementById('purchasePrice').value;
+  if (purchasePrice && parseFloat(purchasePrice) < 0) {
+    document.getElementById('purchasePriceError').textContent = 'Purchase price cannot be negative';
+    document.getElementById('purchasePriceError').style.display = 'block';
+    isValid = false;
+  }
+  
   const count = document.getElementById('count').value;
   if (count && parseInt(count) < 1) {
     document.getElementById('countError').textContent = 'Count must be at least 1';
@@ -1267,28 +2442,262 @@ function validateForm() {
   return isValid;
 }
 
-// Function to clear form fields
-function clearForm() {
-  const fieldsToClear = [
-    'productId', 'productName', 'details', 'price', 'count', 
-    'batchNo', 'expireDate', 'location'
-  ];
+function validateSupplierForm() {
+  let isValid = true;
   
-  fieldsToClear.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (fieldId !== 'productId' || productType.value === 'existing') {
-      field.value = '';
-    }
-  });
+  document.getElementById('supplierSelectionError').style.display = 'none';
+  document.getElementById('supplierNameError').style.display = 'none';
   
-  // Reset product type to existing
-  productType.value = 'existing';
+  const selectedSupplierId = supplierSelection.value;
+  const newSupplierName = supplierNameInput.value.trim();
   
-  // Clear all error messages
-  document.querySelectorAll('.error-message').forEach(el => {
-    el.style.display = 'none';
-  });
+  if (!selectedSupplierId && !newSupplierName) {
+    document.getElementById('supplierSelectionError').textContent = 'Please select a supplier or enter a new supplier name';
+    document.getElementById('supplierSelectionError').style.display = 'block';
+    isValid = false;
+  }
+  
+  if (!purchaseInvoiceInput.value) {
+    showModal("error", "Validation Error", "Purchase invoice number is required");
+    isValid = false;
+  }
+  
+  if (!purchaseDateInput.value) {
+    showModal("error", "Validation Error", "Purchase date is required");
+    isValid = false;
+  }
+  
+  return isValid;
 }
+
+// Add product to list button
+addProductToListBtn.addEventListener("click", addProductToList);
+
+// Add another product button
+addAnotherProductBtn.addEventListener("click", function() {
+  clearProductForm();
+  showModal("success", "Form Cleared", "Product form cleared. You can now add another product.");
+});
+
+// Handle product type change
+productType.addEventListener("change", function() {
+  isNewProduct = this.value === "new";
+  if (isNewProduct) {
+    productIdInput.value = "PRD-" + Date.now();
+    document.getElementById("productName").value = "";
+    document.getElementById("details").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("purchasePrice").value = "";
+    batchNoInput.value = "1";
+  } else {
+    productIdInput.value = "";
+    batchNoInput.value = "";
+  }
+});
+
+// NEW FUNCTION: Generate product details string for Remark column
+function generateProductDetailsRemark() {
+  if (productsInPurchase.length === 0) {
+    return "No products in purchase";
+  }
+  
+  const productDetails = productsInPurchase.map(product => {
+    const details = [
+      product.productName,
+      product.productId,
+      `₹${product.purchasePrice.toFixed(2)}`,
+      product.taxIncluded === "Yes" ? `${product.taxPercentage}% GST` : "No Tax",
+      `Batch:${product.batchNo}`,
+      `Qty:${product.count}`
+    ];
+    return details.join(",");
+  });
+  
+  return productDetails.join(" - ");
+}
+
+// Finish purchase and upload all data - UPDATED with Remark field
+finishPurchaseBtn.addEventListener("click", async function() {
+  if (!validateSupplierForm()) {
+    return;
+  }
+  
+  if (productsInPurchase.length === 0) {
+    showModal("error", "No Products", "Please add at least one product to the purchase.");
+    return;
+  }
+  
+  finishPurchaseBtn.disabled = true;
+  finishPurchaseBtn.textContent = 'Uploading...';
+
+  try {
+    let supplierId = currentSupplierId;
+    let supplierName = "";
+    let supplierCustomId = "";
+    const selectedSupplierId = supplierSelection.value;
+    const newSupplierName = supplierNameInput.value.trim();
+    
+    // If a supplier is selected from dropdown, use it
+    if (selectedSupplierId) {
+      supplierId = selectedSupplierId;
+      const selectedOption = supplierSelection.querySelector(`option[value="${selectedSupplierId}"]`);
+      if (selectedOption && selectedOption.dataset.supplier) {
+        const supplier = JSON.parse(selectedOption.dataset.supplier);
+        supplierName = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '';
+        supplierCustomId = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || '';
+      }
+    } 
+    // If new supplier name is provided, create new supplier
+    else if (newSupplierName) {
+      // Generate a new Supplier ID for the new supplier
+      supplierCustomId = "SUP-" + Date.now();
+      
+      const supplierBody = {
+        [FIELD_NAMES.SUPPLIER.SUPPLIER_ID]: supplierCustomId,
+        [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: newSupplierName,
+        [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
+        [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
+      };
+      
+      const createSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true`, {
+        method:"POST",
+        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+        body:JSON.stringify(supplierBody)
+      });
+      
+      if (!createSupplierRes.ok) {
+        throw new Error(`API error: ${createSupplierRes.status}`);
+      }
+      
+      const newSupplier = await createSupplierRes.json();
+      supplierId = newSupplier.id;
+      supplierName = newSupplierName;
+      supplierCustomId = supplierCustomId;
+    }
+    
+    // Now add all products to inventory and product tables
+    for (const product of productsInPurchase) {
+      // Add product to Product table if it's new
+      if (product.isNewProduct) {
+        try {
+          // Check if product already exists in this shop
+          const productRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${product.productId}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
+            headers:{Authorization:`Token ${API_KEY}`}
+          });
+          
+          if (!productRes.ok) {
+            throw new Error(`API error: ${productRes.status}`);
+          }
+          
+          const productData = await productRes.json();
+          const existing = productData.results.find(p=>String(p[FIELD_NAMES.PRODUCT.PRODUCT_ID])===String(product.productId));
+          
+          if(!existing){
+            const productBody = {
+              [FIELD_NAMES.PRODUCT.PRODUCT_ID]: product.productId,
+              [FIELD_NAMES.PRODUCT.PRODUCT_NAME]: product.productName,
+              [FIELD_NAMES.PRODUCT.DETAILS]: product.details,
+              [FIELD_NAMES.PRODUCT.PRICE]: product.price,
+              [FIELD_NAMES.PRODUCT.PURCHASE_PRICE]: product.purchasePrice,
+              [FIELD_NAMES.PRODUCT.TAX_INCLUDED]: product.taxIncluded,
+              [FIELD_NAMES.PRODUCT.TAX_PERCENTAGE]: product.taxPercentage,
+              [FIELD_NAMES.PRODUCT.SHOP_ID]: ShopID
+            };
+            
+            const createProductRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
+              method:"POST",
+              headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+              body:JSON.stringify(productBody)
+            });
+            
+            if (!createProductRes.ok) {
+              throw new Error(`API error: ${createProductRes.status}`);
+            }
+            
+            console.log("New product added to Product table:", product.productId);
+          }
+        } catch(e) { 
+          console.error("Error adding product to Product table:", e); 
+        }
+      }
+
+      // Add to inventory with supplier reference
+      const inventoryBody = {
+        [FIELD_NAMES.INVENTORY.PRODUCT_ID]: product.productId,
+        [FIELD_NAMES.INVENTORY.PRODUCT_NAME]: product.productName,
+        [FIELD_NAMES.INVENTORY.COUNT]: product.count,
+        [FIELD_NAMES.INVENTORY.BATCH_NO]: product.batchNo,
+        [FIELD_NAMES.INVENTORY.EXPIRE_DATE]: product.expireDate,
+        [FIELD_NAMES.INVENTORY.DATE]: product.date,
+        [FIELD_NAMES.INVENTORY.LOCATION]: product.location,
+        [FIELD_NAMES.INVENTORY.PURCHASE_PRICE]: product.purchasePrice,
+        [FIELD_NAMES.INVENTORY.TAX_INCLUDED]: product.taxIncluded,
+        [FIELD_NAMES.INVENTORY.TAX_PERCENTAGE]: product.taxPercentage,
+        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierCustomId,
+        [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
+      };
+
+      const inventoryRes = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+        method:"POST",
+        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+        body:JSON.stringify(inventoryBody)
+      });
+
+      if (!inventoryRes.ok) {
+        throw new Error(`API error: ${inventoryRes.status}`);
+      }
+
+      console.log("Product added to Inventory table with Supplier ID:", product.productId, supplierCustomId);
+    }
+
+    // Generate product details for Remark column
+    const productDetailsRemark = generateProductDetailsRemark();
+    console.log("Product Details for Remark:", productDetailsRemark);
+
+    // Create transaction record with Supplier ID from the table and product details in Remark
+    const transactionBody = {
+      [FIELD_NAMES.TRANSACTION.SUPPLIER_ID]: supplierCustomId,
+      [FIELD_NAMES.TRANSACTION.SUPPLIER_NAME]: supplierName,
+      [FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE]: "Purchase",
+      [FIELD_NAMES.TRANSACTION.INVOICE_NUMBER]: purchaseInvoiceInput.value,
+      [FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE]: totalInvoiceValue,
+      [FIELD_NAMES.TRANSACTION.DATE]: new Date().toISOString().split('T')[0],
+      [FIELD_NAMES.TRANSACTION.SHOP_ID]: ShopID,
+      [FIELD_NAMES.TRANSACTION.REMARK]: productDetailsRemark // ADDED: Product details in Remark column
+    };
+
+    const transactionRes = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true`, {
+      method:"POST",
+      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
+      body:JSON.stringify(transactionBody)
+    });
+
+    if (!transactionRes.ok) {
+      throw new Error(`API error: ${transactionRes.status}`);
+    }
+
+    showModal("success", "Purchase Complete", 
+      `✅ Successfully uploaded ${productsInPurchase.length} products!<br>
+       - Added to Inventory table: ${productsInPurchase.length} items<br>
+       - Added to Product table: ${productsInPurchase.filter(p => p.isNewProduct).length} new products<br>
+       - Supplier ID in Inventory: ${supplierCustomId}<br>
+       - Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}<br>
+       - Product details saved in Transaction Remark<br>
+       - Transaction recorded successfully.`);
+    
+    clearEntireForm();
+    
+    // Refresh suppliers list
+    fetchSuppliers();
+    
+  } catch (e) {
+    console.error("Error completing purchase:", e);
+    showModal("error", "Upload Error", "Error completing purchase. Please check console for details.");
+  } finally {
+    finishPurchaseBtn.disabled = false;
+    finishPurchaseBtn.textContent = 'Finish & Upload Purchase';
+  }
+});
 
 // Add real-time validation
 document.getElementById('batchNo').addEventListener('input', function() {
@@ -1301,48 +2710,40 @@ document.getElementById('batchNo').addEventListener('input', function() {
   }
 });
 
-// ✅ 1. Role Validation
+// Role Validation
 (async function init(){
   if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
 
   try{
     const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
     const data = await res.json();
-    const user = data.results.find(u=>String(u.Username)===String(MobileTag));
+    const user = data.results.find(u=>String(u[FIELD_NAMES.USER.USERNAME])===String(MobileTag));
     if(!user){ 
       showModal("error", "User Not Found", "User not found in the system.");
       return; 
     }
 
-    const role = user.Role || "Staff";
-    // Status is hidden as requested
+    const role = user[FIELD_NAMES.USER.ROLE] || "Staff";
     app.style.display = "block";
 
     if(role.toLowerCase()!=="manager"){
-      addBtn.disabled = true;
+      addProductToListBtn.disabled = true;
+      addAnotherProductBtn.disabled = true;
+      finishPurchaseBtn.disabled = true;
       Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
       showModal("error", "Access Denied", "Only managers can add products and inventory.");
       return;
     }
+    
+    await fetchSuppliers();
+    
   }catch(e){ 
     console.error(e); 
     showModal("error", "Error", "Error fetching user information.");
   }
 })();
 
-// ✅ 2. Handle Product Type
-productType.addEventListener("change", ()=>{
-  if(productType.value==="new"){
-    productIdInput.value = "PRD-" + Date.now();
-    document.getElementById("productName").value = "";
-    document.getElementById("details").value = "";
-    document.getElementById("price").value = "";
-  }else{
-    productIdInput.value = "";
-  }
-});
-
-// ✅ 3. Fetch Product Details (manual fetch or scan) - Only from current shop
+// Fetch Product Details (manual fetch or scan) - Only from current shop
 async function fetchProduct(pid){
   if(!pid){ 
     document.getElementById("productIdError").textContent = "Enter Product ID";
@@ -1351,8 +2752,7 @@ async function fetchProduct(pid){
   }
   
   try{
-    // Fetch product only if it belongs to the current shop
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${pid}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
       headers:{Authorization:`Token ${API_KEY}`}
     });
     
@@ -1361,30 +2761,45 @@ async function fetchProduct(pid){
     }
     
     const data = await res.json();
-    const product = data.results.find(p=>String(p["Product ID"])===String(pid));
+    const product = data.results.find(p=>String(p[FIELD_NAMES.PRODUCT.PRODUCT_ID])===String(pid));
     
     if(product){
-      document.getElementById("productName").value = product["Product Name"] || "";
-      document.getElementById("details").value = product["Details"] || "";
-      document.getElementById("price").value = product["Price"] || "";
+      document.getElementById("productName").value = product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "";
+      document.getElementById("details").value = product[FIELD_NAMES.PRODUCT.DETAILS] || "";
+      document.getElementById("price").value = product[FIELD_NAMES.PRODUCT.PRICE] || "";
+      document.getElementById("purchasePrice").value = product[FIELD_NAMES.PRODUCT.PURCHASE_PRICE] || "";
       
-      // Clear any previous errors
-      document.getElementById("productIdError").style.display = "none";
+      if (product[FIELD_NAMES.PRODUCT.TAX_INCLUDED] === "Yes") {
+        document.getElementById("taxYes").checked = true;
+        taxYesOption.classList.add("selected");
+        taxNoOption.classList.remove("selected");
+        taxInputContainer.classList.add("show");
+        taxPercentageSelect.value = product[FIELD_NAMES.PRODUCT.TAX_PERCENTAGE] || "0";
+      } else {
+        document.getElementById("taxNo").checked = true;
+        taxNoOption.classList.add("selected");
+        taxYesOption.classList.remove("selected");
+        taxInputContainer.classList.remove("show");
+      }
       
-      // Show success message
+      calculateMargin();
+      calculateTaxBreakdown();
+      
+      const nextBatchNo = await getNextBatchNumber(pid);
+      batchNoInput.value = nextBatchNo;
+      
+      document.getElementById("productIdError").style.display = 'none';
+      
       const successMsg = document.createElement('div');
       successMsg.className = 'success-message';
       successMsg.textContent = '✅ Product details fetched!';
       successMsg.style.display = 'block';
       
-      // Remove any existing success message
       const existingSuccess = document.querySelector('#productId + .success-message');
       if (existingSuccess) existingSuccess.remove();
       
-      // Add success message after product ID input
       productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
       
-      // Remove success message after 3 seconds
       setTimeout(() => {
         successMsg.style.display = 'none';
       }, 3000);
@@ -1401,7 +2816,7 @@ async function fetchProduct(pid){
 
 fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
 
-// ✅ 4. Camera Scanning
+// Camera Scanning
 scanBtn.addEventListener("click", ()=>{
   readerContainer.style.display="flex";
   startCamera();
@@ -1438,93 +2853,6 @@ function stopCamera(){
   }
   readerContainer.style.display="none";
 }
-
-// ✅ 5. Add to Inventory
-addBtn.addEventListener("click", async ()=>{
-  // Validate form before submission
-  if (!validateForm()) {
-    return;
-  }
-  
-  const pid = productIdInput.value.trim();
-  if(!pid){ 
-    document.getElementById("productIdError").textContent = "Enter or scan Product ID";
-    document.getElementById("productIdError").style.display = "block";
-    return; 
-  }
-
-  // Disable button to prevent duplicate submissions
-  addBtn.disabled = true;
-  addBtn.textContent = 'Adding...';
-
-  try {
-    // Add product if it's new (and not duplicate in current shop)
-    if(productType.value==="new"){
-      try{
-        // Check if product already exists in this shop
-        const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"Product ID","type":"contains","value":"${pid}"},{"field":"ShopID","type":"contains","value":"${ShopID}"}]}`, {
-          headers:{Authorization:`Token ${API_KEY}`}
-        });
-        
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        const existing = data.results.find(p=>String(p["Product ID"])===String(pid));
-        
-        if(!existing){
-          const body = {
-            "Product ID": pid,
-            "Product Name": document.getElementById("productName").value,
-            "Details": document.getElementById("details").value,
-            "Price": document.getElementById("price").value,
-            "ShopID": ShopID
-          };
-          await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-            method:"POST",
-            headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-            body:JSON.stringify(body)
-          });
-          showModal("success", "Product Added", "✅ Product added to Product Table!");
-        }
-      }catch(e){ 
-        console.error(e); 
-        showModal("error", "Error", "Error adding product to Product Table.");
-        addBtn.disabled = false;
-        addBtn.textContent = 'Add to Inventory';
-        return;
-      }
-    }
-
-    // Add to inventory
-    const inventoryBody = {
-      "Product ID": pid,
-      "Product Name": document.getElementById("productName").value,
-      "Count": document.getElementById("count").value,
-      "Batch No": document.getElementById("batchNo").value,
-      "Expire Date": document.getElementById("expireDate").value,
-      "Date": document.getElementById("date").value,
-      "Location": document.getElementById("location").value,
-      "ShopID": ShopID
-    };
-
-    await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-      method:"POST",
-      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-      body:JSON.stringify(inventoryBody)
-    });
-
-    showModal("success", "Success", "✅ Product added to Inventory!");
-    clearForm();
-  } catch (e) {
-    console.error(e);
-    showModal("error", "Error", "Error adding to inventory.");
-  } finally {
-    addBtn.disabled = false;
-    addBtn.textContent = 'Add to Inventory';
-  }
-});
 </script>
 </body>
 </html>
