@@ -1472,7 +1472,7 @@ const BASEROW = "https://api.baserow.io";
 const USER_TABLE = 729979;
 const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
-const SUPPLIER_TABLE = 744412;
+const SUPPLIER_TABLE = 734800;
 
 // Field Names Configuration
 const FIELD_NAMES = {
@@ -1518,6 +1518,7 @@ const FIELD_NAMES = {
     PURCHASE_INVOICE: "Purchase Invoice",
     PURCHASE_DATE: "Purchase Date",
     TOTAL_INVOICE_VALUE: "Total Invoice Value",
+    SUPPLIER_ID: "Supplier ID",
     SHOP_ID: "ShopID"
   }
 };
@@ -1754,6 +1755,11 @@ function calculatePurchaseTotals() {
   
   // Show purchase summary
   purchaseSummary.style.display = 'block';
+}
+
+// Generate unique Supplier ID
+function generateSupplierId() {
+  return 'SUP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 }
 
 // Get next batch number for a product
@@ -2289,13 +2295,17 @@ finishPurchaseBtn.addEventListener("click", async function() {
   finishPurchaseBtn.textContent = 'Uploading...';
 
   try {
-    // First, create or get supplier with total invoice value
+    // Generate unique Supplier ID
+    const supplierId = generateSupplierId();
+    
+    // First, create or get supplier with total invoice value and Supplier ID
     const supplierBody = {
       [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: supplierNameInput.value,
       [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
       [FIELD_NAMES.SUPPLIER.PURCHASE_INVOICE]: purchaseInvoiceInput.value,
       [FIELD_NAMES.SUPPLIER.PURCHASE_DATE]: purchaseDateInput.value,
       [FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE]: totalInvoiceValue,
+      [FIELD_NAMES.SUPPLIER.SUPPLIER_ID]: supplierId,
       [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
     };
     
@@ -2309,12 +2319,12 @@ finishPurchaseBtn.addEventListener("click", async function() {
     }
     
     const supplierData = await supplierRes.json();
-    let supplierId;
+    let finalSupplierId = supplierId;
     
     if (supplierData.results.length > 0) {
       // Use existing supplier and update total invoice value
-      supplierId = supplierData.results[0].id;
-      const updateSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/${supplierId}/?user_field_names=true`, {
+      finalSupplierId = supplierData.results[0][FIELD_NAMES.SUPPLIER.SUPPLIER_ID];
+      const updateSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/${supplierData.results[0].id}/?user_field_names=true`, {
         method:"PATCH",
         headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
         body:JSON.stringify({
@@ -2337,8 +2347,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
         throw new Error(`API error: ${createSupplierRes.status}`);
       }
       
-      const newSupplier = await createSupplierRes.json();
-      supplierId = newSupplier.id;
+      await createSupplierRes.json();
     }
     
     // Now add all products to inventory with supplier reference
@@ -2393,22 +2402,26 @@ finishPurchaseBtn.addEventListener("click", async function() {
         [FIELD_NAMES.INVENTORY.PURCHASE_PRICE]: product.purchasePrice,
         [FIELD_NAMES.INVENTORY.TAX_INCLUDED]: product.taxIncluded,
         [FIELD_NAMES.INVENTORY.TAX_PERCENTAGE]: product.taxPercentage,
-        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierId,
+        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: finalSupplierId,
         [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
       };
 
-      await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      const inventoryRes = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
         method:"POST",
         headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
         body:JSON.stringify(inventoryBody)
       });
+
+      if (!inventoryRes.ok) {
+        throw new Error(`API error: ${inventoryRes.status}`);
+      }
     }
 
     showModal("success", "Purchase Complete", `✅ ${productsInPurchase.length} products added to inventory with supplier information! Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}`);
     clearEntireForm();
   } catch (e) {
     console.error(e);
-    showModal("error", "Error", "Error completing purchase.");
+    showModal("error", "Error", "Error completing purchase: " + e.message);
   } finally {
     finishPurchaseBtn.disabled = false;
     finishPurchaseBtn.textContent = 'Finish & Upload Purchase';
