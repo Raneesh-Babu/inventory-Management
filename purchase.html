@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice Generator - Transaction Table</title>
+<title>Invoice Generator - Transaction Data</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
@@ -508,6 +508,77 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+.data-preview {
+  background: rgba(67, 97, 238, 0.05);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--success);
+}
+
+.data-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.data-item {
+  background: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.data-label {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.data-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark);
+  word-break: break-word;
+}
+
+.remark-details {
+  background: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin-top: 10px;
+}
+
+.remark-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.remark-content {
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  border-left: 3px solid var(--primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 @media print {
   body {
     background: white;
@@ -520,7 +591,7 @@ body {
     margin: 0;
   }
   
-  .controls, .transaction-selector {
+  .controls, .transaction-selector, .data-preview {
     display: none;
   }
   
@@ -585,6 +656,10 @@ body {
   .transaction-amount {
     align-self: flex-end;
   }
+  
+  .data-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -615,7 +690,7 @@ body {
 <div class="container">
   <div class="header">
     <h1>Invoice Generator</h1>
-    <p>Generate professional invoices from your transaction data</p>
+    <p>Extract and display data from Transaction table with detailed parsing</p>
   </div>
   
   <div class="transaction-selector">
@@ -626,6 +701,19 @@ body {
       <div class="loading">
         <div class="loading-spinner"></div>
       </div>
+    </div>
+  </div>
+  
+  <div class="data-preview" id="dataPreview" style="display: none;">
+    <div class="data-title">
+      <i class="fas fa-database"></i> Transaction Data Extracted
+    </div>
+    <div class="data-grid" id="dataGrid">
+      <!-- Data items will be populated here -->
+    </div>
+    <div class="remark-details">
+      <div class="remark-title">Raw Remark Content:</div>
+      <div class="remark-content" id="remarkContent"></div>
     </div>
   </div>
   
@@ -695,6 +783,9 @@ const printInvoiceBtn = document.getElementById("printInvoiceBtn");
 const downloadInvoiceBtn = document.getElementById("downloadInvoiceBtn");
 const refreshTransactionsBtn = document.getElementById("refreshTransactionsBtn");
 const transactionList = document.getElementById("transactionList");
+const dataPreview = document.getElementById("dataPreview");
+const dataGrid = document.getElementById("dataGrid");
+const remarkContent = document.getElementById("remarkContent");
 const invoiceContainer = document.getElementById("invoiceContainer");
 const noInvoiceMessage = document.getElementById("noInvoiceMessage");
 const invoiceContent = document.getElementById("invoiceContent");
@@ -809,6 +900,7 @@ async function fetchTransactions() {
     // Set the first transaction as selected by default
     if (transactions.length > 0) {
       selectedTransaction = transactions[0];
+      updateDataPreview(selectedTransaction);
     }
     
     // Add click event listeners to transaction items
@@ -826,6 +918,9 @@ async function fetchTransactions() {
         const index = parseInt(this.getAttribute('data-index'));
         selectedTransaction = transactions[index];
         
+        // Update data preview
+        updateDataPreview(selectedTransaction);
+        
         // Clear any existing invoice
         clearInvoice();
       });
@@ -842,6 +937,52 @@ async function fetchTransactions() {
     `;
     showModal("error", "Error", "Failed to fetch transactions. Please try again.");
   }
+}
+
+// Update data preview with selected transaction details
+function updateDataPreview(transaction) {
+  if (!transaction) return;
+  
+  // Extract all values from transaction
+  const invoiceNumber = transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`;
+  const totalInvoiceValue = parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0);
+  const date = transaction[FIELD_NAMES.DATE] || 'Not specified';
+  const supplierId = transaction[FIELD_NAMES.SUPPLIER_ID] || 'Not specified';
+  const supplierName = transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Not specified';
+  const transactionType = transaction[FIELD_NAMES.TRANSACTION_TYPE] || 'Not specified';
+  const remark = transaction[FIELD_NAMES.REMARK] || 'No remarks';
+  
+  // Create data grid HTML
+  const dataHTML = `
+    <div class="data-item">
+      <div class="data-label">Invoice Number</div>
+      <div class="data-value">${invoiceNumber}</div>
+    </div>
+    <div class="data-item">
+      <div class="data-label">Total Invoice Value</div>
+      <div class="data-value">₹${totalInvoiceValue.toFixed(2)}</div>
+    </div>
+    <div class="data-item">
+      <div class="data-label">Date</div>
+      <div class="data-value">${date}</div>
+    </div>
+    <div class="data-item">
+      <div class="data-label">Supplier ID</div>
+      <div class="data-value">${supplierId}</div>
+    </div>
+    <div class="data-item">
+      <div class="data-label">Supplier Name</div>
+      <div class="data-value">${supplierName}</div>
+    </div>
+    <div class="data-item">
+      <div class="data-label">Transaction Type</div>
+      <div class="data-value">${transactionType}</div>
+    </div>
+  `;
+  
+  dataGrid.innerHTML = dataHTML;
+  remarkContent.textContent = remark;
+  dataPreview.style.display = 'block';
 }
 
 // Parse product details from transaction remark
