@@ -1009,6 +1009,71 @@ button:disabled {
   font-weight: 500;
 }
 
+/* Supplier Selection Styles */
+.supplier-selection-container {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.supplier-select-group {
+  flex: 1;
+}
+
+.supplier-refresh-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  min-width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.supplier-refresh-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.supplier-details-panel {
+  background: rgba(67, 97, 238, 0.05);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-top: 10px;
+  border-left: 4px solid var(--primary);
+  display: none;
+}
+
+.supplier-details-panel.show {
+  display: block;
+}
+
+.supplier-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.supplier-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.supplier-detail-label {
+  color: var(--dark);
+  font-weight: 500;
+}
+
+.supplier-detail-value {
+  color: var(--primary);
+  font-weight: 600;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -1084,6 +1149,15 @@ button:disabled {
     grid-template-columns: 1fr;
     gap: 10px;
   }
+  
+  .supplier-selection-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .supplier-refresh-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1149,23 +1223,56 @@ button:disabled {
       
       <div class="form-row">
         <div class="form-group">
-          <label for="supplierName" class="field-required">Supplier Name:</label>
-          <input type="text" id="supplierName" placeholder="Enter supplier name" required>
-          <div id="supplierNameError" class="error-message"></div>
+          <label for="supplierSelection" class="field-required">Select Supplier:</label>
+          <div class="supplier-selection-container">
+            <div class="supplier-select-group">
+              <select id="supplierSelection" required>
+                <option value="">Loading suppliers...</option>
+              </select>
+              <div id="supplierSelectionError" class="error-message"></div>
+            </div>
+            <button id="refreshSuppliersBtn" class="supplier-refresh-btn" title="Refresh Suppliers">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+          
+          <!-- Supplier Details Panel -->
+          <div class="supplier-details-panel" id="supplierDetailsPanel">
+            <div class="supplier-detail-row">
+              <span class="supplier-detail-label">Supplier Name:</span>
+              <span class="supplier-detail-value" id="selectedSupplierName">-</span>
+            </div>
+            <div class="supplier-detail-row">
+              <span class="supplier-detail-label">Details:</span>
+              <span class="supplier-detail-value" id="selectedSupplierDetails">-</span>
+            </div>
+            <div class="supplier-detail-row">
+              <span class="supplier-detail-label">Total Invoice Value:</span>
+              <span class="supplier-detail-value" id="selectedSupplierTotal">-</span>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="supplierDetails">Supplier Details:</label>
-          <textarea id="supplierDetails" placeholder="Supplier address, contact info, etc."></textarea>
+          <label for="supplierName">Or Add New Supplier:</label>
+          <input type="text" id="supplierName" placeholder="Enter new supplier name">
+          <div id="supplierNameError" class="error-message"></div>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
+          <label for="supplierDetails">Supplier Details:</label>
+          <textarea id="supplierDetails" placeholder="Supplier address, contact info, etc."></textarea>
+        </div>
+
+        <div class="form-group">
           <label for="purchaseInvoice">Purchase Invoice No:</label>
           <input type="text" id="purchaseInvoice" placeholder="Invoice number (if applicable)">
         </div>
+      </div>
 
+      <div class="form-row">
         <div class="form-group">
           <label for="purchaseDate" class="field-required">Purchase Date:</label>
           <input type="date" id="purchaseDate" required>
@@ -1468,11 +1575,11 @@ button:disabled {
 const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const BASEROW = "https://api.baserow.io";
 
-// Table IDs
+// Table IDs - Updated Supplier Table ID
 const USER_TABLE = 729979;
 const PRODUCT_TABLE = 734793;
 const INVENTORY_TABLE = 734795;
-const SUPPLIER_TABLE = 744412;
+const SUPPLIER_TABLE = 744412; // Updated Supplier Table ID
 
 // Field Names Configuration
 const FIELD_NAMES = {
@@ -1518,7 +1625,6 @@ const FIELD_NAMES = {
     PURCHASE_INVOICE: "Purchase Invoice",
     PURCHASE_DATE: "Purchase Date",
     TOTAL_INVOICE_VALUE: "Total Invoice Value",
-    SUPPLIER_ID: "Supplier ID",
     SHOP_ID: "ShopID"
   }
 };
@@ -1541,6 +1647,18 @@ const currentShopElement = document.getElementById("currentShop");
 const searchShopInfo = document.getElementById("searchShopInfo");
 const productsListBody = document.getElementById("productsListBody");
 const purchaseSummary = document.getElementById("purchaseSummary");
+
+// Supplier elements
+const supplierSelection = document.getElementById("supplierSelection");
+const refreshSuppliersBtn = document.getElementById("refreshSuppliersBtn");
+const supplierDetailsPanel = document.getElementById("supplierDetailsPanel");
+const selectedSupplierName = document.getElementById("selectedSupplierName");
+const selectedSupplierDetails = document.getElementById("selectedSupplierDetails");
+const selectedSupplierTotal = document.getElementById("selectedSupplierTotal");
+const supplierNameInput = document.getElementById("supplierName");
+const supplierDetailsInput = document.getElementById("supplierDetails");
+const purchaseInvoiceInput = document.getElementById("purchaseInvoice");
+const purchaseDateInput = document.getElementById("purchaseDate");
 
 const readerContainer = document.getElementById("cameraContainer");
 const modal = document.getElementById("modal");
@@ -1589,15 +1707,10 @@ const totalTaxAmountElement = document.getElementById("totalTaxAmount");
 const totalInvoiceValueElement = document.getElementById("totalInvoiceValue");
 const taxBreakdownDetails = document.getElementById("taxBreakdownDetails");
 
-// Supplier elements
-const supplierNameInput = document.getElementById("supplierName");
-const supplierDetailsInput = document.getElementById("supplierDetails");
-const purchaseInvoiceInput = document.getElementById("purchaseInvoice");
-const purchaseDateInput = document.getElementById("purchaseDate");
-
 let html5QrCode;
 let currentCamera = "environment";
 let allProducts = [];
+let allSuppliers = [];
 let selectedPeriod = "days";
 let selectedDuration = 1;
 let batchNumbers = {}; // Store batch numbers per product
@@ -1612,6 +1725,79 @@ purchaseDateInput.value = new Date().toISOString().split('T')[0];
 // Update shop information (even though it's hidden)
 currentShopElement.textContent = ShopID;
 searchShopInfo.textContent = ShopID;
+
+// Fetch suppliers from the supplier table
+async function fetchSuppliers() {
+  try {
+    supplierSelection.innerHTML = '<option value="">Loading suppliers...</option>';
+    
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    allSuppliers = data.results;
+    
+    if (allSuppliers.length === 0) {
+      supplierSelection.innerHTML = '<option value="">No suppliers found</option>';
+      showModal("info", "No Suppliers", "No suppliers found for your shop. Please add a new supplier.");
+      return;
+    }
+    
+    // Populate the supplier dropdown
+    let optionsHTML = '<option value="">Select a supplier</option>';
+    allSuppliers.forEach(supplier => {
+      const supplierName = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || 'Unnamed Supplier';
+      const totalValue = parseFloat(supplier[FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE] || 0);
+      const displayText = `${supplierName} (₹ ${totalValue.toFixed(2)})`;
+      
+      optionsHTML += `<option value="${supplier.id}" data-supplier='${JSON.stringify(supplier)}'>${displayText}</option>`;
+    });
+    
+    supplierSelection.innerHTML = optionsHTML;
+    
+    // Show success message
+    showModal("success", "Suppliers Loaded", `Loaded ${allSuppliers.length} suppliers successfully.`);
+    
+  } catch (error) {
+    console.error("Error fetching suppliers:", error);
+    supplierSelection.innerHTML = '<option value="">Error loading suppliers</option>';
+    showModal("error", "Error", "Failed to load suppliers. Please try again.");
+  }
+}
+
+// Update supplier details panel when a supplier is selected
+function updateSupplierDetailsPanel(supplierId) {
+  const selectedOption = supplierSelection.querySelector(`option[value="${supplierId}"]`);
+  
+  if (!selectedOption || !selectedOption.dataset.supplier) {
+    supplierDetailsPanel.classList.remove('show');
+    return;
+  }
+  
+  const supplier = JSON.parse(selectedOption.dataset.supplier);
+  
+  // Update the details panel
+  selectedSupplierName.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '-';
+  selectedSupplierDetails.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] || 'No details available';
+  
+  const totalValue = parseFloat(supplier[FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE] || 0);
+  selectedSupplierTotal.textContent = `₹ ${totalValue.toFixed(2)}`;
+  
+  // Auto-fill the new supplier name field
+  supplierNameInput.value = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '';
+  supplierDetailsInput.value = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] || '';
+  
+  // Show the details panel
+  supplierDetailsPanel.classList.add('show');
+  
+  // Store the current supplier ID
+  currentSupplierId = supplierId;
+}
 
 // Calculate and display expiry date
 function calculateExpiryDate() {
@@ -1755,11 +1941,6 @@ function calculatePurchaseTotals() {
   
   // Show purchase summary
   purchaseSummary.style.display = 'block';
-}
-
-// Generate unique Supplier ID
-function generateSupplierId() {
-  return 'SUP-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 }
 
 // Get next batch number for a product
@@ -1975,8 +2156,7 @@ function clearProductForm() {
 function clearEntireForm() {
   clearProductForm();
   
-  // Clear supplier fields
-  supplierNameInput.value = '';
+  // Clear supplier fields but keep selection
   supplierDetailsInput.value = '';
   purchaseInvoiceInput.value = '';
   purchaseDateInput.value = new Date().toISOString().split('T')[0];
@@ -1985,8 +2165,7 @@ function clearEntireForm() {
   productsInPurchase = [];
   updateProductsList();
   
-  // Reset current supplier
-  currentSupplierId = null;
+  // Reset totals
   totalInvoiceValue = 0;
 }
 
@@ -2066,6 +2245,26 @@ priceInput.addEventListener("input", calculateMargin);
 
 taxPercentageSelect.addEventListener("change", calculateTaxBreakdown);
 
+// Supplier selection change event
+supplierSelection.addEventListener("change", function() {
+  const selectedSupplierId = this.value;
+  if (selectedSupplierId) {
+    updateSupplierDetailsPanel(selectedSupplierId);
+  } else {
+    supplierDetailsPanel.classList.remove('show');
+    currentSupplierId = null;
+  }
+});
+
+// Refresh suppliers button
+refreshSuppliersBtn.addEventListener("click", function() {
+  fetchSuppliers();
+  this.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
+  setTimeout(() => {
+    this.innerHTML = '<i class="fas fa-sync-alt"></i>';
+  }, 1000);
+});
+
 // Modal function
 function showModal(type, title, message) {
   modalContent.className = "modal-content";
@@ -2080,6 +2279,9 @@ function showModal(type, title, message) {
   } else if (type === "error") {
     modalContent.classList.add("modal-error");
     modalIcon.innerHTML = "❌";
+  } else if (type === "info") {
+    modalContent.classList.add("modal-success");
+    modalIcon.innerHTML = "ℹ️";
   }
   
   modalTitle.textContent = title;
@@ -2251,12 +2453,16 @@ function validateSupplierForm() {
   let isValid = true;
   
   // Reset error messages
+  document.getElementById('supplierSelectionError').style.display = 'none';
   document.getElementById('supplierNameError').style.display = 'none';
   
-  // Check required fields
-  if (!supplierNameInput.value.trim()) {
-    document.getElementById('supplierNameError').textContent = 'Supplier name is required';
-    document.getElementById('supplierNameError').style.display = 'block';
+  // Check if either a supplier is selected or a new supplier name is provided
+  const selectedSupplierId = supplierSelection.value;
+  const newSupplierName = supplierNameInput.value.trim();
+  
+  if (!selectedSupplierId && !newSupplierName) {
+    document.getElementById('supplierSelectionError').textContent = 'Please select a supplier or enter a new supplier name';
+    document.getElementById('supplierSelectionError').style.display = 'block';
     isValid = false;
   }
   
@@ -2295,36 +2501,16 @@ finishPurchaseBtn.addEventListener("click", async function() {
   finishPurchaseBtn.textContent = 'Uploading...';
 
   try {
-    // Generate unique Supplier ID
-    const supplierId = generateSupplierId();
+    let supplierId = currentSupplierId;
+    const selectedSupplierId = supplierSelection.value;
+    const newSupplierName = supplierNameInput.value.trim();
     
-    // First, create or get supplier with total invoice value and Supplier ID
-    const supplierBody = {
-      [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: supplierNameInput.value,
-      [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
-      [FIELD_NAMES.SUPPLIER.PURCHASE_INVOICE]: purchaseInvoiceInput.value,
-      [FIELD_NAMES.SUPPLIER.PURCHASE_DATE]: purchaseDateInput.value,
-      [FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE]: totalInvoiceValue,
-      [FIELD_NAMES.SUPPLIER.SUPPLIER_ID]: supplierId,
-      [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
-    };
-    
-    // Check if supplier already exists
-    const supplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SUPPLIER_NAME}","type":"contains","value":"${supplierNameInput.value}"},{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers:{Authorization:`Token ${API_KEY}`}
-    });
-    
-    if (!supplierRes.ok) {
-      throw new Error(`API error: ${supplierRes.status}`);
-    }
-    
-    const supplierData = await supplierRes.json();
-    let finalSupplierId = supplierId;
-    
-    if (supplierData.results.length > 0) {
-      // Use existing supplier and update total invoice value
-      finalSupplierId = supplierData.results[0][FIELD_NAMES.SUPPLIER.SUPPLIER_ID];
-      const updateSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/${supplierData.results[0].id}/?user_field_names=true`, {
+    // If a supplier is selected from dropdown, use it
+    if (selectedSupplierId) {
+      supplierId = selectedSupplierId;
+      
+      // Update existing supplier with new total invoice value
+      const updateSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/${supplierId}/?user_field_names=true`, {
         method:"PATCH",
         headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
         body:JSON.stringify({
@@ -2335,8 +2521,18 @@ finishPurchaseBtn.addEventListener("click", async function() {
       if (!updateSupplierRes.ok) {
         throw new Error(`API error: ${updateSupplierRes.status}`);
       }
-    } else {
-      // Create new supplier
+    } 
+    // If new supplier name is provided, create new supplier
+    else if (newSupplierName) {
+      const supplierBody = {
+        [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: newSupplierName,
+        [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
+        [FIELD_NAMES.SUPPLIER.PURCHASE_INVOICE]: purchaseInvoiceInput.value,
+        [FIELD_NAMES.SUPPLIER.PURCHASE_DATE]: purchaseDateInput.value,
+        [FIELD_NAMES.SUPPLIER.TOTAL_INVOICE_VALUE]: totalInvoiceValue,
+        [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
+      };
+      
       const createSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true`, {
         method:"POST",
         headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
@@ -2347,7 +2543,8 @@ finishPurchaseBtn.addEventListener("click", async function() {
         throw new Error(`API error: ${createSupplierRes.status}`);
       }
       
-      await createSupplierRes.json();
+      const newSupplier = await createSupplierRes.json();
+      supplierId = newSupplier.id;
     }
     
     // Now add all products to inventory with supplier reference
@@ -2402,26 +2599,26 @@ finishPurchaseBtn.addEventListener("click", async function() {
         [FIELD_NAMES.INVENTORY.PURCHASE_PRICE]: product.purchasePrice,
         [FIELD_NAMES.INVENTORY.TAX_INCLUDED]: product.taxIncluded,
         [FIELD_NAMES.INVENTORY.TAX_PERCENTAGE]: product.taxPercentage,
-        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: finalSupplierId,
+        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierId,
         [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
       };
 
-      const inventoryRes = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
+      await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
         method:"POST",
         headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
         body:JSON.stringify(inventoryBody)
       });
-
-      if (!inventoryRes.ok) {
-        throw new Error(`API error: ${inventoryRes.status}`);
-      }
     }
 
     showModal("success", "Purchase Complete", `✅ ${productsInPurchase.length} products added to inventory with supplier information! Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}`);
     clearEntireForm();
+    
+    // Refresh suppliers list to show updated values
+    fetchSuppliers();
+    
   } catch (e) {
     console.error(e);
-    showModal("error", "Error", "Error completing purchase: " + e.message);
+    showModal("error", "Error", "Error completing purchase.");
   } finally {
     finishPurchaseBtn.disabled = false;
     finishPurchaseBtn.textContent = 'Finish & Upload Purchase';
@@ -2464,6 +2661,10 @@ document.getElementById('batchNo').addEventListener('input', function() {
       showModal("error", "Access Denied", "Only managers can add products and inventory.");
       return;
     }
+    
+    // Fetch suppliers after role validation
+    await fetchSuppliers();
+    
   }catch(e){ 
     console.error(e); 
     showModal("error", "Error", "Error fetching user information.");
