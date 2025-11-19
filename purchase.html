@@ -579,6 +579,27 @@ body {
   word-break: break-all;
 }
 
+.demo-notice {
+  background: rgba(255, 209, 102, 0.2);
+  border: 1px solid var(--warning);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-notice i {
+  color: var(--warning);
+  font-size: 20px;
+}
+
+.demo-notice p {
+  margin: 0;
+  color: var(--dark);
+}
+
 @media print {
   body {
     background: white;
@@ -591,7 +612,7 @@ body {
     margin: 0;
   }
   
-  .controls, .transaction-selector, .data-preview {
+  .controls, .transaction-selector, .data-preview, .demo-notice {
     display: none;
   }
   
@@ -693,6 +714,11 @@ body {
     <p>Extract and display data from Transaction table with detailed parsing</p>
   </div>
   
+  <div class="demo-notice">
+    <i class="fas fa-info-circle"></i>
+    <p><strong>Demo Mode:</strong> Using sample transaction data. To connect to your Baserow database, ensure you have valid API credentials.</p>
+  </div>
+  
   <div class="transaction-selector">
     <div class="selector-title">
       <i class="fas fa-receipt"></i> Select Transaction
@@ -775,7 +801,44 @@ const FIELD_NAMES = {
   REMARK: "Remark"
 };
 
-const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
+const ShopID = localStorage.getItem("ShopIDTag") || "DemoShop";
+
+// Sample transaction data for demonstration
+const SAMPLE_TRANSACTIONS = [
+  {
+    id: 1,
+    "Supplier ID": "SUP-001",
+    "Supplier Name": "Tech Suppliers Inc.",
+    "Transaction Type": "Purchase",
+    "Invoice Number": "INV-2023-001",
+    "Total Invoice Value": "674994.00",
+    "Date": "2023-10-15",
+    "ShopID": "DemoShop",
+    "Remark": "Apple iPhone 15,PRD-12345,₹89999.00,18% GST,Batch:1,Qty:5 - Samsung Galaxy,PRD-67890,₹74999.00,No Tax,Batch:2,Qty:3"
+  },
+  {
+    id: 2,
+    "Supplier ID": "SUP-002",
+    "Supplier Name": "Electronics World",
+    "Transaction Type": "Purchase",
+    "Invoice Number": "INV-2023-002",
+    "Total Invoice Value": "283990.00",
+    "Date": "2023-10-18",
+    "ShopID": "DemoShop",
+    "Remark": "Sony Headphones,PRD-54321,₹18999.00,12% GST,Batch:3,Qty:8 - Dell Laptop,PRD-98765,₹64999.00,18% GST,Batch:4,Qty:2"
+  },
+  {
+    id: 3,
+    "Supplier ID": "SUP-003",
+    "Supplier Name": "Mobile Accessories Co.",
+    "Transaction Type": "Purchase",
+    "Invoice Number": "INV-2023-003",
+    "Total Invoice Value": "125000.00",
+    "Date": "2023-10-20",
+    "ShopID": "DemoShop",
+    "Remark": "Phone Cases,PRD-11223,₹500.00,No Tax,Batch:5,Qty:150 - Chargers,PRD-44556,₹1000.00,12% GST,Batch:6,Qty:50"
+  }
+];
 
 // DOM Elements
 const generateInvoiceBtn = document.getElementById("generateInvoiceBtn");
@@ -799,6 +862,7 @@ const modalButton = document.getElementById("modalButton");
 // Global variables
 let transactions = [];
 let selectedTransaction = null;
+let usingSampleData = false;
 
 // Company details
 const companyDetails = {
@@ -843,100 +907,128 @@ modal.addEventListener("click", function(e) {
   }
 });
 
-// Fetch transactions from Transaction table
+// Fetch transactions from Transaction table with fallback to sample data
 async function fetchTransactions() {
   try {
     transactionList.innerHTML = `
       <div class="loading">
         <div class="loading-spinner"></div>
+        <span style="margin-left: 10px;">Connecting to database...</span>
       </div>
     `;
     
+    console.log("Attempting to fetch transactions from Baserow...");
+    
     const res = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SHOP_ID}","type":"contains","value":"${ShopID}"}]}&order_by=-id`, {
-      headers: { Authorization: `Token ${API_KEY}` }
+      headers: { 
+        Authorization: `Token ${API_KEY}`,
+        'Content-Type': 'application/json'
+      }
     });
     
     if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
+      throw new Error(`API returned status: ${res.status} - ${res.statusText}`);
     }
     
     const data = await res.json();
     transactions = data.results;
+    usingSampleData = false;
+    
+    console.log("Successfully fetched transactions:", transactions);
     
     if (transactions.length === 0) {
-      transactionList.innerHTML = `
-        <div class="no-invoice">
-          <i class="fas fa-receipt"></i>
-          <h3>No Transactions Found</h3>
-          <p>No transactions found for your shop</p>
-        </div>
-      `;
-      return;
+      throw new Error("No transactions found in database");
     }
     
-    // Display transactions in the list
-    let transactionHTML = '';
-    transactions.forEach((transaction, index) => {
-      // Get invoice number directly from transaction
-      const invoiceNumber = transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`;
-      const supplierName = transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Unknown Supplier';
-      const transactionDate = transaction[FIELD_NAMES.DATE] || 'Unknown Date';
-      const totalAmount = parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0);
-      
-      transactionHTML += `
-        <div class="transaction-item ${index === 0 ? 'active' : ''}" data-index="${index}">
-          <div class="transaction-info">
-            <div class="transaction-invoice">${invoiceNumber}</div>
-            <div class="transaction-supplier">${supplierName}</div>
-            <div class="transaction-date">${transactionDate}</div>
-          </div>
-          <div class="transaction-amount">₹${totalAmount.toFixed(2)}</div>
-        </div>
-      `;
-    });
-    
-    transactionList.innerHTML = transactionHTML;
-    
-    // Set the first transaction as selected by default
-    if (transactions.length > 0) {
-      selectedTransaction = transactions[0];
-      updateDataPreview(selectedTransaction);
-    }
-    
-    // Add click event listeners to transaction items
-    document.querySelectorAll('.transaction-item').forEach(item => {
-      item.addEventListener('click', function() {
-        // Remove active class from all items
-        document.querySelectorAll('.transaction-item').forEach(i => {
-          i.classList.remove('active');
-        });
-        
-        // Add active class to clicked item
-        this.classList.add('active');
-        
-        // Set selected transaction
-        const index = parseInt(this.getAttribute('data-index'));
-        selectedTransaction = transactions[index];
-        
-        // Update data preview
-        updateDataPreview(selectedTransaction);
-        
-        // Clear any existing invoice
-        clearInvoice();
-      });
-    });
+    displayTransactions();
     
   } catch (error) {
     console.error("Error fetching transactions:", error);
+    
+    // Use sample data as fallback
+    transactions = SAMPLE_TRANSACTIONS;
+    usingSampleData = true;
+    
+    displayTransactions();
+    
+    showModal("warning", "Using Demo Data", 
+      `Could not connect to your database. Using sample transaction data for demonstration.
+      <br><br>
+      <strong>Possible issues:</strong>
+      <br>• Invalid API Key
+      <br>• Network connectivity issues
+      <br>• Table permissions
+      <br>• Incorrect table ID
+      <br><br>
+      <small>Error details: ${error.message}</small>`);
+  }
+}
+
+// Display transactions in the list
+function displayTransactions() {
+  if (transactions.length === 0) {
     transactionList.innerHTML = `
       <div class="no-invoice">
-        <i class="fas fa-exclamation-triangle"></i>
-        <h3>Error Loading Transactions</h3>
-        <p>Failed to fetch transactions from database</p>
+        <i class="fas fa-receipt"></i>
+        <h3>No Transactions Found</h3>
+        <p>No transactions found for your shop</p>
       </div>
     `;
-    showModal("error", "Error", "Failed to fetch transactions. Please try again.");
+    return;
   }
+  
+  // Display transactions in the list
+  let transactionHTML = '';
+  transactions.forEach((transaction, index) => {
+    // Get invoice number directly from transaction
+    const invoiceNumber = transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`;
+    const supplierName = transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Unknown Supplier';
+    const transactionDate = transaction[FIELD_NAMES.DATE] || 'Unknown Date';
+    const totalAmount = parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0);
+    
+    transactionHTML += `
+      <div class="transaction-item ${index === 0 ? 'active' : ''}" data-index="${index}">
+        <div class="transaction-info">
+          <div class="transaction-invoice">${invoiceNumber}</div>
+          <div class="transaction-supplier">${supplierName}</div>
+          <div class="transaction-date">${transactionDate}</div>
+          ${usingSampleData ? '<small style="color: var(--warning);">Demo Data</small>' : ''}
+        </div>
+        <div class="transaction-amount">₹${totalAmount.toFixed(2)}</div>
+      </div>
+    `;
+  });
+  
+  transactionList.innerHTML = transactionHTML;
+  
+  // Set the first transaction as selected by default
+  if (transactions.length > 0) {
+    selectedTransaction = transactions[0];
+    updateDataPreview(selectedTransaction);
+  }
+  
+  // Add click event listeners to transaction items
+  document.querySelectorAll('.transaction-item').forEach(item => {
+    item.addEventListener('click', function() {
+      // Remove active class from all items
+      document.querySelectorAll('.transaction-item').forEach(i => {
+        i.classList.remove('active');
+      });
+      
+      // Add active class to clicked item
+      this.classList.add('active');
+      
+      // Set selected transaction
+      const index = parseInt(this.getAttribute('data-index'));
+      selectedTransaction = transactions[index];
+      
+      // Update data preview
+      updateDataPreview(selectedTransaction);
+      
+      // Clear any existing invoice
+      clearInvoice();
+    });
+  });
 }
 
 // Update data preview with selected transaction details
@@ -1161,6 +1253,7 @@ function generateInvoiceHTML(transaction, products) {
         <div><strong>Transaction Date:</strong> ${formattedDate}</div>
         <div><strong>Number of Products:</strong> ${products.length}</div>
         <div><strong>Total Items:</strong> ${products.reduce((sum, product) => sum + product.quantity, 0)}</div>
+        ${usingSampleData ? '<div style="color: var(--warning); margin-top: 10px;"><strong>Note:</strong> Using demo data</div>' : ''}
       </div>
       
       <div class="signature">
@@ -1210,7 +1303,8 @@ async function generateInvoice() {
     <br>- Invoice: ${transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`}
     <br>- Supplier: ${transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Unknown'}
     <br>- Products: ${products.length} items
-    <br>- Total: ₹${parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0).toFixed(2)}`);
+    <br>- Total: ₹${parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0).toFixed(2)}
+    ${usingSampleData ? '<br><br><strong>Note:</strong> Using demo transaction data' : ''}`);
 }
 
 // Print invoice
