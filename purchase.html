@@ -621,7 +621,6 @@ const BASEROW = "https://api.baserow.io";
 // Table IDs
 const TRANSACTION_TABLE = 745465;
 const SUPPLIER_TABLE = 744412;
-const INVENTORY_TABLE = 734795;
 
 // Field Names
 const FIELD_NAMES = {
@@ -639,20 +638,6 @@ const FIELD_NAMES = {
     SUPPLIER_ID: "Supplier ID",
     SUPPLIER_NAME: "Supplier Name",
     SUPPLIER_DETAILS: "Supplier Details",
-    SHOP_ID: "ShopID"
-  },
-  INVENTORY: {
-    PRODUCT_ID: "Product ID",
-    PRODUCT_NAME: "Product Name",
-    COUNT: "Count",
-    BATCH_NO: "Batch No",
-    EXPIRE_DATE: "Expire Date",
-    DATE: "Date",
-    LOCATION: "Location",
-    PURCHASE_PRICE: "Purchase Price",
-    TAX_INCLUDED: "Tax Included",
-    TAX_PERCENTAGE: "Tax Percentage",
-    SUPPLIER_ID: "Supplier ID",
     SHOP_ID: "ShopID"
   }
 };
@@ -815,47 +800,6 @@ async function fetchPurchaseTransactions() {
   }
 }
 
-// Fetch supplier details
-async function fetchSupplierDetails(supplierId) {
-  try {
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SUPPLIER_ID}","type":"contains","value":"${supplierId}"},{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    return data.results.length > 0 ? data.results[0] : null;
-  } catch (error) {
-    console.error("Error fetching supplier:", error);
-    return null;
-  }
-}
-
-// Fetch inventory items for a purchase
-async function fetchInventoryItems(supplierId, invoiceNumber) {
-  try {
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.INVENTORY.SUPPLIER_ID}","type":"contains","value":"${supplierId}"},{"field":"${FIELD_NAMES.INVENTORY.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    
-    // Filter items by invoice number if possible
-    // For now, we'll return all items from this supplier
-    return data.results;
-  } catch (error) {
-    console.error("Error fetching inventory:", error);
-    return [];
-  }
-}
-
 // Parse product details from transaction remark
 function parseProductDetails(remark) {
   if (!remark) return [];
@@ -866,14 +810,46 @@ function parseProductDetails(remark) {
   productSections.forEach(section => {
     const parts = section.split(',');
     if (parts.length >= 6) {
+      // Extract product details from the parts
+      const productName = parts[0].trim();
+      const productId = parts[1].trim();
+      
+      // Extract price (remove ₹ symbol and convert to number)
+      const priceStr = parts[2].replace('₹', '').trim();
+      const purchasePrice = parseFloat(priceStr);
+      
+      // Extract tax information
+      const taxInfo = parts[3].trim();
+      
+      // Extract batch number
+      const batchNo = parts[4].replace('Batch:', '').trim();
+      
+      // Extract quantity
+      const quantityStr = parts[5].replace('Qty:', '').trim();
+      const quantity = parseInt(quantityStr);
+      
+      // Calculate tax amount if tax percentage is provided
+      let taxAmount = 0;
+      let taxPercentage = 0;
+      
+      const taxMatch = taxInfo.match(/(\d+)%/);
+      if (taxMatch) {
+        taxPercentage = parseFloat(taxMatch[1]);
+        taxAmount = (purchasePrice * quantity * taxPercentage) / 100;
+      }
+      
       const product = {
-        name: parts[0],
-        id: parts[1],
-        purchasePrice: parseFloat(parts[2].replace('₹', '').trim()),
-        taxInfo: parts[3],
-        batchNo: parts[4].replace('Batch:', '').trim(),
-        quantity: parseInt(parts[5].replace('Qty:', '').trim())
+        name: productName,
+        id: productId,
+        purchasePrice: purchasePrice,
+        taxInfo: taxInfo,
+        taxPercentage: taxPercentage,
+        taxAmount: taxAmount,
+        batchNo: batchNo,
+        quantity: quantity,
+        total: purchasePrice * quantity
       };
+      
       products.push(product);
     }
   });
@@ -882,31 +858,21 @@ function parseProductDetails(remark) {
 }
 
 // Generate invoice HTML
-function generateInvoiceHTML(purchase, supplier, products) {
+function generateInvoiceHTML(purchase, products) {
   const invoiceNumber = purchase[FIELD_NAMES.TRANSACTION.INVOICE_NUMBER] || `INV-${purchase.id}`;
   const purchaseDate = purchase[FIELD_NAMES.TRANSACTION.DATE] || new Date().toISOString().split('T')[0];
-  const totalAmount = purchase[FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE] || 0;
+  const totalAmount = parseFloat(purchase[FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE] || 0);
+  const supplierId = purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_ID] || 'N/A';
+  const supplierName = purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_NAME] || 'Unknown Supplier';
   
-  // Calculate tax breakdown
-  let taxAmount = 0;
+  // Calculate totals from products
   let subtotal = 0;
+  let totalTax = 0;
   
   products.forEach(product => {
-    const productTotal = product.purchasePrice * product.quantity;
-    subtotal += productTotal;
-    
-    // Extract tax percentage if available
-    const taxMatch = product.taxInfo.match(/(\d+)%/);
-    if (taxMatch) {
-      const taxRate = parseFloat(taxMatch[1]) / 100;
-      taxAmount += productTotal * taxRate;
-    }
+    subtotal += product.total;
+    totalTax += product.taxAmount;
   });
-  
-  // If we couldn't calculate tax from products, estimate it
-  if (taxAmount === 0 && totalAmount > subtotal) {
-    taxAmount = totalAmount - subtotal;
-  }
   
   // Format date
   const formattedDate = new Date(purchaseDate).toLocaleDateString('en-US', {
@@ -938,11 +904,9 @@ function generateInvoiceHTML(purchase, supplier, products) {
       <div class="bill-to">
         <div class="section-title">Supplier Details</div>
         <div class="party-details">
-          <div class="party-name">${supplier ? supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] : purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_NAME] || 'Supplier'}</div>
-          <div><strong>Supplier ID:</strong> ${purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_ID] || 'N/A'}</div>
-          ${supplier && supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] ? 
-            `<div><strong>Details:</strong> ${supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]}</div>` : 
-            ''}
+          <div class="party-name">${supplierName}</div>
+          <div><strong>Supplier ID:</strong> ${supplierId}</div>
+          <div><strong>Invoice Total:</strong> ₹${totalAmount.toFixed(2)}</div>
         </div>
       </div>
       
@@ -980,7 +944,7 @@ function generateInvoiceHTML(purchase, supplier, products) {
             <td class="text-right">${product.quantity}</td>
             <td class="text-right">₹${product.purchasePrice.toFixed(2)}</td>
             <td class="text-right">${product.taxInfo}</td>
-            <td class="text-right">₹${(product.purchasePrice * product.quantity).toFixed(2)}</td>
+            <td class="text-right">₹${product.total.toFixed(2)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -994,11 +958,11 @@ function generateInvoiceHTML(purchase, supplier, products) {
         </tr>
         <tr>
           <td class="summary-label">Tax:</td>
-          <td class="summary-value">₹${taxAmount.toFixed(2)}</td>
+          <td class="summary-value">₹${totalTax.toFixed(2)}</td>
         </tr>
         <tr>
           <td class="summary-label">Total Invoice Value:</td>
-          <td class="summary-value">₹${parseFloat(totalAmount).toFixed(2)}</td>
+          <td class="summary-value">₹${totalAmount.toFixed(2)}</td>
         </tr>
       </table>
     </div>
@@ -1009,8 +973,8 @@ function generateInvoiceHTML(purchase, supplier, products) {
         <div><strong>Transaction Type:</strong> ${purchase[FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE] || 'Purchase'}</div>
         <div><strong>Invoice Number:</strong> ${invoiceNumber}</div>
         <div><strong>Transaction Date:</strong> ${formattedDate}</div>
-        ${purchase[FIELD_NAMES.TRANSACTION.REMARK] ? 
-          `<div><strong>Remarks:</strong> ${purchase[FIELD_NAMES.TRANSACTION.REMARK]}</div>` : ''}
+        <div><strong>Number of Products:</strong> ${products.length}</div>
+        <div><strong>Total Items:</strong> ${products.reduce((sum, product) => sum + product.quantity, 0)}</div>
       </div>
       
       <div class="signature">
@@ -1030,52 +994,37 @@ async function generateInvoice() {
   }
   
   const purchase = selectedPurchase;
-  const supplierId = purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_ID];
+  const remark = purchase[FIELD_NAMES.TRANSACTION.REMARK];
   
-  if (!supplierId) {
-    showModal("error", "Missing Information", "This purchase doesn't have a supplier ID.");
+  if (!remark) {
+    showModal("error", "Missing Product Details", "This purchase doesn't have product details in the remarks field.");
     return;
   }
   
-  const supplier = await fetchSupplierDetails(supplierId);
-  
-  // Parse product details from remark or fetch from inventory
-  let products = [];
-  const remark = purchase[FIELD_NAMES.TRANSACTION.REMARK];
-  
-  if (remark) {
-    products = parseProductDetails(remark);
-  }
-  
-  // If we couldn't parse products from remark, try to fetch from inventory
-  if (products.length === 0) {
-    const inventoryItems = await fetchInventoryItems(supplierId, purchase[FIELD_NAMES.TRANSACTION.INVOICE_NUMBER]);
-    
-    products = inventoryItems.map(item => ({
-      name: item[FIELD_NAMES.INVENTORY.PRODUCT_NAME],
-      id: item[FIELD_NAMES.INVENTORY.PRODUCT_ID],
-      purchasePrice: parseFloat(item[FIELD_NAMES.INVENTORY.PURCHASE_PRICE] || 0),
-      taxInfo: item[FIELD_NAMES.INVENTORY.TAX_INCLUDED] === "Yes" ? 
-        `${item[FIELD_NAMES.INVENTORY.TAX_PERCENTAGE] || 0}% GST` : "No Tax",
-      batchNo: item[FIELD_NAMES.INVENTORY.BATCH_NO],
-      quantity: parseInt(item[FIELD_NAMES.INVENTORY.COUNT] || 0)
-    }));
-  }
+  // Parse product details from remark
+  const products = parseProductDetails(remark);
   
   if (products.length === 0) {
-    showModal("warning", "No Products", "No product details found for this purchase.");
+    showModal("warning", "No Products", "No product details found in the remarks field.");
     return;
   }
   
   // Generate and display the invoice
-  const invoiceHTML = generateInvoiceHTML(purchase, supplier, products);
+  const invoiceHTML = generateInvoiceHTML(purchase, products);
   invoiceContent.innerHTML = invoiceHTML;
   
   // Show the invoice and hide the "no invoice" message
   noInvoiceMessage.style.display = "none";
   invoiceContent.style.display = "block";
   
-  showModal("success", "Invoice Generated", "Purchase invoice has been generated successfully!");
+  showModal("success", "Invoice Generated", 
+    `Purchase invoice has been generated successfully!
+    <br><br>
+    <strong>Details:</strong>
+    <br>- Invoice: ${purchase[FIELD_NAMES.TRANSACTION.INVOICE_NUMBER] || `INV-${purchase.id}`}
+    <br>- Supplier: ${purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_NAME] || 'Unknown'}
+    <br>- Products: ${products.length} items
+    <br>- Total: ₹${parseFloat(purchase[FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE] || 0).toFixed(2)}`);
 }
 
 // Print invoice
