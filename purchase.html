@@ -122,6 +122,14 @@ h2::after {
   background: #e0355f;
 }
 
+.btn-info {
+  background: #17a2b8;
+}
+
+.btn-info:hover {
+  background: #138496;
+}
+
 .invoice-container {
   background: white;
   border-radius: var(--border-radius);
@@ -307,6 +315,79 @@ h2::after {
   color: var(--border);
 }
 
+.purchase-selector {
+  background: rgba(67, 97, 238, 0.05);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+.selector-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.purchase-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+}
+
+.purchase-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.purchase-item:hover {
+  background: rgba(67, 97, 238, 0.07);
+}
+
+.purchase-item:last-child {
+  border-bottom: none;
+}
+
+.purchase-item.active {
+  background: rgba(67, 97, 238, 0.1);
+  border-left: 4px solid var(--primary);
+}
+
+.purchase-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.purchase-invoice {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.purchase-supplier {
+  color: var(--dark);
+  margin-top: 3px;
+}
+
+.purchase-date {
+  color: var(--gray);
+  font-size: 14px;
+}
+
+.purchase-amount {
+  font-weight: 600;
+  color: var(--success);
+}
+
 .modal {
   display: none;
   position: fixed;
@@ -392,7 +473,7 @@ h2::after {
     padding: 0;
   }
   
-  .invoice-controls {
+  .invoice-controls, .purchase-selector {
     display: none;
   }
   
@@ -441,6 +522,16 @@ h2::after {
   .invoice-table td {
     padding: 10px 8px;
   }
+  
+  .purchase-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .purchase-amount {
+    align-self: flex-end;
+  }
 }
 
 @media (max-width: 480px) {
@@ -471,6 +562,19 @@ h2::after {
 <div class="container">
   <h2>Purchase Invoice Generator</h2>
   
+  <div class="purchase-selector">
+    <div class="selector-title">
+      <i class="fas fa-shopping-cart"></i> Select Purchase Transaction
+    </div>
+    <div class="purchase-list" id="purchaseList">
+      <div class="no-invoice">
+        <i class="fas fa-spinner fa-spin"></i>
+        <h3>Loading Purchases...</h3>
+        <p>Fetching purchase transactions from database</p>
+      </div>
+    </div>
+  </div>
+  
   <div class="invoice-controls">
     <button class="btn" id="generateInvoiceBtn">
       <i class="fas fa-file-invoice"></i> Generate Invoice
@@ -481,8 +585,8 @@ h2::after {
     <button class="btn btn-warning" id="downloadInvoiceBtn">
       <i class="fas fa-download"></i> Download PDF
     </button>
-    <button class="btn btn-danger" id="clearInvoiceBtn">
-      <i class="fas fa-trash"></i> Clear Invoice
+    <button class="btn btn-info" id="refreshPurchasesBtn">
+      <i class="fas fa-sync-alt"></i> Refresh Purchases
     </button>
   </div>
   
@@ -490,7 +594,7 @@ h2::after {
     <div class="no-invoice" id="noInvoiceMessage">
       <i class="fas fa-file-invoice-dollar"></i>
       <h3>No Invoice Generated</h3>
-      <p>Click "Generate Invoice" to create a purchase invoice based on your recent purchases.</p>
+      <p>Select a purchase transaction and click "Generate Invoice" to create a purchase invoice.</p>
     </div>
     
     <div id="invoiceContent" style="display: none;">
@@ -559,7 +663,8 @@ const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
 const generateInvoiceBtn = document.getElementById("generateInvoiceBtn");
 const printInvoiceBtn = document.getElementById("printInvoiceBtn");
 const downloadInvoiceBtn = document.getElementById("downloadInvoiceBtn");
-const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
+const refreshPurchasesBtn = document.getElementById("refreshPurchasesBtn");
+const purchaseList = document.getElementById("purchaseList");
 const invoiceContainer = document.getElementById("invoiceContainer");
 const noInvoiceMessage = document.getElementById("noInvoiceMessage");
 const invoiceContent = document.getElementById("invoiceContent");
@@ -570,9 +675,13 @@ const modalTitle = document.getElementById("modalTitle");
 const modalMessage = document.getElementById("modalMessage");
 const modalButton = document.getElementById("modalButton");
 
-// Sample company details (you can replace with actual data)
+// Global variables
+let purchaseTransactions = [];
+let selectedPurchase = null;
+
+// Company details
 const companyDetails = {
-  name: "Your Company Name",
+  name: `${ShopID} Store`,
   address: "123 Business Street, City, State 12345",
   phone: "(123) 456-7890",
   email: "info@yourcompany.com",
@@ -613,9 +722,17 @@ modal.addEventListener("click", function(e) {
   }
 });
 
-// Fetch recent purchase transactions
-async function fetchRecentPurchases() {
+// Fetch purchase transactions from Transaction table
+async function fetchPurchaseTransactions() {
   try {
+    purchaseList.innerHTML = `
+      <div class="no-invoice">
+        <i class="fas fa-spinner fa-spin"></i>
+        <h3>Loading Purchases...</h3>
+        <p>Fetching purchase transactions from database</p>
+      </div>
+    `;
+    
     const res = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE}","type":"contains","value":"Purchase"},{"field":"${FIELD_NAMES.TRANSACTION.SHOP_ID}","type":"contains","value":"${ShopID}"}]}&order_by=-id`, {
       headers: { Authorization: `Token ${API_KEY}` }
     });
@@ -625,11 +742,76 @@ async function fetchRecentPurchases() {
     }
     
     const data = await res.json();
-    return data.results;
+    purchaseTransactions = data.results;
+    
+    if (purchaseTransactions.length === 0) {
+      purchaseList.innerHTML = `
+        <div class="no-invoice">
+          <i class="fas fa-shopping-cart"></i>
+          <h3>No Purchases Found</h3>
+          <p>No purchase transactions found for your shop</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Display purchase transactions in the list
+    let purchaseHTML = '';
+    purchaseTransactions.forEach((purchase, index) => {
+      const invoiceNumber = purchase[FIELD_NAMES.TRANSACTION.INVOICE_NUMBER] || `INV-${purchase.id}`;
+      const supplierName = purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_NAME] || 'Unknown Supplier';
+      const purchaseDate = purchase[FIELD_NAMES.TRANSACTION.DATE] || 'Unknown Date';
+      const totalAmount = parseFloat(purchase[FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE] || 0);
+      
+      purchaseHTML += `
+        <div class="purchase-item ${index === 0 ? 'active' : ''}" data-index="${index}">
+          <div class="purchase-info">
+            <div class="purchase-invoice">${invoiceNumber}</div>
+            <div class="purchase-supplier">${supplierName}</div>
+            <div class="purchase-date">${purchaseDate}</div>
+          </div>
+          <div class="purchase-amount">₹${totalAmount.toFixed(2)}</div>
+        </div>
+      `;
+    });
+    
+    purchaseList.innerHTML = purchaseHTML;
+    
+    // Set the first purchase as selected by default
+    if (purchaseTransactions.length > 0) {
+      selectedPurchase = purchaseTransactions[0];
+    }
+    
+    // Add click event listeners to purchase items
+    document.querySelectorAll('.purchase-item').forEach(item => {
+      item.addEventListener('click', function() {
+        // Remove active class from all items
+        document.querySelectorAll('.purchase-item').forEach(i => {
+          i.classList.remove('active');
+        });
+        
+        // Add active class to clicked item
+        this.classList.add('active');
+        
+        // Set selected purchase
+        const index = parseInt(this.getAttribute('data-index'));
+        selectedPurchase = purchaseTransactions[index];
+        
+        // Clear any existing invoice
+        clearInvoice();
+      });
+    });
+    
   } catch (error) {
     console.error("Error fetching purchases:", error);
-    showModal("error", "Error", "Failed to fetch purchase data. Please try again.");
-    return [];
+    purchaseList.innerHTML = `
+      <div class="no-invoice">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Error Loading Purchases</h3>
+        <p>Failed to fetch purchase transactions</p>
+      </div>
+    `;
+    showModal("error", "Error", "Failed to fetch purchase transactions. Please try again.");
   }
 }
 
@@ -665,7 +847,7 @@ async function fetchInventoryItems(supplierId, invoiceNumber) {
     
     const data = await res.json();
     
-    // Filter items by invoice number (if available in remark or other field)
+    // Filter items by invoice number if possible
     // For now, we'll return all items from this supplier
     return data.results;
   } catch (error) {
@@ -687,10 +869,10 @@ function parseProductDetails(remark) {
       const product = {
         name: parts[0],
         id: parts[1],
-        purchasePrice: parseFloat(parts[2].replace('₹', '')),
+        purchasePrice: parseFloat(parts[2].replace('₹', '').trim()),
         taxInfo: parts[3],
-        batchNo: parts[4].replace('Batch:', ''),
-        quantity: parseInt(parts[5].replace('Qty:', ''))
+        batchNo: parts[4].replace('Batch:', '').trim(),
+        quantity: parseInt(parts[5].replace('Qty:', '').trim())
       };
       products.push(product);
     }
@@ -754,21 +936,23 @@ function generateInvoiceHTML(purchase, supplier, products) {
     
     <div class="invoice-parties">
       <div class="bill-to">
-        <div class="section-title">Bill To</div>
+        <div class="section-title">Supplier Details</div>
         <div class="party-details">
-          <div class="party-name">${supplier ? supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] : 'Supplier'}</div>
+          <div class="party-name">${supplier ? supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] : purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_NAME] || 'Supplier'}</div>
+          <div><strong>Supplier ID:</strong> ${purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_ID] || 'N/A'}</div>
           ${supplier && supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] ? 
-            supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS].replace(/\n/g, '<br>') : 
-            'Supplier details not available'}
+            `<div><strong>Details:</strong> ${supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]}</div>` : 
+            ''}
         </div>
       </div>
       
       <div class="ship-to">
-        <div class="section-title">Ship To</div>
+        <div class="section-title">Store Details</div>
         <div class="party-details">
           <div class="party-name">${companyDetails.name}</div>
           ${companyDetails.address}<br>
-          ${companyDetails.phone}
+          ${companyDetails.phone}<br>
+          Shop ID: ${ShopID}
         </div>
       </div>
     </div>
@@ -776,7 +960,8 @@ function generateInvoiceHTML(purchase, supplier, products) {
     <table class="invoice-table">
       <thead>
         <tr>
-          <th>Item</th>
+          <th>#</th>
+          <th>Product Description</th>
           <th>Product ID</th>
           <th>Batch No</th>
           <th class="text-right">Quantity</th>
@@ -788,7 +973,8 @@ function generateInvoiceHTML(purchase, supplier, products) {
       <tbody>
         ${products.map((product, index) => `
           <tr>
-            <td>${index + 1}. ${product.name}</td>
+            <td>${index + 1}</td>
+            <td>${product.name}</td>
             <td>${product.id}</td>
             <td>${product.batchNo}</td>
             <td class="text-right">${product.quantity}</td>
@@ -811,17 +997,20 @@ function generateInvoiceHTML(purchase, supplier, products) {
           <td class="summary-value">₹${taxAmount.toFixed(2)}</td>
         </tr>
         <tr>
-          <td class="summary-label">Total:</td>
-          <td class="summary-value">₹${totalAmount.toFixed(2)}</td>
+          <td class="summary-label">Total Invoice Value:</td>
+          <td class="summary-value">₹${parseFloat(totalAmount).toFixed(2)}</td>
         </tr>
       </table>
     </div>
     
     <div class="invoice-footer">
       <div class="terms">
-        <div class="terms-title">Terms & Conditions</div>
-        <div>Payment due within 30 days of invoice date.</div>
-        <div>Please make checks payable to ${companyDetails.name}.</div>
+        <div class="terms-title">Transaction Details</div>
+        <div><strong>Transaction Type:</strong> ${purchase[FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE] || 'Purchase'}</div>
+        <div><strong>Invoice Number:</strong> ${invoiceNumber}</div>
+        <div><strong>Transaction Date:</strong> ${formattedDate}</div>
+        ${purchase[FIELD_NAMES.TRANSACTION.REMARK] ? 
+          `<div><strong>Remarks:</strong> ${purchase[FIELD_NAMES.TRANSACTION.REMARK]}</div>` : ''}
       </div>
       
       <div class="signature">
@@ -835,15 +1024,12 @@ function generateInvoiceHTML(purchase, supplier, products) {
 
 // Generate invoice
 async function generateInvoice() {
-  const purchases = await fetchRecentPurchases();
-  
-  if (purchases.length === 0) {
-    showModal("warning", "No Purchases", "No purchase transactions found for your shop.");
+  if (!selectedPurchase) {
+    showModal("warning", "No Purchase Selected", "Please select a purchase transaction first.");
     return;
   }
   
-  // Use the most recent purchase
-  const purchase = purchases[0];
+  const purchase = selectedPurchase;
   const supplierId = purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_ID];
   
   if (!supplierId) {
@@ -902,7 +1088,7 @@ function printInvoice() {
   window.print();
 }
 
-// Download invoice as PDF (simplified version - would need a proper PDF library for full implementation)
+// Download invoice as PDF (simplified version)
 function downloadInvoice() {
   if (invoiceContent.style.display === "none") {
     showModal("warning", "No Invoice", "Please generate an invoice first.");
@@ -910,7 +1096,6 @@ function downloadInvoice() {
   }
   
   // In a real implementation, you would use a library like jsPDF
-  // This is a simplified version that just opens the print dialog
   showModal("info", "Download PDF", "For full PDF download functionality, a PDF library would be needed. For now, you can use the print function and save as PDF from the print dialog.");
 }
 
@@ -918,14 +1103,13 @@ function downloadInvoice() {
 function clearInvoice() {
   invoiceContent.style.display = "none";
   noInvoiceMessage.style.display = "block";
-  showModal("success", "Invoice Cleared", "The invoice has been cleared.");
 }
 
 // Event listeners
 generateInvoiceBtn.addEventListener("click", generateInvoice);
 printInvoiceBtn.addEventListener("click", printInvoice);
 downloadInvoiceBtn.addEventListener("click", downloadInvoice);
-clearInvoiceBtn.addEventListener("click", clearInvoice);
+refreshPurchasesBtn.addEventListener("click", fetchPurchaseTransactions);
 
 // Initialize
 document.addEventListener("DOMContentLoaded", function() {
@@ -936,8 +1120,8 @@ document.addEventListener("DOMContentLoaded", function() {
     return;
   }
   
-  // Set company details based on shop
-  companyDetails.name = `${ShopID} Store`;
+  // Fetch purchase transactions on page load
+  fetchPurchaseTransactions();
 });
 </script>
 </body>
