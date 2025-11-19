@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchase Invoice Generator</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --success: #06d6a0;
+  --danger: #ef476f;
+  --warning: #ffd166;
+  --dark: #333;
+  --light: #f8f9fa;
+  --gray: #6c757d;
+  --border: #dee2e6;
+  --border-radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0; 
+  padding: 20px;
+  min-height: 100vh;
+  color: var(--dark);
+}
+
+.container { 
+  max-width: 1200px; 
+  margin: auto; 
+  background: white; 
+  padding: 30px; 
+  border-radius: var(--border-radius); 
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.container:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+h2 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.invoice-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+}
+
+.btn-success {
+  background: var(--success);
+}
+
+.btn-success:hover {
+  background: #05c290;
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: var(--dark);
+}
+
+.btn-warning:hover {
+  background: #ffc94d;
+}
+
+.btn-danger {
+  background: var(--danger);
+}
+
+.btn-danger:hover {
+  background: #e0355f;
+}
+
+.invoice-container {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 30px;
+  margin-bottom: 20px;
+}
+
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.invoice-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.invoice-meta {
+  text-align: right;
+}
+
+.invoice-number {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.invoice-date {
+  color: var(--gray);
+}
+
+.invoice-company {
+  margin-bottom: 30px;
+}
+
+.company-name {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.company-details {
+  color: var(--gray);
+  line-height: 1.5;
+}
+
+.invoice-parties {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.bill-to, .ship-to {
+  flex: 1;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.party-details {
+  line-height: 1.6;
+}
+
+.party-name {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+}
+
+.invoice-table th {
+  background: var(--primary);
+  color: white;
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.invoice-table td {
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.invoice-table tr:nth-child(even) {
+  background: rgba(67, 97, 238, 0.03);
+}
+
+.invoice-table tr:hover {
+  background: rgba(67, 97, 238, 0.07);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.invoice-summary {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 30px;
+}
+
+.summary-table {
+  width: 300px;
+  border-collapse: collapse;
+}
+
+.summary-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-table tr:last-child td {
+  border-bottom: none;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--success);
+}
+
+.summary-label {
+  text-align: right;
+  font-weight: 500;
+}
+
+.summary-value {
+  text-align: right;
+  font-weight: 600;
+}
+
+.invoice-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border);
+}
+
+.terms, .signature {
+  flex: 1;
+}
+
+.terms-title, .signature-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--primary);
+}
+
+.signature-area {
+  height: 80px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.no-invoice {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray);
+  font-style: italic;
+}
+
+.no-invoice i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: var(--border);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.modal-success .modal-icon {
+  color: var(--success);
+}
+
+.modal-warning .modal-icon {
+  color: var(--warning);
+}
+
+.modal-error .modal-icon {
+  color: var(--danger);
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.modal-message {
+  margin-bottom: 20px;
+  color: var(--dark);
+}
+
+.modal-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: auto;
+  margin: 0 auto;
+}
+
+.modal-button:hover {
+  background: var(--primary-dark);
+}
+
+@media print {
+  body {
+    background: white;
+    padding: 0;
+  }
+  
+  .container {
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .invoice-controls {
+    display: none;
+  }
+  
+  .btn {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  .invoice-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .invoice-meta {
+    text-align: left;
+  }
+  
+  .invoice-parties {
+    flex-direction: column;
+  }
+  
+  .invoice-footer {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .invoice-controls {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .invoice-table {
+    font-size: 14px;
+  }
+  
+  .invoice-table th,
+  .invoice-table td {
+    padding: 10px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  .container {
+    padding: 15px;
+  }
+  
+  .invoice-container {
+    padding: 15px;
+  }
+  
+  .invoice-table {
+    font-size: 12px;
+  }
+  
+  .invoice-table th,
+  .invoice-table td {
+    padding: 8px 5px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Purchase Invoice Generator</h2>
+  
+  <div class="invoice-controls">
+    <button class="btn" id="generateInvoiceBtn">
+      <i class="fas fa-file-invoice"></i> Generate Invoice
+    </button>
+    <button class="btn btn-success" id="printInvoiceBtn">
+      <i class="fas fa-print"></i> Print Invoice
+    </button>
+    <button class="btn btn-warning" id="downloadInvoiceBtn">
+      <i class="fas fa-download"></i> Download PDF
+    </button>
+    <button class="btn btn-danger" id="clearInvoiceBtn">
+      <i class="fas fa-trash"></i> Clear Invoice
+    </button>
+  </div>
+  
+  <div class="invoice-container" id="invoiceContainer">
+    <div class="no-invoice" id="noInvoiceMessage">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <h3>No Invoice Generated</h3>
+      <p>Click "Generate Invoice" to create a purchase invoice based on your recent purchases.</p>
+    </div>
+    
+    <div id="invoiceContent" style="display: none;">
+      <!-- Invoice content will be generated here -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal for alerts -->
+<div id="modal" class="modal">
+  <div class="modal-content" id="modalContent">
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-message" id="modalMessage"></div>
+    <button class="modal-button" id="modalButton">OK</button>
+  </div>
+</div>
+
+<script>
+// Configuration
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const BASEROW = "https://api.baserow.io";
+
+// Table IDs
+const TRANSACTION_TABLE = 745465;
+const SUPPLIER_TABLE = 744412;
+const INVENTORY_TABLE = 734795;
+
+// Field Names
+const FIELD_NAMES = {
+  TRANSACTION: {
+    SUPPLIER_ID: "Supplier ID",
+    SUPPLIER_NAME: "Supplier Name",
+    TRANSACTION_TYPE: "Transaction Type",
+    INVOICE_NUMBER: "Invoice Number",
+    TOTAL_INVOICE_VALUE: "Total Invoice Value",
+    DATE: "Date",
+    SHOP_ID: "ShopID",
+    REMARK: "Remark"
+  },
+  SUPPLIER: {
+    SUPPLIER_ID: "Supplier ID",
+    SUPPLIER_NAME: "Supplier Name",
+    SUPPLIER_DETAILS: "Supplier Details",
+    SHOP_ID: "ShopID"
+  },
+  INVENTORY: {
+    PRODUCT_ID: "Product ID",
+    PRODUCT_NAME: "Product Name",
+    COUNT: "Count",
+    BATCH_NO: "Batch No",
+    EXPIRE_DATE: "Expire Date",
+    DATE: "Date",
+    LOCATION: "Location",
+    PURCHASE_PRICE: "Purchase Price",
+    TAX_INCLUDED: "Tax Included",
+    TAX_PERCENTAGE: "Tax Percentage",
+    SUPPLIER_ID: "Supplier ID",
+    SHOP_ID: "ShopID"
+  }
+};
+
+const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
+
+// DOM Elements
+const generateInvoiceBtn = document.getElementById("generateInvoiceBtn");
+const printInvoiceBtn = document.getElementById("printInvoiceBtn");
+const downloadInvoiceBtn = document.getElementById("downloadInvoiceBtn");
+const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
+const invoiceContainer = document.getElementById("invoiceContainer");
+const noInvoiceMessage = document.getElementById("noInvoiceMessage");
+const invoiceContent = document.getElementById("invoiceContent");
+const modal = document.getElementById("modal");
+const modalContent = document.getElementById("modalContent");
+const modalIcon = document.getElementById("modalIcon");
+const modalTitle = document.getElementById("modalTitle");
+const modalMessage = document.getElementById("modalMessage");
+const modalButton = document.getElementById("modalButton");
+
+// Sample company details (you can replace with actual data)
+const companyDetails = {
+  name: "Your Company Name",
+  address: "123 Business Street, City, State 12345",
+  phone: "(123) 456-7890",
+  email: "info@yourcompany.com",
+  website: "www.yourcompany.com"
+};
+
+// Modal function
+function showModal(type, title, message) {
+  modalContent.className = "modal-content";
+  modalIcon.innerHTML = "";
+  
+  if (type === "success") {
+    modalContent.classList.add("modal-success");
+    modalIcon.innerHTML = "✅";
+  } else if (type === "warning") {
+    modalContent.classList.add("modal-warning");
+    modalIcon.innerHTML = "⚠️";
+  } else if (type === "error") {
+    modalContent.classList.add("modal-error");
+    modalIcon.innerHTML = "❌";
+  } else if (type === "info") {
+    modalContent.classList.add("modal-success");
+    modalIcon.innerHTML = "ℹ️";
+  }
+  
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  modal.style.display = "flex";
+}
+
+modalButton.addEventListener("click", function() {
+  modal.style.display = "none";
+});
+
+modal.addEventListener("click", function(e) {
+  if (e.target === modal) {
+    modal.style.display = "none";
+  }
+});
+
+// Fetch recent purchase transactions
+async function fetchRecentPurchases() {
+  try {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE}","type":"contains","value":"Purchase"},{"field":"${FIELD_NAMES.TRANSACTION.SHOP_ID}","type":"contains","value":"${ShopID}"}]}&order_by=-id`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    return data.results;
+  } catch (error) {
+    console.error("Error fetching purchases:", error);
+    showModal("error", "Error", "Failed to fetch purchase data. Please try again.");
+    return [];
+  }
+}
+
+// Fetch supplier details
+async function fetchSupplierDetails(supplierId) {
+  try {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SUPPLIER_ID}","type":"contains","value":"${supplierId}"},{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    return data.results.length > 0 ? data.results[0] : null;
+  } catch (error) {
+    console.error("Error fetching supplier:", error);
+    return null;
+  }
+}
+
+// Fetch inventory items for a purchase
+async function fetchInventoryItems(supplierId, invoiceNumber) {
+  try {
+    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.INVENTORY.SUPPLIER_ID}","type":"contains","value":"${supplierId}"},{"field":"${FIELD_NAMES.INVENTORY.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
+      headers: { Authorization: `Token ${API_KEY}` }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    
+    // Filter items by invoice number (if available in remark or other field)
+    // For now, we'll return all items from this supplier
+    return data.results;
+  } catch (error) {
+    console.error("Error fetching inventory:", error);
+    return [];
+  }
+}
+
+// Parse product details from transaction remark
+function parseProductDetails(remark) {
+  if (!remark) return [];
+  
+  const products = [];
+  const productSections = remark.split(' - ');
+  
+  productSections.forEach(section => {
+    const parts = section.split(',');
+    if (parts.length >= 6) {
+      const product = {
+        name: parts[0],
+        id: parts[1],
+        purchasePrice: parseFloat(parts[2].replace('₹', '')),
+        taxInfo: parts[3],
+        batchNo: parts[4].replace('Batch:', ''),
+        quantity: parseInt(parts[5].replace('Qty:', ''))
+      };
+      products.push(product);
+    }
+  });
+  
+  return products;
+}
+
+// Generate invoice HTML
+function generateInvoiceHTML(purchase, supplier, products) {
+  const invoiceNumber = purchase[FIELD_NAMES.TRANSACTION.INVOICE_NUMBER] || `INV-${purchase.id}`;
+  const purchaseDate = purchase[FIELD_NAMES.TRANSACTION.DATE] || new Date().toISOString().split('T')[0];
+  const totalAmount = purchase[FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE] || 0;
+  
+  // Calculate tax breakdown
+  let taxAmount = 0;
+  let subtotal = 0;
+  
+  products.forEach(product => {
+    const productTotal = product.purchasePrice * product.quantity;
+    subtotal += productTotal;
+    
+    // Extract tax percentage if available
+    const taxMatch = product.taxInfo.match(/(\d+)%/);
+    if (taxMatch) {
+      const taxRate = parseFloat(taxMatch[1]) / 100;
+      taxAmount += productTotal * taxRate;
+    }
+  });
+  
+  // If we couldn't calculate tax from products, estimate it
+  if (taxAmount === 0 && totalAmount > subtotal) {
+    taxAmount = totalAmount - subtotal;
+  }
+  
+  // Format date
+  const formattedDate = new Date(purchaseDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  // Generate invoice HTML
+  return `
+    <div class="invoice-header">
+      <div class="invoice-title">PURCHASE INVOICE</div>
+      <div class="invoice-meta">
+        <div class="invoice-number">Invoice #: ${invoiceNumber}</div>
+        <div class="invoice-date">Date: ${formattedDate}</div>
+      </div>
+    </div>
+    
+    <div class="invoice-company">
+      <div class="company-name">${companyDetails.name}</div>
+      <div class="company-details">
+        ${companyDetails.address}<br>
+        Phone: ${companyDetails.phone} | Email: ${companyDetails.email}<br>
+        Website: ${companyDetails.website}
+      </div>
+    </div>
+    
+    <div class="invoice-parties">
+      <div class="bill-to">
+        <div class="section-title">Bill To</div>
+        <div class="party-details">
+          <div class="party-name">${supplier ? supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] : 'Supplier'}</div>
+          ${supplier && supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] ? 
+            supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS].replace(/\n/g, '<br>') : 
+            'Supplier details not available'}
+        </div>
+      </div>
+      
+      <div class="ship-to">
+        <div class="section-title">Ship To</div>
+        <div class="party-details">
+          <div class="party-name">${companyDetails.name}</div>
+          ${companyDetails.address}<br>
+          ${companyDetails.phone}
+        </div>
+      </div>
+    </div>
+    
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Product ID</th>
+          <th>Batch No</th>
+          <th class="text-right">Quantity</th>
+          <th class="text-right">Unit Price</th>
+          <th class="text-right">Tax</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${products.map((product, index) => `
+          <tr>
+            <td>${index + 1}. ${product.name}</td>
+            <td>${product.id}</td>
+            <td>${product.batchNo}</td>
+            <td class="text-right">${product.quantity}</td>
+            <td class="text-right">₹${product.purchasePrice.toFixed(2)}</td>
+            <td class="text-right">${product.taxInfo}</td>
+            <td class="text-right">₹${(product.purchasePrice * product.quantity).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <div class="invoice-summary">
+      <table class="summary-table">
+        <tr>
+          <td class="summary-label">Subtotal:</td>
+          <td class="summary-value">₹${subtotal.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td class="summary-label">Tax:</td>
+          <td class="summary-value">₹${taxAmount.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td class="summary-label">Total:</td>
+          <td class="summary-value">₹${totalAmount.toFixed(2)}</td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="invoice-footer">
+      <div class="terms">
+        <div class="terms-title">Terms & Conditions</div>
+        <div>Payment due within 30 days of invoice date.</div>
+        <div>Please make checks payable to ${companyDetails.name}.</div>
+      </div>
+      
+      <div class="signature">
+        <div class="signature-title">Authorized Signature</div>
+        <div class="signature-area"></div>
+        <div>For ${companyDetails.name}</div>
+      </div>
+    </div>
+  `;
+}
+
+// Generate invoice
+async function generateInvoice() {
+  const purchases = await fetchRecentPurchases();
+  
+  if (purchases.length === 0) {
+    showModal("warning", "No Purchases", "No purchase transactions found for your shop.");
+    return;
+  }
+  
+  // Use the most recent purchase
+  const purchase = purchases[0];
+  const supplierId = purchase[FIELD_NAMES.TRANSACTION.SUPPLIER_ID];
+  
+  if (!supplierId) {
+    showModal("error", "Missing Information", "This purchase doesn't have a supplier ID.");
+    return;
+  }
+  
+  const supplier = await fetchSupplierDetails(supplierId);
+  
+  // Parse product details from remark or fetch from inventory
+  let products = [];
+  const remark = purchase[FIELD_NAMES.TRANSACTION.REMARK];
+  
+  if (remark) {
+    products = parseProductDetails(remark);
+  }
+  
+  // If we couldn't parse products from remark, try to fetch from inventory
+  if (products.length === 0) {
+    const inventoryItems = await fetchInventoryItems(supplierId, purchase[FIELD_NAMES.TRANSACTION.INVOICE_NUMBER]);
+    
+    products = inventoryItems.map(item => ({
+      name: item[FIELD_NAMES.INVENTORY.PRODUCT_NAME],
+      id: item[FIELD_NAMES.INVENTORY.PRODUCT_ID],
+      purchasePrice: parseFloat(item[FIELD_NAMES.INVENTORY.PURCHASE_PRICE] || 0),
+      taxInfo: item[FIELD_NAMES.INVENTORY.TAX_INCLUDED] === "Yes" ? 
+        `${item[FIELD_NAMES.INVENTORY.TAX_PERCENTAGE] || 0}% GST` : "No Tax",
+      batchNo: item[FIELD_NAMES.INVENTORY.BATCH_NO],
+      quantity: parseInt(item[FIELD_NAMES.INVENTORY.COUNT] || 0)
+    }));
+  }
+  
+  if (products.length === 0) {
+    showModal("warning", "No Products", "No product details found for this purchase.");
+    return;
+  }
+  
+  // Generate and display the invoice
+  const invoiceHTML = generateInvoiceHTML(purchase, supplier, products);
+  invoiceContent.innerHTML = invoiceHTML;
+  
+  // Show the invoice and hide the "no invoice" message
+  noInvoiceMessage.style.display = "none";
+  invoiceContent.style.display = "block";
+  
+  showModal("success", "Invoice Generated", "Purchase invoice has been generated successfully!");
+}
+
+// Print invoice
+function printInvoice() {
+  if (invoiceContent.style.display === "none") {
+    showModal("warning", "No Invoice", "Please generate an invoice first.");
+    return;
+  }
+  
+  window.print();
+}
+
+// Download invoice as PDF (simplified version - would need a proper PDF library for full implementation)
+function downloadInvoice() {
+  if (invoiceContent.style.display === "none") {
+    showModal("warning", "No Invoice", "Please generate an invoice first.");
+    return;
+  }
+  
+  // In a real implementation, you would use a library like jsPDF
+  // This is a simplified version that just opens the print dialog
+  showModal("info", "Download PDF", "For full PDF download functionality, a PDF library would be needed. For now, you can use the print function and save as PDF from the print dialog.");
+}
+
+// Clear invoice
+function clearInvoice() {
+  invoiceContent.style.display = "none";
+  noInvoiceMessage.style.display = "block";
+  showModal("success", "Invoice Cleared", "The invoice has been cleared.");
+}
+
+// Event listeners
+generateInvoiceBtn.addEventListener("click", generateInvoice);
+printInvoiceBtn.addEventListener("click", printInvoice);
+downloadInvoiceBtn.addEventListener("click", downloadInvoice);
+clearInvoiceBtn.addEventListener("click", clearInvoice);
+
+// Initialize
+document.addEventListener("DOMContentLoaded", function() {
+  // Check if user is logged in
+  const MobileTag = localStorage.getItem("MobileTag");
+  if (!MobileTag) {
+    showModal("error", "Login Required", "Please login to access the invoice generator.");
+    return;
+  }
+  
+  // Set company details based on shop
+  companyDetails.name = `${ShopID} Store`;
+});
+</script>
+</body>
+</html>
