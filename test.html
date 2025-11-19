@@ -1625,7 +1625,7 @@ const FIELD_NAMES = {
     PURCHASE_PRICE: "Purchase Price",
     TAX_INCLUDED: "Tax Included",
     TAX_PERCENTAGE: "Tax Percentage",
-    SUPPLIER_ID: "Supplier ID",
+    SUPPLIER_ID: "Supplier ID", // This is the field that should contain the Supplier ID
     SHOP_ID: "ShopID"
   },
   
@@ -2494,7 +2494,7 @@ productType.addEventListener("change", function() {
   }
 });
 
-// Finish purchase and upload all data - FIXED VERSION
+// Finish purchase and upload all data - FIXED VERSION with proper Supplier ID upload
 finishPurchaseBtn.addEventListener("click", async function() {
   if (!validateSupplierForm()) {
     return;
@@ -2599,7 +2599,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
         }
       }
 
-      // Add to inventory with supplier reference
+      // Add to inventory with supplier reference - FIXED: Now using supplierCustomId for Supplier ID field
       const inventoryBody = {
         [FIELD_NAMES.INVENTORY.PRODUCT_ID]: product.productId,
         [FIELD_NAMES.INVENTORY.PRODUCT_NAME]: product.productName,
@@ -2611,7 +2611,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
         [FIELD_NAMES.INVENTORY.PURCHASE_PRICE]: product.purchasePrice,
         [FIELD_NAMES.INVENTORY.TAX_INCLUDED]: product.taxIncluded,
         [FIELD_NAMES.INVENTORY.TAX_PERCENTAGE]: product.taxPercentage,
-        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierId,
+        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierCustomId, // FIXED: Using the actual Supplier ID from the table
         [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
       };
 
@@ -2625,7 +2625,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
         throw new Error(`API error: ${inventoryRes.status}`);
       }
 
-      console.log("Product added to Inventory table:", product.productId);
+      console.log("Product added to Inventory table with Supplier ID:", product.productId, supplierCustomId);
     }
 
     // Create transaction record with Supplier ID from the table
@@ -2653,7 +2653,7 @@ finishPurchaseBtn.addEventListener("click", async function() {
       `✅ Successfully uploaded ${productsInPurchase.length} products!<br>
        - Added to Inventory table: ${productsInPurchase.length} items<br>
        - Added to Product table: ${productsInPurchase.filter(p => p.isNewProduct).length} new products<br>
-       - Supplier: ${supplierCustomId} - ${supplierName}<br>
+       - Supplier ID in Inventory: ${supplierCustomId}<br>
        - Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}<br>
        - Transaction recorded successfully.`);
     
