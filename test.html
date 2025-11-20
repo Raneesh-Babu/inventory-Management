@@ -1,2830 +1,1227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Product & Inventory</title>
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-/* All CSS remains the same as previous version */
-:root {
-  --primary: #4361ee;
-  --primary-dark: #3a56d4;
-  --success: #06d6a0;
-  --danger: #ef476f;
-  --warning: #ffd166;
-  --dark: #333;
-  --light: #f8f9fa;
-  --gray: #6c757d;
-  --border: #dee2e6;
-  --border-radius: 12px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.08);
-  --transition: all 0.3s ease;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body { 
-  font-family: 'Poppins', sans-serif; 
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  margin: 0; 
-  padding: 20px;
-  min-height: 100vh;
-  color: var(--dark);
-}
-
-.container { 
-  max-width: 1200px; 
-  margin: auto; 
-  background: white; 
-  padding: 30px; 
-  border-radius: var(--border-radius); 
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-}
-
-.container:hover {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-h2 { 
-  text-align: center; 
-  color: var(--primary);
-  margin-bottom: 25px;
-  font-weight: 600;
-  position: relative;
-  padding-bottom: 15px;
-}
-
-h2::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background: var(--primary);
-  border-radius: 2px;
-}
-
-.form-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-label { 
-  display: block; 
-  margin-bottom: 8px; 
-  font-weight: 500;
-  color: var(--dark);
-}
-
-input, select, button, textarea { 
-  width: 100%; 
-  padding: 14px 16px; 
-  margin: 8px 0; 
-  border-radius: var(--border-radius); 
-  border: 2px solid var(--border);
-  font-family: 'Poppins', sans-serif;
-  font-size: 15px;
-  transition: var(--transition);
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-}
-
-input:invalid, select:invalid, textarea:invalid {
-  border-color: var(--danger);
-}
-
-input:valid, select:valid, textarea:valid {
-  border-color: var(--success);
-}
-
-button { 
-  background: var(--primary); 
-  color: white; 
-  border: none; 
-  font-weight: 600; 
-  cursor: pointer;
-  transition: var(--transition);
-  padding: 15px;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-}
-
-button:hover { 
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-button:disabled { 
-  background: var(--gray); 
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-#cameraContainer { 
-  display: none; 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%; 
-  background: rgba(0,0,0,0.9); 
-  z-index: 9999;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-#reader { 
-  width: 90%; 
-  max-width: 500px;
-  height: 60%; 
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  box-shadow: 0 0 30px rgba(255,255,255,0.1);
-}
-
-#switchCameraBtn, #closeCameraBtn { 
-  position: relative;
-  margin: 20px 10px 0;
-  background: white; 
-  color: var(--dark); 
-  border: none; 
-  padding: 12px 24px; 
-  border-radius: var(--border-radius); 
-  font-weight: 600; 
-  cursor: pointer; 
-  transition: var(--transition);
-  width: auto;
-}
-
-#switchCameraBtn:hover, #closeCameraBtn:hover {
-  background: var(--primary);
-  color: white;
-  transform: translateY(-2px);
-}
-
-#buttonsRow { 
-  display: flex; 
-  gap: 10px; 
-  align-items: stretch;
-}
-
-#buttonsRow input {
-  margin: 0;
-}
-
-#buttonsRow button {
-  width: auto;
-  min-width: 100px;
-  margin: 0;
-  padding: 12px 16px;
-}
-
-#fetchBtn {
-  background: var(--success);
-}
-
-#fetchBtn:hover {
-  background: #05c290;
-}
-
-#scanBtn {
-  background: var(--warning);
-  color: var(--dark);
-}
-
-#scanBtn:hover {
-  background: #ffc94d;
-}
-
-#searchBtn {
-  background: #8a2be2;
-}
-
-#searchBtn:hover {
-  background: #7b1fa2;
-}
-
-#status {
-  display: none;
-}
-
-#loginPrompt {
-  color: var(--danger);
-  display: none;
-  padding: 12px 16px;
-  background: rgba(239, 71, 111, 0.1);
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-  border-left: 4px solid var(--danger);
-  font-weight: 500;
-}
-
-.error-message {
-  color: var(--danger);
-  font-size: 13px;
-  margin-top: 5px;
-  display: none;
-}
-
-.success-message {
-  color: var(--success);
-  font-size: 13px;
-  margin-top: 5px;
-  display: none;
-}
-
-.field-required::after {
-  content: " *";
-  color: var(--danger);
-}
-
-.price-container {
-  position: relative;
-}
-
-.rupee-symbol {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--dark);
-  z-index: 1;
-}
-
-.price-input {
-  padding-left: 35px !important;
-}
-
-.expire-date-container {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.expire-date-input {
-  flex: 1;
-}
-
-.quick-expire-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  width: auto;
-  min-width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quick-expire-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-}
-
-.expire-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
-  justify-content: center;
-  align-items: center;
-}
-
-.expire-modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  max-width: 500px;
-  width: 90%;
-  animation: modalFadeIn 0.3s;
-}
-
-.expire-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.expire-modal-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.close-expire-modal {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--gray);
-  width: auto;
-  padding: 0;
-  margin: 0;
-}
-
-.period-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.period-btn {
-  flex: 1;
-  min-width: 100px;
-  background: var(--light);
-  color: var(--dark);
-  border: 2px solid var(--border);
-  border-radius: var(--border-radius);
-  padding: 12px;
-  cursor: pointer;
-  transition: var(--transition);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.period-btn:hover {
-  background: #e9ecef;
-}
-
-.period-btn.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.slider-container {
-  margin: 25px 0;
-}
-
-.slider-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.slider-label {
-  font-weight: 500;
-  color: var(--dark);
-}
-
-.slider-value {
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.slider {
-  width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--border);
-  outline: none;
-  -webkit-appearance: none;
-}
-
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.slider::-webkit-slider-thumb:hover {
-  background: var(--primary-dark);
-  transform: scale(1.1);
-}
-
-.slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  border: none;
-}
-
-.expire-result {
-  background: rgba(67, 97, 238, 0.1);
-  padding: 15px;
-  border-radius: var(--border-radius);
-  margin: 20px 0;
-  text-align: center;
-  font-weight: 500;
-}
-
-.expire-result-date {
-  color: var(--primary);
-  font-weight: 600;
-  margin-top: 5px;
-}
-
-.expire-modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.expire-modal-btn {
-  width: auto;
-  min-width: 100px;
-  padding: 12px 20px;
-}
-
-.expire-modal-cancel {
-  background: var(--gray);
-}
-
-.expire-modal-cancel:hover {
-  background: #5a6268;
-}
-
-.expire-modal-apply {
-  background: var(--success);
-}
-
-.expire-modal-apply:hover {
-  background: #05c290;
-}
-
-.search-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
-  justify-content: center;
-  align-items: center;
-}
-
-.search-modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  animation: modalFadeIn 0.3s;
-}
-
-.search-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.search-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.close-search {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--gray);
-  width: auto;
-  padding: 0;
-  margin: 0;
-}
-
-.search-input-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.search-input {
-  flex: 1;
-}
-
-.search-button {
-  width: auto;
-  min-width: 100px;
-  margin: 0;
-}
-
-.search-results {
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.search-result-item {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.search-result-item:hover {
-  background-color: rgba(67, 97, 238, 0.05);
-}
-
-.search-result-item:last-child {
-  border-bottom: none;
-}
-
-.product-id {
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.product-name {
-  color: var(--dark);
-  margin-top: 5px;
-}
-
-.product-price {
-  color: var(--success);
-  font-weight: 500;
-  margin-top: 3px;
-}
-
-.product-price::before {
-  content: "₹ ";
-}
-
-.no-results {
-  padding: 20px;
-  text-align: center;
-  color: var(--gray);
-}
-
-.shop-info {
-  display: none !important;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  animation: modalFadeIn 0.3s;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-icon {
-  font-size: 48px;
-  margin-bottom: 15px;
-}
-
-.modal-success .modal-icon {
-  color: var(--success);
-}
-
-.modal-warning .modal-icon {
-  color: var(--warning);
-}
-
-.modal-error .modal-icon {
-  color: var(--danger);
-}
-
-.modal-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.modal-message {
-  margin-bottom: 20px;
-  color: var(--dark);
-}
-
-.modal-button {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  width: auto;
-  margin: 0 auto;
-}
-
-.modal-button:hover {
-  background: var(--primary-dark);
-}
-
-.purchase-price-container {
-  position: relative;
-}
-
-.tax-options {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.tax-option {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: var(--transition);
-  flex: 1;
-}
-
-.tax-option:hover {
-  background-color: rgba(67, 97, 238, 0.05);
-}
-
-.tax-option.selected {
-  background-color: rgba(67, 97, 238, 0.1);
-  border-color: var(--primary);
-}
-
-.tax-option input {
-  margin: 0;
-  width: auto;
-}
-
-.tax-option label {
-  margin: 0;
-  cursor: pointer;
-  font-weight: normal;
-}
-
-.tax-input-container {
-  display: none;
-  margin-top: 8px;
-}
-
-.tax-input-container.show {
-  display: block;
-}
-
-.tax-breakdown {
-  display: none;
-  margin-top: 10px;
-  padding: 12px;
-  background-color: rgba(67, 97, 238, 0.05);
-  border-radius: var(--border-radius);
-  border-left: 4px solid var(--primary);
-}
-
-.tax-breakdown.show {
-  display: block;
-}
-
-.tax-breakdown-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
-  font-size: 14px;
-}
-
-.tax-breakdown-row:last-child {
-  margin-bottom: 0;
-  font-weight: 600;
-  border-top: 1px solid var(--border);
-  padding-top: 5px;
-}
-
-.tax-breakdown-label {
-  color: var(--dark);
-}
-
-.tax-breakdown-value {
-  color: var(--primary);
-  font-weight: 500;
-}
-
-.margin-display {
-  margin-top: 8px;
-  padding: 10px;
-  background-color: rgba(6, 214, 160, 0.1);
-  border-radius: var(--border-radius);
-  border-left: 4px solid var(--success);
-  font-weight: 500;
-}
-
-.margin-display .margin-value {
-  font-weight: 600;
-  color: var(--success);
-}
-
-.margin-display .margin-percentage {
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.supplier-section {
-  background-color: rgba(67, 97, 238, 0.05);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-  border-left: 4px solid var(--primary);
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--primary);
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.section-title i {
-  font-size: 20px;
-}
-
-.supplier-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.supplier-actions button {
-  width: auto;
-  min-width: 150px;
-}
-
-#addAnotherProductBtn {
-  background: var(--success);
-}
-
-#addAnotherProductBtn:hover {
-  background: #05c290;
-}
-
-#finishPurchaseBtn {
-  background: #8a2be2;
-}
-
-#finishPurchaseBtn:hover {
-  background: #7b1fa2;
-}
-
-.products-list {
-  margin-top: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-}
-
-.products-list-header {
-  background-color: var(--primary);
-  color: white;
-  padding: 12px 15px;
-  font-weight: 600;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  gap: 10px;
-}
-
-.products-list-body {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.product-item {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.product-item:last-child {
-  border-bottom: none;
-}
-
-.product-item:hover {
-  background-color: rgba(67, 97, 238, 0.05);
-}
-
-.product-item-actions {
-  display: flex;
-  gap: 5px;
-}
-
-.product-item-actions button {
-  width: auto;
-  padding: 6px 10px;
-  font-size: 12px;
-}
-
-.edit-product-btn {
-  background: var(--warning);
-  color: var(--dark);
-}
-
-.edit-product-btn:hover {
-  background: #ffc94d;
-}
-
-.remove-product-btn {
-  background: var(--danger);
-}
-
-.remove-product-btn:hover {
-  background: #e0355f;
-}
-
-.no-products {
-  padding: 20px;
-  text-align: center;
-  color: var(--gray);
-  font-style: italic;
-}
-
-.purchase-summary {
-  background-color: rgba(67, 97, 238, 0.05);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  margin-top: 20px;
-  border-left: 4px solid var(--success);
-}
-
-.summary-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--success);
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.summary-item {
-  background: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  text-align: center;
-}
-
-.summary-label {
-  font-size: 14px;
-  color: var(--gray);
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.summary-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.summary-value.total-invoice {
-  color: var(--success);
-  font-size: 22px;
-}
-
-.summary-breakdown {
-  background: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-}
-
-.breakdown-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--dark);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.breakdown-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.breakdown-item:last-child {
-  border-bottom: none;
-  font-weight: 600;
-  color: var(--success);
-  font-size: 16px;
-}
-
-.breakdown-label {
-  color: var(--dark);
-}
-
-.breakdown-value {
-  color: var(--primary);
-  font-weight: 500;
-}
-
-.supplier-selection-container {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-}
-
-.supplier-select-group {
-  flex: 1;
-}
-
-.supplier-refresh-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  width: auto;
-  min-width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.supplier-refresh-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-}
-
-.supplier-details-panel {
-  background: rgba(67, 97, 238, 0.05);
-  padding: 15px;
-  border-radius: var(--border-radius);
-  margin-top: 10px;
-  border-left: 4px solid var(--primary);
-  display: none;
-}
-
-.supplier-details-panel.show {
-  display: block;
-}
-
-.supplier-detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.supplier-detail-row:last-child {
-  margin-bottom: 0;
-}
-
-.supplier-detail-label {
-  color: var(--dark);
-  font-weight: 500;
-}
-
-.supplier-detail-value {
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.new-supplier-btn {
-  background: var(--success);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  width: auto;
-  min-width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.new-supplier-btn:hover {
-  background: #05c290;
-  transform: translateY(-2px);
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 20px;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  #buttonsRow {
-    flex-direction: column;
-  }
-  
-  #buttonsRow button {
-    width: 100%;
-  }
-  
-  .search-input-group {
-    flex-direction: column;
-  }
-  
-  .search-button {
-    width: 100%;
-  }
-  
-  .search-modal-content {
-    padding: 20px;
-  }
-  
-  .expire-modal-content {
-    padding: 20px;
-  }
-  
-  .period-buttons {
-    flex-direction: column;
-  }
-  
-  .period-btn {
-    min-width: auto;
-  }
-  
-  .tax-options {
-    flex-direction: column;
-  }
-  
-  .supplier-actions {
-    flex-direction: column;
-  }
-  
-  .products-list-header, .product-item {
-    grid-template-columns: 1fr;
-    gap: 5px;
-  }
-  
-  .products-list-header {
-    display: none;
-  }
-  
-  .product-item {
-    padding: 15px;
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    margin-bottom: 10px;
-  }
-  
-  .summary-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  
-  .supplier-selection-container {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .supplier-refresh-btn, .new-supplier-btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  body {
-    padding: 10px;
-  }
-  
-  .container {
-    padding: 15px;
-  }
-  
-  input, select, button, textarea {
-    padding: 12px 14px;
-  }
-  
-  #reader {
-    height: 50%;
-  }
-  
-  .price-input {
-    padding-left: 32px !important;
-  }
-  
-  .rupee-symbol {
-    left: 14px;
-    font-size: 16px;
-  }
-}
-
-@media (min-width: 769px) {
-  .form-row {
-    flex-wrap: wrap;
-  }
-  
-  .form-group {
-    min-width: calc(50% - 10px);
-  }
-  
-  .full-width {
-    flex: 0 0 100%;
-  }
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <div id="status" class="status-message"></div>
-  <div id="loginPrompt" class="error-message">Please login first</div>
-  
-  <div id="app" style="display:none;">
-    
-    <!-- Shop info section is hidden but still present for functionality -->
-    <div class="shop-info">
-      Current Shop: <span id="currentShop">Loading...</span>
-    </div>
-    
-    <!-- Supplier Section -->
-    <div class="supplier-section">
-      <div class="section-title">
-        <i class="fas fa-truck"></i> Supplier Information
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label for="supplierSelection" class="field-required">Select Supplier:</label>
-          <div class="supplier-selection-container">
-            <div class="supplier-select-group">
-              <select id="supplierSelection" required>
-                <option value="">Loading suppliers...</option>
-              </select>
-              <div id="supplierSelectionError" class="error-message"></div>
-            </div>
-            <button id="refreshSuppliersBtn" class="supplier-refresh-btn" title="Refresh Suppliers">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-            <button id="newSupplierBtn" class="new-supplier-btn" title="Add New Supplier">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-          
-          <!-- Supplier Details Panel -->
-          <div class="supplier-details-panel" id="supplierDetailsPanel">
-            <div class="supplier-detail-row">
-              <span class="supplier-detail-label">Supplier ID:</span>
-              <span class="supplier-detail-value" id="selectedSupplierId">-</span>
-            </div>
-            <div class="supplier-detail-row">
-              <span class="supplier-detail-label">Supplier Name:</span>
-              <span class="supplier-detail-value" id="selectedSupplierName">-</span>
-            </div>
-            <div class="supplier-detail-row">
-              <span class="supplier-detail-label">Details:</span>
-              <span class="supplier-detail-value" id="selectedSupplierDetails">-</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="supplierName">Or Add New Supplier:</label>
-          <input type="text" id="supplierName" placeholder="Enter new supplier name">
-          <div id="supplierNameError" class="error-message"></div>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="supplierDetails">Supplier Details:</label>
-          <textarea id="supplierDetails" placeholder="Supplier address, contact info, etc."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="purchaseInvoice" class="field-required">Purchase Invoice No:</label>
-          <input type="text" id="purchaseInvoice" placeholder="Invoice number (required)" required>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="purchaseDate" class="field-required">Purchase Date:</label>
-          <input type="date" id="purchaseDate" required>
-        </div>
-      </div>
-    </div>
-
-    <!-- Product Information Section -->
-    <div class="section-title">
-      <i class="fas fa-box"></i> Product Information
-    </div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label for="productType" class="field-required">Product Type:</label>
-        <select id="productType" required>
-          <option value="existing">Existing Product</option>
-          <option value="new">New Product</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="productId" class="field-required">Product ID:</label>
-        <div id="buttonsRow">
-          <input type="text" id="productId" placeholder="Enter or Scan Product ID" required>
-          <button id="fetchBtn">Fetch</button>
-          <button id="scanBtn">Scan</button>
-          <button id="searchBtn">Search</button>
-        </div>
-        <div id="productIdError" class="error-message"></div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="productName" class="field-required">Product Name:</label>
-        <input type="text" id="productName" required>
-        <div id="productNameError" class="error-message"></div>
-      </div>
-
-      <div class="form-group">
-        <label for="price" class="field-required">Selling Price:</label>
-        <div class="price-container">
-          <span class="rupee-symbol">₹</span>
-          <input type="number" id="price" class="price-input" min="0" step="0.01" placeholder="0.00" required>
-        </div>
-        <div id="priceError" class="error-message"></div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="purchasePrice" class="field-required">Purchase Price:</label>
-        <div class="purchase-price-container">
-          <span class="rupee-symbol">₹</span>
-          <input type="number" id="purchasePrice" class="price-input" min="0" step="0.01" placeholder="0.00" required>
-        </div>
-        <div id="purchasePriceError" class="error-message"></div>
-        
-        <!-- Tax Breakdown -->
-        <div class="tax-breakdown" id="taxBreakdown">
-          <div class="tax-breakdown-row">
-            <span class="tax-breakdown-label">Price without Tax:</span>
-            <span class="tax-breakdown-value" id="priceWithoutTax">₹ 0.00</span>
-          </div>
-          <div class="tax-breakdown-row">
-            <span class="tax-breakdown-label">Tax Amount:</span>
-            <span class="tax-breakdown-value" id="taxAmount">₹ 0.00</span>
-          </div>
-          <div class="tax-breakdown-row">
-            <span class="tax-breakdown-label">Total Purchase Price:</span>
-            <span class="tax-breakdown-value" id="totalWithTax">₹ 0.00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Tax Included:</label>
-        <div class="tax-options">
-          <div class="tax-option" id="taxYesOption">
-            <input type="radio" id="taxYes" name="taxIncluded" value="yes">
-            <label for="taxYes">Yes</label>
-          </div>
-          <div class="tax-option" id="taxNoOption">
-            <input type="radio" id="taxNo" name="taxIncluded" value="no" checked>
-            <label for="taxNo">No</label>
-          </div>
-        </div>
-        
-        <div class="tax-input-container" id="taxInputContainer">
-          <label for="taxPercentage">GST Percentage:</label>
-          <select id="taxPercentage">
-            <option value="0">0%</option>
-            <option value="5">5%</option>
-            <option value="12">12%</option>
-            <option value="18">18%</option>
-            <option value="28">28%</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <div class="margin-display" id="marginDisplay">
-          Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)
-        </div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group full-width">
-        <label for="details">Product Details:</label>
-        <textarea id="details"></textarea>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="count" class="field-required">Count:</label>
-        <input type="number" id="count" min="1" required>
-        <div id="countError" class="error-message"></div>
-      </div>
-
-      <div class="form-group">
-        <label for="batchNo" class="field-required">Batch No:</label>
-        <input type="text" id="batchNo" pattern="[0-9]+" title="Batch number should contain only numbers" required readonly>
-        <div id="batchNoError" class="error-message"></div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="expireDate" class="field-required">Expire Date:</label>
-        <div class="expire-date-container">
-          <input type="date" id="expireDate" class="expire-date-input" required>
-          <button id="quickExpireBtn" class="quick-expire-btn" title="Quick Set Expiry">
-            <i class="fas fa-bolt"></i>
-          </button>
-        </div>
-        <div id="expireDateError" class="error-message"></div>
-      </div>
-
-      <div class="form-group">
-        <label for="date" class="field-required">Date Added:</label>
-        <input type="text" id="date" readonly required>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group full-width">
-        <label for="location" class="field-required">Location:</label>
-        <input type="text" id="location" required>
-        <div id="locationError" class="error-message"></div>
-      </div>
-    </div>
-
-    <div class="supplier-actions">
-      <button id="addProductToListBtn">Add Product to List</button>
-      <button id="addAnotherProductBtn">Add Another Product</button>
-      <button id="finishPurchaseBtn">Finish & Upload Purchase</button>
-    </div>
-
-    <!-- Products List Section -->
-    <div class="section-title">
-      <i class="fas fa-list"></i> Products in Current Purchase
-    </div>
-    
-    <div class="products-list">
-      <div class="products-list-header">
-        <div>Product ID</div>
-        <div>Product Name</div>
-        <div>Batch No</div>
-        <div>Count</div>
-        <div>Purchase Price</div>
-        <div>Selling Price</div>
-        <div>Actions</div>
-      </div>
-      <div class="products-list-body" id="productsListBody">
-        <div class="no-products">No products added yet</div>
-      </div>
-    </div>
-
-    <!-- Purchase Summary Section -->
-    <div class="purchase-summary" id="purchaseSummary" style="display: none;">
-      <div class="summary-title">
-        <i class="fas fa-file-invoice-dollar"></i> Purchase Summary
-      </div>
-      
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-label">Total Price (Excl. Tax)</div>
-          <div class="summary-value" id="totalPriceExclTax">₹ 0.00</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Total Tax Amount</div>
-          <div class="summary-value" id="totalTaxAmount">₹ 0.00</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Total Invoice Value</div>
-          <div class="summary-value total-invoice" id="totalInvoiceValue">₹ 0.00</div>
-        </div>
-      </div>
-      
-      <div class="summary-breakdown">
-        <div class="breakdown-title">
-          <i class="fas fa-receipt"></i> Tax Breakdown
-        </div>
-        <div id="taxBreakdownDetails">
-          <!-- Tax breakdown will be populated here -->
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Camera Popup -->
-<div id="cameraContainer">
-  <div id="reader"></div>
-  <button id="switchCameraBtn">Switch Camera</button>
-  <button id="closeCameraBtn">Close</button>
-</div>
-
-<!-- Expire Date Modal -->
-<div id="expireModal" class="expire-modal">
-  <div class="expire-modal-content">
-    <div class="expire-modal-header">
-      <div class="expire-modal-title">Quick Set Expiry Date</div>
-      <button class="close-expire-modal">&times;</button>
-    </div>
-    
-    <div class="period-buttons">
-      <button class="period-btn" data-period="days">
-        <i class="fas fa-calendar-day"></i> Days
-      </button>
-      <button class="period-btn" data-period="weeks">
-        <i class="fas fa-calendar-week"></i> Weeks
-      </button>
-      <button class="period-btn" data-period="months">
-        <i class="fas fa-calendar-alt"></i> Months
-      </button>
-      <button class="period-btn" data-period="years">
-        <i class="fas fa-calendar"></i> Years
-      </button>
-    </div>
-    
-    <div class="slider-container">
-      <div class="slider-header">
-        <span class="slider-label">Duration:</span>
-        <span class="slider-value" id="sliderValue">1</span>
-      </div>
-      <input type="range" min="1" max="31" value="1" class="slider" id="durationSlider">
-    </div>
-    
-    <div class="expire-result">
-      <div>Expiry Date:</div>
-      <div class="expire-result-date" id="expireResultDate">Calculating...</div>
-    </div>
-    
-    <div class="expire-modal-actions">
-      <button class="expire-modal-btn expire-modal-cancel">Cancel</button>
-      <button class="expire-modal-btn expire-modal-apply">Apply</button>
-    </div>
-  </div>
-</div>
-
-<!-- Search Modal -->
-<div id="searchModal" class="search-modal">
-  <div class="search-modal-content">
-    <div class="search-header">
-      <div class="search-title">Search Products</div>
-      <button class="close-search">&times;</button>
-    </div>
-    <!-- Hidden shop info in search modal -->
-    <div class="shop-info">
-      Showing products for: <span id="searchShopInfo">Loading...</span>
-    </div>
-    <div class="search-input-group">
-      <input type="text" id="searchInput" class="search-input" placeholder="Search by Product ID or Name">
-      <button id="searchProductsBtn" class="search-button">Search</button>
-    </div>
-    <div id="searchResults" class="search-results">
-      <div class="no-results">Enter a search term to find products</div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal for alerts -->
-<div id="modal" class="modal">
-  <div class="modal-content" id="modalContent">
-    <div class="modal-icon" id="modalIcon"></div>
-    <div class="modal-title" id="modalTitle"></div>
-    <div class="modal-message" id="modalMessage"></div>
-    <button class="modal-button" id="modalButton">OK</button>
-  </div>
-</div>
-
-<script>
-// Table IDs and Field Names Configuration
-const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const BASEROW = "https://api.baserow.io";
-
-// Table IDs
-const USER_TABLE = 729979;
-const PRODUCT_TABLE = 734793;
-const INVENTORY_TABLE = 734795;
-const SUPPLIER_TABLE = 744412;
-const TRANSACTION_TABLE = 745465;
-
-// Field Names Configuration
-const FIELD_NAMES = {
-  // User Table Fields
-  USER: {
-    USERNAME: "Username",
-    ROLE: "Role",
-    SHOP_ID: "ShopID"
-  },
-  
-  // Product Table Fields
-  PRODUCT: {
-    PRODUCT_ID: "Product ID",
-    PRODUCT_NAME: "Product Name",
-    DETAILS: "Details",
-    PRICE: "Price",
-    PURCHASE_PRICE: "Purchase Price",
-    TAX_INCLUDED: "Tax Included",
-    TAX_PERCENTAGE: "Tax Percentage",
-    SHOP_ID: "ShopID"
-  },
-  
-  // Inventory Table Fields
-  INVENTORY: {
-    PRODUCT_ID: "Product ID",
-    PRODUCT_NAME: "Product Name",
-    COUNT: "Count",
-    BATCH_NO: "Batch No",
-    EXPIRE_DATE: "Expire Date",
-    DATE: "Date",
-    LOCATION: "Location",
-    PURCHASE_PRICE: "Purchase Price",
-    TAX_INCLUDED: "Tax Included",
-    TAX_PERCENTAGE: "Tax Percentage",
-    SUPPLIER_ID: "Supplier ID", // This is the field that should contain the Supplier ID
-    SHOP_ID: "ShopID"
-  },
-  
-  // Supplier Table Fields
-  SUPPLIER: {
-    SUPPLIER_ID: "Supplier ID",
-    SUPPLIER_NAME: "Supplier Name",
-    SUPPLIER_DETAILS: "Supplier Details",
-    SHOP_ID: "ShopID"
-  },
-  
-  // Transaction Table Fields
-  TRANSACTION: {
-    SUPPLIER_ID: "Supplier ID",
-    SUPPLIER_NAME: "Supplier Name",
-    TRANSACTION_TYPE: "Transaction Type",
-    INVOICE_NUMBER: "Invoice Number",
-    TOTAL_INVOICE_VALUE: "Total Invoice Value",
-    DATE: "Date",
-    SHOP_ID: "ShopID"
-  }
-};
-
-const MobileTag = localStorage.getItem("MobileTag");
-const ShopID = localStorage.getItem("ShopIDTag") || "Unknown";
-
-const app = document.getElementById("app");
-const status = document.getElementById("status");
-const addProductToListBtn = document.getElementById("addProductToListBtn");
-const addAnotherProductBtn = document.getElementById("addAnotherProductBtn");
-const finishPurchaseBtn = document.getElementById("finishPurchaseBtn");
-const scanBtn = document.getElementById("scanBtn");
-const fetchBtn = document.getElementById("fetchBtn");
-const searchBtn = document.getElementById("searchBtn");
-const productIdInput = document.getElementById("productId");
-const productType = document.getElementById("productType");
-const dateInput = document.getElementById("date");
-const currentShopElement = document.getElementById("currentShop");
-const searchShopInfo = document.getElementById("searchShopInfo");
-const productsListBody = document.getElementById("productsListBody");
-const purchaseSummary = document.getElementById("purchaseSummary");
-
-// Supplier elements
-const supplierSelection = document.getElementById("supplierSelection");
-const refreshSuppliersBtn = document.getElementById("refreshSuppliersBtn");
-const newSupplierBtn = document.getElementById("newSupplierBtn");
-const supplierDetailsPanel = document.getElementById("supplierDetailsPanel");
-const selectedSupplierId = document.getElementById("selectedSupplierId");
-const selectedSupplierName = document.getElementById("selectedSupplierName");
-const selectedSupplierDetails = document.getElementById("selectedSupplierDetails");
-const supplierNameInput = document.getElementById("supplierName");
-const supplierDetailsInput = document.getElementById("supplierDetails");
-const purchaseInvoiceInput = document.getElementById("purchaseInvoice");
-const purchaseDateInput = document.getElementById("purchaseDate");
-
-const readerContainer = document.getElementById("cameraContainer");
-const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
-const modalIcon = document.getElementById("modalIcon");
-const modalTitle = document.getElementById("modalTitle");
-const modalMessage = document.getElementById("modalMessage");
-const modalButton = document.getElementById("modalButton");
-
-const searchModal = document.getElementById("searchModal");
-const searchInput = document.getElementById("searchInput");
-const searchProductsBtn = document.getElementById("searchProductsBtn");
-const searchResults = document.getElementById("searchResults");
-const closeSearch = document.querySelector(".close-search");
-
-// Expire date modal elements
-const expireModal = document.getElementById("expireModal");
-const quickExpireBtn = document.getElementById("quickExpireBtn");
-const closeExpireModal = document.querySelector(".close-expire-modal");
-const periodButtons = document.querySelectorAll(".period-btn");
-const durationSlider = document.getElementById("durationSlider");
-const sliderValue = document.getElementById("sliderValue");
-const expireResultDate = document.getElementById("expireResultDate");
-const expireModalCancel = document.querySelector(".expire-modal-cancel");
-const expireModalApply = document.querySelector(".expire-modal-apply");
-
-// New elements for purchase price, tax and margin
-const purchasePriceInput = document.getElementById("purchasePrice");
-const priceInput = document.getElementById("price");
-const taxYesOption = document.getElementById("taxYesOption");
-const taxNoOption = document.getElementById("taxNoOption");
-const taxInputContainer = document.getElementById("taxInputContainer");
-const taxPercentageSelect = document.getElementById("taxPercentage");
-const marginDisplay = document.getElementById("marginDisplay");
-const batchNoInput = document.getElementById("batchNo");
-
-// Tax breakdown elements
-const taxBreakdown = document.getElementById("taxBreakdown");
-const priceWithoutTaxElement = document.getElementById("priceWithoutTax");
-const taxAmountElement = document.getElementById("taxAmount");
-const totalWithTaxElement = document.getElementById("totalWithTax");
-
-// Purchase summary elements
-const totalPriceExclTaxElement = document.getElementById("totalPriceExclTax");
-const totalTaxAmountElement = document.getElementById("totalTaxAmount");
-const totalInvoiceValueElement = document.getElementById("totalInvoiceValue");
-const taxBreakdownDetails = document.getElementById("taxBreakdownDetails");
-
-let html5QrCode;
-let currentCamera = "environment";
-let allProducts = [];
-let allSuppliers = [];
-let selectedPeriod = "days";
-let selectedDuration = 1;
-let batchNumbers = {};
-let productsInPurchase = [];
-let currentSupplierId = null;
-let totalInvoiceValue = 0;
-
-// Set default dates
-dateInput.value = new Date().toISOString().split('T')[0];
-purchaseDateInput.value = new Date().toISOString().split('T')[0];
-
-// Update shop information
-currentShopElement.textContent = ShopID;
-searchShopInfo.textContent = ShopID;
-
-// Track if we're adding a new product
-let isNewProduct = false;
-
-// Fetch suppliers from the supplier table
-async function fetchSuppliers() {
-  try {
-    supplierSelection.innerHTML = '<option value="">Loading suppliers...</option>';
-    
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SUPPLIER.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    allSuppliers = data.results;
-    
-    if (allSuppliers.length === 0) {
-      supplierSelection.innerHTML = '<option value="">No suppliers found</option>';
-      showModal("info", "No Suppliers", "No suppliers found for your shop. Please add a new supplier.");
-      return;
-    }
-    
-    // Populate the supplier dropdown with Supplier ID
-    let optionsHTML = '<option value="">Select a supplier</option>';
-    allSuppliers.forEach(supplier => {
-      const supplierId = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || 'No ID';
-      const supplierName = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || 'Unnamed Supplier';
-      
-      // Display both Supplier ID and Name in dropdown
-      const displayText = `${supplierId} - ${supplierName}`;
-      
-      optionsHTML += `<option value="${supplier.id}" data-supplier='${JSON.stringify(supplier)}'>${displayText}</option>`;
-    });
-    
-    supplierSelection.innerHTML = optionsHTML;
-    
-  } catch (error) {
-    console.error("Error fetching suppliers:", error);
-    supplierSelection.innerHTML = '<option value="">Error loading suppliers</option>';
-    showModal("error", "Error", "Failed to load suppliers. Please try again.");
-  }
-}
-
-// Update supplier details panel when a supplier is selected
-function updateSupplierDetailsPanel(supplierId) {
-  const selectedOption = supplierSelection.querySelector(`option[value="${supplierId}"]`);
-  
-  if (!selectedOption || !selectedOption.dataset.supplier) {
-    supplierDetailsPanel.classList.remove('show');
-    return;
-  }
-  
-  const supplier = JSON.parse(selectedOption.dataset.supplier);
-  
-  // Update the details panel with Supplier ID
-  selectedSupplierId.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || '-';
-  selectedSupplierName.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '-';
-  selectedSupplierDetails.textContent = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] || 'No details available';
-  
-  // Auto-fill the new supplier name field
-  supplierNameInput.value = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '';
-  supplierDetailsInput.value = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS] || '';
-  
-  // Show the details panel
-  supplierDetailsPanel.classList.add('show');
-  
-  // Store the current supplier ID
-  currentSupplierId = supplierId;
-}
-
-// Reset supplier form for new supplier
-function resetSupplierForm() {
-  supplierSelection.value = "";
-  supplierNameInput.value = "";
-  supplierDetailsInput.value = "";
-  supplierDetailsPanel.classList.remove('show');
-  currentSupplierId = null;
-}
-
-// Calculate and display expiry date
-function calculateExpiryDate() {
-  const today = new Date();
-  const resultDate = new Date(today);
-  
-  switch(selectedPeriod) {
-    case "days":
-      resultDate.setDate(today.getDate() + selectedDuration);
-      break;
-    case "weeks":
-      resultDate.setDate(today.getDate() + (selectedDuration * 7));
-      break;
-    case "months":
-      resultDate.setMonth(today.getMonth() + selectedDuration);
-      break;
-    case "years":
-      resultDate.setFullYear(today.getFullYear() + selectedDuration);
-      break;
-  }
-  
-  const formattedDate = resultDate.toISOString().split('T')[0];
-  expireResultDate.textContent = formattedDate;
-  
-  return formattedDate;
-}
-
-// Calculate and display margin
-function calculateMargin() {
-  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
-  const sellingPrice = parseFloat(priceInput.value) || 0;
-  
-  if (purchasePrice <= 0 || sellingPrice <= 0) {
-    marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
-    return;
-  }
-  
-  const marginValue = sellingPrice - purchasePrice;
-  const marginPercentage = ((marginValue / purchasePrice) * 100).toFixed(2);
-  
-  marginDisplay.innerHTML = `Margin: <span class="margin-value">₹ ${marginValue.toFixed(2)}</span> (<span class="margin-percentage">${marginPercentage}%</span>)`;
-}
-
-// Calculate and display tax breakdown
-function calculateTaxBreakdown() {
-  const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
-  const taxPercentage = parseFloat(taxPercentageSelect.value) || 0;
-  
-  if (taxPercentage > 0 && document.getElementById("taxYes").checked) {
-    taxBreakdown.classList.add('show');
-    
-    const priceWithoutTax = purchasePrice / (1 + (taxPercentage / 100));
-    const taxAmount = purchasePrice - priceWithoutTax;
-    
-    priceWithoutTaxElement.textContent = `₹ ${priceWithoutTax.toFixed(2)}`;
-    taxAmountElement.textContent = `₹ ${taxAmount.toFixed(2)} (${taxPercentage}%)`;
-    totalWithTaxElement.textContent = `₹ ${purchasePrice.toFixed(2)}`;
-  } else {
-    taxBreakdown.classList.remove('show');
-  }
-}
-
-// Calculate purchase totals for the entire purchase
-function calculatePurchaseTotals() {
-  if (productsInPurchase.length === 0) {
-    purchaseSummary.style.display = 'none';
-    totalInvoiceValue = 0;
-    return;
-  }
-  
-  let totalPriceExclTax = 0;
-  let totalTaxAmount = 0;
-  totalInvoiceValue = 0;
-  
-  const taxGroups = {};
-  
-  productsInPurchase.forEach(product => {
-    const productTotalPrice = product.purchasePrice * product.count;
-    
-    if (product.taxIncluded === "Yes" && parseFloat(product.taxPercentage) > 0) {
-      const taxPercentage = parseFloat(product.taxPercentage);
-      const priceWithoutTax = productTotalPrice / (1 + (taxPercentage / 100));
-      const taxAmount = productTotalPrice - priceWithoutTax;
-      
-      totalPriceExclTax += priceWithoutTax;
-      totalTaxAmount += taxAmount;
-      
-      if (!taxGroups[taxPercentage]) {
-        taxGroups[taxPercentage] = 0;
-      }
-      taxGroups[taxPercentage] += taxAmount;
-    } else {
-      totalPriceExclTax += productTotalPrice;
-    }
-    
-    totalInvoiceValue += productTotalPrice;
-  });
-  
-  totalPriceExclTaxElement.textContent = `₹ ${totalPriceExclTax.toFixed(2)}`;
-  totalTaxAmountElement.textContent = `₹ ${totalTaxAmount.toFixed(2)}`;
-  totalInvoiceValueElement.textContent = `₹ ${totalInvoiceValue.toFixed(2)}`;
-  
-  let breakdownHTML = '';
-  
-  if (Object.keys(taxGroups).length > 0) {
-    Object.keys(taxGroups).sort((a, b) => parseFloat(b) - parseFloat(a)).forEach(percentage => {
-      breakdownHTML += `
-        <div class="breakdown-item">
-          <span class="breakdown-label">GST ${percentage}%</span>
-          <span class="breakdown-value">₹ ${taxGroups[percentage].toFixed(2)}</span>
-        </div>
-      `;
-    });
-  } else {
-    breakdownHTML = `
-      <div class="breakdown-item">
-        <span class="breakdown-label">No Tax Applied</span>
-        <span class="breakdown-value">₹ 0.00</span>
-      </div>
-    `;
-  }
-  
-  breakdownHTML += `
-    <div class="breakdown-item">
-      <span class="breakdown-label">Total Invoice Value</span>
-      <span class="breakdown-value">₹ ${totalInvoiceValue.toFixed(2)}</span>
-    </div>
-  `;
-  
-  taxBreakdownDetails.innerHTML = breakdownHTML;
-  purchaseSummary.style.display = 'block';
-}
-
-// Get next batch number for a product
-async function getNextBatchNumber(productId) {
-  if (!productId) return 1;
-  
-  if (batchNumbers[productId]) {
-    return batchNumbers[productId] + 1;
-  }
-  
-  try {
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.INVENTORY.PRODUCT_ID}","type":"contains","value":"${productId}"},{"field":"${FIELD_NAMES.INVENTORY.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    const existingBatches = data.results
-      .filter(item => item[FIELD_NAMES.INVENTORY.BATCH_NO])
-      .map(item => parseInt(item[FIELD_NAMES.INVENTORY.BATCH_NO]))
-      .filter(num => !isNaN(num));
-    
-    const maxBatch = existingBatches.length > 0 ? Math.max(...existingBatches) : 0;
-    batchNumbers[productId] = maxBatch;
-    
-    return maxBatch + 1;
-  } catch (error) {
-    console.error("Error fetching batch numbers:", error);
-    return 1;
-  }
-}
-
-// Add product to the current purchase list
-function addProductToList() {
-  if (!validateProductForm()) {
-    return;
-  }
-  
-  const product = {
-    id: Date.now(),
-    productId: productIdInput.value.trim(),
-    productName: document.getElementById("productName").value,
-    details: document.getElementById("details").value,
-    price: parseFloat(document.getElementById("price").value),
-    purchasePrice: parseFloat(document.getElementById("purchasePrice").value),
-    taxIncluded: document.getElementById("taxYes").checked ? "Yes" : "No",
-    taxPercentage: document.getElementById("taxYes").checked ? taxPercentageSelect.value : "0",
-    count: parseInt(document.getElementById("count").value),
-    batchNo: document.getElementById("batchNo").value,
-    expireDate: document.getElementById("expireDate").value,
-    date: document.getElementById("date").value,
-    location: document.getElementById("location").value,
-    isNewProduct: isNewProduct // Track if this is a new product
-  };
-  
-  const marginValue = product.price - product.purchasePrice;
-  const marginPercentage = ((marginValue / product.purchasePrice) * 100).toFixed(2);
-  product.marginValue = marginValue;
-  product.marginPercentage = marginPercentage;
-  
-  productsInPurchase.push(product);
-  updateProductsList();
-  calculatePurchaseTotals();
-  
-  showModal("success", "Product Added", `Product "${product.productId}" added to purchase list!`);
-  clearProductForm();
-}
-
-// Update the products list display
-function updateProductsList() {
-  if (productsInPurchase.length === 0) {
-    productsListBody.innerHTML = '<div class="no-products">No products added yet</div>';
-    purchaseSummary.style.display = 'none';
-    return;
-  }
-  
-  let html = '';
-  productsInPurchase.forEach((product, index) => {
-    html += `
-      <div class="product-item">
-        <div>${product.productId}</div>
-        <div>${product.productName}</div>
-        <div>${product.batchNo}</div>
-        <div>${product.count}</div>
-        <div>₹ ${product.purchasePrice.toFixed(2)}</div>
-        <div>₹ ${product.price.toFixed(2)}</div>
-        <div class="product-item-actions">
-          <button class="edit-product-btn" data-index="${index}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="remove-product-btn" data-index="${index}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
-    `;
-  });
-  
-  productsListBody.innerHTML = html;
-  
-  document.querySelectorAll('.edit-product-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const index = parseInt(this.getAttribute('data-index'));
-      editProduct(index);
-    });
-  });
-  
-  document.querySelectorAll('.remove-product-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const index = parseInt(this.getAttribute('data-index'));
-      removeProduct(index);
-    });
-  });
-}
-
-// Edit a product from the list
-function editProduct(index) {
-  const product = productsInPurchase[index];
-  
-  productIdInput.value = product.productId;
-  document.getElementById("productName").value = product.productName;
-  document.getElementById("details").value = product.details;
-  document.getElementById("price").value = product.price;
-  document.getElementById("purchasePrice").value = product.purchasePrice;
-  
-  if (product.taxIncluded === "Yes") {
-    document.getElementById("taxYes").checked = true;
-    taxYesOption.classList.add("selected");
-    taxNoOption.classList.remove("selected");
-    taxInputContainer.classList.add("show");
-    taxPercentageSelect.value = product.taxPercentage;
-  } else {
-    document.getElementById("taxNo").checked = true;
-    taxNoOption.classList.add("selected");
-    taxYesOption.classList.remove("selected");
-    taxInputContainer.classList.remove("show");
-  }
-  
-  document.getElementById("count").value = product.count;
-  document.getElementById("batchNo").value = product.batchNo;
-  document.getElementById("expireDate").value = product.expireDate;
-  document.getElementById("location").value = product.location;
-  
-  // Set product type based on whether it was marked as new
-  productType.value = product.isNewProduct ? "new" : "existing";
-  isNewProduct = product.isNewProduct;
-  
-  calculateMargin();
-  calculateTaxBreakdown();
-  
-  productsInPurchase.splice(index, 1);
-  updateProductsList();
-  calculatePurchaseTotals();
-  
-  showModal("warning", "Edit Product", "Product loaded for editing. Make changes and click 'Add Product to List' to save.");
-}
-
-// Remove a product from the list
-function removeProduct(index) {
-  productsInPurchase.splice(index, 1);
-  updateProductsList();
-  calculatePurchaseTotals();
-  showModal("success", "Product Removed", "Product removed from purchase list.");
-}
-
-// Clear only the product form (not supplier info)
-function clearProductForm() {
-  const fieldsToClear = [
-    'productId', 'productName', 'details', 'price', 'purchasePrice', 'count', 
-    'batchNo', 'expireDate', 'location'
-  ];
-  
-  fieldsToClear.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (fieldId !== 'productId' || productType.value === 'existing') {
-      field.value = '';
-    }
-  });
-  
-  document.getElementById("taxNo").checked = true;
-  taxNoOption.classList.add("selected");
-  taxYesOption.classList.remove("selected");
-  taxInputContainer.classList.remove("show");
-  taxBreakdown.classList.remove("show");
-  
-  productType.value = 'existing';
-  isNewProduct = false;
-  marginDisplay.innerHTML = 'Margin: <span class="margin-value">₹ 0.00</span> (<span class="margin-percentage">0%</span>)';
-  
-  document.querySelectorAll('.error-message').forEach(el => {
-    el.style.display = 'none';
-  });
-}
-
-// Clear entire form including supplier info
-function clearEntireForm() {
-  clearProductForm();
-  supplierDetailsInput.value = '';
-  purchaseInvoiceInput.value = '';
-  purchaseDateInput.value = new Date().toISOString().split('T')[0];
-  productsInPurchase = [];
-  updateProductsList();
-  totalInvoiceValue = 0;
-}
-
-// Event listeners for expire date modal
-quickExpireBtn.addEventListener("click", function() {
-  expireModal.style.display = "flex";
-  calculateExpiryDate();
-});
-
-closeExpireModal.addEventListener("click", function() {
-  expireModal.style.display = "none";
-});
-
-expireModalCancel.addEventListener("click", function() {
-  expireModal.style.display = "none";
-});
-
-expireModalApply.addEventListener("click", function() {
-  const expiryDate = calculateExpiryDate();
-  document.getElementById("expireDate").value = expiryDate;
-  expireModal.style.display = "none";
-});
-
-expireModal.addEventListener("click", function(e) {
-  if (e.target === expireModal) {
-    expireModal.style.display = "none";
-  }
-});
-
-// Period button selection
-periodButtons.forEach(button => {
-  button.addEventListener("click", function() {
-    periodButtons.forEach(btn => btn.classList.remove("active"));
-    this.classList.add("active");
-    selectedPeriod = this.getAttribute("data-period");
-    calculateExpiryDate();
-  });
-});
-
-// Set default active period
-document.querySelector('.period-btn[data-period="days"]').classList.add("active");
-
-// Slider functionality
-durationSlider.addEventListener("input", function() {
-  selectedDuration = parseInt(this.value);
-  sliderValue.textContent = selectedDuration;
-  calculateExpiryDate();
-});
-
-// Tax option selection
-taxYesOption.addEventListener("click", function() {
-  document.getElementById("taxYes").checked = true;
-  taxYesOption.classList.add("selected");
-  taxNoOption.classList.remove("selected");
-  taxInputContainer.classList.add("show");
-  calculateTaxBreakdown();
-});
-
-taxNoOption.addEventListener("click", function() {
-  document.getElementById("taxNo").checked = true;
-  taxNoOption.classList.add("selected");
-  taxYesOption.classList.remove("selected");
-  taxInputContainer.classList.remove("show");
-  taxBreakdown.classList.remove("show");
-});
-
-// Set default tax option
-taxNoOption.classList.add("selected");
-
-// Calculate margin when prices change
-purchasePriceInput.addEventListener("input", function() {
-  calculateMargin();
-  calculateTaxBreakdown();
-});
-
-priceInput.addEventListener("input", calculateMargin);
-taxPercentageSelect.addEventListener("change", calculateTaxBreakdown);
-
-// Supplier selection change event
-supplierSelection.addEventListener("change", function() {
-  const selectedSupplierId = this.value;
-  if (selectedSupplierId) {
-    updateSupplierDetailsPanel(selectedSupplierId);
-  } else {
-    supplierDetailsPanel.classList.remove('show');
-    currentSupplierId = null;
-  }
-});
-
-// Refresh suppliers button
-refreshSuppliersBtn.addEventListener("click", function() {
-  fetchSuppliers();
-  this.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
-  setTimeout(() => {
-    this.innerHTML = '<i class="fas fa-sync-alt"></i>';
-  }, 1000);
-});
-
-// New supplier button
-newSupplierBtn.addEventListener("click", function() {
-  resetSupplierForm();
-  showModal("info", "New Supplier", "Please enter the new supplier details below.");
-});
-
-// Modal function
-function showModal(type, title, message) {
-  modalContent.className = "modal-content";
-  modalIcon.innerHTML = "";
-  
-  if (type === "success") {
-    modalContent.classList.add("modal-success");
-    modalIcon.innerHTML = "✅";
-  } else if (type === "warning") {
-    modalContent.classList.add("modal-warning");
-    modalIcon.innerHTML = "⚠️";
-  } else if (type === "error") {
-    modalContent.classList.add("modal-error");
-    modalIcon.innerHTML = "❌";
-  } else if (type === "info") {
-    modalContent.classList.add("modal-success");
-    modalIcon.innerHTML = "ℹ️";
-  }
-  
-  modalTitle.textContent = title;
-  modalMessage.textContent = message;
-  modal.style.display = "flex";
-}
-
-modalButton.addEventListener("click", function() {
-  modal.style.display = "none";
-});
-
-modal.addEventListener("click", function(e) {
-  if (e.target === modal) {
-    modal.style.display = "none";
-  }
-});
-
-// Search modal functions
-searchBtn.addEventListener("click", function() {
-  searchModal.style.display = "flex";
-  searchInput.focus();
-});
-
-closeSearch.addEventListener("click", function() {
-  searchModal.style.display = "none";
-});
-
-searchModal.addEventListener("click", function(e) {
-  if (e.target === searchModal) {
-    searchModal.style.display = "none";
-  }
-});
-
-// Search products function - Only products from current shop
-async function searchProducts() {
-  const searchTerm = searchInput.value.trim().toLowerCase();
-  
-  if (!searchTerm) {
-    searchResults.innerHTML = '<div class="no-results">Please enter a search term</div>';
-    return;
-  }
-  
-  try {
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers: { Authorization: `Token ${API_KEY}` }
-    });
-    
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    allProducts = data.results;
-    
-    const filteredProducts = allProducts.filter(product => {
-      const productId = String(product[FIELD_NAMES.PRODUCT.PRODUCT_ID] || "").toLowerCase();
-      const productName = String(product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "").toLowerCase();
-      
-      return productId.includes(searchTerm) || productName.includes(searchTerm);
-    });
-    
-    if (filteredProducts.length === 0) {
-      searchResults.innerHTML = '<div class="no-results">No products found matching your search</div>';
-    } else {
-      let resultsHTML = '';
-      filteredProducts.forEach(product => {
-        resultsHTML += `
-          <div class="search-result-item" data-id="${product[FIELD_NAMES.PRODUCT.PRODUCT_ID]}">
-            <div class="product-id">${product[FIELD_NAMES.PRODUCT.PRODUCT_ID]}</div>
-            <div class="product-name">${product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "No Name"}</div>
-            <div class="product-price">${parseFloat(product[FIELD_NAMES.PRODUCT.PRICE] || 0).toFixed(2)}</div>
-          </div>
-        `;
-      });
-      searchResults.innerHTML = resultsHTML;
-      
-      document.querySelectorAll('.search-result-item').forEach(item => {
-        item.addEventListener('click', function() {
-          const productId = this.getAttribute('data-id');
-          productIdInput.value = productId;
-          searchModal.style.display = "none";
-          fetchProduct(productId);
-        });
-      });
-    }
-  } catch (error) {
-    console.error("Error searching products:", error);
-    searchResults.innerHTML = '<div class="no-results">Error searching products</div>';
-  }
-}
-
-searchProductsBtn.addEventListener("click", searchProducts);
-
-searchInput.addEventListener("keyup", function(event) {
-  if (event.key === "Enter") {
-    searchProducts();
-  }
-});
-
-// Field validation functions
-function validateBatchNo(batchNo) {
-  const batchNoRegex = /^[0-9]+$/;
-  return batchNoRegex.test(batchNo);
-}
-
-function validateProductForm() {
-  let isValid = true;
-  
-  document.querySelectorAll('.error-message').forEach(el => {
-    el.style.display = 'none';
-  });
-  
-  const requiredFields = [
-    'productId', 'productName', 'price', 'purchasePrice', 'count', 'batchNo', 'expireDate', 'location'
-  ];
-  
-  requiredFields.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (!field.value.trim()) {
-      document.getElementById(fieldId + 'Error').textContent = 'This field is required';
-      document.getElementById(fieldId + 'Error').style.display = 'block';
-      isValid = false;
-    }
-  });
-  
-  const batchNo = document.getElementById('batchNo').value;
-  if (batchNo && !validateBatchNo(batchNo)) {
-    document.getElementById('batchNoError').textContent = 'Batch number should contain only numbers';
-    document.getElementById('batchNoError').style.display = 'block';
-    isValid = false;
-  }
-  
-  const price = document.getElementById('price').value;
-  if (price && parseFloat(price) < 0) {
-    document.getElementById('priceError').textContent = 'Price cannot be negative';
-    document.getElementById('priceError').style.display = 'block';
-    isValid = false;
-  }
-  
-  const purchasePrice = document.getElementById('purchasePrice').value;
-  if (purchasePrice && parseFloat(purchasePrice) < 0) {
-    document.getElementById('purchasePriceError').textContent = 'Purchase price cannot be negative';
-    document.getElementById('purchasePriceError').style.display = 'block';
-    isValid = false;
-  }
-  
-  const count = document.getElementById('count').value;
-  if (count && parseInt(count) < 1) {
-    document.getElementById('countError').textContent = 'Count must be at least 1';
-    document.getElementById('countError').style.display = 'block';
-    isValid = false;
-  }
-  
-  return isValid;
-}
-
-function validateSupplierForm() {
-  let isValid = true;
-  
-  document.getElementById('supplierSelectionError').style.display = 'none';
-  document.getElementById('supplierNameError').style.display = 'none';
-  
-  const selectedSupplierId = supplierSelection.value;
-  const newSupplierName = supplierNameInput.value.trim();
-  
-  if (!selectedSupplierId && !newSupplierName) {
-    document.getElementById('supplierSelectionError').textContent = 'Please select a supplier or enter a new supplier name';
-    document.getElementById('supplierSelectionError').style.display = 'block';
-    isValid = false;
-  }
-  
-  if (!purchaseInvoiceInput.value) {
-    showModal("error", "Validation Error", "Purchase invoice number is required");
-    isValid = false;
-  }
-  
-  if (!purchaseDateInput.value) {
-    showModal("error", "Validation Error", "Purchase date is required");
-    isValid = false;
-  }
-  
-  return isValid;
-}
-
-// Add product to list button
-addProductToListBtn.addEventListener("click", addProductToList);
-
-// Add another product button
-addAnotherProductBtn.addEventListener("click", function() {
-  clearProductForm();
-  showModal("success", "Form Cleared", "Product form cleared. You can now add another product.");
-});
-
-// Handle product type change
-productType.addEventListener("change", function() {
-  isNewProduct = this.value === "new";
-  if (isNewProduct) {
-    productIdInput.value = "PRD-" + Date.now();
-    document.getElementById("productName").value = "";
-    document.getElementById("details").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("purchasePrice").value = "";
-    batchNoInput.value = "1";
-  } else {
-    productIdInput.value = "";
-    batchNoInput.value = "";
-  }
-});
-
-// Finish purchase and upload all data - FIXED VERSION with proper Supplier ID upload
-finishPurchaseBtn.addEventListener("click", async function() {
-  if (!validateSupplierForm()) {
-    return;
-  }
-  
-  if (productsInPurchase.length === 0) {
-    showModal("error", "No Products", "Please add at least one product to the purchase.");
-    return;
-  }
-  
-  finishPurchaseBtn.disabled = true;
-  finishPurchaseBtn.textContent = 'Uploading...';
-
-  try {
-    let supplierId = currentSupplierId;
-    let supplierName = "";
-    let supplierCustomId = "";
-    const selectedSupplierId = supplierSelection.value;
-    const newSupplierName = supplierNameInput.value.trim();
-    
-    // If a supplier is selected from dropdown, use it
-    if (selectedSupplierId) {
-      supplierId = selectedSupplierId;
-      const selectedOption = supplierSelection.querySelector(`option[value="${selectedSupplierId}"]`);
-      if (selectedOption && selectedOption.dataset.supplier) {
-        const supplier = JSON.parse(selectedOption.dataset.supplier);
-        supplierName = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_NAME] || '';
-        supplierCustomId = supplier[FIELD_NAMES.SUPPLIER.SUPPLIER_ID] || '';
-      }
-    } 
-    // If new supplier name is provided, create new supplier
-    else if (newSupplierName) {
-      // Generate a new Supplier ID for the new supplier
-      supplierCustomId = "SUP-" + Date.now();
-      
-      const supplierBody = {
-        [FIELD_NAMES.SUPPLIER.SUPPLIER_ID]: supplierCustomId,
-        [FIELD_NAMES.SUPPLIER.SUPPLIER_NAME]: newSupplierName,
-        [FIELD_NAMES.SUPPLIER.SUPPLIER_DETAILS]: supplierDetailsInput.value,
-        [FIELD_NAMES.SUPPLIER.SHOP_ID]: ShopID
-      };
-      
-      const createSupplierRes = await fetch(`${BASEROW}/api/database/rows/table/${SUPPLIER_TABLE}/?user_field_names=true`, {
-        method:"POST",
-        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-        body:JSON.stringify(supplierBody)
-      });
-      
-      if (!createSupplierRes.ok) {
-        throw new Error(`API error: ${createSupplierRes.status}`);
-      }
-      
-      const newSupplier = await createSupplierRes.json();
-      supplierId = newSupplier.id;
-      supplierName = newSupplierName;
-      supplierCustomId = supplierCustomId;
-    }
-    
-    // Now add all products to inventory and product tables
-    for (const product of productsInPurchase) {
-      // Add product to Product table if it's new
-      if (product.isNewProduct) {
-        try {
-          // Check if product already exists in this shop
-          const productRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${product.productId}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-            headers:{Authorization:`Token ${API_KEY}`}
-          });
-          
-          if (!productRes.ok) {
-            throw new Error(`API error: ${productRes.status}`);
-          }
-          
-          const productData = await productRes.json();
-          const existing = productData.results.find(p=>String(p[FIELD_NAMES.PRODUCT.PRODUCT_ID])===String(product.productId));
-          
-          if(!existing){
-            const productBody = {
-              [FIELD_NAMES.PRODUCT.PRODUCT_ID]: product.productId,
-              [FIELD_NAMES.PRODUCT.PRODUCT_NAME]: product.productName,
-              [FIELD_NAMES.PRODUCT.DETAILS]: product.details,
-              [FIELD_NAMES.PRODUCT.PRICE]: product.price,
-              [FIELD_NAMES.PRODUCT.PURCHASE_PRICE]: product.purchasePrice,
-              [FIELD_NAMES.PRODUCT.TAX_INCLUDED]: product.taxIncluded,
-              [FIELD_NAMES.PRODUCT.TAX_PERCENTAGE]: product.taxPercentage,
-              [FIELD_NAMES.PRODUCT.SHOP_ID]: ShopID
-            };
-            
-            const createProductRes = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true`, {
-              method:"POST",
-              headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-              body:JSON.stringify(productBody)
-            });
-            
-            if (!createProductRes.ok) {
-              throw new Error(`API error: ${createProductRes.status}`);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Invoice Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: white;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border-left: 5px solid var(--primary);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-icon {
+            background: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .date-display {
+            font-weight: 500;
+            color: var(--dark);
+            background: #f1f3f9;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            transition: var(--transition);
+            border: 1px solid #eaeaea;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            text-align: center;
+            background: white;
+            color: var(--dark);
+            border-top: 5px solid var(--primary);
+        }
+
+        .stat-card:nth-child(2) {
+            border-top-color: #f5576c;
+        }
+
+        .stat-card:nth-child(3) {
+            border-top-color: #4facfe;
+        }
+
+        .stat-card:nth-child(4) {
+            border-top-color: #43e97b;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--gray);
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: #eaeaea;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1100px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .search-card, .date-filter-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #eaeaea;
+        }
+
+        .card-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input, select {
+            padding: 14px 18px;
+            font-size: 16px;
+            margin: 8px 0;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            background-color: #fff;
+        }
+
+        button {
+            padding: 14px 18px;
+            font-size: 16px;
+            margin: 8px 0;
+            width: 100%;
+            border: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        }
+
+        .invoice-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .invoice-list-item {
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .invoice-list-item:hover {
+            background: #e0f2fe;
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .invoice-number {
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .invoice-supplier {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        .invoice-date {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Invoice View */
+        #invoiceView {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+            margin-top: 20px;
+            position: relative;
+            border: 1px solid #eaeaea;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-info h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .detail-box {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .detail-box h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-box p {
+            margin-bottom: 8px;
+            display: flex;
+        }
+
+        .detail-box p b {
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        table, th, td {
+            border: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tr:hover {
+            background-color: #e0f2fe;
+        }
+
+        .totals {
+            margin-top: 30px;
+            width: 300px;
+            float: right;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .totals td {
+            border: none;
+            padding: 10px 0;
+        }
+
+        .totals tr:last-child {
+            border-top: 1px solid #e2e8f0;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            clear: both;
+        }
+
+        .action-buttons button {
+            width: auto;
+            padding: 12px 25px;
+        }
+
+        .stock-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .supplier-item {
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .supplier-name {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .supplier-invoices {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .filter-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stock-item {
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-info {
+            flex: 1;
+        }
+
+        .stock-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stock-details {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .stock-qty {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .setup-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .setup-card h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .setup-card p {
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #invoiceView, #invoiceView * { visibility: visible; }
+            #invoiceView { 
+                position: absolute; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                box-shadow: none;
+                border: none;
+            }
+            .action-buttons { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
             }
             
-            console.log("New product added to Product table:", product.productId);
-          }
-        } catch(e) { 
-          console.error("Error adding product to Product table:", e); 
+            .invoice-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .invoice-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .invoice-meta {
+                text-align: left;
+            }
+            
+            .totals {
+                width: 100%;
+                float: none;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .filter-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .stock-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .stock-qty {
+                align-self: flex-end;
+            }
         }
-      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <h1>Purchase Invoice Dashboard</h1>
+            </div>
+            <div class="date-display" id="currentDate"></div>
+        </header>
 
-      // Add to inventory with supplier reference - FIXED: Now using supplierCustomId for Supplier ID field
-      const inventoryBody = {
-        [FIELD_NAMES.INVENTORY.PRODUCT_ID]: product.productId,
-        [FIELD_NAMES.INVENTORY.PRODUCT_NAME]: product.productName,
-        [FIELD_NAMES.INVENTORY.COUNT]: product.count,
-        [FIELD_NAMES.INVENTORY.BATCH_NO]: product.batchNo,
-        [FIELD_NAMES.INVENTORY.EXPIRE_DATE]: product.expireDate,
-        [FIELD_NAMES.INVENTORY.DATE]: product.date,
-        [FIELD_NAMES.INVENTORY.LOCATION]: product.location,
-        [FIELD_NAMES.INVENTORY.PURCHASE_PRICE]: product.purchasePrice,
-        [FIELD_NAMES.INVENTORY.TAX_INCLUDED]: product.taxIncluded,
-        [FIELD_NAMES.INVENTORY.TAX_PERCENTAGE]: product.taxPercentage,
-        [FIELD_NAMES.INVENTORY.SUPPLIER_ID]: supplierCustomId, // FIXED: Using the actual Supplier ID from the table
-        [FIELD_NAMES.INVENTORY.SHOP_ID]: ShopID
-      };
+        <!-- Setup Card (shown only when ShopTag is not set) -->
+        <div id="setupCard" class="card setup-card" style="display: none;">
+            <h3>🏪 Setup Your Company Details</h3>
+            <p>Enter your company information to get started with the invoice system</p>
+            <div class="filter-section">
+                <div>
+                    <label>Shop Name</label>
+                    <input type="text" id="setupShopName" placeholder="Your Company Name">
+                </div>
+                <div>
+                    <label>Address</label>
+                    <input type="text" id="setupAddress" placeholder="123 Business Street, City">
+                </div>
+                <div>
+                    <label>Mobile Number</label>
+                    <input type="text" id="setupMobile" placeholder="+1 (123) 456-7890">
+                </div>
+                <div>
+                    <label>GSTIN</label>
+                    <input type="text" id="setupGSTIN" placeholder="12ABCDE3456F7Z8">
+                </div>
+            </div>
+            <button onclick="saveShopTag()" class="btn-success">💾 Save Company Details</button>
+        </div>
 
-      const inventoryRes = await fetch(`${BASEROW}/api/database/rows/table/${INVENTORY_TABLE}/?user_field_names=true`, {
-        method:"POST",
-        headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-        body:JSON.stringify(inventoryBody)
-      });
+        <div class="dashboard">
+            <div class="card stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="totalTax">₹0</div>
+                <div class="stat-label">Total Tax to Pay</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-icon">📄</div>
+                <div class="stat-value" id="totalInvoices">0</div>
+                <div class="stat-label">Invoices Received</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-value" id="totalStock">0</div>
+                <div class="stat-label">Stock Items Received</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-icon">🏪</div>
+                <div class="stat-value" id="totalSuppliers">0</div>
+                <div class="stat-label">Suppliers</div>
+            </div>
+        </div>
 
-      if (!inventoryRes.ok) {
-        throw new Error(`API error: ${inventoryRes.status}`);
-      }
+        <div class="content-grid">
+            <div>
+                <h2 class="section-title">🔍 Search & Filter</h2>
+                
+                <div class="search-card card">
+                    <h3 class="card-title">Search Invoice</h3>
+                    <input id="searchInvoice" placeholder="Enter Invoice Number">
+                    <button onclick="searchByInvoice()">Search Invoice</button>
+                </div>
 
-      console.log("Product added to Inventory table with Supplier ID:", product.productId, supplierCustomId);
-    }
+                <div class="date-filter-card card">
+                    <h3 class="card-title">Filter by Date</h3>
+                    <div class="filter-section">
+                        <div>
+                            <label>From Date</label>
+                            <input type="date" id="fromDate">
+                        </div>
+                        <div>
+                            <label>To Date</label>
+                            <input type="date" id="toDate">
+                        </div>
+                    </div>
+                    <button onclick="filterByDate()">Filter by Date</button>
+                </div>
 
-    // Create transaction record with Supplier ID from the table
-    const transactionBody = {
-      [FIELD_NAMES.TRANSACTION.SUPPLIER_ID]: supplierCustomId,
-      [FIELD_NAMES.TRANSACTION.SUPPLIER_NAME]: supplierName,
-      [FIELD_NAMES.TRANSACTION.TRANSACTION_TYPE]: "Purchase",
-      [FIELD_NAMES.TRANSACTION.INVOICE_NUMBER]: purchaseInvoiceInput.value,
-      [FIELD_NAMES.TRANSACTION.TOTAL_INVOICE_VALUE]: totalInvoiceValue,
-      [FIELD_NAMES.TRANSACTION.DATE]: new Date().toISOString().split('T')[0],
-      [FIELD_NAMES.TRANSACTION.SHOP_ID]: ShopID
-    };
+                <div class="card">
+                    <h3 class="card-title">📄 Invoice List</h3>
+                    <div class="invoice-list" id="invoiceList"></div>
+                </div>
+            </div>
 
-    const transactionRes = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true`, {
-      method:"POST",
-      headers:{ "Authorization":"Token "+API_KEY, "Content-Type":"application/json" },
-      body:JSON.stringify(transactionBody)
-    });
+            <div>
+                <h2 class="section-title">📊 Stock Overview</h2>
+                
+                <div class="card">
+                    <h3 class="card-title">📦 Recent Stock Purchases</h3>
+                    <div id="recentStockList">
+                        <!-- Recent stock will be populated here -->
+                    </div>
+                </div>
 
-    if (!transactionRes.ok) {
-      throw new Error(`API error: ${transactionRes.status}`);
-    }
+                <div class="card">
+                    <h3 class="card-title">📈 Stock Summary</h3>
+                    <table class="stock-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Total Qty</th>
+                                <th>Avg Price</th>
+                                <th>Last Purchase</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockSummaryTable">
+                            <!-- Stock summary will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
 
-    showModal("success", "Purchase Complete", 
-      `✅ Successfully uploaded ${productsInPurchase.length} products!<br>
-       - Added to Inventory table: ${productsInPurchase.length} items<br>
-       - Added to Product table: ${productsInPurchase.filter(p => p.isNewProduct).length} new products<br>
-       - Supplier ID in Inventory: ${supplierCustomId}<br>
-       - Total Invoice Value: ₹ ${totalInvoiceValue.toFixed(2)}<br>
-       - Transaction recorded successfully.`);
-    
-    clearEntireForm();
-    
-    // Refresh suppliers list
-    fetchSuppliers();
-    
-  } catch (e) {
-    console.error("Error completing purchase:", e);
-    showModal("error", "Upload Error", "Error completing purchase. Please check console for details.");
-  } finally {
-    finishPurchaseBtn.disabled = false;
-    finishPurchaseBtn.textContent = 'Finish & Upload Purchase';
-  }
-});
+                <div class="card">
+                    <h3 class="card-title">🏪 Top Suppliers</h3>
+                    <div id="suppliersList">
+                        <!-- Suppliers will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
 
-// Add real-time validation
-document.getElementById('batchNo').addEventListener('input', function() {
-  const batchNoError = document.getElementById('batchNoError');
-  if (this.value && !validateBatchNo(this.value)) {
-    batchNoError.textContent = 'Batch number should contain only numbers';
-    batchNoError.style.display = 'block';
-  } else {
-    batchNoError.style.display = 'none';
-  }
-});
+        <!-- INVOICE VIEW -->
+        <div id="invoiceView" class="card">
+            <div class="invoice-header">
+                <div class="company-info">
+                    <h2>PURCHASE INVOICE</h2>
+                    <div id="shopDetails">
+                        <!-- Shop details will be populated here -->
+                    </div>
+                </div>
+                <div class="invoice-meta">
+                    <p><b>Invoice Number:</b> <span id="invNum"></span></p>
+                    <p><b>Date:</b> <span id="invDate"></span></p>
+                    <p><b>Shop ID:</b> <span id="shopID"></span></p>
+                </div>
+            </div>
 
-// Role Validation
-(async function init(){
-  if(!MobileTag){ document.getElementById("loginPrompt").style.display="block"; return; }
+            <div class="invoice-details">
+                <div class="detail-box">
+                    <h3>🛍️ Supplier Details</h3>
+                    <p><b>Name:</b> <span id="supName"></span></p>
+                    <p><b>ID:</b> <span id="supID"></span></p>
+                    <p><b>GSTIN:</b> <span id="supGST"></span></p>
+                    <p><b>Address:</b> <span id="supAddress"></span></p>
+                </div>
+                
+                <div class="detail-box">
+                    <h3>🏢 Company Details</h3>
+                    <p><b>Name:</b> <span id="companyName">Your Company Name</span></p>
+                    <p><b>Address:</b> <span id="companyAddress">123 Business Street, City, State 12345</span></p>
+                    <p><b>GSTIN:</b> <span id="companyGST">12ABCDE3456F7Z8</span></p>
+                    <p><b>Contact:</b> <span id="companyContact">+1 (123) 456-7890</span></p>
+                </div>
+            </div>
 
-  try{
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${USER_TABLE}/?user_field_names=true`, { headers:{Authorization:`Token ${API_KEY}`}});
-    const data = await res.json();
-    const user = data.results.find(u=>String(u[FIELD_NAMES.USER.USERNAME])===String(MobileTag));
-    if(!user){ 
-      showModal("error", "User Not Found", "User not found in the system.");
-      return; 
-    }
+            <h3 class="card-title">📋 Items</h3>
+            <table id="itemTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Product ID</th>
+                        <th>Price</th>
+                        <th>GST %</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
 
-    const role = user[FIELD_NAMES.USER.ROLE] || "Staff";
-    app.style.display = "block";
+            <table class="totals">
+                <tr><td>Subtotal:</td><td id="subTot"></td></tr>
+                <tr><td>CGST:</td><td id="cgstTot"></td></tr>
+                <tr><td>SGST:</td><td id="sgstTot"></td></tr>
+                <tr><td>GST Total:</td><td id="gstTot"></td></tr>
+                <tr><td><b>Grand Total:</b></td><td id="grandTot"></td></tr>
+            </table>
 
-    if(role.toLowerCase()!=="manager"){
-      addProductToListBtn.disabled = true;
-      addAnotherProductBtn.disabled = true;
-      finishPurchaseBtn.disabled = true;
-      Array.from(app.querySelectorAll("input,textarea,select,button")).forEach(f=>f.disabled=true);
-      showModal("error", "Access Denied", "Only managers can add products and inventory.");
-      return;
-    }
-    
-    await fetchSuppliers();
-    
-  }catch(e){ 
-    console.error(e); 
-    showModal("error", "Error", "Error fetching user information.");
-  }
-})();
+            <div class="action-buttons">
+                <button class="btn-success" onclick="window.print()">🖨️ Print Invoice</button>
+                <button class="btn-danger" onclick="document.getElementById('invoiceView').style.display='none'">❌ Close</button>
+            </div>
+        </div>
+    </div>
 
-// Fetch Product Details (manual fetch or scan) - Only from current shop
-async function fetchProduct(pid){
-  if(!pid){ 
-    document.getElementById("productIdError").textContent = "Enter Product ID";
-    document.getElementById("productIdError").style.display = "block";
-    return; 
-  }
-  
-  try{
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${PRODUCT_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.PRODUCT.PRODUCT_ID}","type":"contains","value":"${pid}"},{"field":"${FIELD_NAMES.PRODUCT.SHOP_ID}","type":"contains","value":"${ShopID}"}]}`, {
-      headers:{Authorization:`Token ${API_KEY}`}
-    });
-    
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    const product = data.results.find(p=>String(p[FIELD_NAMES.PRODUCT.PRODUCT_ID])===String(pid));
-    
-    if(product){
-      document.getElementById("productName").value = product[FIELD_NAMES.PRODUCT.PRODUCT_NAME] || "";
-      document.getElementById("details").value = product[FIELD_NAMES.PRODUCT.DETAILS] || "";
-      document.getElementById("price").value = product[FIELD_NAMES.PRODUCT.PRICE] || "";
-      document.getElementById("purchasePrice").value = product[FIELD_NAMES.PRODUCT.PURCHASE_PRICE] || "";
-      
-      if (product[FIELD_NAMES.PRODUCT.TAX_INCLUDED] === "Yes") {
-        document.getElementById("taxYes").checked = true;
-        taxYesOption.classList.add("selected");
-        taxNoOption.classList.remove("selected");
-        taxInputContainer.classList.add("show");
-        taxPercentageSelect.value = product[FIELD_NAMES.PRODUCT.TAX_PERCENTAGE] || "0";
-      } else {
-        document.getElementById("taxNo").checked = true;
-        taxNoOption.classList.add("selected");
-        taxYesOption.classList.remove("selected");
-        taxInputContainer.classList.remove("show");
-      }
-      
-      calculateMargin();
-      calculateTaxBreakdown();
-      
-      const nextBatchNo = await getNextBatchNumber(pid);
-      batchNoInput.value = nextBatchNo;
-      
-      document.getElementById("productIdError").style.display = 'none';
-      
-      const successMsg = document.createElement('div');
-      successMsg.className = 'success-message';
-      successMsg.textContent = '✅ Product details fetched!';
-      successMsg.style.display = 'block';
-      
-      const existingSuccess = document.querySelector('#productId + .success-message');
-      if (existingSuccess) existingSuccess.remove();
-      
-      productIdInput.parentNode.insertBefore(successMsg, productIdInput.nextSibling);
-      
-      setTimeout(() => {
-        successMsg.style.display = 'none';
-      }, 3000);
-    }else{
-      document.getElementById("productIdError").textContent = "⚠️ Product not found.";
-      document.getElementById("productIdError").style.display = "block";
-    }
-  }catch(err){ 
-    console.error(err); 
-    document.getElementById("productIdError").textContent = "Error fetching product.";
-    document.getElementById("productIdError").style.display = "block";
-  }
-}
+    <script>
+        const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+        const TABLE_ID = 745465;
+        const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
 
-fetchBtn.addEventListener("click", ()=>fetchProduct(productIdInput.value));
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
 
-// Camera Scanning
-scanBtn.addEventListener("click", ()=>{
-  readerContainer.style.display="flex";
-  startCamera();
-});
+            // Check if ShopTag exists in localStorage
+            checkShopTag();
+        });
 
-document.getElementById("closeCameraBtn").addEventListener("click", ()=>{
-  stopCamera();
-});
+        /* ---------- Check and Setup ShopTag ---------- */
+        function checkShopTag() {
+            const shopTag = localStorage.getItem('ShopTag');
+            const setupCard = document.getElementById('setupCard');
+            
+            if (!shopTag) {
+                // Show setup card if ShopTag doesn't exist
+                setupCard.style.display = 'block';
+            } else {
+                // Hide setup card and load data
+                setupCard.style.display = 'none';
+                fetchAll();
+            }
+        }
 
-document.getElementById("switchCameraBtn").addEventListener("click", ()=>{
-  currentCamera = currentCamera==="environment" ? "user" : "environment";
-  stopCamera();
-  startCamera();
-});
+        /* ---------- Save ShopTag to Local Storage ---------- */
+        function saveShopTag() {
+            const shopName = document.getElementById('setupShopName').value.trim();
+            const address = document.getElementById('setupAddress').value.trim();
+            const mobile = document.getElementById('setupMobile').value.trim();
+            const gstin = document.getElementById('setupGSTIN').value.trim();
 
-function startCamera(){
-  html5QrCode = new Html5Qrcode("reader");
-  html5QrCode.start({facingMode: currentCamera}, {fps:10, qrbox:250},
-    qrCodeMessage=>{
-      productIdInput.value = qrCodeMessage;
-      stopCamera();
-      fetchProduct(qrCodeMessage);
-    },
-    error=>{}
-  ).catch(err=>{
-    console.error("Camera error:", err);
-    showModal("error", "Camera Error", "Failed to start camera. Please check permissions.");
-  });
-}
+            if (!shopName || !address || !mobile) {
+                alert('Please fill in all required fields: Shop Name, Address, and Mobile Number');
+                return;
+            }
 
-function stopCamera(){
-  if(html5QrCode){
-    html5QrCode.stop().then(()=>{ html5QrCode.clear(); });
-  }
-  readerContainer.style.display="none";
-}
-</script>
+            // Format: ShopName-Address/Mobile
+            const shopTag = `${shopName}-${address}/${mobile}`;
+            
+            // Save to localStorage
+            localStorage.setItem('ShopTag', shopTag);
+            localStorage.setItem('CompanyGSTIN', gstin);
+            
+            // Hide setup card and load data
+            document.getElementById('setupCard').style.display = 'none';
+            alert('Company details saved successfully!');
+            fetchAll();
+        }
+
+        /* ---------- Get Company Details from Local Storage ---------- */
+        function getCompanyDetails() {
+            const shopTag = localStorage.getItem('ShopTag');
+            const gstin = localStorage.getItem('CompanyGSTIN') || '12ABCDE3456F7Z8';
+            
+            if (!shopTag) {
+                return {
+                    name: 'Your Company Name',
+                    address: '123 Business Street, City, State 12345',
+                    mobile: '+1 (123) 456-7890',
+                    gstin: gstin
+                };
+            }
+            
+            // Parse ShopTag format: ShopName-Address/Mobile
+            const parts = shopTag.split('-');
+            const name = parts[0] || 'Your Company Name';
+            
+            const addressMobile = parts[1] ? parts[1].split('/') : [];
+            const address = addressMobile[0] || '123 Business Street, City, State 12345';
+            const mobile = addressMobile[1] || '+1 (123) 456-7890';
+            
+            return {
+                name: name,
+                address: address,
+                mobile: mobile,
+                gstin: gstin
+            };
+        }
+
+        /* ---------- Fetch All Rows ---------- */
+        async function fetchAll() {
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { Authorization: `Token ${API_KEY}` }
+                });
+                const data = await res.json();
+                updateDashboard(data.results);
+                displayList(data.results);
+                updateRecentStock(data.results);
+                updateStockSummary(data.results);
+                updateSuppliers(data.results);
+                return data.results;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                return [];
+            }
+        }
+
+        /* ---------- Update Dashboard Stats ---------- */
+        function updateDashboard(data) {
+            let totalTax = 0;
+            let totalInvoices = data.length;
+            let totalStock = 0;
+            let suppliers = new Set();
+            
+            data.forEach(row => {
+                suppliers.add(row["Supplier Name"]);
+                
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        totalTax += item.gstAmount;
+                        totalStock += item.qty;
+                    });
+                }
+            });
+            
+            document.getElementById("totalTax").textContent = "₹" + totalTax.toFixed(2);
+            document.getElementById("totalInvoices").textContent = totalInvoices;
+            document.getElementById("totalStock").textContent = totalStock;
+            document.getElementById("totalSuppliers").textContent = suppliers.size;
+        }
+
+        /* ---------- Parse Remark Field into Items ---------- */
+        function parseRemarkItems(remark) {
+            if (!remark) return [];
+            
+            let items = [];
+            let itemStrings = remark.split(" - ");
+            
+            itemStrings.forEach(txt => {
+                let p = txt.split(",");
+                if (p.length >= 6) {
+                    let item = p[0];
+                    let pid = p[1];
+                    let price = parseFloat(p[2].replace(/₹/g, ""));
+                    let gstStr = p[3];
+                    let batch = p[4].replace("Batch:", "");
+                    let qty = parseInt(p[5].replace("Qty:", ""));
+                    
+                    let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
+                    let rowTotal = price * qty;
+                    let gstAmount = rowTotal * gstPercent / 100;
+                    
+                    items.push({
+                        name: item,
+                        productId: pid,
+                        price: price,
+                        gstPercent: gstPercent,
+                        batch: batch,
+                        qty: qty,
+                        total: rowTotal + gstAmount,
+                        gstAmount: gstAmount
+                    });
+                }
+            });
+            
+            return items;
+        }
+
+        /* ---------- Update Recent Stock ---------- */
+        function updateRecentStock(data) {
+            let recentStockList = document.getElementById("recentStockList");
+            recentStockList.innerHTML = "";
+            
+            // Get recent invoices (last 10)
+            let recentInvoices = data.slice(-10).reverse();
+            let stockItems = [];
+            
+            // Extract stock items from recent invoices
+            recentInvoices.forEach(row => {
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        stockItems.push({
+                            ...item,
+                            date: row["Date"],
+                            invoice: row["Invoice Number"],
+                            supplier: row["Supplier Name"]
+                        });
+                    });
+                }
+            });
+            
+            // Display only the 10 most recent stock items
+            stockItems.slice(0, 10).forEach(item => {
+                let stockElement = document.createElement("div");
+                stockElement.className = "stock-item";
+                stockElement.innerHTML = `
+                    <div class="stock-info">
+                        <div class="stock-name">${item.name}</div>
+                        <div class="stock-details">
+                            ${item.supplier} • ${item.date} • Batch: ${item.batch}
+                        </div>
+                    </div>
+                    <div class="stock-qty">${item.qty} units</div>
+                `;
+                recentStockList.appendChild(stockElement);
+            });
+            
+            if (recentStockList.children.length === 0) {
+                recentStockList.innerHTML = `<p style="text-align: center; color: var(--gray);">No recent stock purchases</p>`;
+            }
+        }
+
+        /* ---------- Update Stock Summary ---------- */
+        function updateStockSummary(data) {
+            let stockSummaryTable = document.getElementById("stockSummaryTable");
+            stockSummaryTable.innerHTML = "";
+            
+            let stockSummary = {};
+            
+            // Aggregate stock data
+            data.forEach(row => {
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        if (!stockSummary[item.name]) {
+                            stockSummary[item.name] = {
+                                totalQty: 0,
+                                totalValue: 0,
+                                lastPurchase: row["Date"],
+                                count: 0
+                            };
+                        }
+                        
+                        stockSummary[item.name].totalQty += item.qty;
+                        stockSummary[item.name].totalValue += (item.price * item.qty);
+                        stockSummary[item.name].count += 1;
+                        
+                        // Update last purchase date if this is more recent
+                        if (new Date(row["Date"]) > new Date(stockSummary[item.name].lastPurchase)) {
+                            stockSummary[item.name].lastPurchase = row["Date"];
+                        }
+                    });
+                }
+            });
+            
+            // Convert to array and sort by total quantity
+            let sortedStock = Object.entries(stockSummary)
+                .sort((a, b) => b[1].totalQty - a[1].totalQty)
+                .slice(0, 8);
+            
+            if (sortedStock.length === 0) {
+                stockSummaryTable.innerHTML = `<tr><td colspan="4" style="text-align: center;">No stock data available</td></tr>`;
+                return;
+            }
+            
+            sortedStock.forEach(([product, data]) => {
+                let avgPrice = data.totalValue / data.totalQty;
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${product}</td>
+                    <td>${data.totalQty}</td>
+                    <td>₹${avgPrice.toFixed(2)}</td>
+                    <td>${data.lastPurchase}</td>
+                `;
+                stockSummaryTable.appendChild(row);
+            });
+        }
+
+        /* ---------- Update Suppliers List ---------- */
+        function updateSuppliers(data) {
+            let suppliersList = document.getElementById("suppliersList");
+            suppliersList.innerHTML = "";
+            
+            let suppliers = {};
+            
+            data.forEach(row => {
+                let supplier = row["Supplier Name"];
+                if (supplier) {
+                    if (!suppliers[supplier]) {
+                        suppliers[supplier] = {
+                            count: 0,
+                            totalValue: 0
+                        };
+                    }
+                    suppliers[supplier].count++;
+                    
+                    // Calculate invoice total value
+                    if (row["Remark"]) {
+                        let items = parseRemarkItems(row["Remark"]);
+                        let invoiceTotal = items.reduce((sum, item) => sum + item.total, 0);
+                        suppliers[supplier].totalValue += invoiceTotal;
+                    }
+                }
+            });
+            
+            // Sort suppliers by invoice count
+            let sortedSuppliers = Object.entries(suppliers)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 5);
+            
+            if (sortedSuppliers.length === 0) {
+                suppliersList.innerHTML = `<p>No supplier data available</p>`;
+                return;
+            }
+            
+            sortedSuppliers.forEach(([supplier, data]) => {
+                let supplierDiv = document.createElement("div");
+                supplierDiv.className = "supplier-item";
+                supplierDiv.innerHTML = `
+                    <div class="supplier-name">${supplier}</div>
+                    <div class="supplier-invoices">
+                        ${data.count} invoices • Total: ₹${data.totalValue.toFixed(2)}
+                    </div>
+                `;
+                suppliersList.appendChild(supplierDiv);
+            });
+        }
+
+        /* ---------- Search by Invoice Number ---------- */
+        async function searchByInvoice() {
+            let inv = document.getElementById("searchInvoice").value.trim();
+            if (!inv) return alert("Enter invoice number");
+
+            let all = await fetchAll();
+            let row = all.find(x => x["Invoice Number"] == inv);
+
+            if (!row) return alert("Invoice not found");
+
+            openInvoice(row);
+        }
+
+        /* ---------- Filter by Date Range ---------- */
+        async function filterByDate() {
+            let f = document.getElementById("fromDate").value;
+            let t = document.getElementById("toDate").value;
+
+            if (!f || !t) return alert("Select both dates");
+
+            let from = new Date(f);
+            let to = new Date(t);
+            to.setDate(to.getDate() + 1); // Include the end date
+
+            let all = await fetchAll();
+            let filtered = all.filter(row => {
+                let d = new Date(row["Date"]);
+                return d >= from && d <= to;
+            });
+
+            displayList(filtered);
+        }
+
+        /* ---------- Display Invoice List ---------- */
+        function displayList(list) {
+            let box = document.getElementById("invoiceList");
+            box.innerHTML = "";
+
+            if (list.length == 0) {
+                box.innerHTML = "<p>No invoices found.</p>";
+                return;
+            }
+
+            // Show latest invoices first
+            list.reverse().forEach(row => {
+                let div = document.createElement("div");
+                div.className = "invoice-list-item";
+                div.innerHTML = `
+                    <div class="invoice-number">${row["Invoice Number"]}</div>
+                    <div class="invoice-supplier">Supplier: ${row["Supplier Name"]}</div>
+                    <div class="invoice-date">Date: ${row["Date"]}</div>
+                `;
+                div.onclick = () => openInvoice(row);
+                box.appendChild(div);
+            });
+        }
+
+        /* ---------- Open Invoice ---------- */
+        function openInvoice(row) {
+            document.getElementById("invNum").innerText = row["Invoice Number"];
+            document.getElementById("invDate").innerText = row["Date"];
+            document.getElementById("shopID").innerText = row["ShopID"];
+
+            document.getElementById("supName").innerText = row["Supplier Name"];
+            document.getElementById("supID").innerText = row["Supplier ID"];
+            document.getElementById("supGST").innerText = row["Supplier GST"] || "N/A";
+            
+            // Use Supplier Details as Address
+            document.getElementById("supAddress").innerText = row["Supplier Details"] || "N/A";
+            
+            // Get company details from localStorage
+            updateCompanyDetails();
+
+            parseRemarkForInvoice(row["Remark"]);
+
+            document.getElementById("invoiceView").style.display = "block";
+            // Scroll to invoice view
+            document.getElementById("invoiceView").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ---------- Update Company Details from Local Storage ---------- */
+        function updateCompanyDetails() {
+            const company = getCompanyDetails();
+            const shopDetails = document.getElementById("shopDetails");
+            
+            shopDetails.innerHTML = `
+                <p>${company.name}</p>
+                <p>${company.address}</p>
+                <p>${company.mobile}</p>
+            `;
+            
+            // Update company details in the invoice
+            document.getElementById("companyName").innerText = company.name;
+            document.getElementById("companyAddress").innerText = company.address;
+            document.getElementById("companyContact").innerText = company.mobile;
+            document.getElementById("companyGST").innerText = company.gstin;
+        }
+
+        /* ---------- Parse Remark for Invoice Display ---------- */
+        function parseRemarkForInvoice(remark) {
+            let tbody = document.querySelector("#itemTable tbody");
+            tbody.innerHTML = "";
+
+            if (!remark) {
+                tbody.innerHTML = "<tr><td colspan='7'>No items found</td></tr>";
+                resetTotals();
+                return;
+            }
+
+            let items = parseRemarkItems(remark);
+            let subtotal = 0, gstTotal = 0;
+
+            items.forEach(item => {
+                subtotal += (item.price * item.qty);
+                gstTotal += item.gstAmount;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.productId}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
+                        <td>${item.gstPercent}%</td>
+                        <td>${item.batch}</td>
+                        <td>${item.qty}</td>
+                        <td>₹${item.total.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            updateTotals(subtotal, gstTotal);
+        }
+
+        /* ---------- Reset Totals ---------- */
+        function resetTotals() {
+            document.getElementById("subTot").innerText = "₹0.00";
+            document.getElementById("gstTot").innerText = "₹0.00";
+            document.getElementById("cgstTot").innerText = "₹0.00";
+            document.getElementById("sgstTot").innerText = "₹0.00";
+            document.getElementById("grandTot").innerText = "₹0.00";
+        }
+
+        /* ---------- Update Totals ---------- */
+        function updateTotals(subtotal, gstTotal) {
+            document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
+            document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
+            document.getElementById("cgstTot").innerText = "₹" + (gstTotal / 2).toFixed(2);
+            document.getElementById("sgstTot").innerText = "₹" + (gstTotal / 2).toFixed(2);
+            document.getElementById("grandTot").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
+        }
+    </script>
 </body>
 </html>
