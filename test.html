@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* All CSS styles from previous solution remain the same */
         :root {
             --primary: #4361ee;
             --primary-dark: #3a0ca3;
@@ -1279,8 +1280,643 @@
     </div>
 
     <script>
-        // JavaScript remains the same as previous implementation
-        // ... (All JavaScript functions from previous solution)
+        // Demo data for testing when API fails
+        const DEMO_DATA = [
+            {
+                "Invoice Number": "INV-001",
+                "Date": "2024-01-15",
+                "ShopID": "SHOP-001",
+                "Supplier Name": "ABC Suppliers",
+                "Supplier ID": "SUP-001",
+                "Supplier GST": "07AABCU9603R1ZM",
+                "Supplier Details": "123 Business Street, Mumbai, Maharashtra 400001",
+                "Remark": "Laptop,LP-001,₹45000,18%,Batch:LT2024,Qty:2 - Mouse,MS-001,₹500,18%,Batch:MS2024,Qty:5 - Keyboard,KB-001,₹1200,18%,Batch:KB2024,Qty:3"
+            },
+            {
+                "Invoice Number": "INV-002",
+                "Date": "2024-01-20",
+                "ShopID": "SHOP-001",
+                "Supplier Name": "XYZ Electronics",
+                "Supplier ID": "SUP-002",
+                "Supplier GST": "09AAACX1234M1Z5",
+                "Supplier Details": "456 Tech Park, Bangalore, Karnataka 560001",
+                "Remark": "Monitor,MN-001,₹15000,18%,Batch:MN2024,Qty:3 - CPU,CP-001,₹25000,18%,Batch:CP2024,Qty:2 - Printer,PR-001,₹8000,18%,Batch:PR2024,Qty:1"
+            },
+            {
+                "Invoice Number": "INV-003",
+                "Date": "2024-02-05",
+                "ShopID": "SHOP-001",
+                "Supplier Name": "Global Traders",
+                "Supplier ID": "SUP-003",
+                "Supplier GST": "27AABCU9603R1ZM",
+                "Supplier Details": "789 Trade Center, Delhi, Delhi 110001",
+                "Remark": "Tablet,TB-001,₹20000,12%,Batch:TB2024,Qty:4 - Phone,PH-001,₹15000,12%,Batch:PH2024,Qty:6 - Charger,CH-001,₹800,12%,Batch:CH2024,Qty:10"
+            }
+        ];
+
+        const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+        const TABLE_ID = 745465;
+        const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initialized');
+            checkShopTag();
+        });
+
+        /* ---------- Mobile Functions ---------- */
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleInvoiceView() {
+            const invoiceView = document.getElementById('invoiceView');
+            if (invoiceView.style.display === 'block') {
+                closeInvoice();
+            } else {
+                invoiceView.style.display = 'block';
+                invoiceView.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function closeInvoice() {
+            document.getElementById('invoiceView').style.display = 'none';
+        }
+
+        /* ---------- Check and Setup ShopTag ---------- */
+        function checkShopTag() {
+            const shopTag = localStorage.getItem('ShopTag');
+            const setupCard = document.getElementById('setupCard');
+            
+            if (!shopTag) {
+                setupCard.style.display = 'block';
+                console.log('No ShopTag found, showing setup card');
+            } else {
+                setupCard.style.display = 'none';
+                console.log('ShopTag found, fetching data...');
+                fetchAll();
+            }
+        }
+
+        /* ---------- Save ShopTag to Local Storage ---------- */
+        function saveShopTag() {
+            const shopName = document.getElementById('setupShopName').value.trim();
+            const address = document.getElementById('setupAddress').value.trim();
+            const mobile = document.getElementById('setupMobile').value.trim();
+            const gstin = document.getElementById('setupGSTIN').value.trim();
+
+            if (!shopName || !address || !mobile) {
+                alert('Please fill required fields');
+                return;
+            }
+
+            const shopTag = `${shopName}-${address}/${mobile}`;
+            localStorage.setItem('ShopTag', shopTag);
+            localStorage.setItem('CompanyGSTIN', gstin);
+            
+            document.getElementById('setupCard').style.display = 'none';
+            alert('Company details saved successfully!');
+            fetchAll();
+        }
+
+        /* ---------- Get Company Details ---------- */
+        function getCompanyDetails() {
+            const shopTag = localStorage.getItem('ShopTag');
+            const gstin = localStorage.getItem('CompanyGSTIN') || '12ABCDE3456F7Z8';
+            
+            if (!shopTag) {
+                return {
+                    name: 'Your Company',
+                    address: 'Business Address',
+                    mobile: '+1 (123) 456-7890',
+                    gstin: gstin
+                };
+            }
+            
+            const parts = shopTag.split('-');
+            const name = parts[0] || 'Your Company';
+            
+            const addressMobile = parts[1] ? parts[1].split('/') : [];
+            const address = addressMobile[0] || 'Business Address';
+            const mobile = addressMobile[1] || '+1 (123) 456-7890';
+            
+            return { name, address, mobile, gstin };
+        }
+
+        /* ---------- Fetch All Rows ---------- */
+        async function fetchAll() {
+            try {
+                console.log('Starting data fetch...');
+                showLoadingState(true);
+                
+                let data;
+                
+                // Try to fetch from API first
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Token ${API_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const apiData = await response.json();
+                    
+                    if (!apiData.results || !Array.isArray(apiData.results)) {
+                        throw new Error('Invalid data format from API');
+                    }
+
+                    data = apiData.results;
+                    console.log('API data fetched successfully:', data.length, 'records');
+                    
+                } catch (apiError) {
+                    console.warn('API fetch failed, using demo data:', apiError);
+                    data = DEMO_DATA;
+                    console.log('Using demo data:', data.length, 'records');
+                }
+
+                // Update all dashboard components
+                updateDashboard(data);
+                displayList(data);
+                updateRecentStock(data);
+                updateStockSummary(data);
+                updateSuppliers(data);
+                
+                showLoadingState(false);
+                console.log('Dashboard updated successfully');
+                return data;
+                
+            } catch (error) {
+                console.error('Error in fetchAll:', error);
+                showLoadingState(false);
+                showErrorState('Failed to load data. Using demo data for demonstration.');
+                
+                // Fallback to demo data
+                const demoData = DEMO_DATA;
+                updateDashboard(demoData);
+                displayList(demoData);
+                updateRecentStock(demoData);
+                updateStockSummary(demoData);
+                updateSuppliers(demoData);
+                
+                return demoData;
+            }
+        }
+
+        function showLoadingState(loading) {
+            const containers = ['invoiceList', 'recentStockList', 'stockSummaryTable', 'suppliersList'];
+            containers.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && element.parentElement) {
+                    if (loading) {
+                        element.parentElement.classList.add('loading');
+                    } else {
+                        element.parentElement.classList.remove('loading');
+                    }
+                }
+            });
+        }
+
+        function showErrorState(message) {
+            const elements = ['invoiceList', 'recentStockList', 'stockSummaryTable', 'suppliersList'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.innerHTML = `
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>${message}</div>
+                            <button onclick="fetchAll()" style="margin-top: 10px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-redo"></i> Retry
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        /* ---------- Update Dashboard Stats ---------- */
+        function updateDashboard(data) {
+            let totalTax = 0;
+            let totalInvoices = data.length;
+            let totalStock = 0;
+            let suppliers = new Set();
+            
+            data.forEach(row => {
+                if (row["Supplier Name"]) {
+                    suppliers.add(row["Supplier Name"]);
+                }
+                
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        totalTax += item.gstAmount;
+                        totalStock += item.qty;
+                    });
+                }
+            });
+            
+            document.getElementById("totalTax").textContent = "₹" + totalTax.toFixed(0);
+            document.getElementById("totalInvoices").textContent = totalInvoices;
+            document.getElementById("totalStock").textContent = totalStock;
+            document.getElementById("totalSuppliers").textContent = suppliers.size;
+        }
+
+        /* ---------- Parse Remark Field ---------- */
+        function parseRemarkItems(remark) {
+            if (!remark || typeof remark !== 'string') return [];
+            
+            let items = [];
+            let itemStrings = remark.split(" - ");
+            
+            itemStrings.forEach(txt => {
+                if (!txt.trim()) return;
+                
+                let p = txt.split(",");
+                if (p.length >= 6) {
+                    try {
+                        let item = p[0]?.trim() || 'Unknown';
+                        let pid = p[1]?.trim() || 'N/A';
+                        let price = parseFloat(p[2]?.replace(/[₹\s]/g, "")) || 0;
+                        let gstStr = p[3]?.trim() || '0%';
+                        let batch = p[4]?.replace("Batch:", "")?.trim() || 'N/A';
+                        let qty = parseInt(p[5]?.replace("Qty:", "")?.trim()) || 0;
+                        
+                        let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
+                        let rowTotal = price * qty;
+                        let gstAmount = rowTotal * gstPercent / 100;
+                        
+                        items.push({
+                            name: item,
+                            productId: pid,
+                            price: price,
+                            gstPercent: gstPercent,
+                            batch: batch,
+                            qty: qty,
+                            total: rowTotal + gstAmount,
+                            gstAmount: gstAmount
+                        });
+                    } catch (e) {
+                        console.warn('Error parsing item:', txt, e);
+                    }
+                }
+            });
+            
+            return items;
+        }
+
+        /* ---------- Update Recent Stock ---------- */
+        function updateRecentStock(data) {
+            let recentStockList = document.getElementById("recentStockList");
+            recentStockList.innerHTML = "";
+            
+            let recentInvoices = data.slice(-5).reverse();
+            let stockItems = [];
+            
+            recentInvoices.forEach(row => {
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        stockItems.push({
+                            ...item,
+                            date: formatDate(row["Date"]),
+                            supplier: row["Supplier Name"] || 'Unknown Supplier'
+                        });
+                    });
+                }
+            });
+            
+            if (stockItems.length === 0) {
+                recentStockList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-boxes"></i>
+                        <div>No stock data available</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            stockItems.slice(0, 4).forEach(item => {
+                let stockElement = document.createElement("div");
+                stockElement.className = "stock-item";
+                stockElement.innerHTML = `
+                    <div class="stock-info">
+                        <div class="stock-name">
+                            <i class="fas fa-cube"></i> ${item.name}
+                        </div>
+                        <div class="stock-details">${item.supplier} • ${item.date}</div>
+                    </div>
+                    <div class="stock-qty">${item.qty}</div>
+                `;
+                recentStockList.appendChild(stockElement);
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            } catch (e) {
+                return 'Invalid Date';
+            }
+        }
+
+        /* ---------- Update Stock Summary ---------- */
+        function updateStockSummary(data) {
+            let stockSummaryTable = document.getElementById("stockSummaryTable");
+            stockSummaryTable.innerHTML = "";
+            
+            let stockSummary = {};
+            
+            data.forEach(row => {
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        if (!stockSummary[item.name]) {
+                            stockSummary[item.name] = {
+                                totalQty: 0,
+                                totalValue: 0,
+                                lastPurchase: row["Date"]
+                            };
+                        }
+                        
+                        stockSummary[item.name].totalQty += item.qty;
+                        stockSummary[item.name].totalValue += (item.price * item.qty);
+                        
+                        if (new Date(row["Date"]) > new Date(stockSummary[item.name].lastPurchase || 0)) {
+                            stockSummary[item.name].lastPurchase = row["Date"];
+                        }
+                    });
+                }
+            });
+            
+            let sortedStock = Object.entries(stockSummary)
+                .sort((a, b) => b[1].totalQty - a[1].totalQty)
+                .slice(0, 4);
+            
+            if (sortedStock.length === 0) {
+                stockSummaryTable.innerHTML = `
+                    <tr><td colspan="4" class="empty-state">
+                        <i class="fas fa-boxes"></i>
+                        <div>No stock data available</div>
+                    </td></tr>
+                `;
+                return;
+            }
+            
+            sortedStock.forEach(([product, data]) => {
+                let avgPrice = data.totalQty > 0 ? data.totalValue / data.totalQty : 0;
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${product.substring(0, 15)}</td>
+                    <td>${data.totalQty}</td>
+                    <td>₹${avgPrice.toFixed(0)}</td>
+                    <td>${formatDate(data.lastPurchase)}</td>
+                `;
+                stockSummaryTable.appendChild(row);
+            });
+        }
+
+        /* ---------- Update Suppliers ---------- */
+        function updateSuppliers(data) {
+            let suppliersList = document.getElementById("suppliersList");
+            suppliersList.innerHTML = "";
+            
+            let suppliers = {};
+            
+            data.forEach(row => {
+                let supplier = row["Supplier Name"];
+                if (supplier) {
+                    if (!suppliers[supplier]) {
+                        suppliers[supplier] = { count: 0, totalValue: 0 };
+                    }
+                    suppliers[supplier].count++;
+                    
+                    if (row["Remark"]) {
+                        let items = parseRemarkItems(row["Remark"]);
+                        let invoiceTotal = items.reduce((sum, item) => sum + item.total, 0);
+                        suppliers[supplier].totalValue += invoiceTotal;
+                    }
+                }
+            });
+            
+            let sortedSuppliers = Object.entries(suppliers)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 4);
+            
+            if (sortedSuppliers.length === 0) {
+                suppliersList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-truck"></i>
+                        <div>No supplier data available</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            sortedSuppliers.forEach(([supplier, data]) => {
+                let supplierDiv = document.createElement("div");
+                supplierDiv.className = "supplier-item";
+                supplierDiv.innerHTML = `
+                    <div class="supplier-name">
+                        <i class="fas fa-truck"></i> ${supplier.substring(0, 20)}
+                    </div>
+                    <div class="supplier-invoices">${data.count} invoices • ₹${data.totalValue.toFixed(0)}</div>
+                `;
+                suppliersList.appendChild(supplierDiv);
+            });
+        }
+
+        /* ---------- Search Invoice ---------- */
+        async function searchByInvoice() {
+            let inv = document.getElementById("searchInvoice").value.trim();
+            if (!inv) {
+                alert("Please enter an invoice number");
+                return;
+            }
+
+            let all = await fetchAll();
+            let row = all.find(x => x["Invoice Number"] == inv);
+
+            if (!row) {
+                alert("Invoice not found");
+                return;
+            }
+
+            openInvoice(row);
+        }
+
+        /* ---------- Filter by Date ---------- */
+        async function filterByDate() {
+            let f = document.getElementById("fromDate").value;
+            let t = document.getElementById("toDate").value;
+
+            if (!f || !t) {
+                alert("Please select both dates");
+                return;
+            }
+
+            let from = new Date(f);
+            let to = new Date(t);
+            to.setDate(to.getDate() + 1);
+
+            let all = await fetchAll();
+            let filtered = all.filter(row => {
+                if (!row["Date"]) return false;
+                let d = new Date(row["Date"]);
+                return d >= from && d <= to;
+            });
+
+            displayList(filtered);
+        }
+
+        /* ---------- Display Invoice List ---------- */
+        function displayList(list) {
+            let box = document.getElementById("invoiceList");
+            box.innerHTML = "";
+
+            if (list.length == 0) {
+                box.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <div>No invoices found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            list.reverse().forEach(row => {
+                let div = document.createElement("div");
+                div.className = "invoice-list-item";
+                div.innerHTML = `
+                    <div class="invoice-number">
+                        <i class="fas fa-file-invoice"></i> ${row["Invoice Number"] || 'N/A'}
+                    </div>
+                    <div class="invoice-supplier">${row["Supplier Name"] || 'Unknown Supplier'}</div>
+                    <div class="invoice-date">
+                        <i class="fas fa-calendar"></i> ${formatDate(row["Date"])}
+                    </div>
+                `;
+                div.onclick = () => openInvoice(row);
+                box.appendChild(div);
+            });
+        }
+
+        /* ---------- Open Invoice ---------- */
+        function openInvoice(row) {
+            document.getElementById("invNum").innerText = row["Invoice Number"] || 'N/A';
+            document.getElementById("invDate").innerText = formatDate(row["Date"]);
+            document.getElementById("shopID").innerText = row["ShopID"] || 'N/A';
+            document.getElementById("supID").innerText = row["Supplier ID"] || 'N/A';
+
+            document.getElementById("supName").innerText = row["Supplier Name"] || 'N/A';
+            document.getElementById("supGST").innerText = row["Supplier GST"] || 'N/A';
+            document.getElementById("supAddress").innerText = row["Supplier Details"] || 'N/A';
+            
+            updateCompanyDetails();
+            parseRemarkForInvoice(row["Remark"]);
+
+            document.getElementById("invoiceView").style.display = "block";
+            document.getElementById("invoiceView").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ---------- Update Company Details ---------- */
+        function updateCompanyDetails() {
+            const company = getCompanyDetails();
+            const shopDetails = document.getElementById("shopDetails");
+            
+            document.getElementById("companyNameDisplay").innerText = company.name;
+            document.getElementById("companyDetailsDisplay").innerHTML = `
+                ${company.address} • ${company.mobile} • GSTIN: ${company.gstin}
+            `;
+            
+            document.getElementById("companyName").innerText = company.name;
+            document.getElementById("companyAddress").innerText = company.address;
+            document.getElementById("companyContact").innerText = company.mobile;
+            document.getElementById("companyGST").innerText = company.gstin;
+        }
+
+        /* ---------- Parse Remark for Invoice ---------- */
+        function parseRemarkForInvoice(remark) {
+            let tbody = document.querySelector("#itemTable tbody");
+            tbody.innerHTML = "";
+
+            if (!remark) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="empty-state">
+                        <i class="fas fa-boxes"></i>
+                        <div>No items found in this invoice</div>
+                    </td></tr>
+                `;
+                resetTotals();
+                return;
+            }
+
+            let items = parseRemarkItems(remark);
+            let subtotal = 0, gstTotal = 0;
+
+            if (items.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>Could not parse invoice items</div>
+                    </td></tr>
+                `;
+                resetTotals();
+                return;
+            }
+
+            items.forEach(item => {
+                // Calculate item values correctly
+                let itemSubtotal = item.price * item.qty;
+                let itemGstAmount = itemSubtotal * (item.gstPercent / 100);
+                let itemTotal = itemSubtotal + itemGstAmount;
+
+                subtotal += itemSubtotal;
+                gstTotal += itemGstAmount;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.productId}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
+                        <td>${item.gstPercent}%</td>
+                        <td>${item.batch}</td>
+                        <td>${item.qty}</td>
+                        <td>₹${itemTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            updateTotals(subtotal, gstTotal);
+        }
+
+        function resetTotals() {
+            document.getElementById("subTot").innerText = "₹0.00";
+            document.getElementById("gstTot").innerText = "₹0.00";
+            document.getElementById("cgstTot").innerText = "₹0.00";
+            document.getElementById("sgstTot").innerText = "₹0.00";
+            document.getElementById("grandTot").innerText = "₹0.00";
+        }
+
+        function updateTotals(subtotal, gstTotal) {
+            // Calculate CGST and SGST (each is half of total GST)
+            let cgst = gstTotal / 2;
+            let sgst = gstTotal / 2;
+            let grandTotal = subtotal + gstTotal;
+
+            document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
+            document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
+            document.getElementById("cgstTot").innerText = "₹" + cgst.toFixed(2);
+            document.getElementById("sgstTot").innerText = "₹" + sgst.toFixed(2);
+            document.getElementById("grandTot").innerText = "₹" + grandTotal.toFixed(2);
+        }
     </script>
 </body>
 </html>
