@@ -2,319 +2,244 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Purchase Invoice (GST Format)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchase Invoice System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f5f5f5;
-    margin: 0;
-    padding: 20px;
-}
+    body { font-family: Arial, sans-serif; background:#f2f2f2; padding:20px; }
+    h2 { text-align:center; margin-bottom:20px; }
 
-.container {
-    max-width: 950px;
-    margin: auto;
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-}
-
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-}
-
-.header-section {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.header-section div {
-    width: 48%;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-.table th, .table td {
-    border: 1px solid #333;
-    padding: 8px;
-    font-size: 14px;
-}
-
-.table th {
-    background: #e0e0e0;
-}
-
-.summary-box {
-    margin-top: 20px;
-    float: right;
-    width: 300px;
-}
-
-.summary-box table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.summary-box td {
-    border: 1px solid #333;
-    padding: 8px;
-}
-
-.buttons {
-    margin-top: 30px;
-    text-align: center;
-}
-
-button {
-    padding: 10px 20px;
-    margin: 5px;
-    background: #007bff;
-    color: white;
-    border: none;
-    font-size: 15px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.search-box {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
-
-input {
-    padding: 8px;
-    width: 160px;
-    margin-right: 10px;
-    font-size: 14px;
-}
-
-@media print {
-    .buttons, .search-box {
-        display: none !important;
+    .card {
+        background:#fff; padding:20px; border-radius:10px;
+        box-shadow:0 2px 10px rgba(0,0,0,0.1); margin-bottom:20px;
     }
-    body { background: white; }
-    .container {
-        box-shadow: none;
-        margin: 0;
-        padding: 0;
+
+    input, button {
+        padding:10px; font-size:16px; margin:5px 0;
+        width:100%; border:1px solid #ccc; border-radius:5px;
     }
-}
+
+    button { background:#007bff; color:#fff; cursor:pointer; }
+    button:hover { background:#0056b3; }
+
+    .invoice-list-item {
+        padding:12px; background:#fafafa; border:1px solid #ddd;
+        border-radius:6px; margin-bottom:10px; cursor:pointer;
+    }
+
+    /* GST Invoice Layout */
+    #invoiceView { display:none; background:white; padding:20px; }
+
+    .inv-header { text-align:center; padding-bottom:10px; border-bottom:2px solid #000; }
+    .inv-header h2 { margin:0; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; }
+    table, th, td { border:1px solid black; }
+    th, td { padding:8px; text-align:left; }
+
+    .totals { margin-top:20px; width:300px; float:right; }
+    .totals td { border:none; }
+
+    @media print {
+        body * { visibility: hidden; }
+        #invoiceView, #invoiceView * { visibility: visible; }
+        #invoiceView { position:absolute; top:0; left:0; }
+    }
 </style>
 
 </head>
-
 <body>
 
-<div class="search-box">
-    <label>Invoice Number:</label>
-    <input type="text" id="searchInvoice" placeholder="Enter Invoice No">
+<h2>Purchase Invoice System (GST)</h2>
 
-    <label>Date:</label>
-    <input type="date" id="searchDate">
-
-    <button onclick="searchInvoice()">Search</button>
-    <button onclick="loadLatest()">Load Latest</button>
+<div class="card">
+    <h3>🔍 Search Invoice</h3>
+    <input id="searchInvoice" placeholder="Enter Invoice Number">
+    <button onclick="searchByInvoice()">Search</button>
 </div>
 
-<div class="container">
+<div class="card">
+    <h3>📅 Filter by Date</h3>
+    <label>From Date</label>
+    <input type="date" id="fromDate">
+    <label>To Date</label>
+    <input type="date" id="toDate">
+    <button onclick="filterByDate()">Filter</button>
+</div>
 
-    <h2>PURCHASE TAX INVOICE</h2>
+<div class="card">
+    <h3>📄 Invoice List</h3>
+    <div id="invoiceList"></div>
+</div>
 
-    <div class="header-section">
-        <div>
-            <h3>Supplier Details</h3>
-            <p><b>Name:</b> <span id="supplierName"></span></p>
-            <p><b>Supplier ID:</b> <span id="supplierId"></span></p>
-            <p><b>Address:</b> <span id="supplierAddress"></span></p>
-        </div>
-
-        <div>
-            <h3>Invoice Details</h3>
-            <p><b>Invoice No:</b> <span id="invoiceNumber"></span></p>
-            <p><b>Date:</b> <span id="invoiceDate"></span></p>
-            <p><b>Shop ID:</b> <span id="shopId"></span></p>
-        </div>
+<!-- INVOICE VIEW -->
+<div id="invoiceView" class="card">
+    <div class="inv-header">
+        <h2>PURCHASE INVOICE</h2>
     </div>
 
-    <h3>Item Details</h3>
+    <p><b>Invoice Number:</b> <span id="invNum"></span></p>
+    <p><b>Date:</b> <span id="invDate"></span></p>
+    <p><b>ShopID:</b> <span id="shopID"></span></p>
 
-    <table class="table" id="itemsTable">
-        <tr>
-            <th>Sl</th>
-            <th>Item</th>
-            <th>Product ID</th>
-            <th>Batch</th>
-            <th>Qty</th>
-            <th>Price</th>
-            <th>Tax</th>
-            <th>Total</th>
-        </tr>
+    <h3>Supplier Details</h3>
+    <p><b>Name:</b> <span id="supName"></span></p>
+    <p><b>ID:</b> <span id="supID"></span></p>
+    <p><b>Address:</b> <span id="supAddress"></span></p>
+
+    <h3>Items</h3>
+    <table id="itemTable">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Product ID</th>
+                <th>Price</th>
+                <th>GST</th>
+                <th>Batch</th>
+                <th>Qty</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
     </table>
 
-    <div class="summary-box">
-        <table>
-            <tr><td><b>Sub Total</b></td><td><span id="subtotal"></span></td></tr>
-            <tr><td><b>Total GST</b></td><td><span id="gstTotal"></span></td></tr>
-            <tr><td><b>Grand Total</b></td><td><span id="grandTotal"></span></td></tr>
-        </table>
-    </div>
+    <table class="totals">
+        <tr><td>Subtotal:</td><td id="subTot"></td></tr>
+        <tr><td>GST Total:</td><td id="gstTot"></td></tr>
+        <tr><td><b>Grand Total:</b></td><td id="grandTot"></td></tr>
+    </table>
 
-    <div class="buttons">
-        <button onclick="window.print()">Print</button>
-        <button onclick="downloadPDF()">Download PDF</button>
-    </div>
-
+    <br><br><button onclick="window.print()">Print</button>
 </div>
 
 <script>
-// ---------- CONFIG ----------
-const BASEROW_API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
 const TABLE_ID = 745465;
+const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
 
-// -------- FETCH ALL ROWS --------
-async function fetchRows() {
-    const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
-    const res = await fetch(url, {
-        headers: { Authorization: `Token ${BASEROW_API_KEY}` }
+/* ---------- Fetch All Rows ---------- */
+async function fetchAll() {
+    const res = await fetch(API_URL, {
+        headers: { Authorization: `Token ${API_KEY}` }
     });
-    return await res.json();
+    const data = await res.json();
+    return data.results;
 }
 
-// -------- LOAD LATEST INVOICE --------
-async function loadLatest() {
-    const data = await fetchRows();
-    loadInvoice(data.results[data.results.length - 1]);
+/* ---------- Search by Invoice Number ---------- */
+async function searchByInvoice() {
+    let inv = document.getElementById("searchInvoice").value.trim();
+    if (!inv) return alert("Enter invoice number");
+
+    let all = await fetchAll();
+    let row = all.find(x => x["Invoice Number"] == inv);
+
+    if (!row) return alert("Invoice not found");
+
+    openInvoice(row);
 }
 
-// -------- SEARCH INVOICE --------
-async function searchInvoice() {
-    const invoiceNo = document.getElementById("searchInvoice").value.trim();
-    const date = document.getElementById("searchDate").value;
+/* ---------- Filter by Date Range ---------- */
+async function filterByDate() {
+    let f = document.getElementById("fromDate").value;
+    let t = document.getElementById("toDate").value;
 
-    const data = await fetchRows();
+    if (!f || !t) return alert("Select both dates");
 
-    let filtered = data.results;
+    let from = new Date(f);
+    let to = new Date(t);
 
-    if (invoiceNo !== "")
-        filtered = filtered.filter(r => r["Invoice Number"] == invoiceNo);
+    let all = await fetchAll();
+    let filtered = all.filter(row => {
+        let d = new Date(row["Date"]);
+        return d >= from && d <= to;
+    });
 
-    if (date !== "")
-        filtered = filtered.filter(r => r["Date"] == date);
+    displayList(filtered);
+}
 
-    if (filtered.length === 0) {
-        alert("No invoice found");
+/* ---------- Display Invoice List ---------- */
+function displayList(list) {
+    let box = document.getElementById("invoiceList");
+    box.innerHTML = "";
+
+    if (list.length == 0) {
+        box.innerHTML = "<p>No invoices found.</p>";
         return;
     }
 
-    loadInvoice(filtered[0]);
+    list.forEach(row => {
+        let div = document.createElement("div");
+        div.className = "invoice-list-item";
+        div.innerHTML = `
+            <b>${row["Invoice Number"]}</b> <br>
+            Supplier: ${row["Supplier Name"]} <br>
+            Date: ${row["Date"]}
+        `;
+        div.onclick = () => openInvoice(row);
+        box.appendChild(div);
+    });
 }
 
-// ---------- LOAD DATA INTO TEMPLATE ----------
-function loadInvoice(row) {
+/* ---------- Open Invoice ---------- */
+function openInvoice(row) {
+    document.getElementById("invNum").innerText = row["Invoice Number"];
+    document.getElementById("invDate").innerText = row["Date"];
+    document.getElementById("shopID").innerText = row["ShopID"];
 
-    document.getElementById("invoiceNumber").innerText = row["Invoice Number"];
-    document.getElementById("supplierName").innerText = row["Supplier Name"];
-    document.getElementById("supplierId").innerText = row["Supplier ID"];
-    document.getElementById("supplierAddress").innerText = row["Supplier Address"] ?? "N/A";
-    document.getElementById("invoiceDate").innerText = row["Date"];
-    document.getElementById("shopId").innerText = row["ShopID"];
+    document.getElementById("supName").innerText = row["Supplier Name"];
+    document.getElementById("supID").innerText = row["Supplier ID"];
+    document.getElementById("supAddress").innerText = row["Supplier Details"];
 
-    document.getElementById("itemsTable").innerHTML = `
-        <tr>
-            <th>Sl</th>
-            <th>Item</th>
-            <th>Product ID</th>
-            <th>Batch</th>
-            <th>Qty</th>
-            <th>Price</th>
-            <th>Tax</th>
-            <th>Total</th>
-        </tr>
-    `;
+    parseRemark(row["Remark"]);
 
-    parseItems(row["Remark"]);
+    document.getElementById("invoiceView").style.display = "block";
 }
 
-// -------- PARSE REMARK FORMAT --------
-function parseItems(remark) {
+/* ---------- Parse Remark into Items ---------- */
+function parseRemark(remark) {
+    let tbody = document.querySelector("#itemTable tbody");
+    tbody.innerHTML = "";
 
-    const items = remark.split(" - ");
+    let items = remark.split(" - "); 
 
-    let table = document.getElementById("itemsTable");
-    let subtotal = 0;
-    let gstTotal = 0;
+    let subtotal = 0, gstTotal = 0;
 
-    items.forEach((item, index) => {
-        const parts = item.split(",");
+    items.forEach(txt => {
+        let p = txt.split(",");
 
-        const name = parts[0];
-        const productId = parts[1];
-        const price = parseFloat(parts[2].replace("₹","").replace(",",""));
-        const taxInfo = parts[3];
-        const batch = parts[4].split(":")[1];
-        const qty = parseInt(parts[5].split(":")[1]);
+        let item = p[0];
+        let pid = p[1];
+        let price = parseFloat(p[2].replace(/₹/g,""));
+        let gstStr = p[3];
+        let batch = p[4].replace("Batch:","");
+        let qty = parseInt(p[5].replace("Qty:",""));
 
-        let gst = 0, taxPercent = 0;
+        let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
 
-        if (taxInfo.includes("%")) {
-            taxPercent = parseInt(taxInfo);
-            gst = (price * qty) * (taxPercent / 100);
-        }
+        let rowTotal = price * qty;
+        let rowGST = rowTotal * gstPercent/100;
 
-        const total = (price * qty) + gst;
+        subtotal += rowTotal;
+        gstTotal += rowGST;
 
-        subtotal += price * qty;
-        gstTotal += gst;
-
-        table.insertAdjacentHTML("beforeend", `
+        tbody.innerHTML += `
             <tr>
-                <td>${index + 1}</td>
-                <td>${name}</td>
-                <td>${productId}</td>
+                <td>${item}</td>
+                <td>${pid}</td>
+                <td>₹${price.toFixed(2)}</td>
+                <td>${gstPercent}%</td>
                 <td>${batch}</td>
                 <td>${qty}</td>
-                <td>₹${price.toFixed(2)}</td>
-                <td>${taxInfo}</td>
-                <td>₹${total.toFixed(2)}</td>
+                <td>₹${(rowTotal + rowGST).toFixed(2)}</td>
             </tr>
-        `);
+        `;
     });
 
-    document.getElementById("subtotal").innerText = "₹" + subtotal.toFixed(2);
-    document.getElementById("gstTotal").innerText = "₹" + gstTotal.toFixed(2);
-    document.getElementById("grandTotal").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
+    document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
+    document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
+    document.getElementById("grandTot").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
 }
-
-// -------- PDF Download --------
-async function downloadPDF() {
-    const element = document.querySelector(".container");
-    const canvas = await html2canvas(element);
-    const img = canvas.toDataURL("image/png");
-
-    const pdf = new jspdf.jsPDF("p", "mm", "a4");
-    pdf.addImage(img, "PNG", 0, 0, 210, 297);
-    pdf.save("purchase-invoice.pdf");
-}
-
-// Load the latest invoice when page loads
-loadLatest();
 </script>
-
-<!-- JS Libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 </body>
 </html>
