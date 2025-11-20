@@ -2,1356 +2,255 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Purchase Invoice</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice Generator - Transaction Data</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-:root {
-  --primary: #4361ee;
-  --primary-dark: #3a56d4;
-  --success: #06d6a0;
-  --danger: #ef476f;
-  --warning: #ffd166;
-  --dark: #333;
-  --light: #f8f9fa;
-  --gray: #6c757d;
-  --border: #dee2e6;
-  --border-radius: 12px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.08);
-  --transition: all 0.3s ease;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body { 
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  margin: 0; 
-  padding: 20px;
-  min-height: 100vh;
-  color: var(--dark);
-}
-
-.container { 
-  max-width: 1200px; 
-  margin: 30px auto; 
-  background: white; 
-  padding: 30px; 
-  border-radius: var(--border-radius); 
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-}
-
-.container:hover {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--border);
-}
-
-.header h1 { 
-  color: var(--primary);
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.header p {
-  color: var(--gray);
-  font-size: 16px;
-}
-
-.controls {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
-  flex-wrap: wrap;
-}
-
-.btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--border-radius);
-  font-family: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-}
-
-.btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
-}
-
-.btn-success {
-  background: var(--success);
-}
-
-.btn-success:hover {
-  background: #05c290;
-}
-
-.btn-warning {
-  background: var(--warning);
-  color: var(--dark);
-}
-
-.btn-warning:hover {
-  background: #ffc94d;
-}
-
-.btn-danger {
-  background: var(--danger);
-}
-
-.btn-danger:hover {
-  background: #e0355f;
-}
-
-.btn-info {
-  background: #17a2b8;
-}
-
-.btn-info:hover {
-  background: #138496;
-}
-
-.transaction-selector {
-  background: rgba(67, 97, 238, 0.05);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-  border-left: 4px solid var(--primary);
-}
-
-.selector-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--primary);
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.transaction-list {
-  max-height: 250px;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--border-radius);
-  background: white;
-}
-
-.transaction-item {
-  padding: 15px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.transaction-item:hover {
-  background: rgba(67, 97, 238, 0.07);
-}
-
-.transaction-item:last-child {
-  border-bottom: none;
-}
-
-.transaction-item.active {
-  background: rgba(67, 97, 238, 0.1);
-  border-left: 4px solid var(--primary);
-}
-
-.transaction-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.transaction-invoice {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 16px;
-}
-
-.transaction-supplier {
-  color: var(--dark);
-  margin-top: 5px;
-  font-weight: 500;
-}
-
-.transaction-date {
-  color: var(--gray);
-  font-size: 14px;
-  margin-top: 3px;
-}
-
-.transaction-amount {
-  font-weight: 700;
-  color: var(--success);
-  font-size: 18px;
-}
-
-.invoice-container {
-  background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  padding: 30px;
-  margin-bottom: 20px;
-  border: 1px solid var(--border);
-}
-
-.no-invoice {
-  text-align: center;
-  padding: 40px;
-  color: var(--gray);
-  font-style: italic;
-}
-
-.no-invoice i {
-  font-size: 48px;
-  margin-bottom: 15px;
-  color: var(--border);
-}
-
-.invoice-content {
-  display: none;
-}
-
-.invoice-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--border);
-}
-
-.invoice-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.invoice-meta {
-  text-align: right;
-}
-
-.invoice-number {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: var(--dark);
-}
-
-.invoice-date {
-  color: var(--gray);
-}
-
-.invoice-company {
-  margin-bottom: 30px;
-}
-
-.company-name {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 5px;
-  color: var(--primary);
-}
-
-.company-details {
-  color: var(--gray);
-  line-height: 1.5;
-}
-
-.invoice-parties {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-bottom: 30px;
-}
-
-.bill-to, .ship-to {
-  padding: 20px;
-  background: rgba(67, 97, 238, 0.03);
-  border-radius: var(--border-radius);
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--primary);
-  margin-bottom: 15px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.party-details {
-  line-height: 1.6;
-}
-
-.party-name {
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--dark);
-}
-
-.invoice-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 30px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.03);
-}
-
-.invoice-table th {
-  background: var(--primary);
-  color: white;
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-}
-
-.invoice-table td {
-  padding: 15px;
-  border-bottom: 1px solid var(--border);
-}
-
-.invoice-table tr:nth-child(even) {
-  background: rgba(67, 97, 238, 0.02);
-}
-
-.invoice-table tr:hover {
-  background: rgba(67, 97, 238, 0.05);
-}
-
-.text-right {
-  text-align: right;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.invoice-summary {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 30px;
-}
-
-.summary-table {
-  width: 300px;
-  border-collapse: collapse;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-}
-
-.summary-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--border);
-}
-
-.summary-table tr:last-child td {
-  border-bottom: none;
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--success);
-  background: rgba(6, 214, 160, 0.1);
-}
-
-.summary-label {
-  text-align: right;
-  font-weight: 500;
-}
-
-.summary-value {
-  text-align: right;
-  font-weight: 600;
-}
-
-.invoice-footer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 2px solid var(--border);
-}
-
-.terms, .signature {
-  padding: 20px;
-  background: rgba(67, 97, 238, 0.03);
-  border-radius: var(--border-radius);
-}
-
-.terms-title, .signature-title {
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: var(--primary);
-}
-
-.signature-area {
-  height: 80px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 10px;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 30px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  max-width: 500px;
-  width: 90%;
-  text-align: center;
-  animation: modalFadeIn 0.3s;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-icon {
-  font-size: 48px;
-  margin-bottom: 15px;
-}
-
-.modal-success .modal-icon {
-  color: var(--success);
-}
-
-.modal-warning .modal-icon {
-  color: var(--warning);
-}
-
-.modal-error .modal-icon {
-  color: var(--danger);
-}
-
-.modal-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.modal-message {
-  margin-bottom: 20px;
-  color: var(--dark);
-  line-height: 1.5;
-}
-
-.modal-button {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  width: auto;
-  margin: 0 auto;
-}
-
-.modal-button:hover {
-  background: var(--primary-dark);
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;
-}
-
-.loading-spinner {
-  border: 4px solid rgba(67, 97, 238, 0.3);
-  border-radius: 50%;
-  border-top: 4px solid var(--primary);
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.data-preview {
-  background: rgba(67, 97, 238, 0.05);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-  border-left: 4px solid var(--success);
-}
-
-.data-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--success);
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.data-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.data-item {
-  background: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.data-label {
-  font-size: 14px;
-  color: var(--gray);
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.data-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--dark);
-  word-break: break-word;
-}
-
-.remark-details {
-  background: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  margin-top: 10px;
-}
-
-.remark-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--primary);
-  margin-bottom: 10px;
-}
-
-.remark-content {
-  font-family: monospace;
-  background: #f8f9fa;
-  padding: 10px;
-  border-radius: 5px;
-  border-left: 3px solid var(--primary);
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.demo-notice {
-  background: rgba(255, 209, 102, 0.2);
-  border: 1px solid var(--warning);
-  border-radius: var(--border-radius);
-  padding: 15px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.demo-notice i {
-  color: var(--warning);
-  font-size: 20px;
-}
-
-.demo-notice p {
-  margin: 0;
-  color: var(--dark);
-}
-
-@media print {
-  body {
-    background: white;
-    padding: 0;
-  }
-  
-  .container {
-    box-shadow: none;
-    padding: 0;
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f5f5;
     margin: 0;
-  }
-  
-  .controls, .transaction-selector, .data-preview, .demo-notice {
-    display: none;
-  }
-  
-  .btn {
-    display: none;
-  }
-  
-  .invoice-container {
-    box-shadow: none;
-    border: none;
-    padding: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
     padding: 20px;
-  }
-  
-  .invoice-header {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .invoice-meta {
-    text-align: left;
-  }
-  
-  .invoice-parties {
-    grid-template-columns: 1fr;
-  }
-  
-  .invoice-footer {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .controls {
-    flex-direction: column;
-  }
-  
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .invoice-table {
-    font-size: 14px;
-  }
-  
-  .invoice-table th,
-  .invoice-table td {
-    padding: 10px 8px;
-  }
-  
-  .transaction-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .transaction-amount {
-    align-self: flex-end;
-  }
-  
-  .data-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
-@media (max-width: 480px) {
-  body {
-    padding: 10px;
-  }
-  
-  .container {
-    padding: 15px;
-  }
-  
-  .invoice-container {
-    padding: 15px;
-  }
-  
-  .invoice-table {
-    font-size: 12px;
-  }
-  
-  .invoice-table th,
-  .invoice-table td {
-    padding: 8px 5px;
-  }
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.header-section div {
+    width: 48%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table th, .table td {
+    border: 1px solid #333;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.table th {
+    background: #e0e0e0;
+}
+
+.summary-box {
+    margin-top: 20px;
+    float: right;
+    width: 300px;
+}
+
+.summary-box table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary-box td {
+    border: 1px solid #333;
+    padding: 8px;
+}
+
+.buttons {
+    margin-top: 30px;
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    background: #007bff;
+    color: white;
+    border: none;
+    font-size: 15px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 </style>
 </head>
-<body>
-<div class="container">
-  <div class="header">
-    <h1>Invoice Generator</h1>
-    <p>Extract and display data from Transaction table with detailed parsing</p>
-  </div>
-  
-  <div class="demo-notice">
-    <i class="fas fa-info-circle"></i>
-    <p><strong>Demo Mode:</strong> Using sample transaction data. To connect to your Baserow database, ensure you have valid API credentials.</p>
-  </div>
-  
-  <div class="transaction-selector">
-    <div class="selector-title">
-      <i class="fas fa-receipt"></i> Select Transaction
-    </div>
-    <div class="transaction-list" id="transactionList">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="data-preview" id="dataPreview" style="display: none;">
-    <div class="data-title">
-      <i class="fas fa-database"></i> Transaction Data Extracted
-    </div>
-    <div class="data-grid" id="dataGrid">
-      <!-- Data items will be populated here -->
-    </div>
-    <div class="remark-details">
-      <div class="remark-title">Raw Remark Content:</div>
-      <div class="remark-content" id="remarkContent"></div>
-    </div>
-  </div>
-  
-  <div class="controls">
-    <button class="btn" id="generateInvoiceBtn">
-      <i class="fas fa-file-invoice"></i> Generate Invoice
-    </button>
-    <button class="btn btn-success" id="printInvoiceBtn">
-      <i class="fas fa-print"></i> Print Invoice
-    </button>
-    <button class="btn btn-warning" id="downloadInvoiceBtn">
-      <i class="fas fa-download"></i> Download PDF
-    </button>
-    <button class="btn btn-info" id="refreshTransactionsBtn">
-      <i class="fas fa-sync-alt"></i> Refresh Transactions
-    </button>
-  </div>
-  
-  <div class="invoice-container" id="invoiceContainer">
-    <div class="no-invoice" id="noInvoiceMessage">
-      <i class="fas fa-file-invoice-dollar"></i>
-      <h3>No Invoice Generated</h3>
-      <p>Select a transaction and click "Generate Invoice" to create an invoice.</p>
-    </div>
-    
-    <div id="invoiceContent" class="invoice-content">
-      <!-- Invoice content will be generated here -->
-    </div>
-  </div>
-</div>
 
-<!-- Modal for alerts -->
-<div id="modal" class="modal">
-  <div class="modal-content" id="modalContent">
-    <div class="modal-icon" id="modalIcon"></div>
-    <div class="modal-title" id="modalTitle"></div>
-    <div class="modal-message" id="modalMessage"></div>
-    <button class="modal-button" id="modalButton">OK</button>
-  </div>
+<body>
+
+<div class="container">
+
+    <h2>PURCHASE TAX INVOICE</h2>
+
+    <div class="header-section">
+        <div>
+            <h3>Supplier Details</h3>
+            <p><b>Name:</b> <span id="supplierName"></span></p>
+            <p><b>Supplier ID:</b> <span id="supplierId"></span></p>
+        </div>
+
+        <div>
+            <h3>Invoice Details</h3>
+            <p><b>Invoice No:</b> <span id="invoiceNumber"></span></p>
+            <p><b>Date:</b> <span id="invoiceDate"></span></p>
+            <p><b>Shop ID:</b> <span id="shopId"></span></p>
+        </div>
+    </div>
+
+    <h3>Item Details</h3>
+
+    <table class="table" id="itemsTable">
+        <tr>
+            <th>Sl</th>
+            <th>Item</th>
+            <th>Product ID</th>
+            <th>Batch</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Tax</th>
+            <th>Total</th>
+        </tr>
+    </table>
+
+    <div class="summary-box">
+        <table>
+            <tr>
+                <td><b>Sub Total</b></td>
+                <td><span id="subtotal"></span></td>
+            </tr>
+            <tr>
+                <td><b>Total GST</b></td>
+                <td><span id="gstTotal"></span></td>
+            </tr>
+            <tr>
+                <td><b>Grand Total</b></td>
+                <td><span id="grandTotal"></span></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="buttons">
+        <button onclick="window.print()">Print</button>
+        <button onclick="downloadPDF()">Download PDF</button>
+    </div>
+
 </div>
 
 <script>
-// Configuration
-const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const BASEROW = "https://api.baserow.io";
+// ---------- CONFIG ----------
+const BASEROW_API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const TABLE_ID = 745465;
 
-// Table IDs
-const TRANSACTION_TABLE = 745465;
+// -------- FETCH INVOICE --------
+async function loadInvoice() {
+    const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
 
-// Field Names from Transaction Table
-const FIELD_NAMES = {
-  SUPPLIER_ID: "Supplier ID",
-  SUPPLIER_NAME: "Supplier Name",
-  TRANSACTION_TYPE: "Transaction Type",
-  INVOICE_NUMBER: "Invoice Number",
-  TOTAL_INVOICE_VALUE: "Total Invoice Value",
-  DATE: "Date",
-  SHOP_ID: "ShopID",
-  REMARK: "Remark"
-};
-
-const ShopID = localStorage.getItem("ShopIDTag") || "DemoShop";
-
-// Sample transaction data for demonstration
-const SAMPLE_TRANSACTIONS = [
-  {
-    id: 1,
-    "Supplier ID": "SUP-001",
-    "Supplier Name": "Tech Suppliers Inc.",
-    "Transaction Type": "Purchase",
-    "Invoice Number": "INV-2023-001",
-    "Total Invoice Value": "674994.00",
-    "Date": "2023-10-15",
-    "ShopID": "DemoShop",
-    "Remark": "Apple iPhone 15,PRD-12345,₹89999.00,18% GST,Batch:1,Qty:5 - Samsung Galaxy,PRD-67890,₹74999.00,No Tax,Batch:2,Qty:3"
-  },
-  {
-    id: 2,
-    "Supplier ID": "SUP-002",
-    "Supplier Name": "Electronics World",
-    "Transaction Type": "Purchase",
-    "Invoice Number": "INV-2023-002",
-    "Total Invoice Value": "283990.00",
-    "Date": "2023-10-18",
-    "ShopID": "DemoShop",
-    "Remark": "Sony Headphones,PRD-54321,₹18999.00,12% GST,Batch:3,Qty:8 - Dell Laptop,PRD-98765,₹64999.00,18% GST,Batch:4,Qty:2"
-  },
-  {
-    id: 3,
-    "Supplier ID": "SUP-003",
-    "Supplier Name": "Mobile Accessories Co.",
-    "Transaction Type": "Purchase",
-    "Invoice Number": "INV-2023-003",
-    "Total Invoice Value": "125000.00",
-    "Date": "2023-10-20",
-    "ShopID": "DemoShop",
-    "Remark": "Phone Cases,PRD-11223,₹500.00,No Tax,Batch:5,Qty:150 - Chargers,PRD-44556,₹1000.00,12% GST,Batch:6,Qty:50"
-  }
-];
-
-// DOM Elements
-const generateInvoiceBtn = document.getElementById("generateInvoiceBtn");
-const printInvoiceBtn = document.getElementById("printInvoiceBtn");
-const downloadInvoiceBtn = document.getElementById("downloadInvoiceBtn");
-const refreshTransactionsBtn = document.getElementById("refreshTransactionsBtn");
-const transactionList = document.getElementById("transactionList");
-const dataPreview = document.getElementById("dataPreview");
-const dataGrid = document.getElementById("dataGrid");
-const remarkContent = document.getElementById("remarkContent");
-const invoiceContainer = document.getElementById("invoiceContainer");
-const noInvoiceMessage = document.getElementById("noInvoiceMessage");
-const invoiceContent = document.getElementById("invoiceContent");
-const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
-const modalIcon = document.getElementById("modalIcon");
-const modalTitle = document.getElementById("modalTitle");
-const modalMessage = document.getElementById("modalMessage");
-const modalButton = document.getElementById("modalButton");
-
-// Global variables
-let transactions = [];
-let selectedTransaction = null;
-let usingSampleData = false;
-
-// Company details
-const companyDetails = {
-  name: `${ShopID} Store`,
-  address: "123 Business Street, City, State 12345",
-  phone: "(123) 456-7890",
-  email: "info@yourcompany.com",
-  website: "www.yourcompany.com"
-};
-
-// Modal function
-function showModal(type, title, message) {
-  modalContent.className = "modal-content";
-  modalIcon.innerHTML = "";
-  
-  if (type === "success") {
-    modalContent.classList.add("modal-success");
-    modalIcon.innerHTML = "✅";
-  } else if (type === "warning") {
-    modalContent.classList.add("modal-warning");
-    modalIcon.innerHTML = "⚠️";
-  } else if (type === "error") {
-    modalContent.classList.add("modal-error");
-    modalIcon.innerHTML = "❌";
-  } else if (type === "info") {
-    modalContent.classList.add("modal-success");
-    modalIcon.innerHTML = "ℹ️";
-  }
-  
-  modalTitle.textContent = title;
-  modalMessage.innerHTML = message;
-  modal.style.display = "flex";
-}
-
-modalButton.addEventListener("click", function() {
-  modal.style.display = "none";
-});
-
-modal.addEventListener("click", function(e) {
-  if (e.target === modal) {
-    modal.style.display = "none";
-  }
-});
-
-// Fetch transactions from Transaction table with fallback to sample data
-async function fetchTransactions() {
-  try {
-    transactionList.innerHTML = `
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <span style="margin-left: 10px;">Connecting to database...</span>
-      </div>
-    `;
-    
-    console.log("Attempting to fetch transactions from Baserow...");
-    
-    const res = await fetch(`${BASEROW}/api/database/rows/table/${TRANSACTION_TABLE}/?user_field_names=true&filters={"filter_type":"AND","filters":[{"field":"${FIELD_NAMES.SHOP_ID}","type":"contains","value":"${ShopID}"}]}&order_by=-id`, {
-      headers: { 
-        Authorization: `Token ${API_KEY}`,
-        'Content-Type': 'application/json'
-      }
+    const res = await fetch(url, {
+        headers: { Authorization: `Token ${BASEROW_API_KEY}` }
     });
-    
-    if (!res.ok) {
-      throw new Error(`API returned status: ${res.status} - ${res.statusText}`);
-    }
-    
+
     const data = await res.json();
-    transactions = data.results;
-    usingSampleData = false;
-    
-    console.log("Successfully fetched transactions:", transactions);
-    
-    if (transactions.length === 0) {
-      throw new Error("No transactions found in database");
-    }
-    
-    displayTransactions();
-    
-  } catch (error) {
-    console.error("Error fetching transactions:", error);
-    
-    // Use sample data as fallback
-    transactions = SAMPLE_TRANSACTIONS;
-    usingSampleData = true;
-    
-    displayTransactions();
-    
-    showModal("warning", "Using Demo Data", 
-      `Could not connect to your database. Using sample transaction data for demonstration.
-      <br><br>
-      <strong>Possible issues:</strong>
-      <br>• Invalid API Key
-      <br>• Network connectivity issues
-      <br>• Table permissions
-      <br>• Incorrect table ID
-      <br><br>
-      <small>Error details: ${error.message}</small>`);
-  }
+
+    // use latest invoice
+    const row = data.results[data.results.length - 1];
+
+    document.getElementById("invoiceNumber").innerText = row["Invoice Number"];
+    document.getElementById("supplierName").innerText = row["Supplier Name"];
+    document.getElementById("supplierId").innerText = row["Supplier ID"];
+    document.getElementById("invoiceDate").innerText = row["Date"];
+    document.getElementById("shopId").innerText = row["ShopID"];
+
+    parseItems(row["Remark"]);
 }
 
-// Display transactions in the list
-function displayTransactions() {
-  if (transactions.length === 0) {
-    transactionList.innerHTML = `
-      <div class="no-invoice">
-        <i class="fas fa-receipt"></i>
-        <h3>No Transactions Found</h3>
-        <p>No transactions found for your shop</p>
-      </div>
-    `;
-    return;
-  }
-  
-  // Display transactions in the list
-  let transactionHTML = '';
-  transactions.forEach((transaction, index) => {
-    // Get invoice number directly from transaction
-    const invoiceNumber = transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`;
-    const supplierName = transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Unknown Supplier';
-    const transactionDate = transaction[FIELD_NAMES.DATE] || 'Unknown Date';
-    const totalAmount = parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0);
-    
-    transactionHTML += `
-      <div class="transaction-item ${index === 0 ? 'active' : ''}" data-index="${index}">
-        <div class="transaction-info">
-          <div class="transaction-invoice">${invoiceNumber}</div>
-          <div class="transaction-supplier">${supplierName}</div>
-          <div class="transaction-date">${transactionDate}</div>
-          ${usingSampleData ? '<small style="color: var(--warning);">Demo Data</small>' : ''}
-        </div>
-        <div class="transaction-amount">₹${totalAmount.toFixed(2)}</div>
-      </div>
-    `;
-  });
-  
-  transactionList.innerHTML = transactionHTML;
-  
-  // Set the first transaction as selected by default
-  if (transactions.length > 0) {
-    selectedTransaction = transactions[0];
-    updateDataPreview(selectedTransaction);
-  }
-  
-  // Add click event listeners to transaction items
-  document.querySelectorAll('.transaction-item').forEach(item => {
-    item.addEventListener('click', function() {
-      // Remove active class from all items
-      document.querySelectorAll('.transaction-item').forEach(i => {
-        i.classList.remove('active');
-      });
-      
-      // Add active class to clicked item
-      this.classList.add('active');
-      
-      // Set selected transaction
-      const index = parseInt(this.getAttribute('data-index'));
-      selectedTransaction = transactions[index];
-      
-      // Update data preview
-      updateDataPreview(selectedTransaction);
-      
-      // Clear any existing invoice
-      clearInvoice();
+// -------- PARSE ITEM STRUCTURE --------
+// Example:
+// Apple iPhone 15,PRD-12345,₹89999.00,18% GST,Batch:1,Qty:5 - Samsung...
+
+function parseItems(remark) {
+    const items = remark.split(" - ");
+
+    let table = document.getElementById("itemsTable");
+
+    let subtotal = 0;
+    let gstTotal = 0;
+
+    items.forEach((item, index) => {
+
+        const parts = item.split(",");
+
+        const name = parts[0];
+        const productId = parts[1];
+        const price = parseFloat(parts[2].replace("₹","").replace(",",""));
+        const taxInfo = parts[3];
+        const batch = parts[4].split(":")[1];
+        const qty = parseInt(parts[5].split(":")[1]);
+
+        let gst = 0;
+        let taxPercent = 0;
+
+        if (taxInfo.includes("%")) {
+            taxPercent = parseInt(taxInfo);
+            gst = (price * qty) * (taxPercent / 100);
+        }
+
+        const total = (price * qty) + gst;
+
+        subtotal += price * qty;
+        gstTotal += gst;
+
+        let row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${name}</td>
+                <td>${productId}</td>
+                <td>${batch}</td>
+                <td>${qty}</td>
+                <td>₹${price.toFixed(2)}</td>
+                <td>${taxInfo}</td>
+                <td>₹${total.toFixed(2)}</td>
+            </tr>
+        `;
+
+        table.insertAdjacentHTML("beforeend", row);
     });
-  });
+
+    document.getElementById("subtotal").innerText = "₹" + subtotal.toFixed(2);
+    document.getElementById("gstTotal").innerText = "₹" + gstTotal.toFixed(2);
+    document.getElementById("grandTotal").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
 }
 
-// Update data preview with selected transaction details
-function updateDataPreview(transaction) {
-  if (!transaction) return;
-  
-  // Extract all values from transaction
-  const invoiceNumber = transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`;
-  const totalInvoiceValue = parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0);
-  const date = transaction[FIELD_NAMES.DATE] || 'Not specified';
-  const supplierId = transaction[FIELD_NAMES.SUPPLIER_ID] || 'Not specified';
-  const supplierName = transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Not specified';
-  const transactionType = transaction[FIELD_NAMES.TRANSACTION_TYPE] || 'Not specified';
-  const remark = transaction[FIELD_NAMES.REMARK] || 'No remarks';
-  
-  // Create data grid HTML
-  const dataHTML = `
-    <div class="data-item">
-      <div class="data-label">Invoice Number</div>
-      <div class="data-value">${invoiceNumber}</div>
-    </div>
-    <div class="data-item">
-      <div class="data-label">Total Invoice Value</div>
-      <div class="data-value">₹${totalInvoiceValue.toFixed(2)}</div>
-    </div>
-    <div class="data-item">
-      <div class="data-label">Date</div>
-      <div class="data-value">${date}</div>
-    </div>
-    <div class="data-item">
-      <div class="data-label">Supplier ID</div>
-      <div class="data-value">${supplierId}</div>
-    </div>
-    <div class="data-item">
-      <div class="data-label">Supplier Name</div>
-      <div class="data-value">${supplierName}</div>
-    </div>
-    <div class="data-item">
-      <div class="data-label">Transaction Type</div>
-      <div class="data-value">${transactionType}</div>
-    </div>
-  `;
-  
-  dataGrid.innerHTML = dataHTML;
-  remarkContent.textContent = remark;
-  dataPreview.style.display = 'block';
+// -------- PDF (HTML2CANVAS + jsPDF) --------
+async function downloadPDF() {
+    const element = document.querySelector(".container");
+
+    const canvas = await html2canvas(element);
+    const img = canvas.toDataURL("image/png");
+
+    const pdf = new jspdf.jsPDF("p", "mm", "a4");
+    pdf.addImage(img, "PNG", 0, 0, 210, 297);
+    pdf.save("purchase-invoice.pdf");
 }
 
-// Parse product details from transaction remark
-function parseProductDetails(remark) {
-  if (!remark) return [];
-  
-  const products = [];
-  const productSections = remark.split(' - ');
-  
-  productSections.forEach(section => {
-    const parts = section.split(',');
-    if (parts.length >= 6) {
-      // Extract product details from the parts
-      const productName = parts[0].trim();
-      const productId = parts[1].trim();
-      
-      // Extract price (remove ₹ symbol and convert to number)
-      const priceStr = parts[2].replace('₹', '').trim();
-      const purchasePrice = parseFloat(priceStr);
-      
-      // Extract tax information
-      const taxInfo = parts[3].trim();
-      
-      // Extract batch number
-      const batchNo = parts[4].replace('Batch:', '').trim();
-      
-      // Extract quantity
-      const quantityStr = parts[5].replace('Qty:', '').trim();
-      const quantity = parseInt(quantityStr);
-      
-      // Calculate tax amount if tax percentage is provided
-      let taxAmount = 0;
-      let taxPercentage = 0;
-      
-      const taxMatch = taxInfo.match(/(\d+)%/);
-      if (taxMatch) {
-        taxPercentage = parseFloat(taxMatch[1]);
-        taxAmount = (purchasePrice * quantity * taxPercentage) / 100;
-      }
-      
-      const product = {
-        name: productName,
-        id: productId,
-        purchasePrice: purchasePrice,
-        taxInfo: taxInfo,
-        taxPercentage: taxPercentage,
-        taxAmount: taxAmount,
-        batchNo: batchNo,
-        quantity: quantity,
-        total: purchasePrice * quantity
-      };
-      
-      products.push(product);
-    }
-  });
-  
-  return products;
-}
-
-// Generate invoice HTML
-function generateInvoiceHTML(transaction, products) {
-  // Get invoice number directly from transaction
-  const invoiceNumber = transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`;
-  const transactionDate = transaction[FIELD_NAMES.DATE] || new Date().toISOString().split('T')[0];
-  const totalAmount = parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0);
-  const supplierId = transaction[FIELD_NAMES.SUPPLIER_ID] || 'N/A';
-  const supplierName = transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Unknown Supplier';
-  
-  // Calculate totals from products
-  let subtotal = 0;
-  let totalTax = 0;
-  
-  products.forEach(product => {
-    subtotal += product.total;
-    totalTax += product.taxAmount;
-  });
-  
-  // Format date
-  const formattedDate = new Date(transactionDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  
-  // Generate invoice HTML
-  return `
-    <div class="invoice-header">
-      <div class="invoice-title">PURCHASE INVOICE</div>
-      <div class="invoice-meta">
-        <div class="invoice-number">Invoice #: ${invoiceNumber}</div>
-        <div class="invoice-date">Date: ${formattedDate}</div>
-      </div>
-    </div>
-    
-    <div class="invoice-company">
-      <div class="company-name">${companyDetails.name}</div>
-      <div class="company-details">
-        ${companyDetails.address}<br>
-        Phone: ${companyDetails.phone} | Email: ${companyDetails.email}<br>
-        Website: ${companyDetails.website}
-      </div>
-    </div>
-    
-    <div class="invoice-parties">
-      <div class="bill-to">
-        <div class="section-title">Supplier Details</div>
-        <div class="party-details">
-          <div class="party-name">${supplierName}</div>
-          <div><strong>Supplier ID:</strong> ${supplierId}</div>
-          <div><strong>Invoice Total:</strong> ₹${totalAmount.toFixed(2)}</div>
-        </div>
-      </div>
-      
-      <div class="ship-to">
-        <div class="section-title">Store Details</div>
-        <div class="party-details">
-          <div class="party-name">${companyDetails.name}</div>
-          ${companyDetails.address}<br>
-          ${companyDetails.phone}<br>
-          Shop ID: ${ShopID}
-        </div>
-      </div>
-    </div>
-    
-    <table class="invoice-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Product Description</th>
-          <th>Product ID</th>
-          <th>Batch No</th>
-          <th class="text-right">Quantity</th>
-          <th class="text-right">Unit Price</th>
-          <th class="text-right">Tax</th>
-          <th class="text-right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${products.map((product, index) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${product.name}</td>
-            <td>${product.id}</td>
-            <td>${product.batchNo}</td>
-            <td class="text-right">${product.quantity}</td>
-            <td class="text-right">₹${product.purchasePrice.toFixed(2)}</td>
-            <td class="text-right">${product.taxInfo}</td>
-            <td class="text-right">₹${product.total.toFixed(2)}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    
-    <div class="invoice-summary">
-      <table class="summary-table">
-        <tr>
-          <td class="summary-label">Subtotal:</td>
-          <td class="summary-value">₹${subtotal.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="summary-label">Tax:</td>
-          <td class="summary-value">₹${totalTax.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="summary-label">Total Invoice Value:</td>
-          <td class="summary-value">₹${totalAmount.toFixed(2)}</td>
-        </tr>
-      </table>
-    </div>
-    
-    <div class="invoice-footer">
-      <div class="terms">
-        <div class="terms-title">Transaction Details</div>
-        <div><strong>Transaction Type:</strong> ${transaction[FIELD_NAMES.TRANSACTION_TYPE] || 'Purchase'}</div>
-        <div><strong>Invoice Number:</strong> ${invoiceNumber}</div>
-        <div><strong>Transaction Date:</strong> ${formattedDate}</div>
-        <div><strong>Number of Products:</strong> ${products.length}</div>
-        <div><strong>Total Items:</strong> ${products.reduce((sum, product) => sum + product.quantity, 0)}</div>
-        ${usingSampleData ? '<div style="color: var(--warning); margin-top: 10px;"><strong>Note:</strong> Using demo data</div>' : ''}
-      </div>
-      
-      <div class="signature">
-        <div class="signature-title">Authorized Signature</div>
-        <div class="signature-area"></div>
-        <div>For ${companyDetails.name}</div>
-      </div>
-    </div>
-  `;
-}
-
-// Generate invoice
-async function generateInvoice() {
-  if (!selectedTransaction) {
-    showModal("warning", "No Transaction Selected", "Please select a transaction first.");
-    return;
-  }
-  
-  const transaction = selectedTransaction;
-  const remark = transaction[FIELD_NAMES.REMARK];
-  
-  if (!remark) {
-    showModal("error", "Missing Product Details", "This transaction doesn't have product details in the remarks field.");
-    return;
-  }
-  
-  // Parse product details from remark
-  const products = parseProductDetails(remark);
-  
-  if (products.length === 0) {
-    showModal("warning", "No Products", "No product details found in the remarks field.");
-    return;
-  }
-  
-  // Generate and display the invoice
-  const invoiceHTML = generateInvoiceHTML(transaction, products);
-  invoiceContent.innerHTML = invoiceHTML;
-  
-  // Show the invoice and hide the "no invoice" message
-  noInvoiceMessage.style.display = "none";
-  invoiceContent.style.display = "block";
-  
-  showModal("success", "Invoice Generated", 
-    `Purchase invoice has been generated successfully!
-    <br><br>
-    <strong>Details:</strong>
-    <br>- Invoice: ${transaction[FIELD_NAMES.INVOICE_NUMBER] || `INV-${transaction.id}`}
-    <br>- Supplier: ${transaction[FIELD_NAMES.SUPPLIER_NAME] || 'Unknown'}
-    <br>- Products: ${products.length} items
-    <br>- Total: ₹${parseFloat(transaction[FIELD_NAMES.TOTAL_INVOICE_VALUE] || 0).toFixed(2)}
-    ${usingSampleData ? '<br><br><strong>Note:</strong> Using demo transaction data' : ''}`);
-}
-
-// Print invoice
-function printInvoice() {
-  if (invoiceContent.style.display === "none") {
-    showModal("warning", "No Invoice", "Please generate an invoice first.");
-    return;
-  }
-  
-  window.print();
-}
-
-// Download invoice as PDF (simplified version)
-function downloadInvoice() {
-  if (invoiceContent.style.display === "none") {
-    showModal("warning", "No Invoice", "Please generate an invoice first.");
-    return;
-  }
-  
-  // In a real implementation, you would use a library like jsPDF
-  showModal("info", "Download PDF", "For full PDF download functionality, a PDF library would be needed. For now, you can use the print function and save as PDF from the print dialog.");
-}
-
-// Clear invoice
-function clearInvoice() {
-  invoiceContent.style.display = "none";
-  noInvoiceMessage.style.display = "block";
-}
-
-// Event listeners
-generateInvoiceBtn.addEventListener("click", generateInvoice);
-printInvoiceBtn.addEventListener("click", printInvoice);
-downloadInvoiceBtn.addEventListener("click", downloadInvoice);
-refreshTransactionsBtn.addEventListener("click", fetchTransactions);
-
-// Initialize
-document.addEventListener("DOMContentLoaded", function() {
-  // Check if user is logged in
-  const MobileTag = localStorage.getItem("MobileTag");
-  if (!MobileTag) {
-    showModal("error", "Login Required", "Please login to access the invoice generator.");
-    return;
-  }
-  
-  // Fetch transactions on page load
-  fetchTransactions();
-});
+// Load invoice
+loadInvoice();
 </script>
+
+<!-- JS Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </body>
 </html>
