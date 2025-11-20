@@ -1801,18 +1801,23 @@
             }
 
             items.forEach(item => {
-                subtotal += (item.price * item.qty);
-                gstTotal += item.gstAmount;
+                // Calculate item values correctly
+                let itemSubtotal = item.price * item.qty;
+                let itemGstAmount = itemSubtotal * (item.gstPercent / 100);
+                let itemTotal = itemSubtotal + itemGstAmount;
+
+                subtotal += itemSubtotal;
+                gstTotal += itemGstAmount;
 
                 tbody.innerHTML += `
                     <tr>
                         <td>${item.name.substring(0, 12)}</td>
                         <td>${item.productId}</td>
-                        <td>₹${item.price.toFixed(0)}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
                         <td>${item.gstPercent}%</td>
                         <td>${item.batch}</td>
                         <td>${item.qty}</td>
-                        <td>₹${item.total.toFixed(0)}</td>
+                        <td>₹${itemTotal.toFixed(2)}</td>
                     </tr>
                 `;
             });
@@ -1821,19 +1826,24 @@
         }
 
         function resetTotals() {
-            document.getElementById("subTot").innerText = "₹0";
-            document.getElementById("gstTot").innerText = "₹0";
-            document.getElementById("cgstTot").innerText = "₹0";
-            document.getElementById("sgstTot").innerText = "₹0";
-            document.getElementById("grandTot").innerText = "₹0";
+            document.getElementById("subTot").innerText = "₹0.00";
+            document.getElementById("gstTot").innerText = "₹0.00";
+            document.getElementById("cgstTot").innerText = "₹0.00";
+            document.getElementById("sgstTot").innerText = "₹0.00";
+            document.getElementById("grandTot").innerText = "₹0.00";
         }
 
         function updateTotals(subtotal, gstTotal) {
-            document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(0);
-            document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(0);
-            document.getElementById("cgstTot").innerText = "₹" + (gstTotal / 2).toFixed(0);
-            document.getElementById("sgstTot").innerText = "₹" + (gstTotal / 2).toFixed(0);
-            document.getElementById("grandTot").innerText = "₹" + (subtotal + gstTotal).toFixed(0);
+            // Calculate CGST and SGST (each is half of total GST)
+            let cgst = gstTotal / 2;
+            let sgst = gstTotal / 2;
+            let grandTotal = subtotal + gstTotal;
+
+            document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
+            document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
+            document.getElementById("cgstTot").innerText = "₹" + cgst.toFixed(2);
+            document.getElementById("sgstTot").innerText = "₹" + sgst.toFixed(2);
+            document.getElementById("grandTot").innerText = "₹" + grandTotal.toFixed(2);
         }
     </script>
 </body>
