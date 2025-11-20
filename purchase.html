@@ -2,192 +2,319 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Purchase Invoice System</title>
+<title>Purchase Invoice (GST Format)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        background: #f7f7f7;
-    }
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        max-width: 900px;
-        margin: auto;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    }
-    input, textarea, select {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-    }
-    button {
-        padding: 12px;
-        width: 100%;
-        background: black;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        margin-top: 10px;
-        font-size: 16px;
-    }
-    button:hover { background: #444; }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
 
-    .invoice-box {
-        background: white;
-        padding: 20px;
-        margin-top: 20px;
-        border-radius: 8px;
-    }
+.container {
+    max-width: 950px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
 
-    @media print {
-        button, .no-print { display: none; }
-        body { margin: 0; background: white; }
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.header-section div {
+    width: 48%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table th, .table td {
+    border: 1px solid #333;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.table th {
+    background: #e0e0e0;
+}
+
+.summary-box {
+    margin-top: 20px;
+    float: right;
+    width: 300px;
+}
+
+.summary-box table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary-box td {
+    border: 1px solid #333;
+    padding: 8px;
+}
+
+.buttons {
+    margin-top: 30px;
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    background: #007bff;
+    color: white;
+    border: none;
+    font-size: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.search-box {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+input {
+    padding: 8px;
+    width: 160px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+@media print {
+    .buttons, .search-box {
+        display: none !important;
     }
+    body { background: white; }
+    .container {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+    }
+}
 </style>
+
 </head>
 
 <body>
 
-<div class="card">
-<h2>Purchase Invoice Entry</h2>
+<div class="search-box">
+    <label>Invoice Number:</label>
+    <input type="text" id="searchInvoice" placeholder="Enter Invoice No">
 
-<label>Invoice Number</label>
-<input id="invNo">
+    <label>Date:</label>
+    <input type="date" id="searchDate">
 
-<label>Supplier Name</label>
-<input id="supplierName">
-
-<label>Supplier ID</label>
-<input id="supplierID">
-
-<label>Supplier Address</label>
-<textarea id="supplierAddress"></textarea>
-
-<label>Total Invoice Value</label>
-<input id="totalValue" type="number">
-
-<label>Date</label>
-<input id="date" type="date">
-
-<label>Remark</label>
-<textarea id="remark"></textarea>
-
-<label>ShopID</label>
-<input id="shopID">
-
-<button onclick="uploadInvoice()">Save Invoice</button>
+    <button onclick="searchInvoice()">Search</button>
+    <button onclick="loadLatest()">Load Latest</button>
 </div>
 
-<hr class="no-print">
+<div class="container">
 
-<div class="card no-print">
-<h2>Search Invoice</h2>
+    <h2>PURCHASE TAX INVOICE</h2>
 
-<label>Search By Invoice Number</label>
-<input id="searchInv" placeholder="Enter Invoice Number">
+    <div class="header-section">
+        <div>
+            <h3>Supplier Details</h3>
+            <p><b>Name:</b> <span id="supplierName"></span></p>
+            <p><b>Supplier ID:</b> <span id="supplierId"></span></p>
+            <p><b>Address:</b> <span id="supplierAddress"></span></p>
+        </div>
 
-<label>Filter By Date</label>
-<input id="searchDate" type="date">
+        <div>
+            <h3>Invoice Details</h3>
+            <p><b>Invoice No:</b> <span id="invoiceNumber"></span></p>
+            <p><b>Date:</b> <span id="invoiceDate"></span></p>
+            <p><b>Shop ID:</b> <span id="shopId"></span></p>
+        </div>
+    </div>
 
-<button onclick="searchInvoice()">Search</button>
+    <h3>Item Details</h3>
+
+    <table class="table" id="itemsTable">
+        <tr>
+            <th>Sl</th>
+            <th>Item</th>
+            <th>Product ID</th>
+            <th>Batch</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Tax</th>
+            <th>Total</th>
+        </tr>
+    </table>
+
+    <div class="summary-box">
+        <table>
+            <tr><td><b>Sub Total</b></td><td><span id="subtotal"></span></td></tr>
+            <tr><td><b>Total GST</b></td><td><span id="gstTotal"></span></td></tr>
+            <tr><td><b>Grand Total</b></td><td><span id="grandTotal"></span></td></tr>
+        </table>
+    </div>
+
+    <div class="buttons">
+        <button onclick="window.print()">Print</button>
+        <button onclick="downloadPDF()">Download PDF</button>
+    </div>
+
 </div>
-
-<div id="result"></div>
-
 
 <script>
-const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const TABLE_ID = "TABLE_ID_HERE";  // ← Replace with your actual table ID
-const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
+// ---------- CONFIG ----------
+const BASEROW_API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+const TABLE_ID = 745465;
 
-// =================== SAVE INVOICE =====================
-async function uploadInvoice() {
-    const data = {
-        "Invoice Number": document.getElementById("invNo").value,
-        "Supplier Name": document.getElementById("supplierName").value,
-        "Supplier ID": document.getElementById("supplierID").value,
-        "Supplier Address": document.getElementById("supplierAddress").value,
-        "Total Invoice Value": document.getElementById("totalValue").value,
-        "Date": document.getElementById("date").value,
-        "Remark": document.getElementById("remark").value,
-        "ShopID": document.getElementById("shopID").value
-    };
-
-    const res = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-            "Authorization": `Token ${API_KEY}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
+// -------- FETCH ALL ROWS --------
+async function fetchRows() {
+    const url = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
+    const res = await fetch(url, {
+        headers: { Authorization: `Token ${BASEROW_API_KEY}` }
     });
-
-    if (res.ok) {
-        alert("Invoice Saved Successfully!");
-    } else {
-        alert("Error Saving Invoice");
-    }
+    return await res.json();
 }
 
+// -------- LOAD LATEST INVOICE --------
+async function loadLatest() {
+    const data = await fetchRows();
+    loadInvoice(data.results[data.results.length - 1]);
+}
 
-// =================== SEARCH INVOICE =====================
+// -------- SEARCH INVOICE --------
 async function searchInvoice() {
-    const inv = document.getElementById("searchInv").value;
-    const dt = document.getElementById("searchDate").value;
+    const invoiceNo = document.getElementById("searchInvoice").value.trim();
+    const date = document.getElementById("searchDate").value;
 
-    let url = API_URL;
+    const data = await fetchRows();
 
-    if (inv.trim() !== "") {
-        url += `&filter__Invoice Number__contains=${inv}`;
-    }
+    let filtered = data.results;
 
-    if (dt.trim() !== "") {
-        url += `&filter__Date__equal=${dt}`;
-    }
+    if (invoiceNo !== "")
+        filtered = filtered.filter(r => r["Invoice Number"] == invoiceNo);
 
-    const res = await fetch(url, {
-        headers: { "Authorization": `Token ${API_KEY}` }
-    });
+    if (date !== "")
+        filtered = filtered.filter(r => r["Date"] == date);
 
-    const json = await res.json();
-
-    if (json.results.length === 0) {
-        document.getElementById("result").innerHTML = `<div class='card'>No Invoice Found</div>`;
+    if (filtered.length === 0) {
+        alert("No invoice found");
         return;
     }
 
-    let r = json.results[0]; // First matching row
-
-    document.getElementById("result").innerHTML = `
-        <div class='invoice-box'>
-            <h2>Purchase Invoice</h2>
-
-            <p><b>Invoice Number:</b> ${r["Invoice Number"]}</p>
-            <p><b>Date:</b> ${r["Date"]}</p>
-
-            <hr>
-
-            <h3>Supplier Details</h3>
-            <p><b>Name:</b> ${r["Supplier Name"]}</p>
-            <p><b>ID:</b> ${r["Supplier ID"]}</p>
-            <p><b>Address:</b><br>${r["Supplier Address"]}</p>
-
-            <hr>
-
-            <h3>Invoice Summary</h3>
-            <p><b>Total Value:</b> ₹${r["Total Invoice Value"]}</p>
-            <p><b>Remark:</b> ${r["Remark"]}</p>
-            <p><b>ShopID:</b> ${r["ShopID"]}</p>
-
-            <button onclick="window.print()" class="no-print">Print Invoice</button>
-        </div>
-    `;
+    loadInvoice(filtered[0]);
 }
+
+// ---------- LOAD DATA INTO TEMPLATE ----------
+function loadInvoice(row) {
+
+    document.getElementById("invoiceNumber").innerText = row["Invoice Number"];
+    document.getElementById("supplierName").innerText = row["Supplier Name"];
+    document.getElementById("supplierId").innerText = row["Supplier ID"];
+    document.getElementById("supplierAddress").innerText = row["Supplier Address"] ?? "N/A";
+    document.getElementById("invoiceDate").innerText = row["Date"];
+    document.getElementById("shopId").innerText = row["ShopID"];
+
+    document.getElementById("itemsTable").innerHTML = `
+        <tr>
+            <th>Sl</th>
+            <th>Item</th>
+            <th>Product ID</th>
+            <th>Batch</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Tax</th>
+            <th>Total</th>
+        </tr>
+    `;
+
+    parseItems(row["Remark"]);
+}
+
+// -------- PARSE REMARK FORMAT --------
+function parseItems(remark) {
+
+    const items = remark.split(" - ");
+
+    let table = document.getElementById("itemsTable");
+    let subtotal = 0;
+    let gstTotal = 0;
+
+    items.forEach((item, index) => {
+        const parts = item.split(",");
+
+        const name = parts[0];
+        const productId = parts[1];
+        const price = parseFloat(parts[2].replace("₹","").replace(",",""));
+        const taxInfo = parts[3];
+        const batch = parts[4].split(":")[1];
+        const qty = parseInt(parts[5].split(":")[1]);
+
+        let gst = 0, taxPercent = 0;
+
+        if (taxInfo.includes("%")) {
+            taxPercent = parseInt(taxInfo);
+            gst = (price * qty) * (taxPercent / 100);
+        }
+
+        const total = (price * qty) + gst;
+
+        subtotal += price * qty;
+        gstTotal += gst;
+
+        table.insertAdjacentHTML("beforeend", `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${name}</td>
+                <td>${productId}</td>
+                <td>${batch}</td>
+                <td>${qty}</td>
+                <td>₹${price.toFixed(2)}</td>
+                <td>${taxInfo}</td>
+                <td>₹${total.toFixed(2)}</td>
+            </tr>
+        `);
+    });
+
+    document.getElementById("subtotal").innerText = "₹" + subtotal.toFixed(2);
+    document.getElementById("gstTotal").innerText = "₹" + gstTotal.toFixed(2);
+    document.getElementById("grandTotal").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
+}
+
+// -------- PDF Download --------
+async function downloadPDF() {
+    const element = document.querySelector(".container");
+    const canvas = await html2canvas(element);
+    const img = canvas.toDataURL("image/png");
+
+    const pdf = new jspdf.jsPDF("p", "mm", "a4");
+    pdf.addImage(img, "PNG", 0, 0, 210, 297);
+    pdf.save("purchase-invoice.pdf");
+}
+
+// Load the latest invoice when page loads
+loadLatest();
 </script>
+
+<!-- JS Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </body>
 </html>
