@@ -1,565 +1,872 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Purchase Invoice System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-    :root {
-        --primary: #2c3e50;
-        --secondary: #3498db;
-        --accent: #2980b9;
-        --light: #ecf0f1;
-        --dark: #2c3e50;
-        --success: #27ae60;
-        --warning: #e67e22;
-        --danger: #e74c3c;
-        --gray: #95a5a6;
-        --border-radius: 8px;
-        --box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        --transition: all 0.3s ease;
-    }
-
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        padding: 20px;
-        line-height: 1.6;
-        color: var(--dark);
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    h2 {
-        text-align: center;
-        margin-bottom: 30px;
-        color: var(--primary);
-        font-weight: 600;
-        font-size: 2rem;
-        position: relative;
-        padding-bottom: 15px;
-    }
-
-    h2::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 4px;
-        background: var(--secondary);
-        border-radius: 2px;
-    }
-
-    h3 {
-        color: var(--primary);
-        margin-bottom: 15px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .card {
-        background: #fff;
-        padding: 25px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        margin-bottom: 25px;
-        transition: var(--transition);
-        border-left: 4px solid var(--secondary);
-    }
-
-    .card:hover {
-        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-        transform: translateY(-2px);
-    }
-
-    .card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
-        margin-bottom: 25px;
-    }
-
-    input, button {
-        padding: 12px 15px;
-        font-size: 16px;
-        margin: 8px 0;
-        width: 100%;
-        border: 1px solid #ddd;
-        border-radius: var(--border-radius);
-        transition: var(--transition);
-    }
-
-    input {
-        background-color: #f9f9f9;
-    }
-
-    input:focus {
-        outline: none;
-        border-color: var(--secondary);
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        background-color: #fff;
-    }
-
-    button {
-        background: var(--secondary);
-        color: #fff;
-        cursor: pointer;
-        border: none;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: var(--transition);
-    }
-
-    button:hover {
-        background: var(--accent);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .invoice-list-item {
-        padding: 15px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: var(--border-radius);
-        margin-bottom: 12px;
-        cursor: pointer;
-        transition: var(--transition);
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .invoice-list-item:hover {
-        background: #e9f7fe;
-        border-color: var(--secondary);
-        transform: translateX(5px);
-    }
-
-    .invoice-list-item b {
-        color: var(--primary);
-        font-size: 1.1rem;
-    }
-
-    .invoice-list-item span {
-        color: var(--gray);
-        font-size: 0.9rem;
-    }
-
-    /* GST Invoice Layout */
-    #invoiceView {
-        display: none;
-        background: white;
-        padding: 30px;
-        border-radius: var(--border-radius);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-        margin-top: 20px;
-        position: relative;
-    }
-
-    .invoice-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid var(--primary);
-    }
-
-    .company-info {
-        flex: 1;
-    }
-
-    .company-info h2 {
-        text-align: left;
-        margin-bottom: 5px;
-        font-size: 1.8rem;
-    }
-
-    .company-info h2::after {
-        display: none;
-    }
-
-    .invoice-meta {
-        text-align: right;
-    }
-
-    .invoice-details {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
-        margin-bottom: 30px;
-    }
-
-    .detail-box {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: var(--border-radius);
-        border-left: 4px solid var(--secondary);
-    }
-
-    .detail-box h3 {
-        margin-bottom: 15px;
-        color: var(--primary);
-        font-size: 1.2rem;
-    }
-
-    .detail-box p {
-        margin-bottom: 8px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    table, th, td {
-        border: 1px solid #dee2e6;
-    }
-
-    th {
-        background: var(--primary);
-        color: white;
-        padding: 12px 15px;
-        text-align: left;
-        font-weight: 600;
-    }
-
-    td {
-        padding: 12px 15px;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-
-    tr:hover {
-        background-color: #e9f7fe;
-    }
-
-    .totals {
-        margin-top: 30px;
-        width: 300px;
-        float: right;
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: var(--border-radius);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .totals td {
-        border: none;
-        padding: 8px 0;
-    }
-
-    .totals tr:last-child {
-        border-top: 1px solid #dee2e6;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-
-    .action-buttons {
-        display: flex;
-        justify-content: flex-end;
-        gap: 15px;
-        margin-top: 30px;
-        clear: both;
-    }
-
-    .action-buttons button {
-        width: auto;
-        padding: 12px 25px;
-    }
-
-    .action-buttons button:first-child {
-        background: var(--success);
-    }
-
-    .action-buttons button:first-child:hover {
-        background: #219653;
-    }
-
-    .action-buttons button:last-child {
-        background: var(--gray);
-    }
-
-    .action-buttons button:last-child:hover {
-        background: #7f8c8d;
-    }
-
-    @media print {
-        body * { visibility: hidden; }
-        #invoiceView, #invoiceView * { visibility: visible; }
-        #invoiceView { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            box-shadow: none;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Invoice Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
         }
-        .action-buttons { display: none; }
-    }
 
-    @media (max-width: 768px) {
-        .card-grid {
-            grid-template-columns: 1fr;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .invoice-details {
-            grid-template-columns: 1fr;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
         }
-        
-        .invoice-header {
-            flex-direction: column;
-            gap: 20px;
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        
-        .invoice-meta {
-            text-align: left;
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
-        
-        .totals {
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-icon {
+            background: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .date-display {
+            font-weight: 500;
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card:nth-child(4) {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1100px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .search-card, .date-filter-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input, button {
+            padding: 14px 18px;
+            font-size: 16px;
+            margin: 8px 0;
             width: 100%;
-            float: none;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
         }
-    }
-</style>
 
+        input {
+            background-color: #f8fafc;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            background-color: #fff;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(67, 97, 238, 0.3);
+        }
+
+        .invoice-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .invoice-list-item {
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .invoice-list-item:hover {
+            background: #e0f2fe;
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .invoice-number {
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .invoice-supplier {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        .invoice-date {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Invoice View */
+        #invoiceView {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-info h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .detail-box {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .detail-box h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .detail-box p {
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        table, th, td {
+            border: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tr:hover {
+            background-color: #e0f2fe;
+        }
+
+        .totals {
+            margin-top: 30px;
+            width: 300px;
+            float: right;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .totals td {
+            border: none;
+            padding: 10px 0;
+        }
+
+        .totals tr:last-child {
+            border-top: 1px solid #e2e8f0;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+            clear: both;
+        }
+
+        .action-buttons button {
+            width: auto;
+            padding: 12px 25px;
+        }
+
+        .action-buttons button:first-child {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .action-buttons button:last-child {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        }
+
+        .stock-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #invoiceView, #invoiceView * { visibility: visible; }
+            #invoiceView { 
+                position: absolute; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                box-shadow: none;
+            }
+            .action-buttons { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .invoice-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .invoice-header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .invoice-meta {
+                text-align: left;
+            }
+            
+            .totals {
+                width: 100%;
+                float: none;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <h1>Purchase Invoice Dashboard</h1>
+            </div>
+            <div class="date-display" id="currentDate"></div>
+        </header>
 
-<div class="container">
-    <h2>Purchase Invoice System (GST)</h2>
-
-    <div class="card-grid">
-        <div class="card">
-            <h3>🔍 Search Invoice</h3>
-            <input id="searchInvoice" placeholder="Enter Invoice Number">
-            <button onclick="searchByInvoice()">Search</button>
+        <div class="dashboard">
+            <div class="card stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="totalTax">₹0</div>
+                <div class="stat-label">Total Tax to Pay</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-icon">📄</div>
+                <div class="stat-value" id="totalInvoices">0</div>
+                <div class="stat-label">Invoices Received</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-value" id="totalStock">0</div>
+                <div class="stat-label">Stock Items Received</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-icon">🏪</div>
+                <div class="stat-value" id="totalSuppliers">0</div>
+                <div class="stat-label">Suppliers</div>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>📅 Filter by Date</h3>
-            <label>From Date</label>
-            <input type="date" id="fromDate">
-            <label>To Date</label>
-            <input type="date" id="toDate">
-            <button onclick="filterByDate()">Filter</button>
+        <div class="content-grid">
+            <div>
+                <h2 class="section-title">🔍 Search & Filter</h2>
+                
+                <div class="search-card card">
+                    <h3 class="card-title">Search Invoice</h3>
+                    <input id="searchInvoice" placeholder="Enter Invoice Number">
+                    <button onclick="searchByInvoice()">Search Invoice</button>
+                </div>
+
+                <div class="date-filter-card card">
+                    <h3 class="card-title">Filter by Date</h3>
+                    <label>From Date</label>
+                    <input type="date" id="fromDate">
+                    <label>To Date</label>
+                    <input type="date" id="toDate">
+                    <button onclick="filterByDate()">Filter by Date</button>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">📄 Invoice List</h3>
+                    <div class="invoice-list" id="invoiceList"></div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="section-title">📊 Stock Overview</h2>
+                
+                <div class="card">
+                    <h3 class="card-title">📦 Recent Stock Purchases</h3>
+                    <table class="stock-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTable">
+                            <!-- Stock data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">🏪 Top Suppliers</h3>
+                    <div id="suppliersList">
+                        <!-- Suppliers will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVOICE VIEW -->
+        <div id="invoiceView" class="card">
+            <div class="invoice-header">
+                <div class="company-info">
+                    <h2>PURCHASE INVOICE</h2>
+                    <p>Your Company Name</p>
+                    <p>123 Business Street, City, State 12345</p>
+                    <p>GSTIN: 12ABCDE3456F7Z8</p>
+                </div>
+                <div class="invoice-meta">
+                    <p><b>Invoice Number:</b> <span id="invNum"></span></p>
+                    <p><b>Date:</b> <span id="invDate"></span></p>
+                    <p><b>Shop ID:</b> <span id="shopID"></span></p>
+                </div>
+            </div>
+
+            <div class="invoice-details">
+                <div class="detail-box">
+                    <h3>Supplier Details</h3>
+                    <p><b>Name:</b> <span id="supName"></span></p>
+                    <p><b>ID:</b> <span id="supID"></span></p>
+                    <p><b>Address:</b> <span id="supAddress"></span></p>
+                </div>
+                
+                <div class="detail-box">
+                    <h3>Company Details</h3>
+                    <p><b>Name:</b> Your Company Name</p>
+                    <p><b>Address:</b> 123 Business Street, City, State 12345</p>
+                    <p><b>Contact:</b> +1 (123) 456-7890</p>
+                </div>
+            </div>
+
+            <h3 class="card-title">Items</h3>
+            <table id="itemTable">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Product ID</th>
+                        <th>Price</th>
+                        <th>GST</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <table class="totals">
+                <tr><td>Subtotal:</td><td id="subTot"></td></tr>
+                <tr><td>GST Total:</td><td id="gstTot"></td></tr>
+                <tr><td><b>Grand Total:</b></td><td id="grandTot"></td></tr>
+            </table>
+
+            <div class="action-buttons">
+                <button onclick="window.print()">Print Invoice</button>
+                <button onclick="document.getElementById('invoiceView').style.display='none'">Close</button>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <h3>📄 Invoice List</h3>
-        <div id="invoiceList"></div>
-    </div>
+    <script>
+        const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
+        const TABLE_ID = 745465;
+        const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
 
-    <!-- INVOICE VIEW -->
-    <div id="invoiceView" class="card">
-        <div class="invoice-header">
-            <div class="company-info">
-                <h2>PURCHASE INVOICE</h2>
-                <p>Your Company Name</p>
-                <p>123 Business Street, City, State 12345</p>
-                <p>GSTIN: 12ABCDE3456F7Z8</p>
-            </div>
-            <div class="invoice-meta">
-                <p><b>Invoice Number:</b> <span id="invNum"></span></p>
-                <p><b>Date:</b> <span id="invDate"></span></p>
-                <p><b>Shop ID:</b> <span id="shopID"></span></p>
-            </div>
-        </div>
+        // Set current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
 
-        <div class="invoice-details">
-            <div class="detail-box">
-                <h3>Supplier Details</h3>
-                <p><b>Name:</b> <span id="supName"></span></p>
-                <p><b>ID:</b> <span id="supID"></span></p>
-                <p><b>Address:</b> <span id="supAddress"></span></p>
-            </div>
+        /* ---------- Fetch All Rows ---------- */
+        async function fetchAll() {
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { Authorization: `Token ${API_KEY}` }
+                });
+                const data = await res.json();
+                updateDashboard(data.results);
+                displayList(data.results);
+                updateStockTable(data.results);
+                updateSuppliers(data.results);
+                return data.results;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                return [];
+            }
+        }
+
+        /* ---------- Update Dashboard Stats ---------- */
+        function updateDashboard(data) {
+            let totalTax = 0;
+            let totalInvoices = data.length;
+            let totalStock = 0;
+            let suppliers = new Set();
             
-            <div class="detail-box">
-                <h3>Company Details</h3>
-                <p><b>Name:</b> Your Company Name</p>
-                <p><b>Address:</b> 123 Business Street, City, State 12345</p>
-                <p><b>Contact:</b> +1 (123) 456-7890</p>
-            </div>
-        </div>
+            data.forEach(row => {
+                suppliers.add(row["Supplier Name"]);
+                
+                if (row["Remark"]) {
+                    let items = row["Remark"].split(" - ");
+                    items.forEach(txt => {
+                        let p = txt.split(",");
+                        if (p.length >= 6) {
+                            let price = parseFloat(p[2].replace(/₹/g, ""));
+                            let gstStr = p[3];
+                            let qty = parseInt(p[5].replace("Qty:", ""));
+                            
+                            let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
+                            let rowTotal = price * qty;
+                            let rowGST = rowTotal * gstPercent / 100;
+                            
+                            totalTax += rowGST;
+                            totalStock += qty;
+                        }
+                    });
+                }
+            });
+            
+            document.getElementById("totalTax").textContent = "₹" + totalTax.toFixed(2);
+            document.getElementById("totalInvoices").textContent = totalInvoices;
+            document.getElementById("totalStock").textContent = totalStock;
+            document.getElementById("totalSuppliers").textContent = suppliers.size;
+        }
 
-        <h3>Items</h3>
-        <table id="itemTable">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Product ID</th>
-                    <th>Price</th>
-                    <th>GST</th>
-                    <th>Batch</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        /* ---------- Update Stock Table ---------- */
+        function updateStockTable(data) {
+            let stockTable = document.getElementById("stockTable");
+            stockTable.innerHTML = "";
+            
+            // Get the 5 most recent invoices
+            let recentInvoices = data.slice(-5);
+            
+            recentInvoices.forEach(row => {
+                if (row["Remark"]) {
+                    let items = row["Remark"].split(" - ");
+                    items.forEach(txt => {
+                        let p = txt.split(",");
+                        if (p.length >= 6) {
+                            let item = p[0];
+                            let qty = parseInt(p[5].replace("Qty:", ""));
+                            let price = parseFloat(p[2].replace(/₹/g, ""));
+                            
+                            let row = document.createElement("tr");
+                            row.innerHTML = `
+                                <td>${item}</td>
+                                <td>${qty}</td>
+                                <td>₹${price.toFixed(2)}</td>
+                                <td>${row["Date"] || "N/A"}</td>
+                            `;
+                            stockTable.appendChild(row);
+                        }
+                    });
+                }
+            });
+            
+            if (stockTable.children.length === 0) {
+                stockTable.innerHTML = `<tr><td colspan="4" style="text-align: center;">No stock data available</td></tr>`;
+            }
+        }
 
-        <table class="totals">
-            <tr><td>Subtotal:</td><td id="subTot"></td></tr>
-            <tr><td>GST Total:</td><td id="gstTot"></td></tr>
-            <tr><td><b>Grand Total:</b></td><td id="grandTot"></td></tr>
-        </table>
+        /* ---------- Update Suppliers List ---------- */
+        function updateSuppliers(data) {
+            let suppliersList = document.getElementById("suppliersList");
+            suppliersList.innerHTML = "";
+            
+            let suppliers = {};
+            
+            data.forEach(row => {
+                let supplier = row["Supplier Name"];
+                if (supplier) {
+                    if (!suppliers[supplier]) {
+                        suppliers[supplier] = 0;
+                    }
+                    suppliers[supplier]++;
+                }
+            });
+            
+            // Sort suppliers by invoice count
+            let sortedSuppliers = Object.entries(suppliers)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            if (sortedSuppliers.length === 0) {
+                suppliersList.innerHTML = `<p>No supplier data available</p>`;
+                return;
+            }
+            
+            sortedSuppliers.forEach(([supplier, count]) => {
+                let supplierDiv = document.createElement("div");
+                supplierDiv.className = "invoice-list-item";
+                supplierDiv.innerHTML = `
+                    <div class="invoice-number">${supplier}</div>
+                    <div class="invoice-supplier">${count} invoice${count > 1 ? 's' : ''}</div>
+                `;
+                suppliersList.appendChild(supplierDiv);
+            });
+        }
 
-        <div class="action-buttons">
-            <button onclick="window.print()">Print Invoice</button>
-            <button onclick="document.getElementById('invoiceView').style.display='none'">Close</button>
-        </div>
-    </div>
-</div>
+        /* ---------- Search by Invoice Number ---------- */
+        async function searchByInvoice() {
+            let inv = document.getElementById("searchInvoice").value.trim();
+            if (!inv) return alert("Enter invoice number");
 
-<script>
-const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-const TABLE_ID = 745465;
-const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
+            let all = await fetchAll();
+            let row = all.find(x => x["Invoice Number"] == inv);
 
-/* ---------- Fetch All Rows ---------- */
-async function fetchAll() {
-    const res = await fetch(API_URL, {
-        headers: { Authorization: `Token ${API_KEY}` }
-    });
-    const data = await res.json();
-    return data.results;
-}
+            if (!row) return alert("Invoice not found");
 
-/* ---------- Search by Invoice Number ---------- */
-async function searchByInvoice() {
-    let inv = document.getElementById("searchInvoice").value.trim();
-    if (!inv) return alert("Enter invoice number");
+            openInvoice(row);
+        }
 
-    let all = await fetchAll();
-    let row = all.find(x => x["Invoice Number"] == inv);
+        /* ---------- Filter by Date Range ---------- */
+        async function filterByDate() {
+            let f = document.getElementById("fromDate").value;
+            let t = document.getElementById("toDate").value;
 
-    if (!row) return alert("Invoice not found");
+            if (!f || !t) return alert("Select both dates");
 
-    openInvoice(row);
-}
+            let from = new Date(f);
+            let to = new Date(t);
+            to.setDate(to.getDate() + 1); // Include the end date
 
-/* ---------- Filter by Date Range ---------- */
-async function filterByDate() {
-    let f = document.getElementById("fromDate").value;
-    let t = document.getElementById("toDate").value;
+            let all = await fetchAll();
+            let filtered = all.filter(row => {
+                let d = new Date(row["Date"]);
+                return d >= from && d <= to;
+            });
 
-    if (!f || !t) return alert("Select both dates");
+            displayList(filtered);
+        }
 
-    let from = new Date(f);
-    let to = new Date(t);
+        /* ---------- Display Invoice List ---------- */
+        function displayList(list) {
+            let box = document.getElementById("invoiceList");
+            box.innerHTML = "";
 
-    let all = await fetchAll();
-    let filtered = all.filter(row => {
-        let d = new Date(row["Date"]);
-        return d >= from && d <= to;
-    });
+            if (list.length == 0) {
+                box.innerHTML = "<p>No invoices found.</p>";
+                return;
+            }
 
-    displayList(filtered);
-}
+            // Show latest invoices first
+            list.reverse().forEach(row => {
+                let div = document.createElement("div");
+                div.className = "invoice-list-item";
+                div.innerHTML = `
+                    <div class="invoice-number">${row["Invoice Number"]}</div>
+                    <div class="invoice-supplier">Supplier: ${row["Supplier Name"]}</div>
+                    <div class="invoice-date">Date: ${row["Date"]}</div>
+                `;
+                div.onclick = () => openInvoice(row);
+                box.appendChild(div);
+            });
+        }
 
-/* ---------- Display Invoice List ---------- */
-function displayList(list) {
-    let box = document.getElementById("invoiceList");
-    box.innerHTML = "";
+        /* ---------- Open Invoice ---------- */
+        function openInvoice(row) {
+            document.getElementById("invNum").innerText = row["Invoice Number"];
+            document.getElementById("invDate").innerText = row["Date"];
+            document.getElementById("shopID").innerText = row["ShopID"];
 
-    if (list.length == 0) {
-        box.innerHTML = "<p>No invoices found.</p>";
-        return;
-    }
+            document.getElementById("supName").innerText = row["Supplier Name"];
+            document.getElementById("supID").innerText = row["Supplier ID"];
+            document.getElementById("supAddress").innerText = row["Supplier Details"];
 
-    list.forEach(row => {
-        let div = document.createElement("div");
-        div.className = "invoice-list-item";
-        div.innerHTML = `
-            <b>${row["Invoice Number"]}</b>
-            <span>Supplier: ${row["Supplier Name"]}</span>
-            <span>Date: ${row["Date"]}</span>
-        `;
-        div.onclick = () => openInvoice(row);
-        box.appendChild(div);
-    });
-}
+            parseRemark(row["Remark"]);
 
-/* ---------- Open Invoice ---------- */
-function openInvoice(row) {
-    document.getElementById("invNum").innerText = row["Invoice Number"];
-    document.getElementById("invDate").innerText = row["Date"];
-    document.getElementById("shopID").innerText = row["ShopID"];
+            document.getElementById("invoiceView").style.display = "block";
+            // Scroll to invoice view
+            document.getElementById("invoiceView").scrollIntoView({ behavior: 'smooth' });
+        }
 
-    document.getElementById("supName").innerText = row["Supplier Name"];
-    document.getElementById("supID").innerText = row["Supplier ID"];
-    document.getElementById("supAddress").innerText = row["Supplier Details"];
+        /* ---------- Parse Remark into Items ---------- */
+        function parseRemark(remark) {
+            let tbody = document.querySelector("#itemTable tbody");
+            tbody.innerHTML = "";
 
-    parseRemark(row["Remark"]);
+            if (!remark) {
+                tbody.innerHTML = "<tr><td colspan='7'>No items found</td></tr>";
+                document.getElementById("subTot").innerText = "₹0.00";
+                document.getElementById("gstTot").innerText = "₹0.00";
+                document.getElementById("grandTot").innerText = "₹0.00";
+                return;
+            }
 
-    document.getElementById("invoiceView").style.display = "block";
-    // Scroll to invoice view
-    document.getElementById("invoiceView").scrollIntoView({ behavior: 'smooth' });
-}
+            let items = remark.split(" - "); 
+            let subtotal = 0, gstTotal = 0;
 
-/* ---------- Parse Remark into Items ---------- */
-function parseRemark(remark) {
-    let tbody = document.querySelector("#itemTable tbody");
-    tbody.innerHTML = "";
+            items.forEach(txt => {
+                let p = txt.split(",");
 
-    let items = remark.split(" - "); 
+                if (p.length < 6) return;
 
-    let subtotal = 0, gstTotal = 0;
+                let item = p[0];
+                let pid = p[1];
+                let price = parseFloat(p[2].replace(/₹/g, ""));
+                let gstStr = p[3];
+                let batch = p[4].replace("Batch:", "");
+                let qty = parseInt(p[5].replace("Qty:", ""));
 
-    items.forEach(txt => {
-        let p = txt.split(",");
+                let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
 
-        let item = p[0];
-        let pid = p[1];
-        let price = parseFloat(p[2].replace(/₹/g,""));
-        let gstStr = p[3];
-        let batch = p[4].replace("Batch:","");
-        let qty = parseInt(p[5].replace("Qty:",""));
+                let rowTotal = price * qty;
+                let rowGST = rowTotal * gstPercent/100;
 
-        let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
+                subtotal += rowTotal;
+                gstTotal += rowGST;
 
-        let rowTotal = price * qty;
-        let rowGST = rowTotal * gstPercent/100;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item}</td>
+                        <td>${pid}</td>
+                        <td>₹${price.toFixed(2)}</td>
+                        <td>${gstPercent}%</td>
+                        <td>${batch}</td>
+                        <td>${qty}</td>
+                        <td>₹${(rowTotal + rowGST).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
 
-        subtotal += rowTotal;
-        gstTotal += rowGST;
+            document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
+            document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
+            document.getElementById("grandTot").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
+        }
 
-        tbody.innerHTML += `
-            <tr>
-                <td>${item}</td>
-                <td>${pid}</td>
-                <td>₹${price.toFixed(2)}</td>
-                <td>${gstPercent}%</td>
-                <td>${batch}</td>
-                <td>${qty}</td>
-                <td>₹${(rowTotal + rowGST).toFixed(2)}</td>
-            </tr>
-        `;
-    });
-
-    document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
-    document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
-    document.getElementById("grandTot").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
-}
-</script>
-
+        // Initialize the dashboard
+        fetchAll();
+    </script>
 </body>
 </html>
