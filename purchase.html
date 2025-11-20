@@ -28,7 +28,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
             color: var(--dark);
             line-height: 1.6;
             min-height: 100vh;
@@ -46,10 +46,10 @@
             align-items: center;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            background: white;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
+            border-left: 5px solid var(--primary);
         }
 
         .logo {
@@ -62,7 +62,7 @@
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
             font-size: 1.8rem;
-            background: linear-gradient(90deg, #fff, #e0e7ff);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -81,8 +81,8 @@
 
         .date-display {
             font-weight: 500;
-            color: white;
-            background: rgba(0, 0, 0, 0.2);
+            color: var(--dark);
+            background: #f1f3f9;
             padding: 8px 16px;
             border-radius: 20px;
         }
@@ -100,6 +100,7 @@
             box-shadow: var(--box-shadow);
             padding: 25px;
             transition: var(--transition);
+            border: 1px solid #eaeaea;
         }
 
         .card:hover {
@@ -109,20 +110,21 @@
 
         .stat-card {
             text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: white;
+            color: var(--dark);
+            border-top: 5px solid var(--primary);
         }
 
         .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-top-color: #f5576c;
         }
 
         .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-top-color: #4facfe;
         }
 
         .stat-card:nth-child(4) {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border-top-color: #43e97b;
         }
 
         .stat-icon {
@@ -138,7 +140,7 @@
 
         .stat-label {
             font-size: 1rem;
-            opacity: 0.9;
+            color: var(--gray);
         }
 
         .section-title {
@@ -146,7 +148,7 @@
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 20px;
-            color: white;
+            color: var(--dark);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -156,7 +158,7 @@
             content: '';
             flex: 1;
             height: 2px;
-            background: rgba(255, 255, 255, 0.3);
+            background: #eaeaea;
         }
 
         .content-grid {
@@ -177,6 +179,7 @@
             box-shadow: var(--box-shadow);
             padding: 25px;
             margin-bottom: 25px;
+            border: 1px solid #eaeaea;
         }
 
         .card-title {
@@ -190,7 +193,7 @@
             gap: 10px;
         }
 
-        input, button {
+        input, select {
             padding: 14px 18px;
             font-size: 16px;
             margin: 8px 0;
@@ -199,13 +202,10 @@
             border-radius: var(--border-radius);
             transition: var(--transition);
             font-family: 'Inter', sans-serif;
-        }
-
-        input {
             background-color: #f8fafc;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
@@ -213,17 +213,36 @@
         }
 
         button {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            cursor: pointer;
+            padding: 14px 18px;
+            font-size: 16px;
+            margin: 8px 0;
+            width: 100%;
             border: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
             font-weight: 600;
             letter-spacing: 0.5px;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
         }
 
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 7px 14px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
         }
 
         .invoice-list {
@@ -276,6 +295,7 @@
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
             margin-top: 20px;
             position: relative;
+            border: 1px solid #eaeaea;
         }
 
         .invoice-header {
@@ -320,10 +340,19 @@
             margin-bottom: 15px;
             color: var(--primary);
             font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .detail-box p {
             margin-bottom: 8px;
+            display: flex;
+        }
+
+        .detail-box p b {
+            min-width: 120px;
+            display: inline-block;
         }
 
         table {
@@ -391,17 +420,36 @@
             padding: 12px 25px;
         }
 
-        .action-buttons button:first-child {
-            background: linear-gradient(135deg, #43e97b, #38f9d7);
-        }
-
-        .action-buttons button:last-child {
-            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-        }
-
         .stock-table {
             width: 100%;
             margin-top: 15px;
+        }
+
+        .supplier-item {
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .supplier-name {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .supplier-invoices {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .filter-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
         @media print {
@@ -413,6 +461,7 @@
                 left: 0; 
                 width: 100%; 
                 box-shadow: none;
+                border: none;
             }
             .action-buttons { display: none; }
         }
@@ -444,6 +493,10 @@
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
+            }
+            
+            .filter-section {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -493,10 +546,16 @@
 
                 <div class="date-filter-card card">
                     <h3 class="card-title">Filter by Date</h3>
-                    <label>From Date</label>
-                    <input type="date" id="fromDate">
-                    <label>To Date</label>
-                    <input type="date" id="toDate">
+                    <div class="filter-section">
+                        <div>
+                            <label>From Date</label>
+                            <input type="date" id="fromDate">
+                        </div>
+                        <div>
+                            <label>To Date</label>
+                            <input type="date" id="toDate">
+                        </div>
+                    </div>
                     <button onclick="filterByDate()">Filter by Date</button>
                 </div>
 
@@ -540,9 +599,9 @@
             <div class="invoice-header">
                 <div class="company-info">
                     <h2>PURCHASE INVOICE</h2>
-                    <p>Your Company Name</p>
-                    <p>123 Business Street, City, State 12345</p>
-                    <p>GSTIN: 12ABCDE3456F7Z8</p>
+                    <div id="shopDetails">
+                        <!-- Shop details will be populated here -->
+                    </div>
                 </div>
                 <div class="invoice-meta">
                     <p><b>Invoice Number:</b> <span id="invNum"></span></p>
@@ -553,28 +612,30 @@
 
             <div class="invoice-details">
                 <div class="detail-box">
-                    <h3>Supplier Details</h3>
+                    <h3>🛍️ Supplier Details</h3>
                     <p><b>Name:</b> <span id="supName"></span></p>
                     <p><b>ID:</b> <span id="supID"></span></p>
+                    <p><b>GSTIN:</b> <span id="supGST"></span></p>
                     <p><b>Address:</b> <span id="supAddress"></span></p>
                 </div>
                 
                 <div class="detail-box">
-                    <h3>Company Details</h3>
-                    <p><b>Name:</b> Your Company Name</p>
-                    <p><b>Address:</b> 123 Business Street, City, State 12345</p>
-                    <p><b>Contact:</b> +1 (123) 456-7890</p>
+                    <h3>🏢 Company Details</h3>
+                    <p><b>Name:</b> <span id="companyName">Your Company Name</span></p>
+                    <p><b>Address:</b> <span id="companyAddress">123 Business Street, City, State 12345</span></p>
+                    <p><b>GSTIN:</b> <span id="companyGST">12ABCDE3456F7Z8</span></p>
+                    <p><b>Contact:</b> <span id="companyContact">+1 (123) 456-7890</span></p>
                 </div>
             </div>
 
-            <h3 class="card-title">Items</h3>
+            <h3 class="card-title">📋 Items</h3>
             <table id="itemTable">
                 <thead>
                     <tr>
                         <th>Item</th>
                         <th>Product ID</th>
                         <th>Price</th>
-                        <th>GST</th>
+                        <th>GST %</th>
                         <th>Batch</th>
                         <th>Qty</th>
                         <th>Total</th>
@@ -585,13 +646,15 @@
 
             <table class="totals">
                 <tr><td>Subtotal:</td><td id="subTot"></td></tr>
+                <tr><td>CGST:</td><td id="cgstTot"></td></tr>
+                <tr><td>SGST:</td><td id="sgstTot"></td></tr>
                 <tr><td>GST Total:</td><td id="gstTot"></td></tr>
                 <tr><td><b>Grand Total:</b></td><td id="grandTot"></td></tr>
             </table>
 
             <div class="action-buttons">
-                <button onclick="window.print()">Print Invoice</button>
-                <button onclick="document.getElementById('invoiceView').style.display='none'">Close</button>
+                <button class="btn-success" onclick="window.print()">🖨️ Print Invoice</button>
+                <button class="btn-danger" onclick="document.getElementById('invoiceView').style.display='none'">❌ Close</button>
             </div>
         </div>
     </div>
@@ -681,14 +744,14 @@
                             let qty = parseInt(p[5].replace("Qty:", ""));
                             let price = parseFloat(p[2].replace(/₹/g, ""));
                             
-                            let row = document.createElement("tr");
-                            row.innerHTML = `
+                            let rowElement = document.createElement("tr");
+                            rowElement.innerHTML = `
                                 <td>${item}</td>
                                 <td>${qty}</td>
                                 <td>₹${price.toFixed(2)}</td>
                                 <td>${row["Date"] || "N/A"}</td>
                             `;
-                            stockTable.appendChild(row);
+                            stockTable.appendChild(rowElement);
                         }
                     });
                 }
@@ -728,10 +791,10 @@
             
             sortedSuppliers.forEach(([supplier, count]) => {
                 let supplierDiv = document.createElement("div");
-                supplierDiv.className = "invoice-list-item";
+                supplierDiv.className = "supplier-item";
                 supplierDiv.innerHTML = `
-                    <div class="invoice-number">${supplier}</div>
-                    <div class="invoice-supplier">${count} invoice${count > 1 ? 's' : ''}</div>
+                    <div class="supplier-name">${supplier}</div>
+                    <div class="supplier-invoices">${count} invoice${count > 1 ? 's' : ''}</div>
                 `;
                 suppliersList.appendChild(supplierDiv);
             });
@@ -802,13 +865,52 @@
 
             document.getElementById("supName").innerText = row["Supplier Name"];
             document.getElementById("supID").innerText = row["Supplier ID"];
-            document.getElementById("supAddress").innerText = row["Supplier Details"];
+            document.getElementById("supGST").innerText = row["Supplier GST"] || "N/A";
+            
+            // Use Supplier Details as Address
+            document.getElementById("supAddress").innerText = row["Supplier Details"] || "N/A";
+            
+            // Parse ShopTag for company details
+            parseShopTag(row["ShopTag"]);
 
             parseRemark(row["Remark"]);
 
             document.getElementById("invoiceView").style.display = "block";
             // Scroll to invoice view
             document.getElementById("invoiceView").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ---------- Parse ShopTag for Company Details ---------- */
+        function parseShopTag(shopTag) {
+            let shopDetails = document.getElementById("shopDetails");
+            
+            if (!shopTag) {
+                shopDetails.innerHTML = `
+                    <p>Your Company Name</p>
+                    <p>123 Business Street, City, State 12345</p>
+                    <p>GSTIN: 12ABCDE3456F7Z8</p>
+                `;
+                return;
+            }
+            
+            // Parse ShopTag format: ShopName-Address/Mobile Number
+            let parts = shopTag.split('-');
+            let shopName = parts[0] || "Your Company Name";
+            
+            let addressMobile = parts[1] ? parts[1].split('/') : [];
+            let address = addressMobile[0] || "123 Business Street, City, State 12345";
+            let mobile = addressMobile[1] || "+1 (123) 456-7890";
+            
+            shopDetails.innerHTML = `
+                <p>${shopName}</p>
+                <p>${address}</p>
+                <p>${mobile}</p>
+            `;
+            
+            // Update company details in the invoice
+            document.getElementById("companyName").innerText = shopName;
+            document.getElementById("companyAddress").innerText = address;
+            document.getElementById("companyContact").innerText = mobile;
         }
 
         /* ---------- Parse Remark into Items ---------- */
@@ -820,6 +922,8 @@
                 tbody.innerHTML = "<tr><td colspan='7'>No items found</td></tr>";
                 document.getElementById("subTot").innerText = "₹0.00";
                 document.getElementById("gstTot").innerText = "₹0.00";
+                document.getElementById("cgstTot").innerText = "₹0.00";
+                document.getElementById("sgstTot").innerText = "₹0.00";
                 document.getElementById("grandTot").innerText = "₹0.00";
                 return;
             }
@@ -843,6 +947,8 @@
 
                 let rowTotal = price * qty;
                 let rowGST = rowTotal * gstPercent/100;
+                let cgst = rowGST / 2;
+                let sgst = rowGST / 2;
 
                 subtotal += rowTotal;
                 gstTotal += rowGST;
@@ -862,6 +968,8 @@
 
             document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
             document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
+            document.getElementById("cgstTot").innerText = "₹" + (gstTotal / 2).toFixed(2);
+            document.getElementById("sgstTot").innerText = "₹" + (gstTotal / 2).toFixed(2);
             document.getElementById("grandTot").innerText = "₹" + (subtotal + gstTotal).toFixed(2);
         }
 
