@@ -1350,9 +1350,52 @@
             }
         ];
 
+        // Supplier Table Demo Data
+        const DEMO_SUPPLIER_DATA = [
+            {
+                "id": 1,
+                "Supplier ID": "SUP-001",
+                "Supplier Details": "ABC Suppliers, 123 Business Street, Mumbai, Maharashtra 400001 (GST:07AABCU9603R1ZM)",
+                "Contact": "+91-9876543210",
+                "Email": "contact@abcsuppliers.com"
+            },
+            {
+                "id": 2,
+                "Supplier ID": "SUP-002",
+                "Supplier Details": "XYZ Electronics, 456 Tech Park, Bangalore, Karnataka 560001 (GST:09AAACX1234M1Z5)",
+                "Contact": "+91-8765432109",
+                "Email": "info@xyzelectronics.com"
+            },
+            {
+                "id": 3,
+                "Supplier ID": "SUP-003",
+                "Supplier Details": "Global Traders, 789 Trade Center, Delhi, Delhi 110001 (GST:27AABCU9603R1ZM)",
+                "Contact": "+91-7654321098",
+                "Email": "sales@globaltraders.com"
+            },
+            {
+                "id": 4,
+                "Supplier ID": "SUP-004",
+                "Supplier Details": "Tech Distributors, 321 Innovation Road, Hyderabad, Telangana 500001 (GST:29AABCT1234M1Z5)",
+                "Contact": "+91-6543210987",
+                "Email": "support@techdistributors.com"
+            },
+            {
+                "id": 5,
+                "Supplier ID": "SUP-005",
+                "Supplier Details": "Office Supplies Ltd, 654 Stationery Lane, Chennai, Tamil Nadu 600001 (GST:24AABCO1234M1Z5)",
+                "Contact": "+91-5432109876",
+                "Email": "orders@officesupplies.com"
+            }
+        ];
+
         const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
-        const TABLE_ID = 745465;
-        const API_URL = `https://api.baserow.io/api/database/rows/table/${TABLE_ID}/?user_field_names=true`;
+        const INVOICE_TABLE_ID = 745465;
+        const SUPPLIER_TABLE_ID = 74412;
+        const SUPPLIER_DETAILS_FIELD_ID = 6271136;
+        
+        const INVOICE_API_URL = `https://api.baserow.io/api/database/rows/table/${INVOICE_TABLE_ID}/?user_field_names=true`;
+        const SUPPLIER_API_URL = `https://api.baserow.io/api/database/rows/table/${SUPPLIER_TABLE_ID}/?user_field_names=true`;
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1381,6 +1424,113 @@
         function applyDefaultFilter() {
             setDefaultDateFilter();
             filterByDate();
+        }
+
+        /* ---------- Parse GST from Text ---------- */
+        function parseGSTFromText(text) {
+            if (!text) return "No GST";
+            
+            // Look for GST in round brackets
+            const gstMatch = text.match(/\(GST:([^)]+)\)/i);
+            if (gstMatch && gstMatch[1]) {
+                return gstMatch[1].trim();
+            }
+            
+            // Alternative pattern: GST followed by colon and value
+            const altMatch = text.match(/GST:?\s*([A-Z0-9]+)/i);
+            if (altMatch && altMatch[1]) {
+                return altMatch[1].trim();
+            }
+            
+            return "No GST";
+        }
+
+        /* ---------- Extract Address from Supplier Details ---------- */
+        function extractAddressFromSupplierDetails(details) {
+            if (!details) return "Address not available";
+            
+            // Remove GST information to get clean address
+            const address = details.replace(/\(GST:[^)]+\)/gi, '').trim();
+            
+            // Remove trailing commas or other punctuation
+            return address.replace(/[,\s]*$/, '');
+        }
+
+        /* ---------- Fetch Supplier Details ---------- */
+        async function fetchSupplierDetails(supplierId) {
+            try {
+                console.log(`Fetching details for supplier: ${supplierId}`);
+                
+                // Try to fetch from API first
+                try {
+                    const response = await fetch(SUPPLIER_API_URL, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Token ${API_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const supplierData = await response.json();
+                    
+                    if (!supplierData.results || !Array.isArray(supplierData.results)) {
+                        throw new Error('Invalid data format from Supplier API');
+                    }
+
+                    // Find the supplier by ID
+                    const supplier = supplierData.results.find(s => s["Supplier ID"] === supplierId);
+                    
+                    if (supplier) {
+                        console.log('Supplier details found via API:', supplier);
+                        return {
+                            details: supplier["Supplier Details"] || "Details not available",
+                            address: extractAddressFromSupplierDetails(supplier["Supplier Details"]),
+                            gst: parseGSTFromText(supplier["Supplier Details"]),
+                            contact: supplier["Contact"] || "Contact not available",
+                            email: supplier["Email"] || "Email not available"
+                        };
+                    }
+                    
+                } catch (apiError) {
+                    console.warn('Supplier API fetch failed, using demo data:', apiError);
+                }
+
+                // Fallback to demo supplier data
+                const demoSupplier = DEMO_SUPPLIER_DATA.find(s => s["Supplier ID"] === supplierId);
+                if (demoSupplier) {
+                    console.log('Supplier details found in demo data:', demoSupplier);
+                    return {
+                        details: demoSupplier["Supplier Details"],
+                        address: extractAddressFromSupplierDetails(demoSupplier["Supplier Details"]),
+                        gst: parseGSTFromText(demoSupplier["Supplier Details"]),
+                        contact: demoSupplier["Contact"],
+                        email: demoSupplier["Email"]
+                    };
+                }
+
+                console.warn(`Supplier not found: ${supplierId}`);
+                return {
+                    details: "Supplier details not found",
+                    address: "Address not available",
+                    gst: "No GST",
+                    contact: "Contact not available",
+                    email: "Email not available"
+                };
+                
+            } catch (error) {
+                console.error('Error in fetchSupplierDetails:', error);
+                return {
+                    details: "Error fetching supplier details",
+                    address: "Address not available",
+                    gst: "No GST",
+                    contact: "Contact not available",
+                    email: "Email not available"
+                };
+            }
         }
 
         /* ---------- Mobile Functions ---------- */
@@ -1472,7 +1622,7 @@
                 
                 // Try to fetch from API first
                 try {
-                    const response = await fetch(API_URL, {
+                    const response = await fetch(INVOICE_API_URL, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Token ${API_KEY}`,
@@ -1871,15 +2021,24 @@
         }
 
         /* ---------- Open Invoice ---------- */
-        function openInvoice(row) {
+        async function openInvoice(row) {
             document.getElementById("invNum").innerText = row["Invoice Number"] || 'N/A';
             document.getElementById("invDate").innerText = formatDate(row["Date"]);
             document.getElementById("shopID").innerText = row["ShopID"] || 'N/A';
             document.getElementById("supID").innerText = row["Supplier ID"] || 'N/A';
 
             document.getElementById("supName").innerText = row["Supplier Name"] || 'N/A';
-            document.getElementById("supGST").innerText = row["Supplier GST"] || 'N/A';
-            document.getElementById("supAddress").innerText = row["Supplier Details"] || 'N/A';
+            
+            // Fetch and display enhanced supplier details
+            const supplierId = row["Supplier ID"];
+            if (supplierId) {
+                const supplierDetails = await fetchSupplierDetails(supplierId);
+                document.getElementById("supGST").innerText = supplierDetails.gst;
+                document.getElementById("supAddress").innerText = supplierDetails.address;
+            } else {
+                document.getElementById("supGST").innerText = "No GST";
+                document.getElementById("supAddress").innerText = "Address not available";
+            }
             
             updateCompanyDetails();
             parseRemarkForInvoice(row["Remark"]);
