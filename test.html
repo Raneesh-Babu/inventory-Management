@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* All CSS styles from previous solution remain the same */
+        /* All CSS styles remain the same as before */
         :root {
             --primary: #4361ee;
             --primary-dark: #3a0ca3;
@@ -1095,6 +1095,9 @@
                     <button onclick="filterByDate()">
                         <i class="fas fa-filter"></i> Filter Results
                     </button>
+                    <button onclick="applyDefaultFilter()" class="btn-success" style="margin-top: 10px;">
+                        <i class="fas fa-calendar-week"></i> Last 30 Days
+                    </button>
                 </div>
 
                 <div class="card">
@@ -1324,6 +1327,26 @@
                 "Supplier GST": "27AABCU9603R1ZM",
                 "Supplier Details": "789 Trade Center, Delhi, Delhi 110001",
                 "Remark": "Tablet,TB-001,₹20000,12%,Batch:TB2024,Qty:4 - Phone,PH-001,₹15000,12%,Batch:PH2024,Qty:6 - Charger,CH-001,₹800,12%,Batch:CH2024,Qty:10"
+            },
+            {
+                "Invoice Number": "INV-004",
+                "Date": "2024-03-10",
+                "ShopID": "SHOP-001",
+                "Supplier Name": "Tech Distributors",
+                "Supplier ID": "SUP-004",
+                "Supplier GST": "29AABCT1234M1Z5",
+                "Supplier Details": "321 Innovation Road, Hyderabad, Telangana 500001",
+                "Remark": "Headphones,HP-001,₹2500,18%,Batch:HP2024,Qty:8 - Speaker,SP-001,₹5000,18%,Batch:SP2024,Qty:4 - Webcam,WC-001,₹3500,18%,Batch:WC2024,Qty:6"
+            },
+            {
+                "Invoice Number": "INV-005",
+                "Date": "2024-03-25",
+                "ShopID": "SHOP-001",
+                "Supplier Name": "Office Supplies Ltd",
+                "Supplier ID": "SUP-005",
+                "Supplier GST": "24AABCO1234M1Z5",
+                "Supplier Details": "654 Stationery Lane, Chennai, Tamil Nadu 600001",
+                "Remark": "Notebook,NB-001,₹150,12%,Batch:NB2024,Qty:50 - Pen,PN-001,₹20,12%,Batch:PN2024,Qty:100 - Folder,FD-001,₹80,12%,Batch:FD2024,Qty:30"
             }
         ];
 
@@ -1335,7 +1358,30 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard initialized');
             checkShopTag();
+            setDefaultDateFilter();
         });
+
+        /* ---------- Set Default 30-Day Filter ---------- */
+        function setDefaultDateFilter() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('fromDate').value = formatDateForInput(thirtyDaysAgo);
+            document.getElementById('toDate').value = formatDateForInput(today);
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function applyDefaultFilter() {
+            setDefaultDateFilter();
+            filterByDate();
+        }
 
         /* ---------- Mobile Functions ---------- */
         function scrollToTop() {
@@ -1588,10 +1634,12 @@
             let recentStockList = document.getElementById("recentStockList");
             recentStockList.innerHTML = "";
             
-            let recentInvoices = data.slice(-5).reverse();
+            // Sort data by date (newest first)
+            let sortedData = [...data].sort((a, b) => new Date(b.Date) - new Date(a.Date));
+            
             let stockItems = [];
             
-            recentInvoices.forEach(row => {
+            sortedData.forEach(row => {
                 if (row["Remark"]) {
                     let items = parseRemarkItems(row["Remark"]);
                     items.forEach(item => {
@@ -1614,6 +1662,7 @@
                 return;
             }
             
+            // Show only the 4 most recent stock items
             stockItems.slice(0, 4).forEach(item => {
                 let stockElement = document.createElement("div");
                 stockElement.className = "stock-item";
