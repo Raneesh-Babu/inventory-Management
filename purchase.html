@@ -452,6 +452,41 @@
             gap: 15px;
         }
 
+        .stock-item {
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-info {
+            flex: 1;
+        }
+
+        .stock-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stock-details {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .stock-qty {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
         @media print {
             body * { visibility: hidden; }
             #invoiceView, #invoiceView * { visibility: visible; }
@@ -497,6 +532,16 @@
             
             .filter-section {
                 grid-template-columns: 1fr;
+            }
+            
+            .stock-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .stock-qty {
+                align-self: flex-end;
             }
         }
     </style>
@@ -570,17 +615,24 @@
                 
                 <div class="card">
                     <h3 class="card-title">📦 Recent Stock Purchases</h3>
+                    <div id="recentStockList">
+                        <!-- Recent stock will be populated here -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">📈 Stock Summary</h3>
                     <table class="stock-table">
                         <thead>
                             <tr>
                                 <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th>Date</th>
+                                <th>Total Qty</th>
+                                <th>Avg Price</th>
+                                <th>Last Purchase</th>
                             </tr>
                         </thead>
-                        <tbody id="stockTable">
-                            <!-- Stock data will be populated here -->
+                        <tbody id="stockSummaryTable">
+                            <!-- Stock summary will be populated here -->
                         </tbody>
                     </table>
                 </div>
@@ -681,7 +733,8 @@
                 const data = await res.json();
                 updateDashboard(data.results);
                 displayList(data.results);
-                updateStockTable(data.results);
+                updateRecentStock(data.results);
+                updateStockSummary(data.results);
                 updateSuppliers(data.results);
                 return data.results;
             } catch (error) {
@@ -701,21 +754,10 @@
                 suppliers.add(row["Supplier Name"]);
                 
                 if (row["Remark"]) {
-                    let items = row["Remark"].split(" - ");
-                    items.forEach(txt => {
-                        let p = txt.split(",");
-                        if (p.length >= 6) {
-                            let price = parseFloat(p[2].replace(/₹/g, ""));
-                            let gstStr = p[3];
-                            let qty = parseInt(p[5].replace("Qty:", ""));
-                            
-                            let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
-                            let rowTotal = price * qty;
-                            let rowGST = rowTotal * gstPercent / 100;
-                            
-                            totalTax += rowGST;
-                            totalStock += qty;
-                        }
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        totalTax += item.gstAmount;
+                        totalStock += item.qty;
                     });
                 }
             });
@@ -726,40 +768,142 @@
             document.getElementById("totalSuppliers").textContent = suppliers.size;
         }
 
-        /* ---------- Update Stock Table ---------- */
-        function updateStockTable(data) {
-            let stockTable = document.getElementById("stockTable");
-            stockTable.innerHTML = "";
+        /* ---------- Parse Remark Field into Items ---------- */
+        function parseRemarkItems(remark) {
+            if (!remark) return [];
             
-            // Get the 5 most recent invoices
-            let recentInvoices = data.slice(-5);
+            let items = [];
+            let itemStrings = remark.split(" - ");
             
+            itemStrings.forEach(txt => {
+                let p = txt.split(",");
+                if (p.length >= 6) {
+                    let item = p[0];
+                    let pid = p[1];
+                    let price = parseFloat(p[2].replace(/₹/g, ""));
+                    let gstStr = p[3];
+                    let batch = p[4].replace("Batch:", "");
+                    let qty = parseInt(p[5].replace("Qty:", ""));
+                    
+                    let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
+                    let rowTotal = price * qty;
+                    let gstAmount = rowTotal * gstPercent / 100;
+                    
+                    items.push({
+                        name: item,
+                        productId: pid,
+                        price: price,
+                        gstPercent: gstPercent,
+                        batch: batch,
+                        qty: qty,
+                        total: rowTotal + gstAmount,
+                        gstAmount: gstAmount
+                    });
+                }
+            });
+            
+            return items;
+        }
+
+        /* ---------- Update Recent Stock ---------- */
+        function updateRecentStock(data) {
+            let recentStockList = document.getElementById("recentStockList");
+            recentStockList.innerHTML = "";
+            
+            // Get recent invoices (last 10)
+            let recentInvoices = data.slice(-10).reverse();
+            let stockItems = [];
+            
+            // Extract stock items from recent invoices
             recentInvoices.forEach(row => {
                 if (row["Remark"]) {
-                    let items = row["Remark"].split(" - ");
-                    items.forEach(txt => {
-                        let p = txt.split(",");
-                        if (p.length >= 6) {
-                            let item = p[0];
-                            let qty = parseInt(p[5].replace("Qty:", ""));
-                            let price = parseFloat(p[2].replace(/₹/g, ""));
-                            
-                            let rowElement = document.createElement("tr");
-                            rowElement.innerHTML = `
-                                <td>${item}</td>
-                                <td>${qty}</td>
-                                <td>₹${price.toFixed(2)}</td>
-                                <td>${row["Date"] || "N/A"}</td>
-                            `;
-                            stockTable.appendChild(rowElement);
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        stockItems.push({
+                            ...item,
+                            date: row["Date"],
+                            invoice: row["Invoice Number"],
+                            supplier: row["Supplier Name"]
+                        });
+                    });
+                }
+            });
+            
+            // Display only the 10 most recent stock items
+            stockItems.slice(0, 10).forEach(item => {
+                let stockElement = document.createElement("div");
+                stockElement.className = "stock-item";
+                stockElement.innerHTML = `
+                    <div class="stock-info">
+                        <div class="stock-name">${item.name}</div>
+                        <div class="stock-details">
+                            ${item.supplier} • ${item.date} • Batch: ${item.batch}
+                        </div>
+                    </div>
+                    <div class="stock-qty">${item.qty} units</div>
+                `;
+                recentStockList.appendChild(stockElement);
+            });
+            
+            if (recentStockList.children.length === 0) {
+                recentStockList.innerHTML = `<p style="text-align: center; color: var(--gray);">No recent stock purchases</p>`;
+            }
+        }
+
+        /* ---------- Update Stock Summary ---------- */
+        function updateStockSummary(data) {
+            let stockSummaryTable = document.getElementById("stockSummaryTable");
+            stockSummaryTable.innerHTML = "";
+            
+            let stockSummary = {};
+            
+            // Aggregate stock data
+            data.forEach(row => {
+                if (row["Remark"]) {
+                    let items = parseRemarkItems(row["Remark"]);
+                    items.forEach(item => {
+                        if (!stockSummary[item.name]) {
+                            stockSummary[item.name] = {
+                                totalQty: 0,
+                                totalValue: 0,
+                                lastPurchase: row["Date"],
+                                count: 0
+                            };
+                        }
+                        
+                        stockSummary[item.name].totalQty += item.qty;
+                        stockSummary[item.name].totalValue += (item.price * item.qty);
+                        stockSummary[item.name].count += 1;
+                        
+                        // Update last purchase date if this is more recent
+                        if (new Date(row["Date"]) > new Date(stockSummary[item.name].lastPurchase)) {
+                            stockSummary[item.name].lastPurchase = row["Date"];
                         }
                     });
                 }
             });
             
-            if (stockTable.children.length === 0) {
-                stockTable.innerHTML = `<tr><td colspan="4" style="text-align: center;">No stock data available</td></tr>`;
+            // Convert to array and sort by total quantity
+            let sortedStock = Object.entries(stockSummary)
+                .sort((a, b) => b[1].totalQty - a[1].totalQty)
+                .slice(0, 8);
+            
+            if (sortedStock.length === 0) {
+                stockSummaryTable.innerHTML = `<tr><td colspan="4" style="text-align: center;">No stock data available</td></tr>`;
+                return;
             }
+            
+            sortedStock.forEach(([product, data]) => {
+                let avgPrice = data.totalValue / data.totalQty;
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${product}</td>
+                    <td>${data.totalQty}</td>
+                    <td>₹${avgPrice.toFixed(2)}</td>
+                    <td>${data.lastPurchase}</td>
+                `;
+                stockSummaryTable.appendChild(row);
+            });
         }
 
         /* ---------- Update Suppliers List ---------- */
@@ -773,15 +917,25 @@
                 let supplier = row["Supplier Name"];
                 if (supplier) {
                     if (!suppliers[supplier]) {
-                        suppliers[supplier] = 0;
+                        suppliers[supplier] = {
+                            count: 0,
+                            totalValue: 0
+                        };
                     }
-                    suppliers[supplier]++;
+                    suppliers[supplier].count++;
+                    
+                    // Calculate invoice total value
+                    if (row["Remark"]) {
+                        let items = parseRemarkItems(row["Remark"]);
+                        let invoiceTotal = items.reduce((sum, item) => sum + item.total, 0);
+                        suppliers[supplier].totalValue += invoiceTotal;
+                    }
                 }
             });
             
             // Sort suppliers by invoice count
             let sortedSuppliers = Object.entries(suppliers)
-                .sort((a, b) => b[1] - a[1])
+                .sort((a, b) => b[1].count - a[1].count)
                 .slice(0, 5);
             
             if (sortedSuppliers.length === 0) {
@@ -789,12 +943,14 @@
                 return;
             }
             
-            sortedSuppliers.forEach(([supplier, count]) => {
+            sortedSuppliers.forEach(([supplier, data]) => {
                 let supplierDiv = document.createElement("div");
                 supplierDiv.className = "supplier-item";
                 supplierDiv.innerHTML = `
                     <div class="supplier-name">${supplier}</div>
-                    <div class="supplier-invoices">${count} invoice${count > 1 ? 's' : ''}</div>
+                    <div class="supplier-invoices">
+                        ${data.count} invoices • Total: ₹${data.totalValue.toFixed(2)}
+                    </div>
                 `;
                 suppliersList.appendChild(supplierDiv);
             });
@@ -873,7 +1029,7 @@
             // Parse ShopTag for company details
             parseShopTag(row["ShopTag"]);
 
-            parseRemark(row["Remark"]);
+            parseRemarkForInvoice(row["Remark"]);
 
             document.getElementById("invoiceView").style.display = "block";
             // Scroll to invoice view
@@ -913,59 +1069,51 @@
             document.getElementById("companyContact").innerText = mobile;
         }
 
-        /* ---------- Parse Remark into Items ---------- */
-        function parseRemark(remark) {
+        /* ---------- Parse Remark for Invoice Display ---------- */
+        function parseRemarkForInvoice(remark) {
             let tbody = document.querySelector("#itemTable tbody");
             tbody.innerHTML = "";
 
             if (!remark) {
                 tbody.innerHTML = "<tr><td colspan='7'>No items found</td></tr>";
-                document.getElementById("subTot").innerText = "₹0.00";
-                document.getElementById("gstTot").innerText = "₹0.00";
-                document.getElementById("cgstTot").innerText = "₹0.00";
-                document.getElementById("sgstTot").innerText = "₹0.00";
-                document.getElementById("grandTot").innerText = "₹0.00";
+                resetTotals();
                 return;
             }
 
-            let items = remark.split(" - "); 
+            let items = parseRemarkItems(remark);
             let subtotal = 0, gstTotal = 0;
 
-            items.forEach(txt => {
-                let p = txt.split(",");
-
-                if (p.length < 6) return;
-
-                let item = p[0];
-                let pid = p[1];
-                let price = parseFloat(p[2].replace(/₹/g, ""));
-                let gstStr = p[3];
-                let batch = p[4].replace("Batch:", "");
-                let qty = parseInt(p[5].replace("Qty:", ""));
-
-                let gstPercent = gstStr.includes("%") ? parseInt(gstStr) : 0;
-
-                let rowTotal = price * qty;
-                let rowGST = rowTotal * gstPercent/100;
-                let cgst = rowGST / 2;
-                let sgst = rowGST / 2;
-
-                subtotal += rowTotal;
-                gstTotal += rowGST;
+            items.forEach(item => {
+                subtotal += (item.price * item.qty);
+                gstTotal += item.gstAmount;
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${item}</td>
-                        <td>${pid}</td>
-                        <td>₹${price.toFixed(2)}</td>
-                        <td>${gstPercent}%</td>
-                        <td>${batch}</td>
-                        <td>${qty}</td>
-                        <td>₹${(rowTotal + rowGST).toFixed(2)}</td>
+                        <td>${item.name}</td>
+                        <td>${item.productId}</td>
+                        <td>₹${item.price.toFixed(2)}</td>
+                        <td>${item.gstPercent}%</td>
+                        <td>${item.batch}</td>
+                        <td>${item.qty}</td>
+                        <td>₹${item.total.toFixed(2)}</td>
                     </tr>
                 `;
             });
 
+            updateTotals(subtotal, gstTotal);
+        }
+
+        /* ---------- Reset Totals ---------- */
+        function resetTotals() {
+            document.getElementById("subTot").innerText = "₹0.00";
+            document.getElementById("gstTot").innerText = "₹0.00";
+            document.getElementById("cgstTot").innerText = "₹0.00";
+            document.getElementById("sgstTot").innerText = "₹0.00";
+            document.getElementById("grandTot").innerText = "₹0.00";
+        }
+
+        /* ---------- Update Totals ---------- */
+        function updateTotals(subtotal, gstTotal) {
             document.getElementById("subTot").innerText = "₹" + subtotal.toFixed(2);
             document.getElementById("gstTot").innerText = "₹" + gstTotal.toFixed(2);
             document.getElementById("cgstTot").innerText = "₹" + (gstTotal / 2).toFixed(2);
