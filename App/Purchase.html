@@ -74,6 +74,21 @@
             width: 100%;
         }
 
+        /* Shop ID Display */
+        .shop-id-badge {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
+        }
+
         /* Premium Dashboard Stats */
         .dashboard {
             display: grid;
@@ -978,7 +993,12 @@
     </style>
 </head>
 <body>
-    <div class="container">
+<div class="container">
+        <!-- Shop ID Display -->
+        <div id="shopIdDisplay" class="shop-id-badge" style="display: none;">
+            <i class="fas fa-store"></i>
+            <span id="currentShopId">Loading...</span>
+        </div>
         <!-- Setup Card -->
         <div id="setupCard" class="card setup-card" style="display: none;">
             <h3><i class="fas fa-store"></i> Company Setup</h3>
@@ -999,6 +1019,10 @@
                 <div class="form-group">
                     <label class="form-label">GSTIN</label>
                     <input type="text" id="setupGSTIN" placeholder="GSTIN Number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Shop ID</label>
+                    <input type="text" id="setupShopID" placeholder="SHOP-001">
                 </div>
             </div>
             <button onclick="saveShopTag()" class="btn-success">
@@ -1343,7 +1367,7 @@
             {
                 "Invoice Number": "INV-003",
                 "Date": "2024-02-05",
-                "ShopID": "SHOP-001",
+                "ShopID": "SHOP-002",
                 "Supplier Name": "Global Traders",
                 "Supplier ID": "SUP-003",
                 "Supplier GST": "27AABCU9603R1ZM",
@@ -1363,7 +1387,7 @@
             {
                 "Invoice Number": "INV-005",
                 "Date": "2024-03-25",
-                "ShopID": "SHOP-001",
+                "ShopID": "SHOP-002",
                 "Supplier Name": "Office Supplies Ltd",
                 "Supplier ID": "SUP-005",
                 "Supplier GST": "24AABCO1234M1Z5",
@@ -1422,6 +1446,7 @@
         // Global variables
         let allInvoiceData = [];
         let currentFilteredData = [];
+        let currentShopID = "";
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1429,6 +1454,54 @@
             checkShopTag();
             setDefaultDateFilter();
         });
+
+        /* ---------- Get Current Shop ID from ShopIDTag ---------- */
+        function getCurrentShopID() {
+            // Get ShopIDTag from localStorage
+            const shopIDTag = localStorage.getItem('ShopIDTag');
+            console.log('ShopIDTag from localStorage:', shopIDTag);
+            
+            if (!shopIDTag) {
+                console.log('No ShopIDTag found in localStorage');
+                return "";
+            }
+            
+            // ShopIDTag IS the ShopID value
+            const shopID = shopIDTag;
+            console.log('Current Shop ID:', shopID);
+            return shopID;
+        }
+
+        /* ---------- Display Current Shop ID ---------- */
+        function displayCurrentShopID() {
+            const shopIdDisplay = document.getElementById('shopIdDisplay');
+            const currentShopIdSpan = document.getElementById('currentShopId');
+            
+            if (currentShopID) {
+                currentShopIdSpan.textContent = `Shop: ${currentShopID}`;
+                shopIdDisplay.style.display = 'inline-flex';
+            } else {
+                shopIdDisplay.style.display = 'none';
+            }
+        }
+
+        /* ---------- Filter Data by Shop ID ---------- */
+        function filterDataByShopID(data) {
+            if (!currentShopID) {
+                console.log('No Shop ID set, showing all data');
+                return data;
+            }
+            
+            const filteredData = data.filter(row => {
+                // Check if row has ShopID and it matches currentShopID
+                const rowShopID = row["ShopID"] || row["shopID"] || row["ShopId"] || row["shopId"];
+                console.log('Row ShopID:', rowShopID, 'Current ShopID:', currentShopID);
+                return rowShopID === currentShopID;
+            });
+            
+            console.log(`Filtered data by ShopID: ${currentShopID}, found ${filteredData.length} records out of ${data.length}`);
+            return filteredData;
+        }
 
         /* ---------- Set Default 30-Day Filter ---------- */
         function setDefaultDateFilter() {
@@ -1677,6 +1750,10 @@
             const shopTag = localStorage.getItem('ShopTag');
             const setupCard = document.getElementById('setupCard');
             
+            // Get current Shop ID from ShopIDTag
+            currentShopID = getCurrentShopID();
+            displayCurrentShopID();
+            
             if (!shopTag) {
                 setupCard.style.display = 'block';
                 console.log('No ShopTag found, showing setup card');
@@ -1693,15 +1770,21 @@
             const address = document.getElementById('setupAddress').value.trim();
             const mobile = document.getElementById('setupMobile').value.trim();
             const gstin = document.getElementById('setupGSTIN').value.trim();
+            const shopID = document.getElementById('setupShopID').value.trim();
 
-            if (!shopName || !address || !mobile) {
-                alert('Please fill required fields');
+            if (!shopName || !address || !mobile || !shopID) {
+                alert('Please fill all required fields');
                 return;
             }
 
             const shopTag = `${shopName}-${address}/${mobile}`;
             localStorage.setItem('ShopTag', shopTag);
             localStorage.setItem('CompanyGSTIN', gstin);
+            localStorage.setItem('ShopIDTag', shopID); // Store as ShopIDTag
+            
+            // Update current Shop ID
+            currentShopID = shopID;
+            displayCurrentShopID();
             
             document.getElementById('setupCard').style.display = 'none';
             alert('Company details saved successfully!');
@@ -1769,21 +1852,24 @@
                     console.log('Using demo data:', data.length, 'records');
                 }
 
+                // Filter data by Shop ID
+                const filteredData = filterDataByShopID(data);
+                
                 // Store the data globally
-                allInvoiceData = data;
-                currentFilteredData = data;
+                allInvoiceData = filteredData;
+                currentFilteredData = filteredData;
 
                 // Update all dashboard components
-                updateDashboard(data);
-                displayList(data);
-                updateRecentStock(data);
-                updateStockSummary(data);
-                updateSuppliers(data);
-                populateSupplierFilter(data);
+                updateDashboard(filteredData);
+                displayList(filteredData);
+                updateRecentStock(filteredData);
+                updateStockSummary(filteredData);
+                updateSuppliers(filteredData);
+                populateSupplierFilter(filteredData);
                 
                 showLoadingState(false);
                 console.log('Dashboard updated successfully');
-                return data;
+                return filteredData;
                 
             } catch (error) {
                 console.error('Error in fetchAll:', error);
@@ -1792,17 +1878,18 @@
                 
                 // Fallback to demo data
                 const demoData = DEMO_DATA;
-                allInvoiceData = demoData;
-                currentFilteredData = demoData;
+                const filteredDemoData = filterDataByShopID(demoData);
+                allInvoiceData = filteredDemoData;
+                currentFilteredData = filteredDemoData;
                 
-                updateDashboard(demoData);
-                displayList(demoData);
-                updateRecentStock(demoData);
-                updateStockSummary(demoData);
-                updateSuppliers(demoData);
-                populateSupplierFilter(demoData);
+                updateDashboard(filteredDemoData);
+                displayList(filteredDemoData);
+                updateRecentStock(filteredDemoData);
+                updateStockSummary(filteredDemoData);
+                updateSuppliers(filteredDemoData);
+                populateSupplierFilter(filteredDemoData);
                 
-                return demoData;
+                return filteredDemoData;
             }
         }
 
@@ -2105,7 +2192,7 @@
                 box.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-receipt"></i>
-                        <div>No invoices found</div>
+                        <div>No invoices found for your shop</div>
                     </div>
                 `;
                 return;
