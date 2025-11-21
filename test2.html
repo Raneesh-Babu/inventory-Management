@@ -1211,10 +1211,7 @@
                     <div class="meta-label">Invoice Date</div>
                     <div class="meta-value" id="invDate">-</div>
                 </div>
-                <div class="invoice-meta-item">
-                    <div class="meta-label">Shop ID</div>
-                    <div class="meta-value" id="shopID">-</div>
-                </div>
+                <!-- ShopID section has been removed -->
                 <div class="invoice-meta-item">
                     <div class="meta-label">Supplier ID</div>
                     <div class="meta-value" id="supID">-</div>
@@ -1413,7 +1410,7 @@
 
         const API_KEY = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
         const INVOICE_TABLE_ID = 745465;
-        const SUPPLIER_TABLE_ID = 744412;
+        const SUPPLIER_TABLE_ID = 74412;
         const SUPPLIER_DETAILS_FIELD_ID = 6271136;
         
         const INVOICE_API_URL = `https://api.baserow.io/api/database/rows/table/${INVOICE_TABLE_ID}/?user_field_names=true`;
@@ -2132,7 +2129,7 @@
         async function openInvoice(row) {
             document.getElementById("invNum").innerText = row["Invoice Number"] || 'N/A';
             document.getElementById("invDate").innerText = formatDate(row["Date"]);
-            document.getElementById("shopID").innerText = row["ShopID"] || 'N/A';
+            // ShopID has been removed from display
             document.getElementById("supID").innerText = row["Supplier ID"] || 'N/A';
 
             document.getElementById("supName").innerText = row["Supplier Name"] || 'N/A';
