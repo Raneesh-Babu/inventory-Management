@@ -530,6 +530,11 @@
             color: var(--gray-900);
         }
 
+        /* Hide ShopID section in invoice meta grid */
+        .invoice-meta-item:nth-child(3) {
+            display: none;
+        }
+
         .invoice-parties {
             display: grid;
             grid-template-columns: 1fr;
@@ -1211,7 +1216,7 @@
                     <div class="meta-label">Invoice Date</div>
                     <div class="meta-value" id="invDate">-</div>
                 </div>
-                <!-- ShopID section has been removed -->
+                <!-- ShopID section is now hidden -->
                 <div class="invoice-meta-item">
                     <div class="meta-label">Supplier ID</div>
                     <div class="meta-value" id="supID">-</div>
@@ -2129,7 +2134,7 @@
         async function openInvoice(row) {
             document.getElementById("invNum").innerText = row["Invoice Number"] || 'N/A';
             document.getElementById("invDate").innerText = formatDate(row["Date"]);
-            // ShopID has been removed from display
+            // ShopID is now hidden from display
             document.getElementById("supID").innerText = row["Supplier ID"] || 'N/A';
 
             document.getElementById("supName").innerText = row["Supplier Name"] || 'N/A';
