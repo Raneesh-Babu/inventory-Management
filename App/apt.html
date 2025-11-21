@@ -108,9 +108,10 @@
     box-shadow: var(--box-shadow);
     width: 90%;
     max-width: 450px;
-    padding: 30px;
+    padding: 40px 30px;
     text-align: center;
     animation: modalFadeIn 0.3s ease;
+    border-left: 6px solid var(--danger);
   }
 
   .block-icon {
@@ -133,10 +134,11 @@
     font-size: 16px;
   }
 
-  .block-redirect {
-    color: var(--gray-600);
+  .block-timer {
     font-size: 14px;
+    color: var(--gray-600);
     margin-top: 15px;
+    font-weight: 500;
   }
 
   /* Sidebar Navigation */
@@ -152,7 +154,7 @@
   }
 
   .sidebar.collapsed {
-    width: 70px;
+    width: 100px;
   }
 
   .sidebar.collapsed .nav-text,
@@ -761,10 +763,11 @@
       </div>
       <div class="block-title">Account Blocked</div>
       <div class="block-message">
-        Your account has been temporarily blocked. Please contact your administrator for more information.
+        Your account has been temporarily blocked for security reasons. 
+        Please contact your administrator for assistance.
       </div>
-      <div class="block-redirect">
-        Redirecting to login page...
+      <div class="block-timer" id="blockTimer">
+        Redirecting to login in <span id="countdown">5</span> seconds...
       </div>
     </div>
   </div>
@@ -832,6 +835,12 @@
       <a href="Inv.html" class="nav-item" data-page="Add Inventory">
         <div class="nav-icon"><i class="fas fa-boxes"></i></div>
         <div class="nav-text">Add Inventory</div>
+      </a>
+      
+      <!-- NEW PURCHASE HISTORY MENU ITEM -->
+      <a href="https://inventomobile.netlify.app/app/purchase" class="nav-item" data-page="Purchase History">
+        <div class="nav-icon"><i class="fas fa-history"></i></div>
+        <div class="nav-text">Purchase History</div>
       </a>
       
       <a href="invdash.html" class="nav-item" data-page="Inventory Report">
@@ -936,7 +945,10 @@ const iframeWrapper = document.getElementById('iframeWrapper');
 const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
+
+// Block Modal elements
 const blockModal = document.getElementById('blockModal');
+const blockTimer = document.getElementById('countdown');
 
 // Logout Modal elements
 const logoutModal = document.getElementById('logoutModal');
@@ -944,12 +956,12 @@ const cancelLogout = document.getElementById('cancelLogout');
 const confirmLogout = document.getElementById('confirmLogout');
 
 // API Configuration
-const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
-const TABLE_ID = '729979';
-const BASE_URL = 'https://api.baserow.io/api/database/rows/table';
+const BASEROW_API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+const BASEROW_TABLE_ID = '729979';
+const BASEROW_API_URL = `https://api.baserow.io/api/database/rows/table/${BASEROW_TABLE_ID}/?user_field_names=true`;
 
-// Background validation interval
-let validationInterval;
+// Background check interval
+let blockCheckInterval = null;
 
 // Authentication check
 function checkAuthentication() {
@@ -970,91 +982,10 @@ function checkAuthentication() {
   appContainer.classList.remove('unauthorized');
   sidebar.style.display = 'flex';
   
-  // Start background validation
-  startBackgroundValidation();
+  // Start background block check
+  startBlockCheck();
   
   return true;
-}
-
-// Start background validation every second
-function startBackgroundValidation() {
-  // Run immediately first time
-  validateUserBlockStatus();
-  
-  // Then run every second
-  validationInterval = setInterval(validateUserBlockStatus, 1000);
-}
-
-// Stop background validation
-function stopBackgroundValidation() {
-  if (validationInterval) {
-    clearInterval(validationInterval);
-    validationInterval = null;
-  }
-}
-
-// Validate user block status from Baserow
-async function validateUserBlockStatus() {
-  try {
-    const mobileTag = localStorage.getItem('MobileTag');
-    const shopIDTag = localStorage.getItem('ShopIDTag');
-    
-    if (!mobileTag || !shopIDTag) {
-      console.log('Missing required user data for validation');
-      return;
-    }
-    
-    // Fetch user data from Baserow
-    const response = await fetch(
-      `${BASE_URL}/${TABLE_ID}/?user_field_names=true&filter__Username=${mobileTag}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Token ${API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    if (!response.ok) {
-      console.error('Failed to fetch user data from Baserow');
-      return;
-    }
-    
-    const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      const user = data.results[0];
-      
-      // Check if ShopID matches and Block is true
-      if (user.ShopID === shopIDTag && user.Block === true) {
-        console.log('User is blocked, showing block modal');
-        showBlockModal();
-        stopBackgroundValidation();
-      }
-    }
-  } catch (error) {
-    console.error('Error validating user block status:', error);
-  }
-}
-
-// Show block modal and redirect
-function showBlockModal() {
-  // Hide all navigation and sidebar
-  sidebar.style.display = 'none';
-  document.querySelector('.top-bar').style.display = 'none';
-  document.querySelector('.iframe-container').style.display = 'none';
-  
-  // Show block modal
-  blockModal.classList.add('active');
-  
-  // Clear all localStorage data
-  localStorage.clear();
-  
-  // Redirect to login after 3 seconds
-  setTimeout(() => {
-    window.location.href = 'login.html';
-  }, 3000);
 }
 
 // Initialize authentication check on page load
@@ -1085,6 +1016,110 @@ function updateUserInterface() {
     const shopName = shopParts[0] || 'Shop';
     shopBadge.innerHTML = `Shop: ${shopName}`;
   }
+}
+
+// Background block check function
+async function checkUserBlockStatus() {
+  try {
+    const mobileTag = localStorage.getItem('MobileTag');
+    const shopIDTag = localStorage.getItem('ShopIDTag');
+    
+    if (!mobileTag || !shopIDTag) {
+      console.log('Missing user data in localStorage');
+      return;
+    }
+    
+    // Fetch user data from Baserow
+    const response = await fetch(BASEROW_API_URL, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${BASEROW_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Find user with matching mobile number and shop ID
+    const user = data.results.find(user => 
+      user.Username === mobileTag && user.ShopID === shopIDTag
+    );
+    
+    if (user) {
+      console.log('User found in database:', user);
+      
+      // Check if user is blocked
+      if (user.Block === true) {
+        console.log('User is blocked, showing block modal');
+        showBlockModal();
+        return true;
+      } else {
+        console.log('User is not blocked');
+        return false;
+      }
+    } else {
+      console.log('User not found in database');
+      // User not found in database, block access
+      showBlockModal();
+      return true;
+    }
+  } catch (error) {
+    console.error('Error checking user block status:', error);
+    // In case of error, don't block the user to avoid false positives
+    return false;
+  }
+}
+
+// Start background block check
+function startBlockCheck() {
+  // Run immediately
+  checkUserBlockStatus();
+  
+  // Then run every second
+  blockCheckInterval = setInterval(async () => {
+    const isBlocked = await checkUserBlockStatus();
+    if (isBlocked) {
+      // Stop checking if user is blocked
+      clearInterval(blockCheckInterval);
+    }
+  }, 30000);
+}
+
+// Show block modal and redirect
+function showBlockModal() {
+  // Hide all navigation and sidebar
+  sidebar.style.display = 'none';
+  document.querySelector('.top-bar').style.display = 'none';
+  document.querySelector('.main-content').style.display = 'none';
+  
+  // Show block modal
+  blockModal.classList.add('active');
+  
+  // Clear localStorage
+  localStorage.clear();
+  
+  // Start countdown for redirect
+  let countdown = 5;
+  const countdownElement = document.getElementById('countdown');
+  
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    countdownElement.textContent = countdown;
+    
+    if (countdown <= 0) {
+      clearInterval(countdownInterval);
+      redirectToLogin();
+    }
+  }, 1000);
+}
+
+// Redirect to login page
+function redirectToLogin() {
+  window.location.href = 'login.html';
 }
 
 // Listen for authentication changes from iframe (login success)
@@ -1355,11 +1390,13 @@ function hideLogoutModal() {
 
 // Logout functionality
 function performLogout() {
-  // Stop background validation
-  stopBackgroundValidation();
-  
   // Clear all localStorage data
   localStorage.clear();
+  
+  // Stop block check interval
+  if (blockCheckInterval) {
+    clearInterval(blockCheckInterval);
+  }
   
   // Hide the modal
   hideLogoutModal();
