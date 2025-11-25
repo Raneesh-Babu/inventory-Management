@@ -681,7 +681,8 @@
         let totalCGST = 0;
         let totalTaxAmount = 0;
         
-        for (const row of invoiceRows) {
+        // FIXED: Added index parameter to forEach
+        invoiceRows.forEach((row, index) => {
           const product = productData.results.find(
             p => p["Product ID"] === row["Product ID"]
           );
@@ -720,10 +721,14 @@
               <td>₹${total.toFixed(2)}</td>
             </tr>
           `;
-        }
+        });
 
         tableHTML += `</tbody></table>`;
         itemsDiv.innerHTML = tableHTML;
+        
+        // Calculate effective tax percentage for display
+        const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+          (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
         
         // Create tax breakdown
         const taxDetailsHTML = `
@@ -733,11 +738,11 @@
               <span class="tax-value">₹${totalTaxableAmount.toFixed(2)}</span>
             </div>
             <div class="tax-row">
-              <span class="tax-label">SGST (${(totalTaxAmount/2/totalTaxableAmount*100).toFixed(2)}%):</span>
+              <span class="tax-label">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
               <span class="tax-value">₹${totalSGST.toFixed(2)}</span>
             </div>
             <div class="tax-row">
-              <span class="tax-label">CGST (${(totalTaxAmount/2/totalTaxableAmount*100).toFixed(2)}%):</span>
+              <span class="tax-label">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
               <span class="tax-value">₹${totalCGST.toFixed(2)}</span>
             </div>
             <div class="tax-row">
