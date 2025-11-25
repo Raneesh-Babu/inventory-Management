@@ -43,12 +43,6 @@
     }
     
     .dashboard-header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: white;
-      padding: 20px;
-      border-radius: var(--border-radius);
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
       display: none; /* Hidden as requested */
     }
     
@@ -90,45 +84,6 @@
     .gross-margin { color: var(--info); }
     .total-invoices { color: var(--secondary); }
     .tax-savings { color: var(--warning); }
-    
-    .profit-explanation {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
-    }
-    
-    .explanation-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      color: var(--primary);
-    }
-    
-    .calculation-steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 15px;
-    }
-    
-    .calculation-step {
-      padding: 15px;
-      background: var(--light);
-      border-radius: var(--border-radius);
-      border-left: 4px solid var(--primary);
-    }
-    
-    .step-title {
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--dark);
-    }
-    
-    .step-value {
-      font-weight: 700;
-      color: var(--primary);
-    }
     
     .tables-container {
       display: grid;
@@ -294,10 +249,6 @@
       .tables-container {
         grid-template-columns: 1fr;
       }
-      
-      .calculation-steps {
-        grid-template-columns: 1fr;
-      }
     }
     
     @media (max-width: 768px) {
@@ -337,10 +288,6 @@
       .data-table th, .data-table td {
         padding: 8px 10px;
         font-size: 12px;
-      }
-      
-      .profit-explanation {
-        padding: 15px;
       }
     }
     
@@ -393,32 +340,6 @@
       <button class="refresh-btn" id="refreshBtn">
         <span id="btnText">Refresh Data</span>
       </button>
-    </div>
-
-    <div class="profit-explanation">
-      <div class="explanation-title">How Real Profit is Calculated</div>
-      <div class="calculation-steps">
-        <div class="calculation-step">
-          <div class="step-title">Purchase Price (Incl. Tax)</div>
-          <div class="step-value" id="purchasePriceEx">₹0.00</div>
-          <small>You already paid tax on this amount</small>
-        </div>
-        <div class="calculation-step">
-          <div class="step-title">Selling Price (Incl. Tax)</div>
-          <div class="step-value" id="sellingPriceEx">₹0.00</div>
-          <small>Customer pays tax on this amount</small>
-        </div>
-        <div class="calculation-step">
-          <div class="step-title">Tax You Need to Pay</div>
-          <div class="step-value" id="taxToPayEx">₹0.00</div>
-          <small>Only on the profit margin</small>
-        </div>
-        <div class="calculation-step">
-          <div class="step-title">Real Profit</div>
-          <div class="step-value positive" id="realProfitEx">₹0.00</div>
-          <small>After accounting for purchase tax</small>
-        </div>
-      </div>
     </div>
 
     <div class="stats-grid">
@@ -513,7 +434,6 @@
     let allSalesData = [];
     let allProductData = [];
     let filteredSalesData = [];
-    let filteredProductData = [];
     
     // Pagination variables
     let currentInvoicePage = 1;
@@ -522,8 +442,6 @@
 
     // Initialize the dashboard
     document.addEventListener('DOMContentLoaded', function() {
-      loadShopInfo();
-      setDefaultDates();
       setupEventListeners();
       loadDashboardData();
     });
@@ -534,70 +452,6 @@
       document.getElementById('productFilter').addEventListener('change', applyFilters);
       document.getElementById('invoiceFilter').addEventListener('change', applyFilters);
       document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
-      
-      // Date range filters
-      document.getElementById('startDate').addEventListener('change', applyFilters);
-      document.getElementById('endDate').addEventListener('change', applyFilters);
-    }
-
-    function setDefaultDates() {
-      const today = new Date();
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      
-      // Create date inputs if they don't exist
-      if (!document.getElementById('startDate')) {
-        const filters = document.querySelector('.filters');
-        const dateRangeDiv = document.createElement('div');
-        dateRangeDiv.className = 'date-range';
-        dateRangeDiv.innerHTML = `
-          <input type="date" id="startDate" class="filter-select" placeholder="Start Date">
-          <span>to</span>
-          <input type="date" id="endDate" class="filter-select" placeholder="End Date">
-        `;
-        filters.insertBefore(dateRangeDiv, document.getElementById('refreshBtn'));
-      }
-      
-      document.getElementById('startDate').valueAsDate = firstDay;
-      document.getElementById('endDate').valueAsDate = today;
-    }
-
-    function parseShopTag(shopTag) {
-      let shopName = "Your Shop";
-      let address = "Address not available";
-      let phone = "Phone not available";
-      
-      if (shopTag) {
-        const firstSplit = shopTag.split('-');
-        
-        if (firstSplit.length > 1) {
-          shopName = firstSplit[0].trim();
-          const secondSplit = firstSplit[1].split('/');
-          
-          if (secondSplit.length > 1) {
-            address = secondSplit[0].trim();
-            phone = secondSplit[1].trim();
-          } else {
-            address = firstSplit[1].trim();
-          }
-        } else {
-          shopName = shopTag.trim();
-        }
-      }
-      
-      return { shopName, address, phone };
-    }
-
-    function loadShopInfo() {
-      const shopIDTag = localStorage.getItem("ShopIDTag");
-      const shopTagValue = localStorage.getItem("ShopTag") || "Your Shop";
-      
-      const shopInfo = parseShopTag(shopTagValue);
-      
-      if (shopIDTag) {
-        document.getElementById('shopTag').textContent = shopIDTag;
-      } else {
-        document.getElementById('shopTag').textContent = "Not Set";
-      }
     }
 
     function calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage) {
@@ -689,19 +543,6 @@
         filteredData = filteredData.filter(row => row["Invoice Number"] === invoiceFilter);
       }
       
-      // Apply date range filter
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-      if (startDate && endDate) {
-        filteredData = filteredData.filter(row => {
-          const rowDate = new Date(row["Date"]);
-          const start = new Date(startDate);
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999); // Include entire end date
-          return rowDate >= start && rowDate <= end;
-        });
-      }
-      
       filteredSalesData = filteredData;
       
       // Calculate and display dashboard metrics
@@ -758,12 +599,6 @@
       const invoiceMap = new Map();
       const productMap = new Map();
 
-      // Example calculation for demonstration
-      let examplePurchasePrice = 0;
-      let exampleSellingPrice = 0;
-      let exampleTaxPercentage = 0;
-      let exampleQuantity = 0;
-
       // Process each sale record
       salesData.forEach(sale => {
         const product = productData.find(p => p["Product ID"] === sale["Product ID"]);
@@ -773,14 +608,6 @@
         const sellingPrice = Number(sale["Price"]) || 0;
         const purchasePrice = Number(product["Purchase Price"]) || 0;
         const taxPercentage = Number(product["Tax Percentage"]) || 0;
-        
-        // Store example values for demonstration
-        if (examplePurchasePrice === 0) {
-          examplePurchasePrice = purchasePrice;
-          exampleSellingPrice = sellingPrice;
-          exampleTaxPercentage = taxPercentage;
-          exampleQuantity = quantity;
-        }
         
         // Calculate real profit
         const profitData = calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage);
@@ -845,15 +672,6 @@
       document.getElementById('grossMargin').textContent = `₹${totalGrossProfit.toFixed(2)}`;
       document.getElementById('taxSavings').textContent = `₹${totalTaxSavings.toFixed(2)}`;
       document.getElementById('totalInvoices').textContent = invoiceCount;
-
-      // Update example calculation
-      if (examplePurchasePrice > 0) {
-        const exampleProfit = calculateRealProfit(examplePurchasePrice, exampleSellingPrice, exampleQuantity, exampleTaxPercentage);
-        document.getElementById('purchasePriceEx').textContent = `₹${(examplePurchasePrice * exampleQuantity).toFixed(2)}`;
-        document.getElementById('sellingPriceEx').textContent = `₹${(exampleSellingPrice * exampleQuantity).toFixed(2)}`;
-        document.getElementById('taxToPayEx').textContent = `₹${exampleProfit.taxToPay.toFixed(2)}`;
-        document.getElementById('realProfitEx').textContent = `₹${exampleProfit.realProfit.toFixed(2)}`;
-      }
 
       // Update tables with pagination
       updateInvoiceTable(Array.from(invoiceMap.values()));
