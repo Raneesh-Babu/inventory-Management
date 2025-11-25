@@ -253,6 +253,35 @@
       color: var(--primary);
     }
     
+    .tax-details {
+      margin-top: 15px;
+      padding: 15px;
+      background: white;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
+    }
+    
+    .tax-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .tax-row:last-child {
+      border-bottom: none;
+    }
+    
+    .tax-label {
+      font-weight: 500;
+      color: var(--gray);
+    }
+    
+    .tax-value {
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
     .print-btn {
       display: block;
       margin: 40px auto 10px;
@@ -323,6 +352,10 @@
       .items-table th,
       .items-table td {
         padding: 14px 12px;
+      }
+      
+      .tax-details {
+        padding: 10px;
       }
     }
     
@@ -493,6 +526,32 @@
       }
     }
 
+    function calculateTaxes(price, quantity, taxPercentage, taxIncluded) {
+      const totalAmount = price * quantity;
+      let taxableAmount, taxAmount, sgst, cgst;
+      
+      if (taxIncluded) {
+        // If tax is included in the price
+        taxableAmount = totalAmount / (1 + (taxPercentage / 100));
+        taxAmount = totalAmount - taxableAmount;
+      } else {
+        // If tax is not included in the price
+        taxableAmount = totalAmount;
+        taxAmount = taxableAmount * (taxPercentage / 100);
+      }
+      
+      // Split tax equally between SGST and CGST
+      sgst = taxAmount / 2;
+      cgst = taxAmount / 2;
+      
+      return {
+        taxableAmount,
+        taxAmount,
+        sgst,
+        cgst
+      };
+    }
+
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
@@ -606,6 +665,10 @@
                 <th>Batch No</th>
                 <th>Quantity</th>
                 <th>Price</th>
+                <th>Tax %</th>
+                <th>Taxable Amount</th>
+                <th>SGST</th>
+                <th>CGST</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -613,13 +676,35 @@
         `;
 
         let grandTotal = 0;
+        let totalTaxableAmount = 0;
+        let totalSGST = 0;
+        let totalCGST = 0;
+        let totalTaxAmount = 0;
+        
+        // FIXED: Added index parameter to forEach
         invoiceRows.forEach((row, index) => {
           const product = productData.results.find(
             p => p["Product ID"] === row["Product ID"]
           );
+          
           const productName = product ? product["Product Name"] : "Not Found";
-          const total = (Number(row["Quantity"]) || 0) * (Number(row["Price"]) || 0);
+          const quantity = Number(row["Quantity"]) || 0;
+          const price = Number(row["Price"]) || 0;
+          
+          // Get tax details from product table
+          const taxIncluded = product ? product["Tax Included"] : false;
+          const taxPercentage = product ? Number(product["Tax Percentage"]) || 0 : 0;
+          
+          // Calculate taxes
+          const taxes = calculateTaxes(price, quantity, taxPercentage, taxIncluded);
+          
+          const total = taxes.taxableAmount + taxes.taxAmount;
+          
           grandTotal += total;
+          totalTaxableAmount += taxes.taxableAmount;
+          totalSGST += taxes.sgst;
+          totalCGST += taxes.cgst;
+          totalTaxAmount += taxes.taxAmount;
 
           tableHTML += `
             <tr>
@@ -627,8 +712,12 @@
               <td>${productName}</td>
               <td>${row["Product ID"]}</td>
               <td>${row["Batch No"]}</td>
-              <td>${row["Quantity"]}</td>
-              <td>₹${Number(row["Price"]).toFixed(2)}</td>
+              <td>${quantity}</td>
+              <td>₹${price.toFixed(2)}</td>
+              <td>${taxPercentage}%</td>
+              <td>₹${taxes.taxableAmount.toFixed(2)}</td>
+              <td>₹${taxes.sgst.toFixed(2)}</td>
+              <td>₹${taxes.cgst.toFixed(2)}</td>
               <td>₹${total.toFixed(2)}</td>
             </tr>
           `;
@@ -636,7 +725,38 @@
 
         tableHTML += `</tbody></table>`;
         itemsDiv.innerHTML = tableHTML;
-        totalDiv.innerHTML = `<div class="total-amount">Grand Total: ₹${grandTotal.toFixed(2)}</div>`;
+        
+        // Calculate effective tax percentage for display
+        const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+          (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
+        
+        // Create tax breakdown
+        const taxDetailsHTML = `
+          <div class="tax-details">
+            <div class="tax-row">
+              <span class="tax-label">Taxable Amount:</span>
+              <span class="tax-value">₹${totalTaxableAmount.toFixed(2)}</span>
+            </div>
+            <div class="tax-row">
+              <span class="tax-label">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+              <span class="tax-value">₹${totalSGST.toFixed(2)}</span>
+            </div>
+            <div class="tax-row">
+              <span class="tax-label">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+              <span class="tax-value">₹${totalCGST.toFixed(2)}</span>
+            </div>
+            <div class="tax-row">
+              <span class="tax-label">Total Tax:</span>
+              <span class="tax-value">₹${totalTaxAmount.toFixed(2)}</span>
+            </div>
+          </div>
+        `;
+        
+        totalDiv.innerHTML = `
+          ${taxDetailsHTML}
+          <div class="total-amount" style="margin-top: 20px;">Grand Total: ₹${grandTotal.toFixed(2)}</div>
+        `;
+        
         printBtn.style.display = "block";
         
         // Add fade-in animation
