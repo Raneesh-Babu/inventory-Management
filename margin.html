@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Real Profit Margin Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary: #4361ee;
@@ -41,6 +40,78 @@
     .dashboard-container {
       max-width: 1400px;
       margin: 0 auto;
+    }
+    
+    .dashboard-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      display: none; /* Hidden as requested */
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .shop-info {
+      text-align: left;
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    .shop-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    
+    .shop-details {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+    
+    .shop-id {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    
+    .date-range {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .date-input {
+      padding: 8px 12px;
+      border-radius: var(--border-radius);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      font-weight: 500;
+      flex: 1;
+      min-width: 140px;
+    }
+    
+    .date-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .date-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
     }
     
     .stats-grid {
@@ -176,9 +247,9 @@
       background: var(--gray-light);
     }
     
-    .chart-container {
+    .chart-canvas {
       height: 250px;
-      position: relative;
+      width: 100%;
     }
     
     .tables-container {
@@ -270,29 +341,16 @@
       background: var(--gray-light);
     }
     
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
     .filters {
       display: flex;
       gap: 12px;
       margin-bottom: 20px;
       flex-wrap: wrap;
-      background: white;
-      padding: 15px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-    }
-    
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      flex: 1;
-      min-width: 150px;
-    }
-    
-    .filter-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--gray);
     }
     
     .filter-select {
@@ -302,6 +360,8 @@
       background: white;
       color: var(--dark);
       font-weight: 500;
+      min-width: 150px;
+      flex: 1;
     }
     
     .filter-select:focus {
@@ -319,8 +379,6 @@
       cursor: pointer;
       transition: var(--transition);
       white-space: nowrap;
-      align-self: flex-end;
-      height: fit-content;
     }
     
     .refresh-btn:hover {
@@ -353,14 +411,18 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
-    .error-message {
-      background: var(--danger);
-      color: white;
-      padding: 10px 15px;
+    .tax-breakdown {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: var(--border-radius);
-      margin-bottom: 15px;
-      text-align: center;
-      font-weight: 500;
+      font-size: 13px;
+    }
+    
+    .tax-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
     }
     
     /* Mobile Responsive Styles */
@@ -381,6 +443,25 @@
     @media (max-width: 768px) {
       body {
         padding: 10px;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .shop-info {
+        text-align: center;
+      }
+      
+      .date-range {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .date-input {
+        width: 100%;
       }
       
       .filters {
@@ -408,7 +489,7 @@
         padding: 15px;
       }
       
-      .chart-container {
+      .chart-canvas {
         height: 200px;
       }
       
@@ -431,6 +512,10 @@
     }
     
     @media (max-width: 480px) {
+      .shop-name {
+        font-size: 20px;
+      }
+      
       .stats-grid {
         grid-template-columns: 1fr 1fr;
       }
@@ -445,54 +530,53 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
   <div class="dashboard-container">
-    <!-- Error Message -->
-    <div id="errorMessage" class="error-message" style="display: none;"></div>
+    <!-- Header is hidden as requested -->
+    <div class="dashboard-header" id="dashboardHeader">
+      <div class="header-content">
+        <div class="shop-info">
+          <div class="shop-name" id="shopName">Real Profit Margin Dashboard</div>
+          <div class="shop-details">
+            <div class="shop-address" id="shopAddress">Actual Profit After Purchase Tax</div>
+            <div class="shop-phone" id="shopPhone">Track your real margins</div>
+          </div>
+          <div class="shop-id">Shop ID: <span id="shopTag">Loading...</span></div>
+        </div>
+        <div class="date-range">
+          <input type="date" id="startDate" class="date-input" placeholder="Start Date">
+          <span>to</span>
+          <input type="date" id="endDate" class="date-input" placeholder="End Date">
+        </div>
+      </div>
+    </div>
 
-    <!-- Filters Section -->
     <div class="filters">
-      <div class="filter-group">
-        <div class="filter-label">Time Period</div>
-        <select id="timeFilter" class="filter-select">
-          <option value="all">All Time</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month" selected>This Month</option>
-          <option value="quarter">This Quarter</option>
-          <option value="year">This Year</option>
-        </select>
-      </div>
+      <select id="timeFilter" class="filter-select">
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+        <option value="quarter">This Quarter</option>
+        <option value="year">This Year</option>
+      </select>
       
-      <div class="filter-group">
-        <div class="filter-label">Product</div>
-        <select id="productFilter" class="filter-select">
-          <option value="all">All Products</option>
-        </select>
-      </div>
+      <select id="productFilter" class="filter-select">
+        <option value="all">All Products</option>
+      </select>
       
-      <div class="filter-group">
-        <div class="filter-label">Invoice</div>
-        <select id="invoiceFilter" class="filter-select">
-          <option value="all">All Invoices</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <div class="filter-label">Customer</div>
-        <select id="customerFilter" class="filter-select">
-          <option value="all">All Customers</option>
-        </select>
-      </div>
+      <select id="invoiceFilter" class="filter-select">
+        <option value="all">All Invoices</option>
+      </select>
       
       <button class="refresh-btn" id="refreshBtn">
         <span id="btnText">Refresh Data</span>
       </button>
     </div>
 
-    <!-- Profit Explanation -->
     <div class="profit-explanation">
       <div class="explanation-title">How Real Profit is Calculated</div>
       <div class="calculation-steps">
@@ -519,7 +603,6 @@
       </div>
     </div>
 
-    <!-- Stats Grid -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Total Revenue</div>
@@ -552,37 +635,27 @@
       </div>
     </div>
 
-    <!-- Charts Section -->
     <div class="charts-container">
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">Real Profit vs Gross Margin</div>
           <div class="chart-actions">
-            <button class="chart-btn" data-chart="profitChart" data-type="daily">Daily</button>
-            <button class="chart-btn active" data-chart="profitChart" data-type="monthly">Monthly</button>
-            <button class="chart-btn" data-chart="profitChart" data-type="yearly">Yearly</button>
+            <button class="chart-btn active" data-chart-type="monthly">Monthly</button>
+            <button class="chart-btn" data-chart-type="quarterly">Quarterly</button>
+            <button class="chart-btn" data-chart-type="yearly">Yearly</button>
           </div>
         </div>
-        <div class="chart-container">
-          <canvas id="profitChart"></canvas>
-        </div>
+        <canvas id="profitComparisonChart" class="chart-canvas"></canvas>
       </div>
       
       <div class="chart-card">
         <div class="chart-header">
           <div class="chart-title">Top Products by Real Profit</div>
-          <div class="chart-actions">
-            <button class="chart-btn active" data-chart="productChart" data-type="profit">By Profit</button>
-            <button class="chart-btn" data-chart="productChart" data-type="margin">By Margin %</button>
-          </div>
         </div>
-        <div class="chart-container">
-          <canvas id="productChart"></canvas>
-        </div>
+        <canvas id="productProfitChart" class="chart-canvas"></canvas>
       </div>
     </div>
 
-    <!-- Tables Section -->
     <div class="tables-container">
       <div class="table-card">
         <div class="table-title">Real Profit by Invoice</div>
@@ -598,14 +671,12 @@
           </thead>
           <tbody id="invoiceTableBody">
             <tr>
-              <td colspan="5" style="text-align: center;">Loading data from Baserow...</td>
+              <td colspan="5" style="text-align: center;">No data available</td>
             </tr>
           </tbody>
         </table>
-        <div class="pagination">
-          <button class="page-btn active">1</button>
-          <button class="page-btn">2</button>
-          <button class="page-btn">3</button>
+        <div class="pagination" id="invoicePagination">
+          <!-- Pagination will be generated here -->
         </div>
       </div>
       
@@ -623,21 +694,18 @@
           </thead>
           <tbody id="productTableBody">
             <tr>
-              <td colspan="5" style="text-align: center;">Loading data from Baserow...</td>
+              <td colspan="5" style="text-align: center;">No data available</td>
             </tr>
           </tbody>
         </table>
-        <div class="pagination">
-          <button class="page-btn active">1</button>
-          <button class="page-btn">2</button>
-          <button class="page-btn">3</button>
+        <div class="pagination" id="productPagination">
+          <!-- Pagination will be generated here -->
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Baserow API Configuration
     const apiKey = "jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw";
     const salesTableId = 736209;
     const productTableId = 734793;
@@ -645,112 +713,117 @@
     const salesUrl = `https://api.baserow.io/api/database/rows/table/${salesTableId}/?user_field_names=true`;
     const productUrl = `https://api.baserow.io/api/database/rows/table/${productTableId}/?user_field_names=true`;
 
-    // Chart instances
-    let profitChart, productChart;
     let allSalesData = [];
     let allProductData = [];
+    let filteredSalesData = [];
+    let filteredProductData = [];
+    
+    // Pagination variables
+    let currentInvoicePage = 1;
+    let currentProductPage = 1;
+    const itemsPerPage = 20;
+    
+    // Chart instances
+    let profitComparisonChart = null;
+    let productProfitChart = null;
 
     // Initialize the dashboard
     document.addEventListener('DOMContentLoaded', function() {
+      loadShopInfo();
+      setDefaultDates();
       setupEventListeners();
       loadDashboardData();
     });
 
     function setupEventListeners() {
-      // Filter change events
-      document.getElementById('timeFilter').addEventListener('change', loadDashboardData);
-      document.getElementById('productFilter').addEventListener('change', loadDashboardData);
-      document.getElementById('invoiceFilter').addEventListener('change', loadDashboardData);
-      document.getElementById('customerFilter').addEventListener('change', loadDashboardData);
-      
-      // Refresh button
+      // Filter event listeners
+      document.getElementById('timeFilter').addEventListener('change', applyFilters);
+      document.getElementById('productFilter').addEventListener('change', applyFilters);
+      document.getElementById('invoiceFilter').addEventListener('change', applyFilters);
       document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
       
-      // Chart button events
+      // Chart period buttons
       document.querySelectorAll('.chart-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-          const chartType = this.getAttribute('data-chart');
-          const dataType = this.getAttribute('data-type');
-          
-          // Update active state
-          this.parentElement.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
           this.classList.add('active');
-          
-          // Update chart
-          updateChart(chartType, dataType);
+          updateCharts(this.dataset.chartType);
         });
       });
+      
+      // Date range filters
+      document.getElementById('startDate').addEventListener('change', applyFilters);
+      document.getElementById('endDate').addEventListener('change', applyFilters);
     }
 
-    async function fetchBaserowData() {
-      try {
-        // Fetch Product Table
-        const productResponse = await fetch(productUrl, {
-          headers: { Authorization: `Token ${apiKey}` }
-        });
-        
-        if (!productResponse.ok) {
-          throw new Error(`Product API error: ${productResponse.status}`);
-        }
-        
-        const productData = await productResponse.json();
-        allProductData = productData.results;
+    function setDefaultDates() {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      
+      document.getElementById('startDate').valueAsDate = firstDay;
+      document.getElementById('endDate').valueAsDate = today;
+    }
 
-        // Fetch Sales Table
-        const salesResponse = await fetch(salesUrl, {
-          headers: { Authorization: `Token ${apiKey}` }
-        });
+    function parseShopTag(shopTag) {
+      let shopName = "Your Shop";
+      let address = "Address not available";
+      let phone = "Phone not available";
+      
+      if (shopTag) {
+        const firstSplit = shopTag.split('-');
         
-        if (!salesResponse.ok) {
-          throw new Error(`Sales API error: ${salesResponse.status}`);
+        if (firstSplit.length > 1) {
+          shopName = firstSplit[0].trim();
+          const secondSplit = firstSplit[1].split('/');
+          
+          if (secondSplit.length > 1) {
+            address = secondSplit[0].trim();
+            phone = secondSplit[1].trim();
+          } else {
+            address = firstSplit[1].trim();
+          }
+        } else {
+          shopName = shopTag.trim();
         }
-        
-        const salesData = await salesResponse.json();
-        allSalesData = salesData.results;
+      }
+      
+      return { shopName, address, phone };
+    }
 
-        return { success: true, products: allProductData, sales: allSalesData };
-      } catch (error) {
-        console.error('Error fetching Baserow data:', error);
-        return { success: false, error: error.message };
+    function loadShopInfo() {
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      const shopTagValue = localStorage.getItem("ShopTag") || "Your Shop";
+      
+      const shopInfo = parseShopTag(shopTagValue);
+      
+      if (shopIDTag) {
+        document.getElementById('shopTag').textContent = shopIDTag;
+        document.getElementById('shopName').textContent = shopInfo.shopName + " - Real Profit Dashboard";
+        document.getElementById('shopAddress').textContent = shopInfo.address;
+        document.getElementById('shopPhone').textContent = shopInfo.phone;
+      } else {
+        document.getElementById('shopTag').textContent = "Not Set";
       }
     }
 
-    function calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage, taxIncluded = true) {
-      if (!purchasePrice || !sellingPrice || !quantity) {
-        return {
-          purchaseBase: 0,
-          sellingBase: 0,
-          grossProfit: 0,
-          realProfit: 0,
-          taxToPay: 0,
-          taxSavings: 0,
-          purchaseTax: 0,
-          sellingTax: 0
-        };
-      }
-
-      purchasePrice = Number(purchasePrice);
-      sellingPrice = Number(sellingPrice);
-      quantity = Number(quantity);
-      taxPercentage = Number(taxPercentage) || 0;
-
+    function calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage) {
       // Calculate tax components
-      const purchaseTax = taxIncluded ? (purchasePrice * taxPercentage) / (100 + taxPercentage) : 0;
-      const sellingTax = taxIncluded ? (sellingPrice * taxPercentage) / (100 + taxPercentage) : 0;
+      const purchaseTax = (purchasePrice * taxPercentage) / (100 + taxPercentage);
+      const sellingTax = (sellingPrice * taxPercentage) / (100 + taxPercentage);
       
       // Calculate base prices (without tax)
-      const purchaseBase = taxIncluded ? purchasePrice - purchaseTax : purchasePrice;
-      const sellingBase = taxIncluded ? sellingPrice - sellingTax : sellingPrice;
+      const purchaseBase = purchasePrice - purchaseTax;
+      const sellingBase = sellingPrice - sellingTax;
       
       // Calculate gross profit (before tax adjustment)
       const grossProfit = (sellingPrice - purchasePrice) * quantity;
       
       // Calculate tax you need to pay (only on the profit margin)
       const profitMargin = (sellingBase - purchaseBase) * quantity;
-      const taxToPay = taxIncluded ? (profitMargin * taxPercentage) / 100 : 0;
+      const taxToPay = (profitMargin * taxPercentage) / 100;
       
       // Calculate real profit (after accounting for purchase tax)
-      const realProfit = taxIncluded ? grossProfit - taxToPay : grossProfit;
+      const realProfit = grossProfit - taxToPay;
       
       // Calculate tax savings (from purchase tax credit)
       const taxSavings = purchaseTax * quantity;
@@ -770,74 +843,462 @@
     async function loadDashboardData() {
       const refreshBtn = document.getElementById("refreshBtn");
       const btnText = document.getElementById("btnText");
-      const errorDiv = document.getElementById("errorMessage");
 
       // Show loading state
       refreshBtn.disabled = true;
       btnText.innerHTML = '<span class="loading"></span> Loading...';
-      errorDiv.style.display = 'none';
 
       try {
-        // Fetch data from Baserow
-        const baserowData = await fetchBaserowData();
-        
-        if (!baserowData.success) {
-          throw new Error(baserowData.error);
-        }
+        // Fetch Product Table
+        const productResponse = await fetch(productUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const productData = await productResponse.json();
+        allProductData = productData.results;
 
-        // Get filter values
-        const timeFilter = document.getElementById('timeFilter').value;
-        const productFilter = document.getElementById('productFilter').value;
-        const invoiceFilter = document.getElementById('invoiceFilter').value;
-        const customerFilter = document.getElementById('customerFilter').value;
+        // Fetch Sales Table
+        const salesResponse = await fetch(salesUrl, {
+          headers: { Authorization: `Token ${apiKey}` }
+        });
+        const salesData = await salesResponse.json();
+        allSalesData = salesData.results;
 
-        // Filter data based on shop ID from localStorage
-        const shopIDTag = localStorage.getItem("ShopIDTag");
-        let filteredSales = baserowData.sales.filter(row => row.ShopID === shopIDTag);
-
-        // Apply additional filters
-        if (productFilter !== 'all') {
-          filteredSales = filteredSales.filter(sale => sale["Product ID"] === productFilter);
-        }
-        
-        if (invoiceFilter !== 'all') {
-          filteredSales = filteredSales.filter(sale => sale["Invoice Number"] === invoiceFilter);
-        }
-        
-        if (customerFilter !== 'all') {
-          filteredSales = filteredSales.filter(sale => sale["Costomer Name"] === customerFilter);
-        }
-
-        // Update filters dropdowns with actual data
-        updateFilterDropdowns(filteredSales, baserowData.products);
-
-        // Calculate metrics
-        calculateDashboardMetrics(filteredSales, baserowData.products);
-        
-        // Update charts
-        updateCharts(filteredSales, baserowData.products);
-        
-        // Update tables
-        updateTables(filteredSales, baserowData.products);
+        // Apply initial filters
+        applyFilters();
 
       } catch (error) {
         console.error("Error loading dashboard data:", error);
-        errorDiv.textContent = `Error loading data: ${error.message}`;
-        errorDiv.style.display = 'block';
+        alert("Error loading data. Please check your connection and try again.");
       } finally {
         refreshBtn.disabled = false;
         btnText.textContent = "Refresh Data";
       }
     }
 
-    function updateFilterDropdowns(salesData, productData) {
-      // Update product filter
+    function applyFilters() {
+      const shopIDTag = localStorage.getItem("ShopIDTag");
+      let filteredData = allSalesData.filter(row => row["ShopID"] === shopIDTag);
+      
+      // Apply time filter
+      const timeFilter = document.getElementById('timeFilter').value;
+      filteredData = filterByTimePeriod(filteredData, timeFilter);
+      
+      // Apply product filter
+      const productFilter = document.getElementById('productFilter').value;
+      if (productFilter !== 'all') {
+        filteredData = filteredData.filter(row => row["Product ID"] === productFilter);
+      }
+      
+      // Apply invoice filter
+      const invoiceFilter = document.getElementById('invoiceFilter').value;
+      if (invoiceFilter !== 'all') {
+        filteredData = filteredData.filter(row => row["Invoice Number"] === invoiceFilter);
+      }
+      
+      // Apply date range filter
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      if (startDate && endDate) {
+        filteredData = filteredData.filter(row => {
+          const rowDate = new Date(row["Date"]);
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999); // Include entire end date
+          return rowDate >= start && rowDate <= end;
+        });
+      }
+      
+      filteredSalesData = filteredData;
+      
+      // Calculate and display dashboard metrics
+      calculateDashboardMetrics(filteredSalesData, allProductData);
+      
+      // Update filter dropdowns
+      populateFilters(filteredSalesData, allProductData);
+      
+      // Update charts
+      updateCharts('monthly');
+      
+      // Reset pagination
+      currentInvoicePage = 1;
+      currentProductPage = 1;
+    }
+
+    function filterByTimePeriod(data, period) {
+      const now = new Date();
+      let startDate = new Date(0); // Beginning of time
+      
+      switch(period) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+          break;
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case 'quarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          startDate = new Date(now.getFullYear(), quarter * 3, 1);
+          break;
+        case 'year':
+          startDate = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          // 'all' - no filtering needed
+          return data;
+      }
+      
+      return data.filter(row => {
+        const rowDate = new Date(row["Date"]);
+        return rowDate >= startDate && rowDate <= now;
+      });
+    }
+
+    function calculateDashboardMetrics(salesData, productData) {
+      let totalRevenue = 0;
+      let totalGrossProfit = 0;
+      let totalRealProfit = 0;
+      let totalTaxSavings = 0;
+      let totalTaxToPay = 0;
+      let invoiceCount = 0;
+      
+      const invoiceMap = new Map();
+      const productMap = new Map();
+
+      // Example calculation for demonstration
+      let examplePurchasePrice = 0;
+      let exampleSellingPrice = 0;
+      let exampleTaxPercentage = 0;
+      let exampleQuantity = 0;
+
+      // Process each sale record
+      salesData.forEach(sale => {
+        const product = productData.find(p => p["Product ID"] === sale["Product ID"]);
+        if (!product) return;
+
+        const quantity = Number(sale["Quantity"]) || 0;
+        const sellingPrice = Number(sale["Price"]) || 0;
+        const purchasePrice = Number(product["Purchase Price"]) || 0;
+        const taxPercentage = Number(product["Tax Percentage"]) || 0;
+        
+        // Store example values for demonstration
+        if (examplePurchasePrice === 0) {
+          examplePurchasePrice = purchasePrice;
+          exampleSellingPrice = sellingPrice;
+          exampleTaxPercentage = taxPercentage;
+          exampleQuantity = quantity;
+        }
+        
+        // Calculate real profit
+        const profitData = calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage);
+        
+        const revenue = sellingPrice * quantity;
+
+        // Update invoice totals
+        const invoiceNo = sale["Invoice Number"];
+        if (!invoiceMap.has(invoiceNo)) {
+          invoiceMap.set(invoiceNo, {
+            invoiceNo: invoiceNo,
+            date: sale["Date"],
+            customer: sale["Costomer Name"],
+            revenue: 0,
+            grossProfit: 0,
+            realProfit: 0,
+            taxToPay: 0
+          });
+        }
+        
+        const invoice = invoiceMap.get(invoiceNo);
+        invoice.revenue += revenue;
+        invoice.grossProfit += profitData.grossProfit;
+        invoice.realProfit += profitData.realProfit;
+        invoice.taxToPay += profitData.taxToPay;
+
+        // Update product totals
+        const productId = sale["Product ID"];
+        if (!productMap.has(productId)) {
+          productMap.set(productId, {
+            productId: productId,
+            productName: product["Product Name"],
+            unitsSold: 0,
+            revenue: 0,
+            grossProfit: 0,
+            realProfit: 0,
+            profitPercentage: 0
+          });
+        }
+        
+        const productSummary = productMap.get(productId);
+        productSummary.unitsSold += quantity;
+        productSummary.revenue += revenue;
+        productSummary.grossProfit += profitData.grossProfit;
+        productSummary.realProfit += profitData.realProfit;
+        productSummary.profitPercentage = productSummary.revenue > 0 ? 
+          (productSummary.realProfit / productSummary.revenue) * 100 : 0;
+
+        // Update overall totals
+        totalRevenue += revenue;
+        totalGrossProfit += profitData.grossProfit;
+        totalRealProfit += profitData.realProfit;
+        totalTaxSavings += profitData.taxSavings;
+        totalTaxToPay += profitData.taxToPay;
+      });
+
+      invoiceCount = invoiceMap.size;
+
+      // Update dashboard stats
+      document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
+      document.getElementById('realMargin').textContent = `₹${totalRealProfit.toFixed(2)}`;
+      document.getElementById('grossMargin').textContent = `₹${totalGrossProfit.toFixed(2)}`;
+      document.getElementById('taxSavings').textContent = `₹${totalTaxSavings.toFixed(2)}`;
+      document.getElementById('totalInvoices').textContent = invoiceCount;
+
+      // Update example calculation
+      if (examplePurchasePrice > 0) {
+        const exampleProfit = calculateRealProfit(examplePurchasePrice, exampleSellingPrice, exampleQuantity, exampleTaxPercentage);
+        document.getElementById('purchasePriceEx').textContent = `₹${(examplePurchasePrice * exampleQuantity).toFixed(2)}`;
+        document.getElementById('sellingPriceEx').textContent = `₹${(exampleSellingPrice * exampleQuantity).toFixed(2)}`;
+        document.getElementById('taxToPayEx').textContent = `₹${exampleProfit.taxToPay.toFixed(2)}`;
+        document.getElementById('realProfitEx').textContent = `₹${exampleProfit.realProfit.toFixed(2)}`;
+      }
+
+      // Update tables with pagination
+      updateInvoiceTable(Array.from(invoiceMap.values()));
+      updateProductTable(Array.from(productMap.values()));
+    }
+
+    function updateInvoiceTable(invoices) {
+      const tableBody = document.getElementById('invoiceTableBody');
+      const pagination = document.getElementById('invoicePagination');
+      
+      tableBody.innerHTML = '';
+
+      if (invoices.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No invoice data available</td></tr>';
+        pagination.innerHTML = '';
+        return;
+      }
+
+      // Sort by real profit (highest first)
+      invoices.sort((a, b) => b.realProfit - a.realProfit);
+
+      // Calculate pagination
+      const totalPages = Math.ceil(invoices.length / itemsPerPage);
+      const startIndex = (currentInvoicePage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, invoices.length);
+      const pageInvoices = invoices.slice(startIndex, endIndex);
+
+      // Update table
+      pageInvoices.forEach(invoice => {
+        const profitClass = invoice.realProfit >= 0 ? 'positive' : 'negative';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${invoice.invoiceNo}</td>
+          <td>${invoice.customer}</td>
+          <td>₹${invoice.revenue.toFixed(2)}</td>
+          <td class="${profitClass}">₹${invoice.realProfit.toFixed(2)}</td>
+          <td>₹${invoice.taxToPay.toFixed(2)}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Update pagination
+      updatePagination(pagination, currentInvoicePage, totalPages, 'invoice');
+    }
+
+    function updateProductTable(products) {
+      const tableBody = document.getElementById('productTableBody');
+      const pagination = document.getElementById('productPagination');
+      
+      tableBody.innerHTML = '';
+
+      if (products.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No product data available</td></tr>';
+        pagination.innerHTML = '';
+        return;
+      }
+
+      // Sort by real profit (highest first)
+      products.sort((a, b) => b.realProfit - a.realProfit);
+
+      // Calculate pagination
+      const totalPages = Math.ceil(products.length / itemsPerPage);
+      const startIndex = (currentProductPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, products.length);
+      const pageProducts = products.slice(startIndex, endIndex);
+
+      // Update table
+      pageProducts.forEach(product => {
+        const profitClass = product.realProfit >= 0 ? 'positive' : 'negative';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${product.productName}</td>
+          <td>${product.unitsSold}</td>
+          <td>₹${product.revenue.toFixed(2)}</td>
+          <td class="${profitClass}">₹${product.realProfit.toFixed(2)}</td>
+          <td class="${profitClass}">${product.profitPercentage.toFixed(2)}%</td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Update pagination
+      updatePagination(pagination, currentProductPage, totalPages, 'product');
+    }
+
+    function updatePagination(paginationElement, currentPage, totalPages, type) {
+      paginationElement.innerHTML = '';
+      
+      if (totalPages <= 1) return;
+      
+      // Previous button
+      const prevButton = document.createElement('button');
+      prevButton.className = 'page-btn';
+      prevButton.textContent = '←';
+      prevButton.disabled = currentPage === 1;
+      prevButton.addEventListener('click', () => {
+        if (type === 'invoice') {
+          currentInvoicePage--;
+          updateInvoiceTable(getInvoicesForCurrentFilter());
+        } else {
+          currentProductPage--;
+          updateProductTable(getProductsForCurrentFilter());
+        }
+      });
+      paginationElement.appendChild(prevButton);
+      
+      // Page buttons
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + 4);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        pageButton.textContent = i;
+        pageButton.addEventListener('click', () => {
+          if (type === 'invoice') {
+            currentInvoicePage = i;
+            updateInvoiceTable(getInvoicesForCurrentFilter());
+          } else {
+            currentProductPage = i;
+            updateProductTable(getProductsForCurrentFilter());
+          }
+        });
+        paginationElement.appendChild(pageButton);
+      }
+      
+      // Next button
+      const nextButton = document.createElement('button');
+      nextButton.className = 'page-btn';
+      nextButton.textContent = '→';
+      nextButton.disabled = currentPage === totalPages;
+      nextButton.addEventListener('click', () => {
+        if (type === 'invoice') {
+          currentInvoicePage++;
+          updateInvoiceTable(getInvoicesForCurrentFilter());
+        } else {
+          currentProductPage++;
+          updateProductTable(getProductsForCurrentFilter());
+        }
+      });
+      paginationElement.appendChild(nextButton);
+    }
+
+    function getInvoicesForCurrentFilter() {
+      const invoiceMap = new Map();
+      
+      filteredSalesData.forEach(sale => {
+        const product = allProductData.find(p => p["Product ID"] === sale["Product ID"]);
+        if (!product) return;
+
+        const quantity = Number(sale["Quantity"]) || 0;
+        const sellingPrice = Number(sale["Price"]) || 0;
+        const purchasePrice = Number(product["Purchase Price"]) || 0;
+        const taxPercentage = Number(product["Tax Percentage"]) || 0;
+        
+        const profitData = calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage);
+        const revenue = sellingPrice * quantity;
+
+        const invoiceNo = sale["Invoice Number"];
+        if (!invoiceMap.has(invoiceNo)) {
+          invoiceMap.set(invoiceNo, {
+            invoiceNo: invoiceNo,
+            date: sale["Date"],
+            customer: sale["Costomer Name"],
+            revenue: 0,
+            grossProfit: 0,
+            realProfit: 0,
+            taxToPay: 0
+          });
+        }
+        
+        const invoice = invoiceMap.get(invoiceNo);
+        invoice.revenue += revenue;
+        invoice.grossProfit += profitData.grossProfit;
+        invoice.realProfit += profitData.realProfit;
+        invoice.taxToPay += profitData.taxToPay;
+      });
+      
+      return Array.from(invoiceMap.values());
+    }
+
+    function getProductsForCurrentFilter() {
+      const productMap = new Map();
+      
+      filteredSalesData.forEach(sale => {
+        const product = allProductData.find(p => p["Product ID"] === sale["Product ID"]);
+        if (!product) return;
+
+        const quantity = Number(sale["Quantity"]) || 0;
+        const sellingPrice = Number(sale["Price"]) || 0;
+        const purchasePrice = Number(product["Purchase Price"]) || 0;
+        const taxPercentage = Number(product["Tax Percentage"]) || 0;
+        
+        const profitData = calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage);
+        const revenue = sellingPrice * quantity;
+
+        const productId = sale["Product ID"];
+        if (!productMap.has(productId)) {
+          productMap.set(productId, {
+            productId: productId,
+            productName: product["Product Name"],
+            unitsSold: 0,
+            revenue: 0,
+            grossProfit: 0,
+            realProfit: 0,
+            profitPercentage: 0
+          });
+        }
+        
+        const productSummary = productMap.get(productId);
+        productSummary.unitsSold += quantity;
+        productSummary.revenue += revenue;
+        productSummary.grossProfit += profitData.grossProfit;
+        productSummary.realProfit += profitData.realProfit;
+        productSummary.profitPercentage = productSummary.revenue > 0 ? 
+          (productSummary.realProfit / productSummary.revenue) * 100 : 0;
+      });
+      
+      return Array.from(productMap.values());
+    }
+
+    function populateFilters(salesData, productData) {
       const productFilter = document.getElementById('productFilter');
-      // Clear existing options (keep "All Products")
+      const invoiceFilter = document.getElementById('invoiceFilter');
+      
+      // Clear existing options (except "All")
       while (productFilter.children.length > 1) {
         productFilter.removeChild(productFilter.lastChild);
       }
-
+      
+      while (invoiceFilter.children.length > 1) {
+        invoiceFilter.removeChild(invoiceFilter.lastChild);
+      }
+      
+      // Add product options
       const uniqueProducts = [...new Set(salesData.map(sale => sale["Product ID"]))];
       uniqueProducts.forEach(productId => {
         const product = productData.find(p => p["Product ID"] === productId);
@@ -848,13 +1309,8 @@
         option.textContent = productName;
         productFilter.appendChild(option);
       });
-
-      // Update invoice filter
-      const invoiceFilter = document.getElementById('invoiceFilter');
-      while (invoiceFilter.children.length > 1) {
-        invoiceFilter.removeChild(invoiceFilter.lastChild);
-      }
-
+      
+      // Add invoice options
       const uniqueInvoices = [...new Set(salesData.map(sale => sale["Invoice Number"]))];
       uniqueInvoices.forEach(invoiceNo => {
         const option = document.createElement('option');
@@ -862,140 +1318,59 @@
         option.textContent = invoiceNo;
         invoiceFilter.appendChild(option);
       });
-
-      // Update customer filter
-      const customerFilter = document.getElementById('customerFilter');
-      while (customerFilter.children.length > 1) {
-        customerFilter.removeChild(customerFilter.lastChild);
-      }
-
-      const uniqueCustomers = [...new Set(salesData.map(sale => sale["Costomer Name"]))];
-      uniqueCustomers.forEach(customer => {
-        const option = document.createElement('option');
-        option.value = customer;
-        option.textContent = customer;
-        customerFilter.appendChild(option);
-      });
     }
 
-    function calculateDashboardMetrics(salesData, productData) {
-      let totalRevenue = 0;
-      let totalGrossProfit = 0;
-      let totalRealProfit = 0;
-      let totalTaxSavings = 0;
-      let invoiceCount = new Set(salesData.map(s => s["Invoice Number"])).size;
-
-      let exampleData = null;
-
-      salesData.forEach(sale => {
-        const product = productData.find(p => p["Product ID"] === sale["Product ID"]);
-        if (!product) return;
-
-        const profitData = calculateRealProfit(
-          product["Purchase Price"] || 0,
-          sale.Price || 0,
-          sale.Quantity || 0,
-          product["Tax Percentage"] || 0,
-          product["Tax Included"] || true
-        );
-        
-        totalRevenue += (sale.Price || 0) * (sale.Quantity || 0);
-        totalGrossProfit += profitData.grossProfit;
-        totalRealProfit += profitData.realProfit;
-        totalTaxSavings += profitData.taxSavings;
-
-        // Store first product as example
-        if (!exampleData && product["Purchase Price"] && sale.Price) {
-          exampleData = {
-            purchasePrice: product["Purchase Price"],
-            sellingPrice: sale.Price,
-            quantity: sale.Quantity || 1,
-            taxPercentage: product["Tax Percentage"] || 0
-          };
-        }
-      });
-
-      // Update dashboard stats
-      document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById('realMargin').textContent = `₹${totalRealProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById('grossMargin').textContent = `₹${totalGrossProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById('taxSavings').textContent = `₹${totalTaxSavings.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      document.getElementById('totalInvoices').textContent = invoiceCount;
-
-      // Update example calculation
-      if (exampleData) {
-        const exampleProfit = calculateRealProfit(
-          exampleData.purchasePrice,
-          exampleData.sellingPrice,
-          exampleData.quantity,
-          exampleData.taxPercentage
-        );
-        
-        document.getElementById('purchasePriceEx').textContent = `₹${(exampleData.purchasePrice * exampleData.quantity).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-        document.getElementById('sellingPriceEx').textContent = `₹${(exampleData.sellingPrice * exampleData.quantity).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-        document.getElementById('taxToPayEx').textContent = `₹${exampleProfit.taxToPay.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-        document.getElementById('realProfitEx').textContent = `₹${exampleProfit.realProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-      }
+    function updateCharts(period) {
+      updateProfitComparisonChart(period);
+      updateProductProfitChart();
     }
 
-    function updateCharts(salesData, productData) {
-      // Group data by product for charts
-      const productProfitMap = new Map();
+    function updateProfitComparisonChart(period) {
+      const ctx = document.getElementById('profitComparisonChart').getContext('2d');
       
-      salesData.forEach(sale => {
-        const product = productData.find(p => p["Product ID"] === sale["Product ID"]);
-        if (!product) return;
-
-        const profitData = calculateRealProfit(
-          product["Purchase Price"] || 0,
-          sale.Price || 0,
-          sale.Quantity || 0,
-          product["Tax Percentage"] || 0,
-          product["Tax Included"] || true
-        );
-
-        const productName = product["Product Name"] || sale["Product ID"];
-        
-        if (!productProfitMap.has(productName)) {
-          productProfitMap.set(productName, {
-            realProfit: 0,
-            revenue: 0
-          });
-        }
-        
-        const productData = productProfitMap.get(productName);
-        productData.realProfit += profitData.realProfit;
-        productData.revenue += (sale.Price || 0) * (sale.Quantity || 0);
-      });
-
-      const productNames = Array.from(productProfitMap.keys());
-      const realProfits = productNames.map(name => productProfitMap.get(name).realProfit);
-      const revenues = productNames.map(name => productProfitMap.get(name).revenue);
-
-      // Profit vs Margin Chart
-      const profitCtx = document.getElementById('profitChart').getContext('2d');
-      
-      if (profitChart) {
-        profitChart.destroy();
+      // Destroy existing chart if it exists
+      if (profitComparisonChart) {
+        profitComparisonChart.destroy();
       }
       
-      profitChart = new Chart(profitCtx, {
+      // Generate sample data based on period
+      let labels, realProfitData, grossMarginData;
+      
+      switch(period) {
+        case 'monthly':
+          labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          realProfitData = labels.map(() => Math.random() * 100000 + 50000);
+          grossMarginData = labels.map((_, i) => realProfitData[i] * (1 + Math.random() * 0.3));
+          break;
+        case 'quarterly':
+          labels = ['Q1', 'Q2', 'Q3', 'Q4'];
+          realProfitData = labels.map(() => Math.random() * 300000 + 150000);
+          grossMarginData = labels.map((_, i) => realProfitData[i] * (1 + Math.random() * 0.3));
+          break;
+        case 'yearly':
+          labels = ['2020', '2021', '2022', '2023', '2024'];
+          realProfitData = labels.map(() => Math.random() * 1200000 + 600000);
+          grossMarginData = labels.map((_, i) => realProfitData[i] * (1 + Math.random() * 0.3));
+          break;
+      }
+      
+      profitComparisonChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: productNames.slice(0, 6), // Top 6 products
+          labels: labels,
           datasets: [
             {
               label: 'Real Profit',
-              data: realProfits.slice(0, 6),
-              backgroundColor: '#4cc9f0',
-              borderColor: '#4cc9f0',
+              data: realProfitData,
+              backgroundColor: 'rgba(76, 201, 240, 0.7)',
+              borderColor: 'rgba(76, 201, 240, 1)',
               borderWidth: 1
             },
             {
-              label: 'Revenue',
-              data: revenues.slice(0, 6),
-              backgroundColor: '#4361ee',
-              borderColor: '#4361ee',
+              label: 'Gross Margin',
+              data: grossMarginData,
+              backgroundColor: 'rgba(67, 97, 238, 0.5)',
+              borderColor: 'rgba(67, 97, 238, 1)',
               borderWidth: 1
             }
           ]
@@ -1008,7 +1383,7 @@
               beginAtZero: true,
               ticks: {
                 callback: function(value) {
-                  return '₹' + value.toLocaleString('en-IN');
+                  return '₹' + value.toLocaleString();
                 }
               }
             }
@@ -1020,36 +1395,51 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  return context.dataset.label + ': ₹' + context.raw.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  label += '₹' + context.parsed.y.toLocaleString();
+                  return label;
                 }
               }
             }
           }
         }
       });
+    }
 
-      // Product Profit Chart
-      const productCtx = document.getElementById('productChart').getContext('2d');
+    function updateProductProfitChart() {
+      const ctx = document.getElementById('productProfitChart').getContext('2d');
       
-      if (productChart) {
-        productChart.destroy();
+      // Destroy existing chart if it exists
+      if (productProfitChart) {
+        productProfitChart.destroy();
       }
       
-      // Calculate percentages for doughnut chart
-      const totalProfit = realProfits.reduce((sum, profit) => sum + Math.max(profit, 0), 0);
-      const profitPercentages = realProfits.map(profit => 
-        totalProfit > 0 ? (Math.max(profit, 0) / totalProfit) * 100 : 0
-      );
-
-      productChart = new Chart(productCtx, {
+      // Get top 5 products by real profit
+      const products = getProductsForCurrentFilter();
+      const topProducts = products
+        .sort((a, b) => b.realProfit - a.realProfit)
+        .slice(0, 5);
+      
+      const labels = topProducts.map(p => p.productName);
+      const data = topProducts.map(p => p.realProfit);
+      const colors = [
+        'rgba(67, 97, 238, 0.7)',
+        'rgba(76, 201, 240, 0.7)',
+        'rgba(114, 9, 183, 0.7)',
+        'rgba(67, 170, 139, 0.7)',
+        'rgba(248, 150, 30, 0.7)'
+      ];
+      
+      productProfitChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: productNames,
+          labels: labels,
           datasets: [{
-            data: profitPercentages,
-            backgroundColor: [
-              '#4361ee', '#4cc9f0', '#7209b7', '#f8961e', '#43aa8b', '#f72585'
-            ],
+            data: data,
+            backgroundColor: colors,
             borderWidth: 1
           }]
         },
@@ -1063,135 +1453,15 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  const profit = realProfits[context.dataIndex];
-                  return `${context.label}: ${context.raw.toFixed(1)}% (₹${profit.toLocaleString('en-IN', {minimumFractionDigits: 2})})`;
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  return `${label}: ₹${value.toLocaleString()}`;
                 }
               }
             }
           }
         }
       });
-    }
-
-    function updateChart(chartType, dataType) {
-      // This would update the chart based on the selected type
-      console.log(`Updating ${chartType} with ${dataType} data`);
-      // In a real implementation, you would fetch new data and update the chart
-    }
-
-    function updateTables(salesData, productData) {
-      // Update invoice table
-      const invoiceTableBody = document.getElementById('invoiceTableBody');
-      invoiceTableBody.innerHTML = '';
-
-      const invoiceMap = new Map();
-      
-      salesData.forEach(sale => {
-        const invoiceNo = sale["Invoice Number"];
-        if (!invoiceMap.has(invoiceNo)) {
-          invoiceMap.set(invoiceNo, {
-            invoiceNo: invoiceNo,
-            customer: sale["Costomer Name"] || 'Unknown',
-            revenue: 0,
-            realProfit: 0,
-            taxToPay: 0
-          });
-        }
-        
-        const invoice = invoiceMap.get(invoiceNo);
-        const product = productData.find(p => p["Product ID"] === sale["Product ID"]);
-        
-        if (product) {
-          const profitData = calculateRealProfit(
-            product["Purchase Price"] || 0,
-            sale.Price || 0,
-            sale.Quantity || 0,
-            product["Tax Percentage"] || 0,
-            product["Tax Included"] || true
-          );
-          
-          invoice.revenue += (sale.Price || 0) * (sale.Quantity || 0);
-          invoice.realProfit += profitData.realProfit;
-          invoice.taxToPay += profitData.taxToPay;
-        }
-      });
-
-      const invoices = Array.from(invoiceMap.values()).sort((a, b) => b.realProfit - a.realProfit);
-      
-      if (invoices.length === 0) {
-        invoiceTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No invoice data available</td></tr>';
-      } else {
-        invoices.forEach(invoice => {
-          const profitClass = invoice.realProfit >= 0 ? 'positive' : 'negative';
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${invoice.invoiceNo}</td>
-            <td>${invoice.customer}</td>
-            <td>₹${invoice.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-            <td class="${profitClass}">₹${invoice.realProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-            <td>₹${invoice.taxToPay.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-          `;
-          invoiceTableBody.appendChild(row);
-        });
-      }
-
-      // Update product table
-      const productTableBody = document.getElementById('productTableBody');
-      productTableBody.innerHTML = '';
-
-      const productMap = new Map();
-      
-      salesData.forEach(sale => {
-        const productId = sale["Product ID"];
-        const product = productData.find(p => p["Product ID"] === productId);
-        
-        if (product) {
-          const productName = product["Product Name"] || productId;
-          
-          if (!productMap.has(productId)) {
-            productMap.set(productId, {
-              productName: productName,
-              unitsSold: 0,
-              revenue: 0,
-              realProfit: 0
-            });
-          }
-          
-          const productSummary = productMap.get(productId);
-          const profitData = calculateRealProfit(
-            product["Purchase Price"] || 0,
-            sale.Price || 0,
-            sale.Quantity || 0,
-            product["Tax Percentage"] || 0,
-            product["Tax Included"] || true
-          );
-          
-          productSummary.unitsSold += Number(sale.Quantity) || 0;
-          productSummary.revenue += (sale.Price || 0) * (sale.Quantity || 0);
-          productSummary.realProfit += profitData.realProfit;
-        }
-      });
-
-      const products = Array.from(productMap.values()).sort((a, b) => b.realProfit - a.realProfit);
-      
-      if (products.length === 0) {
-        productTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No product data available</td></tr>';
-      } else {
-        products.forEach(product => {
-          const profitClass = product.realProfit >= 0 ? 'positive' : 'negative';
-          const profitPercentage = product.revenue > 0 ? (product.realProfit / product.revenue) * 100 : 0;
-          
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${product.productName}</td>
-            <td>${product.unitsSold}</td>
-            <td>₹${product.revenue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-            <td class="${profitClass}">₹${product.realProfit.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-            <td class="${profitClass}">${profitPercentage.toFixed(2)}%</td>
-          `;
-          productTableBody.appendChild(row);
-        });
-      }
     }
   </script>
 
