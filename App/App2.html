@@ -83,6 +83,64 @@
     height: 100vh;
   }
 
+  /* Block Modal */
+  .block-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+    display: none;
+  }
+
+  .block-modal.active {
+    display: flex;
+  }
+
+  .block-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 90%;
+    max-width: 450px;
+    padding: 40px 30px;
+    text-align: center;
+    animation: modalFadeIn 0.3s ease;
+    border-left: 6px solid var(--danger);
+  }
+
+  .block-icon {
+    font-size: 64px;
+    color: var(--danger);
+    margin-bottom: 20px;
+  }
+
+  .block-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--danger);
+  }
+
+  .block-message {
+    color: var(--gray-700);
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  .block-timer {
+    font-size: 14px;
+    color: var(--gray-600);
+    margin-top: 15px;
+    font-weight: 500;
+  }
+
   /* Sidebar Navigation */
   .sidebar {
     width: 260px;
@@ -96,7 +154,7 @@
   }
 
   .sidebar.collapsed {
-    width: 70px;
+    width: 100px;
   }
 
   .sidebar.collapsed .nav-text,
@@ -697,6 +755,23 @@
 </head>
 <body>
 <div class="app-container" id="appContainer">
+  <!-- Block Modal -->
+  <div class="block-modal" id="blockModal">
+    <div class="block-content">
+      <div class="block-icon">
+        <i class="fas fa-ban"></i>
+      </div>
+      <div class="block-title">Account Blocked</div>
+      <div class="block-message">
+        Your account has been temporarily blocked for security reasons. 
+        Please contact your administrator for assistance.
+      </div>
+      <div class="block-timer" id="blockTimer">
+        Redirecting to login in <span id="countdown">5</span> seconds...
+      </div>
+    </div>
+  </div>
+
   <!-- Security Warning -->
   <div class="security-warning" id="securityWarning">
     <div class="warning-content">
@@ -760,6 +835,18 @@
       <a href="Inv.html" class="nav-item" data-page="Add Inventory">
         <div class="nav-icon"><i class="fas fa-boxes"></i></div>
         <div class="nav-text">Add Inventory</div>
+      </a>
+      
+      <!-- NEW PURCHASE HISTORY MENU ITEM -->
+      <a href="https://inventomobile.netlify.app/app/purchase" class="nav-item" data-page="Purchase History">
+        <div class="nav-icon"><i class="fas fa-history"></i></div>
+        <div class="nav-text">Purchase History</div>
+      </a>
+      
+      <!-- NEW MARGIN CALCULATOR MENU ITEM -->
+      <a href="https://inventomobile.netlify.app/app/margin.html" class="nav-item" data-page="Margin Calculator">
+        <div class="nav-icon"><i class="fas fa-calculator"></i></div>
+        <div class="nav-text">Margin Calculator</div>
       </a>
       
       <a href="invdash.html" class="nav-item" data-page="Inventory Report">
@@ -865,18 +952,31 @@ const securityWarning = document.getElementById('securityWarning');
 const closeWarning = document.getElementById('closeWarning');
 const iframeOverlay = document.getElementById('iframeOverlay');
 
+// Block Modal elements
+const blockModal = document.getElementById('blockModal');
+const blockTimer = document.getElementById('countdown');
+
 // Logout Modal elements
 const logoutModal = document.getElementById('logoutModal');
 const cancelLogout = document.getElementById('cancelLogout');
 const confirmLogout = document.getElementById('confirmLogout');
+
+// API Configuration
+const BASEROW_API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw';
+const BASEROW_TABLE_ID = '729979';
+const BASEROW_API_URL = `https://api.baserow.io/api/database/rows/table/${BASEROW_TABLE_ID}/?user_field_names=true`;
+
+// Background check interval
+let blockCheckInterval = null;
 
 // Authentication check
 function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
   const nameTag = localStorage.getItem('NameTag');
   const shopTag = localStorage.getItem('ShopTag');
+  const mobileTag = localStorage.getItem('MobileTag');
   
-  if (!shopIDTag || !nameTag || !shopTag) {
+  if (!shopIDTag || !nameTag || !shopTag || !mobileTag) {
     // User is not authenticated - redirect to login page
     console.log('User not authenticated, redirecting to login');
     window.location.href = 'login.html';
@@ -887,6 +987,9 @@ function checkAuthentication() {
   console.log('User authenticated');
   appContainer.classList.remove('unauthorized');
   sidebar.style.display = 'flex';
+  
+  // Start background block check
+  startBlockCheck();
   
   return true;
 }
@@ -921,6 +1024,110 @@ function updateUserInterface() {
   }
 }
 
+// Background block check function
+async function checkUserBlockStatus() {
+  try {
+    const mobileTag = localStorage.getItem('MobileTag');
+    const shopIDTag = localStorage.getItem('ShopIDTag');
+    
+    if (!mobileTag || !shopIDTag) {
+      console.log('Missing user data in localStorage');
+      return;
+    }
+    
+    // Fetch user data from Baserow
+    const response = await fetch(BASEROW_API_URL, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${BASEROW_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Find user with matching mobile number and shop ID
+    const user = data.results.find(user => 
+      user.Username === mobileTag && user.ShopID === shopIDTag
+    );
+    
+    if (user) {
+      console.log('User found in database:', user);
+      
+      // Check if user is blocked
+      if (user.Block === true) {
+        console.log('User is blocked, showing block modal');
+        showBlockModal();
+        return true;
+      } else {
+        console.log('User is not blocked');
+        return false;
+      }
+    } else {
+      console.log('User not found in database');
+      // User not found in database, block access
+      showBlockModal();
+      return true;
+    }
+  } catch (error) {
+    console.error('Error checking user block status:', error);
+    // In case of error, don't block the user to avoid false positives
+    return false;
+  }
+}
+
+// Start background block check
+function startBlockCheck() {
+  // Run immediately
+  checkUserBlockStatus();
+  
+  // Then run every second
+  blockCheckInterval = setInterval(async () => {
+    const isBlocked = await checkUserBlockStatus();
+    if (isBlocked) {
+      // Stop checking if user is blocked
+      clearInterval(blockCheckInterval);
+    }
+  }, 30000);
+}
+
+// Show block modal and redirect
+function showBlockModal() {
+  // Hide all navigation and sidebar
+  sidebar.style.display = 'none';
+  document.querySelector('.top-bar').style.display = 'none';
+  document.querySelector('.main-content').style.display = 'none';
+  
+  // Show block modal
+  blockModal.classList.add('active');
+  
+  // Clear localStorage
+  localStorage.clear();
+  
+  // Start countdown for redirect
+  let countdown = 5;
+  const countdownElement = document.getElementById('countdown');
+  
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    countdownElement.textContent = countdown;
+    
+    if (countdown <= 0) {
+      clearInterval(countdownInterval);
+      redirectToLogin();
+    }
+  }, 1000);
+}
+
+// Redirect to login page
+function redirectToLogin() {
+  window.location.href = 'login.html';
+}
+
 // Listen for authentication changes from iframe (login success)
 window.addEventListener('message', function(event) {
   // Check if the message is from a trusted source (optional)
@@ -934,6 +1141,7 @@ window.addEventListener('message', function(event) {
       localStorage.setItem('NameTag', event.data.userData.name || 'User');
       localStorage.setItem('ShopIDTag', event.data.userData.shopId || '');
       localStorage.setItem('ShopTag', event.data.userData.shop || 'Shop');
+      localStorage.setItem('MobileTag', event.data.userData.mobile || '');
     }
     
     // Re-check authentication
@@ -1190,6 +1398,11 @@ function hideLogoutModal() {
 function performLogout() {
   // Clear all localStorage data
   localStorage.clear();
+  
+  // Stop block check interval
+  if (blockCheckInterval) {
+    clearInterval(blockCheckInterval);
+  }
   
   // Hide the modal
   hideLogoutModal();
