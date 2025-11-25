@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice Margin Dashboard</title>
+  <title>Real Profit Margin Dashboard</title>
   <style>
     :root {
       --primary: #4361ee;
@@ -109,10 +109,6 @@
       border-color: rgba(255, 255, 255, 0.7);
     }
     
-    .date-input::placeholder {
-      color: rgba(255, 255, 255, 0.7);
-    }
-    
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -147,10 +143,49 @@
     }
     
     .total-revenue { color: var(--primary); }
-    .total-margin { color: var(--success); }
-    .avg-margin { color: var(--info); }
+    .real-margin { color: var(--success); }
+    .gross-margin { color: var(--info); }
     .total-invoices { color: var(--secondary); }
-    .total-tax { color: var(--warning); }
+    .tax-savings { color: var(--warning); }
+    
+    .profit-explanation {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    
+    .explanation-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: var(--primary);
+    }
+    
+    .calculation-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    
+    .calculation-step {
+      padding: 15px;
+      background: var(--light);
+      border-radius: var(--border-radius);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--dark);
+    }
+    
+    .step-value {
+      font-weight: 700;
+      color: var(--primary);
+    }
     
     .charts-container {
       display: grid;
@@ -370,15 +405,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    
     .tax-breakdown {
       margin-top: 10px;
       padding: 10px;
@@ -400,6 +426,10 @@
       }
       
       .tables-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .calculation-steps {
         grid-template-columns: 1fr;
       }
     }
@@ -470,6 +500,10 @@
         padding: 8px 10px;
         font-size: 12px;
       }
+      
+      .profit-explanation {
+        padding: 15px;
+      }
     }
     
     @media (max-width: 480px) {
@@ -498,10 +532,10 @@
     <div class="dashboard-header">
       <div class="header-content">
         <div class="shop-info">
-          <div class="shop-name" id="shopName">Margin Dashboard</div>
+          <div class="shop-name" id="shopName">Real Profit Margin Dashboard</div>
           <div class="shop-details">
-            <div class="shop-address" id="shopAddress">Profitability Analysis</div>
-            <div class="shop-phone" id="shopPhone">Track your invoice margins</div>
+            <div class="shop-address" id="shopAddress">Actual Profit After Purchase Tax</div>
+            <div class="shop-phone" id="shopPhone">Track your real margins</div>
           </div>
           <div class="shop-id">Shop ID: <span id="shopTag">Loading...</span></div>
         </div>
@@ -536,6 +570,32 @@
       </button>
     </div>
 
+    <div class="profit-explanation">
+      <div class="explanation-title">How Real Profit is Calculated</div>
+      <div class="calculation-steps">
+        <div class="calculation-step">
+          <div class="step-title">Purchase Price (Incl. Tax)</div>
+          <div class="step-value" id="purchasePriceEx">₹0.00</div>
+          <small>You already paid tax on this amount</small>
+        </div>
+        <div class="calculation-step">
+          <div class="step-title">Selling Price (Incl. Tax)</div>
+          <div class="step-value" id="sellingPriceEx">₹0.00</div>
+          <small>Customer pays tax on this amount</small>
+        </div>
+        <div class="calculation-step">
+          <div class="step-title">Tax You Need to Pay</div>
+          <div class="step-value" id="taxToPayEx">₹0.00</div>
+          <small>Only on the profit margin</small>
+        </div>
+        <div class="calculation-step">
+          <div class="step-title">Real Profit</div>
+          <div class="step-value positive" id="realProfitEx">₹0.00</div>
+          <small>After accounting for purchase tax</small>
+        </div>
+      </div>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Total Revenue</div>
@@ -544,30 +604,21 @@
       </div>
       
       <div class="stat-card">
-        <div class="stat-label">Total Margin</div>
-        <div class="stat-value total-margin" id="totalMargin">₹0.00</div>
-        <div class="stat-label">Net Profit</div>
+        <div class="stat-label">Real Profit</div>
+        <div class="stat-value real-margin" id="realMargin">₹0.00</div>
+        <div class="stat-label">After Purchase Tax</div>
       </div>
       
       <div class="stat-card">
-        <div class="stat-label">Avg. Margin %</div>
-        <div class="stat-value avg-margin" id="avgMargin">0.00%</div>
-        <div class="stat-label">Across All Products</div>
+        <div class="stat-label">Gross Margin</div>
+        <div class="stat-value gross-margin" id="grossMargin">₹0.00</div>
+        <div class="stat-label">Before Tax Adjustment</div>
       </div>
       
       <div class="stat-card">
-        <div class="stat-label">Total Tax</div>
-        <div class="stat-value total-tax" id="totalTax">₹0.00</div>
-        <div class="tax-breakdown">
-          <div class="tax-row">
-            <span>SGST:</span>
-            <span id="sgstAmount">₹0.00</span>
-          </div>
-          <div class="tax-row">
-            <span>CGST:</span>
-            <span id="cgstAmount">₹0.00</span>
-          </div>
-        </div>
+        <div class="stat-label">Tax Savings</div>
+        <div class="stat-value tax-savings" id="taxSavings">₹0.00</div>
+        <div class="stat-label">From Purchase Tax Credit</div>
       </div>
       
       <div class="stat-card">
@@ -580,7 +631,7 @@
     <div class="charts-container">
       <div class="chart-card">
         <div class="chart-header">
-          <div class="chart-title">Margin & Tax Trends</div>
+          <div class="chart-title">Real Profit vs Gross Margin</div>
           <div class="chart-actions">
             <button class="chart-btn">Daily</button>
             <button class="chart-btn active">Monthly</button>
@@ -588,39 +639,38 @@
           </div>
         </div>
         <div class="chart-placeholder">
-          Margin & Tax Trend Chart Will Appear Here<br>
-          <small>(Shows revenue, margin, and tax over time)</small>
+          Real Profit vs Gross Margin Comparison<br>
+          <small>(Shows the difference after accounting for purchase tax)</small>
         </div>
       </div>
       
       <div class="chart-card">
         <div class="chart-header">
-          <div class="chart-title">Top Products by Margin</div>
+          <div class="chart-title">Tax Efficiency</div>
         </div>
         <div class="chart-placeholder">
-          Product Margin Chart Will Appear Here<br>
-          <small>(Visualizes most profitable products)</small>
+          Tax Savings Analysis<br>
+          <small>(How much you saved from purchase tax credit)</small>
         </div>
       </div>
     </div>
 
     <div class="tables-container">
       <div class="table-card">
-        <div class="table-title">Invoice Margin & Tax Summary</div>
+        <div class="table-title">Real Profit by Invoice</div>
         <table class="data-table">
           <thead>
             <tr>
               <th>Invoice No</th>
-              <th>Date</th>
               <th>Customer</th>
               <th>Revenue</th>
-              <th>Margin</th>
-              <th>Tax</th>
+              <th>Real Profit</th>
+              <th>Tax Paid</th>
             </tr>
           </thead>
           <tbody id="invoiceTableBody">
             <tr>
-              <td colspan="6" style="text-align: center;">No data available</td>
+              <td colspan="5" style="text-align: center;">No data available</td>
             </tr>
           </tbody>
         </table>
@@ -632,15 +682,15 @@
       </div>
       
       <div class="table-card">
-        <div class="table-title">Product Performance with Tax</div>
+        <div class="table-title">Product Real Profitability</div>
         <table class="data-table">
           <thead>
             <tr>
               <th>Product</th>
               <th>Sold</th>
               <th>Revenue</th>
-              <th>Margin</th>
-              <th>Tax</th>
+              <th>Real Profit</th>
+              <th>Profit %</th>
             </tr>
           </thead>
           <tbody id="productTableBody">
@@ -718,7 +768,7 @@
       
       if (shopIDTag) {
         document.getElementById('shopTag').textContent = shopIDTag;
-        document.getElementById('shopName').textContent = shopInfo.shopName + " - Margin Dashboard";
+        document.getElementById('shopName').textContent = shopInfo.shopName + " - Real Profit Dashboard";
         document.getElementById('shopAddress').textContent = shopInfo.address;
         document.getElementById('shopPhone').textContent = shopInfo.phone;
       } else {
@@ -726,29 +776,37 @@
       }
     }
 
-    function calculateTaxes(price, quantity, taxPercentage, taxIncluded) {
-      const totalAmount = price * quantity;
-      let taxableAmount, taxAmount, sgst, cgst;
+    function calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage) {
+      // Calculate tax components
+      const purchaseTax = (purchasePrice * taxPercentage) / (100 + taxPercentage);
+      const sellingTax = (sellingPrice * taxPercentage) / (100 + taxPercentage);
       
-      if (taxIncluded) {
-        // If tax is included in the price
-        taxableAmount = totalAmount / (1 + (taxPercentage / 100));
-        taxAmount = totalAmount - taxableAmount;
-      } else {
-        // If tax is not included in the price
-        taxableAmount = totalAmount;
-        taxAmount = taxableAmount * (taxPercentage / 100);
-      }
+      // Calculate base prices (without tax)
+      const purchaseBase = purchasePrice - purchaseTax;
+      const sellingBase = sellingPrice - sellingTax;
       
-      // Split tax equally between SGST and CGST
-      sgst = taxAmount / 2;
-      cgst = taxAmount / 2;
+      // Calculate gross profit (before tax adjustment)
+      const grossProfit = (sellingPrice - purchasePrice) * quantity;
+      
+      // Calculate tax you need to pay (only on the profit margin)
+      const profitMargin = (sellingBase - purchaseBase) * quantity;
+      const taxToPay = (profitMargin * taxPercentage) / 100;
+      
+      // Calculate real profit (after accounting for purchase tax)
+      const realProfit = grossProfit - taxToPay;
+      
+      // Calculate tax savings (from purchase tax credit)
+      const taxSavings = purchaseTax * quantity;
       
       return {
-        taxableAmount,
-        taxAmount,
-        sgst,
-        cgst
+        purchaseBase: purchaseBase * quantity,
+        sellingBase: sellingBase * quantity,
+        grossProfit,
+        realProfit,
+        taxToPay,
+        taxSavings,
+        purchaseTax: purchaseTax * quantity,
+        sellingTax: sellingTax * quantity
       };
     }
 
@@ -795,15 +853,20 @@
 
     function calculateDashboardMetrics(salesData, productData) {
       let totalRevenue = 0;
-      let totalCost = 0;
-      let totalMargin = 0;
-      let totalTaxAmount = 0;
-      let totalSGST = 0;
-      let totalCGST = 0;
+      let totalGrossProfit = 0;
+      let totalRealProfit = 0;
+      let totalTaxSavings = 0;
+      let totalTaxToPay = 0;
       let invoiceCount = 0;
       
       const invoiceMap = new Map();
       const productMap = new Map();
+
+      // Example calculation for demonstration
+      let examplePurchasePrice = 0;
+      let exampleSellingPrice = 0;
+      let exampleTaxPercentage = 0;
+      let exampleQuantity = 0;
 
       // Process each sale record
       salesData.forEach(sale => {
@@ -813,16 +876,20 @@
         const quantity = Number(sale["Quantity"]) || 0;
         const sellingPrice = Number(sale["Price"]) || 0;
         const purchasePrice = Number(product["Purchase Price"]) || 0;
-        const taxIncluded = product["Tax Included"] || false;
         const taxPercentage = Number(product["Tax Percentage"]) || 0;
         
-        // Calculate taxes
-        const taxes = calculateTaxes(sellingPrice, quantity, taxPercentage, taxIncluded);
+        // Store example values for demonstration
+        if (examplePurchasePrice === 0) {
+          examplePurchasePrice = purchasePrice;
+          exampleSellingPrice = sellingPrice;
+          exampleTaxPercentage = taxPercentage;
+          exampleQuantity = quantity;
+        }
         
-        const revenue = quantity * sellingPrice;
-        const cost = quantity * purchasePrice;
-        const margin = revenue - cost - (taxIncluded ? 0 : taxes.taxAmount);
-        const marginPercent = revenue > 0 ? (margin / revenue) * 100 : 0;
+        // Calculate real profit
+        const profitData = calculateRealProfit(purchasePrice, sellingPrice, quantity, taxPercentage);
+        
+        const revenue = sellingPrice * quantity;
 
         // Update invoice totals
         const invoiceNo = sale["Invoice Number"];
@@ -832,17 +899,17 @@
             date: sale["Date"],
             customer: sale["Costomer Name"],
             revenue: 0,
-            cost: 0,
-            margin: 0,
-            tax: 0
+            grossProfit: 0,
+            realProfit: 0,
+            taxToPay: 0
           });
         }
         
         const invoice = invoiceMap.get(invoiceNo);
         invoice.revenue += revenue;
-        invoice.cost += cost;
-        invoice.margin += margin;
-        invoice.tax += taxes.taxAmount;
+        invoice.grossProfit += profitData.grossProfit;
+        invoice.realProfit += profitData.realProfit;
+        invoice.taxToPay += profitData.taxToPay;
 
         // Update product totals
         const productId = sale["Product ID"];
@@ -852,37 +919,45 @@
             productName: product["Product Name"],
             unitsSold: 0,
             revenue: 0,
-            margin: 0,
-            tax: 0
+            grossProfit: 0,
+            realProfit: 0,
+            profitPercentage: 0
           });
         }
         
         const productSummary = productMap.get(productId);
         productSummary.unitsSold += quantity;
         productSummary.revenue += revenue;
-        productSummary.margin += margin;
-        productSummary.tax += taxes.taxAmount;
+        productSummary.grossProfit += profitData.grossProfit;
+        productSummary.realProfit += profitData.realProfit;
+        productSummary.profitPercentage = productSummary.revenue > 0 ? 
+          (productSummary.realProfit / productSummary.revenue) * 100 : 0;
 
         // Update overall totals
         totalRevenue += revenue;
-        totalCost += cost;
-        totalMargin += margin;
-        totalTaxAmount += taxes.taxAmount;
-        totalSGST += taxes.sgst;
-        totalCGST += taxes.cgst;
+        totalGrossProfit += profitData.grossProfit;
+        totalRealProfit += profitData.realProfit;
+        totalTaxSavings += profitData.taxSavings;
+        totalTaxToPay += profitData.taxToPay;
       });
 
       invoiceCount = invoiceMap.size;
-      const avgMarginPercent = totalRevenue > 0 ? (totalMargin / totalRevenue) * 100 : 0;
 
       // Update dashboard stats
       document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
-      document.getElementById('totalMargin').textContent = `₹${totalMargin.toFixed(2)}`;
-      document.getElementById('avgMargin').textContent = `${avgMarginPercent.toFixed(2)}%`;
+      document.getElementById('realMargin').textContent = `₹${totalRealProfit.toFixed(2)}`;
+      document.getElementById('grossMargin').textContent = `₹${totalGrossProfit.toFixed(2)}`;
+      document.getElementById('taxSavings').textContent = `₹${totalTaxSavings.toFixed(2)}`;
       document.getElementById('totalInvoices').textContent = invoiceCount;
-      document.getElementById('totalTax').textContent = `₹${totalTaxAmount.toFixed(2)}`;
-      document.getElementById('sgstAmount').textContent = `₹${totalSGST.toFixed(2)}`;
-      document.getElementById('cgstAmount').textContent = `₹${totalCGST.toFixed(2)}`;
+
+      // Update example calculation
+      if (examplePurchasePrice > 0) {
+        const exampleProfit = calculateRealProfit(examplePurchasePrice, exampleSellingPrice, exampleQuantity, exampleTaxPercentage);
+        document.getElementById('purchasePriceEx').textContent = `₹${(examplePurchasePrice * exampleQuantity).toFixed(2)}`;
+        document.getElementById('sellingPriceEx').textContent = `₹${(exampleSellingPrice * exampleQuantity).toFixed(2)}`;
+        document.getElementById('taxToPayEx').textContent = `₹${exampleProfit.taxToPay.toFixed(2)}`;
+        document.getElementById('realProfitEx').textContent = `₹${exampleProfit.realProfit.toFixed(2)}`;
+      }
 
       // Update invoice table
       updateInvoiceTable(Array.from(invoiceMap.values()));
@@ -896,24 +971,23 @@
       tableBody.innerHTML = '';
 
       if (invoices.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No invoice data available</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No invoice data available</td></tr>';
         return;
       }
 
-      // Sort by margin (highest first)
-      invoices.sort((a, b) => b.margin - a.margin);
+      // Sort by real profit (highest first)
+      invoices.sort((a, b) => b.realProfit - a.realProfit);
 
       invoices.forEach(invoice => {
-        const marginClass = invoice.margin >= 0 ? 'positive' : 'negative';
+        const profitClass = invoice.realProfit >= 0 ? 'positive' : 'negative';
         
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${invoice.invoiceNo}</td>
-          <td>${formatDate(invoice.date)}</td>
           <td>${invoice.customer}</td>
           <td>₹${invoice.revenue.toFixed(2)}</td>
-          <td class="${marginClass}">₹${invoice.margin.toFixed(2)}</td>
-          <td>₹${invoice.tax.toFixed(2)}</td>
+          <td class="${profitClass}">₹${invoice.realProfit.toFixed(2)}</td>
+          <td>₹${invoice.taxToPay.toFixed(2)}</td>
         `;
         tableBody.appendChild(row);
       });
@@ -928,19 +1002,19 @@
         return;
       }
 
-      // Sort by margin (highest first)
-      products.sort((a, b) => b.margin - a.margin);
+      // Sort by real profit (highest first)
+      products.sort((a, b) => b.realProfit - a.realProfit);
 
       products.forEach(product => {
-        const marginClass = product.margin >= 0 ? 'positive' : 'negative';
+        const profitClass = product.realProfit >= 0 ? 'positive' : 'negative';
         
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${product.productName}</td>
           <td>${product.unitsSold}</td>
           <td>₹${product.revenue.toFixed(2)}</td>
-          <td class="${marginClass}">₹${product.margin.toFixed(2)}</td>
-          <td>₹${product.tax.toFixed(2)}</td>
+          <td class="${profitClass}">₹${product.realProfit.toFixed(2)}</td>
+          <td class="${profitClass}">${product.profitPercentage.toFixed(2)}%</td>
         `;
         tableBody.appendChild(row);
       });
@@ -979,23 +1053,6 @@
         option.textContent = invoiceNo;
         invoiceFilter.appendChild(option);
       });
-    }
-
-    function formatDate(dateString) {
-      if (!dateString) return "N/A";
-      
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString;
-        
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        
-        return `${day}/${month}/${year}`;
-      } catch (error) {
-        return dateString;
-      }
     }
   </script>
 
