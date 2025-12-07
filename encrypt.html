@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure Biometric + Local Storage</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f6fa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+  }
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    margin: 10px;
+    background: #007bff;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  button:hover { background: #0056b3; }
+  pre {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 90%;
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+<h2>🔐 Secure Local Storage with Biometric Unlock</h2>
+<p>This demo encrypts data and stores it securely in LocalStorage. You must unlock it with biometrics.</p>
+
+<button id="saveBtn">Save Encrypted Data</button>
+<button id="unlockBtn">Unlock with Biometric</button>
+
+<h3>Stored Local Storage Content (Encrypted):</h3>
+<pre id="localData">(nothing yet)</pre>
+
+<h3>Decrypted Output:</h3>
+<pre id="decryptedData">(nothing decrypted yet)</pre>
+
+<script>
+// ======== PBKDF2 + AES Encryption/Decryption ==========
+function deriveKey(password, salt) {
+  return CryptoJS.PBKDF2(password, salt, { keySize: 256/32, iterations: 5000 });
+}
+
+function secureEncrypt(password, data) {
+  const salt = CryptoJS.lib.WordArray.random(16);
+  const iv = CryptoJS.lib.WordArray.random(16);
+  const key = deriveKey(password, salt);
+  const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), key, { iv });
+  return JSON.stringify({
+    salt: salt.toString(),
+    iv: iv.toString(),
+    cipher: encrypted.toString()
+  });
+}
+
+function secureDecrypt(password, encryptedString) {
+  const obj = JSON.parse(encryptedString);
+  const salt = CryptoJS.enc.Hex.parse(obj.salt);
+  const iv = CryptoJS.enc.Hex.parse(obj.iv);
+  const key = deriveKey(password, salt);
+  const decrypted = CryptoJS.AES.decrypt(obj.cipher, key, { iv });
+  return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
+}
+
+function secureStore(keyName, password, data) {
+  const encrypted = secureEncrypt(password, data);
+  localStorage.setItem(keyName, encrypted);
+  return encrypted;
+}
+
+function secureLoad(keyName, password) {
+  const encrypted = localStorage.getItem(keyName);
+  if (!encrypted) return null;
+  return secureDecrypt(password, encrypted);
+}
+
+// ======== Biometric Functions (WebAuthn) ==========
+async function biometricVerify() {
+  if (!window.PublicKeyCredential) {
+    alert("Biometric/WebAuthn not supported in this browser.");
+    return false;
+  }
+
+  const challenge = new Uint8Array(32);
+  window.crypto.getRandomValues(challenge);
+
+  try {
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        userVerification: "required"
+      }
+    });
+    return !!assertion;
+  } catch (err) {
+    console.error("Biometric verification failed:", err);
+    alert("Biometric verification failed or canceled.");
+    return false;
+  }
+}
+
+// ======== Event Handlers ==========
+document.getElementById("saveBtn").onclick = () => {
+  const data = {
+    name: "Raneesh",
+    score: 200,
+    exam: "Final Test",
+    time: new Date().toLocaleString()
+  };
+  const encrypted = secureStore("secureStudentData", "LocalUnlockKey", data);
+  document.getElementById("localData").textContent = encrypted;
+  document.getElementById("decryptedData").textContent = "(locked)";
+  alert("Data encrypted and stored securely in Local Storage!");
+};
+
+document.getElementById("unlockBtn").onclick = async () => {
+  const ok = await biometricVerify();
+  if (!ok) return;
+  const data = secureLoad("secureStudentData", "LocalUnlockKey");
+  if (data) {
+    document.getElementById("decryptedData").textContent = JSON.stringify(data, null, 2);
+    alert("Biometric verified! Data successfully decrypted.");
+  } else {
+    alert("No data found in Local Storage.");
+  }
+  document.getElementById("localData").textContent = localStorage.getItem("secureStudentData") || "(nothing)";
+};
+
+// ======== Display current encrypted data ==========
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("localData").textContent =
+    localStorage.getItem("secureStudentData") || "(nothing)";
+});
+</script>
+</body>
+</html>
