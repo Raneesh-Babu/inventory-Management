@@ -929,7 +929,6 @@
     </div>
   </div>
 </div>
-
 <script>
 // Get elements
 const sidebar = document.getElementById('sidebar');
@@ -969,6 +968,10 @@ const BASEROW_API_URL = `https://api.baserow.io/api/database/rows/table/${BASERO
 // Background check interval
 let blockCheckInterval = null;
 
+// Print Handling Variables
+let printFrame = null;
+let printModal = null;
+
 // Authentication check
 function checkAuthentication() {
   const shopIDTag = localStorage.getItem('ShopIDTag');
@@ -1001,8 +1004,268 @@ window.addEventListener('DOMContentLoaded', () => {
   if (isAuthenticated) {
     // Only proceed with normal initialization if authenticated
     updateUserInterface();
+    initializePrintHandling();
   }
 });
+
+// Initialize print handling
+function initializePrintHandling() {
+  // Create print iframe (hidden)
+  printFrame = document.createElement('iframe');
+  printFrame.id = 'printFrame';
+  printFrame.style.cssText = 'position: fixed; top: -10000px; left: -10000px; width: 0; height: 0; border: none; visibility: hidden;';
+  printFrame.sandbox = 'allow-same-origin allow-scripts';
+  document.body.appendChild(printFrame);
+  
+  // Create print modal
+  createPrintModal();
+  
+  // Listen for print messages from iframe
+  window.addEventListener('message', handlePrintMessage);
+}
+
+// Handle print messages from iframe
+function handlePrintMessage(event) {
+  // For security, you might want to verify the event.origin
+  // if (event.origin !== "https://your-domain.com") return;
+  
+  if (event.data && event.data.type === 'PRINT_REQUEST') {
+    console.log('Print request received:', event.data);
+    handlePrintRequest(event.data);
+  }
+  
+  if (event.data && event.data.type === 'PRINT_DIALOG') {
+    console.log('Print dialog request received');
+    showPrintDialog(event.data);
+  }
+}
+
+// Handle print request
+function handlePrintRequest(printData) {
+  if (!printData || !printData.content) {
+    console.error('No print content provided');
+    return;
+  }
+  
+  // Open print modal with content
+  openPrintModal(printData.content, printData.title || 'Print Document');
+}
+
+// Create print modal
+function createPrintModal() {
+  printModal = document.createElement('div');
+  printModal.id = 'printModal';
+  printModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10010;
+    display: none;
+  `;
+  
+  printModal.innerHTML = `
+    <div style="background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+      <div style="padding: 20px; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; color: #333;" id="printModalTitle">Print Preview</h3>
+        <button id="closePrintModal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;">×</button>
+      </div>
+      <div style="flex: 1; overflow: auto; padding: 20px;" id="printContent">
+        <!-- Print content will be inserted here -->
+      </div>
+      <div style="padding: 20px; border-top: 1px solid #e9ecef; display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="cancelPrint" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button id="proceedPrint" style="padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 6px; cursor: pointer;">Print</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(printModal);
+  
+  // Add event listeners for print modal
+  document.getElementById('closePrintModal').addEventListener('click', closePrintModal);
+  document.getElementById('cancelPrint').addEventListener('click', closePrintModal);
+  document.getElementById('proceedPrint').addEventListener('click', executePrint);
+}
+
+// Open print modal with content
+function openPrintModal(content, title = 'Print Document') {
+  const printContent = document.getElementById('printContent');
+  const printModalTitle = document.getElementById('printModalTitle');
+  
+  printContent.innerHTML = content;
+  printModalTitle.textContent = title;
+  printModal.style.display = 'flex';
+  
+  // Apply print styles to content
+  applyPrintStyles();
+}
+
+// Close print modal
+function closePrintModal() {
+  printModal.style.display = 'none';
+  document.getElementById('printContent').innerHTML = '';
+}
+
+// Apply print styles to content
+function applyPrintStyles() {
+  const printContent = document.getElementById('printContent');
+  const elements = printContent.querySelectorAll('*');
+  
+  elements.forEach(el => {
+    el.style.boxSizing = 'border-box';
+    el.style.maxWidth = '100%';
+  });
+  
+  // Ensure tables are properly formatted for print
+  const tables = printContent.querySelectorAll('table');
+  tables.forEach(table => {
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.style.fontSize = '12px';
+  });
+  
+  const cells = printContent.querySelectorAll('td, th');
+  cells.forEach(cell => {
+    cell.style.padding = '8px';
+    cell.style.border = '1px solid #ddd';
+  });
+}
+
+// Execute actual print
+function executePrint() {
+  const printContent = document.getElementById('printContent');
+  
+  // Create a new window for printing
+  const printWindow = window.open('', '_blank');
+  
+  if (!printWindow) {
+    alert('Please allow pop-ups for printing to work properly.');
+    return;
+  }
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Print Document</title>
+      <style>
+        body {
+          font-family: 'Inter', sans-serif;
+          margin: 20px;
+          color: #333;
+        }
+        @media print {
+          body { margin: 0; }
+          .no-print { display: none !important; }
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 15px;
+          font-size: 12px;
+        }
+        th, td {
+          padding: 8px;
+          border: 1px solid #ddd;
+          text-align: left;
+        }
+        th {
+          background-color: #f8f9fa;
+          font-weight: 600;
+        }
+        .print-header {
+          text-align: center;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #4361ee;
+          padding-bottom: 10px;
+        }
+        .print-footer {
+          margin-top: 30px;
+          padding-top: 10px;
+          border-top: 1px solid #ddd;
+          text-align: center;
+          font-size: 11px;
+          color: #666;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-header">
+        <h2 style="margin: 0; color: #4361ee;">${document.getElementById('printModalTitle').textContent}</h2>
+        <p style="margin: 5px 0; color: #666;">Date: ${new Date().toLocaleDateString()}</p>
+      </div>
+      ${printContent.innerHTML}
+      <div class="print-footer">
+        <p>Printed from Invento Mobile • ${new Date().toLocaleString()}</p>
+      </div>
+      <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Print Document</button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin-left: 10px; font-size: 14px;">Close</button>
+      </div>
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  printWindow.focus();
+  
+  // Close the print modal
+  closePrintModal();
+  
+  // Auto-print after a short delay (optional)
+  setTimeout(() => {
+    try {
+      printWindow.print();
+    } catch (e) {
+      console.log('Print initiated, user can click print button');
+    }
+  }, 500);
+}
+
+// Alternative: Show print dialog with iframe content
+function showPrintDialog(data) {
+  if (!printFrame) return;
+  
+  try {
+    const printDoc = printFrame.contentDocument || printFrame.contentWindow.document;
+    printDoc.open();
+    printDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${data.title || 'Print Document'}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        ${data.content || ''}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              window.onafterprint = function() {
+                window.parent.postMessage({type: 'PRINT_COMPLETE'}, '*');
+              };
+            }, 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    printDoc.close();
+  } catch (e) {
+    console.error('Error setting up print:', e);
+    openPrintModal(data.content || 'Print content not available', data.title);
+  }
+}
 
 // Update UI with user information
 function updateUserInterface() {
@@ -1199,11 +1462,97 @@ function applyIframeSecurity() {
       iframeDoc.body.style.webkitUserSelect = 'none';
       iframeDoc.body.style.mozUserSelect = 'none';
       iframeDoc.body.style.msUserSelect = 'none';
+      
+      // Inject print handler into iframe
+      injectPrintHandler(iframeWindow);
     }
   } catch (e) {
     // Cross-origin iframe - use overlay method
     console.log('Cross-origin iframe detected, using overlay security');
     iframeOverlay.classList.add('active');
+  }
+}
+
+// Inject print handler into iframe
+function injectPrintHandler(iframeWindow) {
+  try {
+    // Override window.print in iframe
+    iframeWindow.print = function() {
+      // Send print request to parent
+      window.parent.postMessage({
+        type: 'PRINT_REQUEST',
+        content: iframeWindow.document.body.innerHTML,
+        title: iframeWindow.document.title || 'Print Document'
+      }, '*');
+    };
+    
+    // Add print button handlers
+    const script = iframeWindow.document.createElement('script');
+    script.textContent = `
+      // Override all print buttons
+      document.addEventListener('click', function(e) {
+        const target = e.target;
+        
+        // Check if it's a print button
+        if (target.matches('[onclick*="print"], button[onclick*="print"], .print-btn, [class*="print"], [id*="print"]')) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Get the content to print
+          let printContent = '';
+          let printTitle = document.title || 'Print Document';
+          
+          // Try to find specific print content
+          const printElement = document.querySelector('.print-content, .invoice, .receipt, table, .print-area');
+          if (printElement) {
+            printContent = printElement.outerHTML;
+          } else {
+            printContent = document.body.innerHTML;
+          }
+          
+          // Send to parent for printing
+          window.parent.postMessage({
+            type: 'PRINT_REQUEST',
+            content: printContent,
+            title: printTitle
+          }, '*');
+          return false;
+        }
+        
+        // Check for window.print() in onclick attribute
+        if (target.onclick && target.onclick.toString().includes('print()')) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.print();
+          return false;
+        }
+      }, true);
+      
+      // Also handle window.print calls
+      const originalPrint = window.print;
+      window.print = function() {
+        // Get content to print
+        let printContent = '';
+        let printTitle = document.title || 'Print Document';
+        
+        const printElement = document.querySelector('.print-content, .invoice, .receipt, table, .print-area');
+        if (printElement) {
+          printContent = printElement.outerHTML;
+        } else {
+          printContent = document.body.innerHTML;
+        }
+        
+        // Send to parent for printing
+        window.parent.postMessage({
+          type: 'PRINT_REQUEST',
+          content: printContent,
+          title: printTitle
+        }, '*');
+      };
+    `;
+    iframeWindow.document.head.appendChild(script);
+  } catch (e) {
+    console.log('Could not inject print handler into iframe');
   }
 }
 
@@ -1429,6 +1778,14 @@ contentFrame.addEventListener('load', () => {
   
   setTimeout(() => {
     forceIframeScroll();
+    
+    // Try to inject print handler
+    try {
+      const iframeWindow = contentFrame.contentWindow;
+      injectPrintHandler(iframeWindow);
+    } catch (e) {
+      console.log('Could not access iframe window for print injection');
+    }
   }, 1000);
 });
 
