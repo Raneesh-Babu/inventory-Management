@@ -236,7 +236,7 @@
 
 <script>
 // ================= CONFIGURATION =================
-const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw'; // Replace with your API key
+const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw'; // Your Baserow API Key
 const BASE_URL = 'https://api.baserow.io/api/database/rows/table';
 const TABLES = {
   users: 729979,
@@ -247,13 +247,67 @@ const TABLES = {
   sale: 736209,
   supplier: 744412,
   transaction: 745465,
-  shops: 999999 // Add your shops table ID here
+  shops: 999999 // Update this with your actual shops table ID
 };
 
 // ================= STATE MANAGEMENT =================
 let shopInfo = null;
 let shopStats = {};
 let isOperationInProgress = false;
+
+// ================= GET VALUES FROM LOCALSTORAGE =================
+function getShopID() {
+  // Try different possible keys
+  const possibleKeys = ['ShopIDtag', 'ShopIDTag', 'ShopID', 'shopID', 'shopId'];
+  
+  for (const key of possibleKeys) {
+    const value = localStorage.getItem(key);
+    if (value) {
+      console.log(`Found Shop ID in localStorage with key "${key}": ${value}`);
+      return value;
+    }
+  }
+  
+  // If not found, check all localStorage items
+  console.log('Searching all localStorage items for Shop ID...');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key);
+    console.log(`localStorage[${key}] = ${value}`);
+    if (key.toLowerCase().includes('shop') && key.toLowerCase().includes('id')) {
+      console.log(`Possible Shop ID found: ${key} = ${value}`);
+      return value;
+    }
+  }
+  
+  throw new Error('Shop ID not found in localStorage. Please log in again.');
+}
+
+function getMobile() {
+  // Try different possible keys
+  const possibleKeys = ['MobileTag', 'mobileTag', 'Mobile', 'mobile', 'phone', 'Phone'];
+  
+  for (const key of possibleKeys) {
+    const value = localStorage.getItem(key);
+    if (value) {
+      console.log(`Found Mobile in localStorage with key "${key}": ${value}`);
+      return value;
+    }
+  }
+  
+  // If not found, check all localStorage items
+  console.log('Searching all localStorage items for Mobile...');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key);
+    if (key.toLowerCase().includes('mobile') || key.toLowerCase().includes('phone')) {
+      console.log(`Possible Mobile found: ${key} = ${value}`);
+      return value;
+    }
+  }
+  
+  throw new Error('Mobile number not found in localStorage. Please log in again.');
+}
 
 // ================= API CONFIGURATION =================
 const headers = {
@@ -329,6 +383,10 @@ async function fetchWithPagination(tableId, filters = {}) {
         url += `&filter__ShopID__equal=${filters.shopID}`;
       }
       
+      if (filters.mobile) {
+        url += `&filter__Username__equal=${filters.mobile}`;
+      }
+      
       const response = await fetch(url, { headers });
       
       if (!response.ok) {
@@ -353,12 +411,11 @@ async function fetchWithPagination(tableId, filters = {}) {
 // ================= SHOP INFORMATION =================
 async function loadShopInfo() {
   try {
-    const shopID = localStorage.getItem('ShopIDtag');
-    const mobile = localStorage.getItem('MobileTag');
+    // Get values from localStorage
+    const shopID = getShopID();
+    const mobile = getMobile();
     
-    if (!shopID || !mobile) {
-      throw new Error('ShopID or Mobile not found in localStorage');
-    }
+    log(`Loading shop info for Shop ID: ${shopID}, Mobile: ${mobile}`, 'info');
     
     // Fetch user info to check role
     const users = await fetchWithPagination(TABLES.users, { 
@@ -379,6 +436,8 @@ async function loadShopInfo() {
           <h2 style="color: #f5576c;">⛔ Access Denied</h2>
           <p>Manager role required to access this page.</p>
           <p>Your role: <strong>${user.Role}</strong></p>
+          <p>Your Shop ID: <strong>${shopID}</strong></p>
+          <p>Your Mobile: <strong>${mobile}</strong></p>
           <button onclick="window.history.back()" class="primary" style="margin-top: 20px;">
             ← Go Back
           </button>
@@ -392,9 +451,20 @@ async function loadShopInfo() {
       const shops = await fetchWithPagination(TABLES.shops, { shopID: shopID });
       if (shops.length > 0) {
         shopInfo = shops[0];
+        log(`Found shop in shops table: ${shopInfo.name || 'Unnamed Shop'}`, 'success');
+      } else {
+        // If shops table doesn't exist or no shop found, create dummy info
+        shopInfo = {
+          name: `Shop ${shopID}`,
+          id: shopID,
+          owner: user.Username || mobile,
+          role: user.Role,
+          created: user.created_date || 'Unknown'
+        };
+        log(`No shop found in shops table, using generated info`, 'warning');
       }
     } catch (e) {
-      // If shops table doesn't exist, create dummy shop info
+      // If shops table doesn't exist or error accessing it
       shopInfo = {
         name: `Shop ${shopID}`,
         id: shopID,
@@ -402,6 +472,7 @@ async function loadShopInfo() {
         role: user.Role,
         created: user.created_date || 'Unknown'
       };
+      log(`Could not access shops table: ${e.message}. Using generated shop info.`, 'warning');
     }
     
     // Update UI with shop information
@@ -417,6 +488,15 @@ async function loadShopInfo() {
       <div class="shop-id" style="background: rgba(255,255,255,0.2);">
         Error: ${error.message}
       </div>
+      <div class="shop-details">
+        <div class="detail-item">
+          <strong>Debug Info:</strong><br>
+          localStorage items: ${localStorage.length}<br>
+          <button onclick="showLocalStorage()" style="margin-top: 5px; padding: 5px 10px; font-size: 12px;">
+            Show All localStorage
+          </button>
+        </div>
+      </div>
     `;
   }
 }
@@ -430,7 +510,7 @@ function updateShopUI(shopInfo, user) {
       <strong>👤 Manager:</strong> ${user.Username || 'Unknown'}
     </div>
     <div class="detail-item">
-      <strong>📱 Mobile:</strong> ${localStorage.getItem('MobileTag')}
+      <strong>📱 Mobile:</strong> ${getMobile()}
     </div>
     <div class="detail-item">
       <strong>🎯 Role:</strong> ${user.Role}
@@ -450,14 +530,34 @@ function updateShopUI(shopInfo, user) {
         <strong>✉️ Email:</strong> ${shopInfo.email}
       </div>
     ` : ''}
+    ${shopInfo.created ? `
+      <div class="detail-item">
+        <strong>📅 Created:</strong> ${shopInfo.created}
+      </div>
+    ` : ''}
   `;
   
   document.getElementById('shopDetails').innerHTML = detailsHTML;
 }
 
+// Helper function to show all localStorage (for debugging)
+function showLocalStorage() {
+  console.log('=== ALL localStorage ITEMS ===');
+  let debugInfo = '📋 All localStorage items:\n\n';
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key);
+    console.log(`${key}: ${value}`);
+    debugInfo += `${key}: ${value}\n`;
+  }
+  
+  alert(debugInfo);
+}
+
 async function loadShopStats() {
   try {
-    const shopID = localStorage.getItem('ShopIDtag');
+    const shopID = getShopID();
     
     // Fetch counts from each table
     const statsPromises = Object.entries(TABLES).map(async ([tableName, tableId]) => {
@@ -520,7 +620,7 @@ async function downloadAllData() {
     showProgress(true);
     log('Starting backup process...', 'info');
     
-    const shopID = localStorage.getItem('ShopIDtag');
+    const shopID = getShopID();
     const backup = {};
     let totalTables = Object.keys(TABLES).length;
     let completedTables = 0;
@@ -547,6 +647,7 @@ async function downloadAllData() {
     backup.metadata = {
       shopId: shopID,
       shopName: shopInfo?.name || `Shop ${shopID}`,
+      mobile: getMobile(),
       backupDate: new Date().toISOString(),
       totalRecords: Object.values(backup).reduce((sum, data) => sum + (Array.isArray(data) ? data.length : 0), 0)
     };
@@ -610,7 +711,7 @@ document.getElementById('restoreFile').onchange = async function(e) {
       throw new Error('Invalid backup file format: Missing metadata');
     }
     
-    const currentShopID = localStorage.getItem('ShopIDtag');
+    const currentShopID = getShopID();
     if (backupData.metadata.shopId !== currentShopID) {
       throw new Error(`Backup is for shop ${backupData.metadata.shopId}, but current shop is ${currentShopID}`);
     }
@@ -719,7 +820,7 @@ async function deleteShop() {
     clearLog();
     showProgress(true);
     
-    const shopID = localStorage.getItem('ShopIDtag');
+    const shopID = getShopID();
     log('Starting shop deletion process...', 'warning');
     
     // Get counts first
@@ -809,6 +910,11 @@ async function initialize() {
         <h2 style="color: #f5576c;">❌ Initialization Error</h2>
         <p>${error.message}</p>
         <p>Please ensure you are logged in and have proper permissions.</p>
+        <p><strong>Debug Info:</strong></p>
+        <p>localStorage has ${localStorage.length} items</p>
+        <button onclick="showLocalStorage()" class="warning" style="margin: 10px;">
+          Show localStorage Contents
+        </button>
         <button onclick="location.reload()" class="primary" style="margin-top: 20px;">
           🔄 Retry
         </button>
