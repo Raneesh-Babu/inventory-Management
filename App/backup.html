@@ -1,38 +1,242 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Delete / Backup / Restore Shop</title>
+  <title>Shop Data Management</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; padding:20px; }
-    .card { max-width:700px; margin:auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.1); }
+    .card { max-width:800px; margin:auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.1); }
     h2 { margin-top:0; }
-    button { padding:12px 18px; border:none; border-radius:8px; cursor:pointer; font-size:15px; }
-    .danger { background:#d9534f; color:#fff; }
-    .primary { background:#0d6efd; color:#fff; }
-    .success { background:#198754; color:#fff; }
+    .shop-header { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px; 
+      border-radius: 8px; 
+      margin-bottom: 25px; 
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+    .shop-header h3 { 
+      margin: 0 0 10px 0; 
+      font-size: 24px; 
+      font-weight: 600;
+    }
+    .shop-header .shop-id { 
+      opacity: 0.9; 
+      font-size: 14px; 
+      font-family: 'Courier New', monospace; 
+      background: rgba(255,255,255,0.1);
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .shop-details {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .detail-item {
+      background: rgba(255,255,255,0.1);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    button { 
+      padding:14px 22px; 
+      border:none; 
+      border-radius:8px; 
+      cursor:pointer; 
+      font-size:15px; 
+      font-weight:500;
+      margin: 5px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    .danger { background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:#fff; }
+    .danger:hover { background:linear-gradient(135deg, #f5576c 0%, #f093fb 100%); }
+    .primary { background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; }
+    .primary:hover { background:linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
+    .success { background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color:#fff; }
+    .success:hover { background:linear-gradient(135deg, #38ef7d 0%, #11998e 100%); }
+    .warning { background:linear-gradient(135deg, #f6d365 0%, #fda085 100%); color:#333; }
+    .warning:hover { background:linear-gradient(135deg, #fda085 0%, #f6d365 100%); }
     .row { display:flex; gap:12px; flex-wrap:wrap; }
     input[type=file] { padding:8px; }
     .hidden { display:none; }
-    .log { margin-top:15px; font-size:14px; white-space:pre-line; }
+    .log { 
+      margin-top:20px; 
+      font-size:14px; 
+      white-space:pre-line; 
+      background: #f8f9fa; 
+      padding: 20px; 
+      border-radius: 8px; 
+      border-left: 4px solid #6c757d;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+    }
+    .log.error { border-left-color: #f5576c; background: #f8d7da; }
+    .log.success { border-left-color: #38ef7d; background: #d4edda; }
+    .log.warning { border-left-color: #fda085; background: #fff3cd; }
+    .log.info { border-left-color: #667eea; background: #d1ecf1; }
+    .progress-container {
+      margin-top:20px;
+      background:#f8f9fa;
+      padding:20px;
+      border-radius:8px;
+      display:none;
+    }
+    .progress-bar {
+      background:#e9ecef;
+      border-radius:10px;
+      overflow:hidden;
+      height:18px;
+      margin-bottom:10px;
+    }
+    .progress-fill {
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, #667eea, #764ba2);
+      transition:width .3s ease;
+      border-radius:10px;
+      position:relative;
+      overflow:hidden;
+    }
+    .progress-fill::after {
+      content:'';
+      position:absolute;
+      top:0;
+      left:0;
+      bottom:0;
+      right:0;
+      background-image:linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255,255,255,0.2) 50%,
+        rgba(255,255,255,0.2) 75%,
+        transparent 75%,
+        transparent
+      );
+      background-size:50px 50px;
+      animation:move 2s linear infinite;
+    }
+    @keyframes move {
+      0% { background-position:0 0; }
+      100% { background-position:50px 50px; }
+    }
+    .progress-text {
+      font-size:14px;
+      display:flex;
+      justify-content:space-between;
+      font-weight:500;
+    }
+    .stats {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+      gap:15px;
+      margin:20px 0;
+    }
+    .stat-card {
+      background:#f8f9fa;
+      padding:15px;
+      border-radius:8px;
+      text-align:center;
+      border-left:4px solid #667eea;
+    }
+    .stat-value {
+      font-size:24px;
+      font-weight:bold;
+      color:#667eea;
+      margin:5px 0;
+    }
+    .stat-label {
+      font-size:12px;
+      color:#6c757d;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+    .action-buttons {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:15px;
+      margin:25px 0;
+    }
+    .icon {
+      font-size:18px;
+    }
   </style>
 </head>
-<body><div class="card" id="page">
-  <h2>Shop Data Management</h2>
-  <p><b>Warning:</b> Delete Shop is <span style="color:red">PERMANENT</span>.</p>  <div class="row">
-    <button class="primary" onclick="downloadAllData()">Download Data (CSV Backup)</button>
-    <button class="success" onclick="triggerRestore()">Restore Data</button>
-    <button class="danger" onclick="deleteShop()">Delete Shop</button>
-  </div>  <input type="file" id="restoreFile" accept=".json" class="hidden" />  <div style="margin-top:20px;">
-  <div>Progress:</div>
-  <div style="background:#e9ecef;border-radius:10px;overflow:hidden;height:18px;">
-    <div id="progressBar" style="height:100%;width:0%;background:#0d6efd;transition:width .3s"></div>
+<body>
+<div class="card" id="page">
+  <div class="shop-header" id="shopHeader">
+    <h3 id="shopName">Loading shop information...</h3>
+    <div class="shop-id">Shop ID: <span id="shopIDDisplay">...</span></div>
+    <div class="shop-details" id="shopDetails"></div>
   </div>
-  <div id="progressText" style="font-size:13px;margin-top:6px;">0%</div>
-</div><div class="log" id="log"></div>
-</div><script>
-/* ================= CONFIG ================= */
-const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw'; // <-- REQUIRED
+  
+  <div class="stats" id="statsContainer" style="display:none;">
+    <!-- Stats will be populated dynamically -->
+  </div>
+  
+  <h2>📊 Shop Data Management</h2>
+  <p style="color: #666; line-height: 1.6;">
+    <b style="color: #f5576c;">⚠️ Warning:</b> Operations below affect all shop data. 
+    Delete Shop is <span style="color:red; font-weight:bold;">PERMANENT</span> and cannot be undone.
+  </p>
+  
+  <div class="action-buttons">
+    <button class="primary" onclick="downloadAllData()" id="btnBackup">
+      <span class="icon">💾</span>
+      Download Backup
+    </button>
+    <button class="success" onclick="triggerRestore()" id="btnRestore">
+      <span class="icon">🔄</span>
+      Restore Data
+    </button>
+    <button class="warning" onclick="showStats()" id="btnStats">
+      <span class="icon">📈</span>
+      Show Statistics
+    </button>
+    <button class="danger" onclick="deleteShop()" id="btnDelete">
+      <span class="icon">🗑️</span>
+      Delete Shop
+    </button>
+  </div>
+  
+  <input type="file" id="restoreFile" accept=".json" class="hidden" />
+  
+  <div class="progress-container" id="progressContainer">
+    <div style="margin-bottom: 10px; font-weight: 500;">Operation Progress:</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+    <div class="progress-text">
+      <span id="progressText">0%</span>
+      <span id="progressCount">0 / 0</span>
+    </div>
+  </div>
+  
+  <div class="log" id="log">✅ Ready. Select an action to begin.</div>
+</div>
+
+<script>
+// ================= CONFIGURATION =================
+const API_KEY = 'jXXkrUUqrQK3RlESaDPs2gq0Eu0SK4Sw'; // Replace with your API key
 const BASE_URL = 'https://api.baserow.io/api/database/rows/table';
 const TABLES = {
   users: 729979,
@@ -42,141 +246,601 @@ const TABLES = {
   ledger: 736207,
   sale: 736209,
   supplier: 744412,
-  transaction: 745465
+  transaction: 745465,
+  shops: 999999 // Add your shops table ID here
 };
 
-/* ================= HELPERS ================= */
+// ================= STATE MANAGEMENT =================
+let shopInfo = null;
+let shopStats = {};
+let isOperationInProgress = false;
+
+// ================= API CONFIGURATION =================
 const headers = {
   'Authorization': `Token ${API_KEY}`,
   'Content-Type': 'application/json'
 };
 
-const log = msg => document.getElementById('log').innerText += msg + '
-';
-const setProgress = (done, total) => {
-  const percent = Math.round((done / total) * 100);
-  document.getElementById('progressBar').style.width = percent + '%';
-  document.getElementById('progressText').innerText = percent + '%';
-};
-
-const shopID = localStorage.getItem('ShopIDtag');
-const mobile = localStorage.getItem('MobileTag');
-
-if (!shopID || !mobile) {
-  alert('ShopID or Mobile not found in localStorage');
+// ================= UI HELPER FUNCTIONS =================
+function updateButtonState(buttonId, isWorking) {
+  const button = document.getElementById(buttonId);
+  if (isWorking) {
+    button.disabled = true;
+    button.style.opacity = '0.7';
+  } else {
+    button.disabled = false;
+    button.style.opacity = '1';
+  }
 }
 
-/* ================= AUTH CHECK ================= */
-async function checkRole() {
-  const url = `${BASE_URL}/${TABLES.users}/?user_field_names=true&filter__Username__equal=${mobile}`;
-  const res = await fetch(url, { headers });
-  const data = await res.json();
+function setAllButtonsState(isWorking) {
+  const buttons = ['btnBackup', 'btnRestore', 'btnStats', 'btnDelete'];
+  buttons.forEach(btnId => updateButtonState(btnId, isWorking));
+  isOperationInProgress = isWorking;
+}
 
-  if (!data.results || data.results.length === 0) {
-    alert('User not found');
-    document.getElementById('page').classList.add('hidden');
+function showProgress(show) {
+  document.getElementById('progressContainer').style.display = show ? 'block' : 'none';
+}
+
+function setProgress(done, total, message = '') {
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressBar').style.width = percent + '%';
+  document.getElementById('progressText').innerText = `${percent}%`;
+  document.getElementById('progressCount').innerText = `${done} / ${total}`;
+  
+  if (message) {
+    log(message, 'info');
+  }
+}
+
+function log(message, type = 'info') {
+  const logElement = document.getElementById('log');
+  const timestamp = new Date().toLocaleTimeString();
+  const prefix = {
+    'info': 'ℹ️',
+    'success': '✅',
+    'warning': '⚠️',
+    'error': '❌'
+  }[type] || '📝';
+  
+  const logEntry = `${prefix} [${timestamp}] ${message}\n`;
+  logElement.innerText += logEntry;
+  logElement.className = `log ${type}`;
+  logElement.scrollTop = logElement.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log').innerText = '';
+  document.getElementById('log').className = 'log';
+}
+
+// ================= API HELPER FUNCTIONS =================
+async function fetchWithPagination(tableId, filters = {}) {
+  let allResults = [];
+  let page = 1;
+  
+  while (true) {
+    try {
+      let url = `${BASE_URL}/${tableId}/?user_field_names=true&page=${page}`;
+      
+      // Add filters
+      if (filters.shopID) {
+        url += `&filter__ShopID__equal=${filters.shopID}`;
+      }
+      
+      const response = await fetch(url, { headers });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      allResults = allResults.concat(data.results || []);
+      
+      if (!data.next) break;
+      page++;
+      
+    } catch (error) {
+      log(`Error fetching data: ${error.message}`, 'error');
+      throw error;
+    }
+  }
+  
+  return allResults;
+}
+
+// ================= SHOP INFORMATION =================
+async function loadShopInfo() {
+  try {
+    const shopID = localStorage.getItem('ShopIDtag');
+    const mobile = localStorage.getItem('MobileTag');
+    
+    if (!shopID || !mobile) {
+      throw new Error('ShopID or Mobile not found in localStorage');
+    }
+    
+    // Fetch user info to check role
+    const users = await fetchWithPagination(TABLES.users, { 
+      shopID: shopID,
+      mobile: mobile 
+    });
+    
+    if (users.length === 0) {
+      throw new Error('User not found in database');
+    }
+    
+    const user = users[0];
+    
+    // Check if user is Manager
+    if (user.Role !== 'Manager') {
+      document.getElementById('page').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <h2 style="color: #f5576c;">⛔ Access Denied</h2>
+          <p>Manager role required to access this page.</p>
+          <p>Your role: <strong>${user.Role}</strong></p>
+          <button onclick="window.history.back()" class="primary" style="margin-top: 20px;">
+            ← Go Back
+          </button>
+        </div>
+      `;
+      return;
+    }
+    
+    // Try to fetch shop details from shops table
+    try {
+      const shops = await fetchWithPagination(TABLES.shops, { shopID: shopID });
+      if (shops.length > 0) {
+        shopInfo = shops[0];
+      }
+    } catch (e) {
+      // If shops table doesn't exist, create dummy shop info
+      shopInfo = {
+        name: `Shop ${shopID}`,
+        id: shopID,
+        owner: user.Username || mobile,
+        role: user.Role,
+        created: user.created_date || 'Unknown'
+      };
+    }
+    
+    // Update UI with shop information
+    updateShopUI(shopInfo, user);
+    
+    // Load initial statistics
+    await loadShopStats();
+    
+  } catch (error) {
+    log(`Failed to load shop information: ${error.message}`, 'error');
+    document.getElementById('shopHeader').innerHTML = `
+      <h3 style="color: #f5576c;">❌ Error Loading Shop</h3>
+      <div class="shop-id" style="background: rgba(255,255,255,0.2);">
+        Error: ${error.message}
+      </div>
+    `;
+  }
+}
+
+function updateShopUI(shopInfo, user) {
+  document.getElementById('shopName').textContent = shopInfo.name || `Shop ${shopInfo.id}`;
+  document.getElementById('shopIDDisplay').textContent = shopInfo.id;
+  
+  const detailsHTML = `
+    <div class="detail-item">
+      <strong>👤 Manager:</strong> ${user.Username || 'Unknown'}
+    </div>
+    <div class="detail-item">
+      <strong>📱 Mobile:</strong> ${localStorage.getItem('MobileTag')}
+    </div>
+    <div class="detail-item">
+      <strong>🎯 Role:</strong> ${user.Role}
+    </div>
+    ${shopInfo.address ? `
+      <div class="detail-item">
+        <strong>📍 Address:</strong> ${shopInfo.address}
+      </div>
+    ` : ''}
+    ${shopInfo.phone ? `
+      <div class="detail-item">
+        <strong>📞 Phone:</strong> ${shopInfo.phone}
+      </div>
+    ` : ''}
+    ${shopInfo.email ? `
+      <div class="detail-item">
+        <strong>✉️ Email:</strong> ${shopInfo.email}
+      </div>
+    ` : ''}
+  `;
+  
+  document.getElementById('shopDetails').innerHTML = detailsHTML;
+}
+
+async function loadShopStats() {
+  try {
+    const shopID = localStorage.getItem('ShopIDtag');
+    
+    // Fetch counts from each table
+    const statsPromises = Object.entries(TABLES).map(async ([tableName, tableId]) => {
+      if (tableName === 'shops') return null;
+      
+      try {
+        const data = await fetchWithPagination(tableId, { shopID: shopID });
+        return { [tableName]: data.length };
+      } catch (e) {
+        return { [tableName]: 0 };
+      }
+    });
+    
+    const statsResults = await Promise.all(statsPromises);
+    shopStats = Object.assign({}, ...statsResults.filter(Boolean));
+    
+    // Update stats display
+    updateStatsUI();
+    
+  } catch (error) {
+    log(`Could not load statistics: ${error.message}`, 'warning');
+  }
+}
+
+function updateStatsUI() {
+  const statsContainer = document.getElementById('statsContainer');
+  if (Object.keys(shopStats).length === 0) return;
+  
+  const statsHTML = Object.entries(shopStats).map(([table, count]) => `
+    <div class="stat-card">
+      <div class="stat-value">${count}</div>
+      <div class="stat-label">${table.charAt(0).toUpperCase() + table.slice(1)}</div>
+    </div>
+  `).join('');
+  
+  statsContainer.innerHTML = statsHTML;
+  statsContainer.style.display = 'grid';
+}
+
+function showStats() {
+  const statsContainer = document.getElementById('statsContainer');
+  statsContainer.style.display = statsContainer.style.display === 'none' ? 'grid' : 'none';
+  log(statsContainer.style.display === 'none' ? 'Statistics hidden' : 'Statistics displayed', 'info');
+}
+
+// ================= BACKUP FUNCTION =================
+async function downloadAllData() {
+  if (isOperationInProgress) {
+    alert('Please wait for the current operation to complete.');
     return;
   }
-
-  const role = data.results[0].Role;
-  if (role !== 'Manager') {
-    alert('Access denied. Manager only.');
-    document.getElementById('page').classList.add('hidden');
+  
+  if (!confirm('📥 This will download all shop data as a JSON backup file. Continue?')) {
+    return;
+  }
+  
+  try {
+    setAllButtonsState(true);
+    clearLog();
+    showProgress(true);
+    log('Starting backup process...', 'info');
+    
+    const shopID = localStorage.getItem('ShopIDtag');
+    const backup = {};
+    let totalTables = Object.keys(TABLES).length;
+    let completedTables = 0;
+    
+    // Fetch data from each table
+    for (const [tableName, tableId] of Object.entries(TABLES)) {
+      if (tableName === 'shops') continue;
+      
+      log(`Fetching ${tableName} data...`, 'info');
+      try {
+        const data = await fetchWithPagination(tableId, { shopID: shopID });
+        backup[tableName] = data;
+        log(`✓ ${tableName}: ${data.length} records`, 'success');
+      } catch (error) {
+        log(`✗ ${tableName}: Failed to fetch - ${error.message}`, 'error');
+        backup[tableName] = [];
+      }
+      
+      completedTables++;
+      setProgress(completedTables, totalTables - 1); // Exclude shops table
+    }
+    
+    // Add metadata
+    backup.metadata = {
+      shopId: shopID,
+      shopName: shopInfo?.name || `Shop ${shopID}`,
+      backupDate: new Date().toISOString(),
+      totalRecords: Object.values(backup).reduce((sum, data) => sum + (Array.isArray(data) ? data.length : 0), 0)
+    };
+    
+    // Create and download the file
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SHOP_${shopID}_${shopInfo?.name?.replace(/\s+/g, '_') || 'BACKUP'}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    log(`✅ Backup completed successfully! Total records: ${backup.metadata.totalRecords}`, 'success');
+    setProgress(totalTables - 1, totalTables - 1, 'Backup complete');
+    
+    // Refresh stats
+    setTimeout(async () => {
+      showProgress(false);
+      await loadShopStats();
+    }, 2000);
+    
+  } catch (error) {
+    log(`Backup failed: ${error.message}`, 'error');
+  } finally {
+    setAllButtonsState(false);
   }
 }
 
-checkRole();
-
-/* ================= FETCH ALL ROWS BY SHOPID ================= */
-async function fetchAll(tableId) {
-  let page = 1, all = [];
-  while (true) {
-    const res = await fetch(`${BASE_URL}/${tableId}/?user_field_names=true&page=${page}&filter__ShopID__equal=${shopID}`, { headers });
-    const data = await res.json();
-    all = all.concat(data.results);
-    if (!data.next) break;
-    page++;
-  }
-  return all;
-}
-
-/* ================= DOWNLOAD BACKUP ================= */
-async function downloadAllData() {
-  log('Preparing backup...');
-  const backup = {};
-
-  for (const key in TABLES) {
-    log(`Fetching ${key}...`);
-    backup[key] = await fetchAll(TABLES[key]);
-  }
-
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `SHOP_${shopID}_BACKUP.json`;
-  a.click();
-
-  log('Backup downloaded successfully');
-}
-
-/* ================= RESTORE ================= */
+// ================= RESTORE FUNCTION =================
 function triggerRestore() {
+  if (isOperationInProgress) {
+    alert('Please wait for the current operation to complete.');
+    return;
+  }
   document.getElementById('restoreFile').click();
 }
 
-restoreFile.onchange = async e => {
+document.getElementById('restoreFile').onchange = async function(e) {
   const file = e.target.files[0];
   if (!file) return;
-
-  if (!confirm('Restore will insert data back into database. Continue?')) return;
-
-  const backup = JSON.parse(await file.text());
-  let total = 0, done = 0;
-
-  for (const key in backup) total += backup[key].length;
-
-  for (const key in backup) {
-    log(`Restoring ${key}...`);
-    for (const row of backup[key]) {
-      delete row.id;
-      await fetch(`${BASE_URL}/${TABLES[key]}/?user_field_names=true`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(row)
-      });
-      done++;
-      setProgress(done, total);
-    }
+  
+  if (!confirm('⚠️ WARNING: This will restore data from backup. Existing data with same IDs may be overwritten. Continue?')) {
+    this.value = '';
+    return;
   }
-
-  log('Restore completed');
+  
+  try {
+    setAllButtonsState(true);
+    clearLog();
+    showProgress(true);
+    
+    log('Reading backup file...', 'info');
+    const backupText = await file.text();
+    const backupData = JSON.parse(backupText);
+    
+    // Validate backup
+    if (!backupData.metadata || !backupData.metadata.shopId) {
+      throw new Error('Invalid backup file format: Missing metadata');
+    }
+    
+    const currentShopID = localStorage.getItem('ShopIDtag');
+    if (backupData.metadata.shopId !== currentShopID) {
+      throw new Error(`Backup is for shop ${backupData.metadata.shopId}, but current shop is ${currentShopID}`);
+    }
+    
+    log(`Valid backup found for shop: ${backupData.metadata.shopName}`, 'success');
+    log(`Backup date: ${backupData.metadata.backupDate}`, 'info');
+    
+    // Calculate total records to restore
+    let totalRecords = 0;
+    const tablesToRestore = [];
+    
+    for (const [tableName, data] of Object.entries(backupData)) {
+      if (tableName === 'metadata') continue;
+      if (Array.isArray(data) && data.length > 0) {
+        tablesToRestore.push({ tableName, data });
+        totalRecords += data.length;
+      }
+    }
+    
+    log(`Found ${tablesToRestore.length} tables with ${totalRecords} total records to restore`, 'info');
+    
+    // Start restore process
+    let restoredCount = 0;
+    let errors = 0;
+    
+    for (const { tableName, data } of tablesToRestore) {
+      log(`Restoring ${tableName} (${data.length} records)...`, 'info');
+      
+      for (const record of data) {
+        try {
+          // Remove ID to avoid conflicts (Baserow will assign new ID)
+          const recordToInsert = { ...record };
+          delete recordToInsert.id;
+          
+          // Ensure ShopID matches current shop
+          if (recordToInsert.ShopID !== undefined) {
+            recordToInsert.ShopID = currentShopID;
+          }
+          
+          await fetch(`${BASE_URL}/${TABLES[tableName]}/?user_field_names=true`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(recordToInsert)
+          });
+          
+          restoredCount++;
+          setProgress(restoredCount, totalRecords);
+          
+        } catch (error) {
+          errors++;
+          log(`Failed to restore record in ${tableName}: ${error.message}`, 'error');
+        }
+      }
+    }
+    
+    log(`✅ Restore completed! Success: ${restoredCount - errors}, Failed: ${errors}`, 
+        errors === 0 ? 'success' : 'warning');
+    
+    // Refresh data
+    setTimeout(async () => {
+      showProgress(false);
+      await loadShopStats();
+      alert(`Restore completed!\nSuccessfully restored: ${restoredCount - errors} records\nFailed: ${errors} records`);
+    }, 1000);
+    
+  } catch (error) {
+    log(`Restore failed: ${error.message}`, 'error');
+    alert(`Restore failed: ${error.message}`);
+  } finally {
+    setAllButtonsState(false);
+    e.target.value = '';
+  }
 };
 
-/* ================= DELETE SHOP ================= */
+// ================= DELETE FUNCTION =================
 async function deleteShop() {
-  if (!confirm('This will permanently DELETE ALL DATA of this shop. Continue?')) return;
-
-  let total = 0, done = 0;
-  const cache = {};
-
-  for (const key in TABLES) {
-    cache[key] = await fetchAll(TABLES[key]);
-    total += cache[key].length;
+  if (isOperationInProgress) {
+    alert('Please wait for the current operation to complete.');
+    return;
   }
+  
+  if (!shopInfo) {
+    alert('Shop information not loaded. Please refresh the page.');
+    return;
+  }
+  
+  const shopName = shopInfo.name || `Shop ${shopInfo.id}`;
+  
+  // Triple confirmation for safety
+  if (!confirm(`⚠️ DANGER: This will delete ALL data for "${shopName}". Continue?`)) {
+    return;
+  }
+  
+  const confirmation = prompt(`Type "DELETE ${shopName}" to confirm permanent deletion:`);
+  if (confirmation !== `DELETE ${shopName}`) {
+    alert('Deletion cancelled. Confirmation text did not match.');
+    return;
+  }
+  
+  if (!confirm(`🚨 FINAL WARNING: This action is PERMANENT and CANNOT BE UNDONE!\n\nALL data for "${shopName}" will be lost forever.\n\nAre you absolutely sure?`)) {
+    return;
+  }
+  
+  try {
+    setAllButtonsState(true);
+    clearLog();
+    showProgress(true);
+    
+    const shopID = localStorage.getItem('ShopIDtag');
+    log('Starting shop deletion process...', 'warning');
+    
+    // Get counts first
+    let totalRecords = 0;
+    const tableCounts = {};
+    
+    for (const [tableName, tableId] of Object.entries(TABLES)) {
+      if (tableName === 'shops') continue;
+      
+      try {
+        const data = await fetchWithPagination(tableId, { shopID: shopID });
+        tableCounts[tableName] = data.length;
+        totalRecords += data.length;
+      } catch (error) {
+        tableCounts[tableName] = 0;
+      }
+    }
+    
+    log(`Found ${totalRecords} records to delete across ${Object.keys(tableCounts).length} tables`, 'warning');
+    
+    // Delete records from each table
+    let deletedCount = 0;
+    let errors = 0;
+    
+    for (const [tableName, tableId] of Object.entries(TABLES)) {
+      if (tableName === 'shops') continue;
+      
+      const count = tableCounts[tableName];
+      if (count === 0) continue;
+      
+      log(`Deleting ${tableName} (${count} records)...`, 'warning');
+      
+      try {
+        const data = await fetchWithPagination(tableId, { shopID: shopID });
+        
+        for (const record of data) {
+          try {
+            await fetch(`${BASE_URL}/${tableId}/${record.id}/`, {
+              method: 'DELETE',
+              headers
+            });
+            deletedCount++;
+            setProgress(deletedCount, totalRecords);
+          } catch (error) {
+            errors++;
+            log(`Failed to delete record in ${tableName}: ${error.message}`, 'error');
+          }
+        }
+      } catch (error) {
+        log(`Error accessing ${tableName}: ${error.message}`, 'error');
+      }
+    }
+    
+    if (errors > 0) {
+      log(`⚠️ Deletion completed with ${errors} errors. ${deletedCount} records deleted.`, 'warning');
+      alert(`Deletion completed with ${errors} errors.\n${deletedCount} records were deleted.`);
+    } else {
+      log(`✅ Shop deletion completed! ${deletedCount} records deleted permanently.`, 'success');
+      alert(`Shop "${shopName}" has been deleted permanently.\n\n${deletedCount} records were removed.\n\nYou will now be logged out.`);
+      
+      // Clear localStorage and redirect
+      localStorage.clear();
+      setTimeout(() => {
+        window.location.href = '/login.html';
+      }, 2000);
+    }
+    
+  } catch (error) {
+    log(`Deletion failed: ${error.message}`, 'error');
+    alert(`Deletion failed: ${error.message}`);
+  } finally {
+    setAllButtonsState(false);
+    showProgress(false);
+  }
+}
 
-  for (const key in TABLES) {
-    log(`Deleting ${key}...`);
-    for (const row of cache[key]) {
-      await fetch(`${BASE_URL}/${TABLES[key]}/${row.id}/`, {
-        method: 'DELETE',
-        headers
-      });
-      done++;
-      setProgress(done, total);
+// ================= INITIALIZATION =================
+async function initialize() {
+  try {
+    log('Initializing shop management system...', 'info');
+    await loadShopInfo();
+    log('✅ System ready. You can now perform backup, restore, or delete operations.', 'success');
+  } catch (error) {
+    log(`❌ Initialization failed: ${error.message}`, 'error');
+    document.getElementById('page').innerHTML = `
+      <div style="text-align: center; padding: 40px;">
+        <h2 style="color: #f5576c;">❌ Initialization Error</h2>
+        <p>${error.message}</p>
+        <p>Please ensure you are logged in and have proper permissions.</p>
+        <button onclick="location.reload()" class="primary" style="margin-top: 20px;">
+          🔄 Retry
+        </button>
+      </div>
+    `;
+  }
+}
+
+// Start the application when page loads
+window.addEventListener('DOMContentLoaded', initialize);
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    switch(e.key.toLowerCase()) {
+      case 'b':
+        e.preventDefault();
+        if (!isOperationInProgress) downloadAllData();
+        break;
+      case 'r':
+        e.preventDefault();
+        if (!isOperationInProgress) triggerRestore();
+        break;
+      case 'd':
+        if (e.shiftKey) {
+          e.preventDefault();
+          if (!isOperationInProgress) deleteShop();
+        }
+        break;
     }
   }
-
-  log('Shop deleted permanently');
-}
-</script></body>
+});
+</script>
+</body>
 </html>
