@@ -1,0 +1,183 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Delete / Backup / Restore Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; padding:20px; }
+    .card { max-width:700px; margin:auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.1); }
+    h2 { margin-top:0; }
+    button { padding:12px 18px; border:none; border-radius:8px; cursor:pointer; font-size:15px; }
+    .danger { background:#d9534f; color:#fff; }
+    .primary { background:#0d6efd; color:#fff; }
+    .success { background:#198754; color:#fff; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    input[type=file] { padding:8px; }
+    .hidden { display:none; }
+    .log { margin-top:15px; font-size:14px; white-space:pre-line; }
+  </style>
+</head>
+<body><div class="card" id="page">
+  <h2>Shop Data Management</h2>
+  <p><b>Warning:</b> Delete Shop is <span style="color:red">PERMANENT</span>.</p>  <div class="row">
+    <button class="primary" onclick="downloadAllData()">Download Data (CSV Backup)</button>
+    <button class="success" onclick="triggerRestore()">Restore Data</button>
+    <button class="danger" onclick="deleteShop()">Delete Shop</button>
+  </div>  <input type="file" id="restoreFile" accept=".json" class="hidden" />  <div style="margin-top:20px;">
+  <div>Progress:</div>
+  <div style="background:#e9ecef;border-radius:10px;overflow:hidden;height:18px;">
+    <div id="progressBar" style="height:100%;width:0%;background:#0d6efd;transition:width .3s"></div>
+  </div>
+  <div id="progressText" style="font-size:13px;margin-top:6px;">0%</div>
+</div><div class="log" id="log"></div>
+</div><script>
+/* ================= CONFIG ================= */
+const API_KEY = 'YOUR_BASEROW_API_KEY'; // <-- REQUIRED
+const BASE_URL = 'https://api.baserow.io/api/database/rows/table';
+
+const TABLES = {
+  users: 729979,
+  inventory: 734795,
+  products: 734793,
+  customers: 736204,
+  ledger: 736207,
+  sale: 736209,
+  supplier: 744412,
+  transaction: 745465
+};
+
+/* ================= HELPERS ================= */
+const headers = {
+  'Authorization': `Token ${API_KEY}`,
+  'Content-Type': 'application/json'
+};
+
+const log = msg => document.getElementById('log').innerText += msg + '
+';
+const setProgress = (done, total) => {
+  const percent = Math.round((done / total) * 100);
+  document.getElementById('progressBar').style.width = percent + '%';
+  document.getElementById('progressText').innerText = percent + '%';
+};
+
+const shopID = localStorage.getItem('ShopIDtag');
+const mobile = localStorage.getItem('MobileTag');
+
+if (!shopID || !mobile) {
+  alert('ShopID or Mobile not found in localStorage');
+}
+
+/* ================= AUTH CHECK ================= */
+async function checkRole() {
+  const url = `${BASE_URL}/${TABLES.users}/?user_field_names=true&filter__Username__equal=${mobile}`;
+  const res = await fetch(url, { headers });
+  const data = await res.json();
+
+  if (!data.results || data.results.length === 0) {
+    alert('User not found');
+    document.getElementById('page').classList.add('hidden');
+    return;
+  }
+
+  const role = data.results[0].Role;
+  if (role !== 'Manager') {
+    alert('Access denied. Manager only.');
+    document.getElementById('page').classList.add('hidden');
+  }
+}
+
+checkRole();
+
+/* ================= FETCH ALL ROWS BY SHOPID ================= */
+async function fetchAll(tableId) {
+  let page = 1, all = [];
+  while (true) {
+    const res = await fetch(`${BASE_URL}/${tableId}/?user_field_names=true&page=${page}&filter__ShopID__equal=${shopID}`, { headers });
+    const data = await res.json();
+    all = all.concat(data.results);
+    if (!data.next) break;
+    page++;
+  }
+  return all;
+}
+
+/* ================= DOWNLOAD BACKUP ================= */
+async function downloadAllData() {
+  log('Preparing backup...');
+  const backup = {};
+
+  for (const key in TABLES) {
+    log(`Fetching ${key}...`);
+    backup[key] = await fetchAll(TABLES[key]);
+  }
+
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `SHOP_${shopID}_BACKUP.json`;
+  a.click();
+
+  log('Backup downloaded successfully');
+}
+
+/* ================= RESTORE ================= */
+function triggerRestore() {
+  document.getElementById('restoreFile').click();
+}
+
+restoreFile.onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!confirm('Restore will insert data back into database. Continue?')) return;
+
+  const backup = JSON.parse(await file.text());
+  let total = 0, done = 0;
+
+  for (const key in backup) total += backup[key].length;
+
+  for (const key in backup) {
+    log(`Restoring ${key}...`);
+    for (const row of backup[key]) {
+      delete row.id;
+      await fetch(`${BASE_URL}/${TABLES[key]}/?user_field_names=true`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(row)
+      });
+      done++;
+      setProgress(done, total);
+    }
+  }
+
+  log('Restore completed');
+};
+
+/* ================= DELETE SHOP ================= */
+async function deleteShop() {
+  if (!confirm('This will permanently DELETE ALL DATA of this shop. Continue?')) return;
+
+  let total = 0, done = 0;
+  const cache = {};
+
+  for (const key in TABLES) {
+    cache[key] = await fetchAll(TABLES[key]);
+    total += cache[key].length;
+  }
+
+  for (const key in TABLES) {
+    log(`Deleting ${key}...`);
+    for (const row of cache[key]) {
+      await fetch(`${BASE_URL}/${TABLES[key]}/${row.id}/`, {
+        method: 'DELETE',
+        headers
+      });
+      done++;
+      setProgress(done, total);
+    }
+  }
+
+  log('Shop deleted permanently');
+}
+</script></body>
+</html>
