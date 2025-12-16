@@ -1812,7 +1812,7 @@ Thank you for your Business! 🙏
         });
     }
 
-    // SCREENSHOT-BASED PDF GENERATION WITH 5-SECOND DELAY
+    // SCREENSHOT-BASED PDF GENERATION WITH 5-SECOND DELAY - SINGLE PAGE
     async function generatePDF() {
       if (!currentInvoiceData) {
         showToast('⚠️ Please load an invoice first');
@@ -1825,7 +1825,7 @@ Thank you for your Business! 🙏
       pdfLoading.style.display = 'flex';
       
       try {
-        // Step 1: Prepare the screenshot content
+        // Step 1: Prepare the screenshot content with compact layout
         await prepareScreenshotContent();
         
         // Step 2: Wait for 5 seconds to ensure all content is loaded and rendered
@@ -1834,8 +1834,8 @@ Thank you for your Business! 🙏
         // Step 3: Capture the screenshot
         const canvas = await captureScreenshot();
         
-        // Step 4: Generate PDF from the canvas
-        await generatePDFFromCanvas(canvas);
+        // Step 4: Generate PDF from the canvas (single page)
+        await generateSinglePagePDF(canvas);
         
         // Step 5: Clean up
         cleanupScreenshot();
@@ -1864,104 +1864,92 @@ Thank you for your Business! 🙏
       let totalTaxAmount = 0;
       let itemCount = 0;
       
-      // Build HTML for screenshot
+      // Build compact HTML for screenshot (single page)
       let screenshotHTML = `
-        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; background: white;">
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #4361ee 0%, #7209b7 100%); color: white; padding: 30px; border-radius: 12px 12px 0 0;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; width: 750px; margin: 0 auto; background: white; padding: 20px; box-sizing: border-box;">
+          <!-- Header - Compact -->
+          <div style="background: linear-gradient(135deg, #4361ee 0%, #7209b7 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">${shopInfo.shopName}</div>
-                <div style="font-size: 15px; opacity: 0.9; line-height: 1.5;">
+                <div style="font-size: 22px; font-weight: 700; margin-bottom: 5px;">${shopInfo.shopName}</div>
+                <div style="font-size: 11px; opacity: 0.9; line-height: 1.3;">
                   <div>${shopInfo.address}</div>
                   <div>Phone: ${shopInfo.phone}</div>
                 </div>
-                <div style="font-size: 14px; opacity: 0.8; margin-top: 12px; font-weight: 500;">
-                  Shop ID: ${localStorage.getItem("ShopIDTag") || "Not Set"}
-                </div>
               </div>
-              ${invoice["Tag"] ? `<div style="background: rgba(255, 255, 255, 0.25); padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.4);">${invoice["Tag"]}</div>` : ''}
+              ${invoice["Tag"] ? `<div style="background: rgba(255, 255, 255, 0.25); padding: 6px 12px; border-radius: 15px; font-weight: 600; font-size: 12px; backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.4);">${invoice["Tag"]}</div>` : ''}
             </div>
           </div>
           
-          <!-- Invoice Title -->
-          <div style="padding: 30px 30px 0 30px;">
-            <h1 style="color: #4361ee; margin: 0 0 20px 0; font-size: 28px;">TAX INVOICE</h1>
-          </div>
-          
-          <!-- Invoice Details -->
-          <div style="padding: 20px 30px; background: #f8f9fa; border-radius: 12px; margin: 20px 30px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-              <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 14px; margin-bottom: 8px;">Invoice Number</div>
-                <div style="font-weight: 500; color: #212529; font-size: 16px;">${invoice["Invoice Number"]}</div>
+          <!-- Invoice Title and Details - Compact -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <div>
+              <h1 style="color: #4361ee; margin: 0 0 10px 0; font-size: 20px;">TAX INVOICE</h1>
+              <div style="font-size: 12px; color: #6c757d;">
+                <div><strong>Invoice:</strong> ${invoice["Invoice Number"]}</div>
+                <div><strong>Date:</strong> ${formatDate(invoice["Date"])}</div>
+                <div><strong>Sales By:</strong> ${invoice["Sales Person"] || "Not Specified"}</div>
               </div>
-              <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 14px; margin-bottom: 8px;">Invoice Date</div>
-                <div style="font-weight: 500; color: #212529; font-size: 16px;">${formatDate(invoice["Date"])}</div>
-              </div>
-              <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 14px; margin-bottom: 8px;">Sales Person</div>
-                <div style="font-weight: 500; color: #212529; font-size: 16px;">${invoice["Sales Person"] || "Not Specified"}</div>
-              </div>
-              <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 14px; margin-bottom: 8px;">Shop GST</div>
-                <div style="font-weight: 500; color: #212529; font-size: 16px;">${shopGST}</div>
-              </div>
+            </div>
+            <div style="text-align: right; font-size: 12px; color: #6c757d;">
+              <div><strong>Shop GST:</strong> ${shopGST}</div>
+              <div><strong>Shop ID:</strong> ${localStorage.getItem("ShopIDTag") || "Not Set"}</div>
             </div>
           </div>
           
-          <!-- Customer Information -->
-          <div style="padding: 25px 30px; margin: 0 30px 20px 30px; border: 1px solid #e9ecef; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; color: #4361ee;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Customer Information - Compact -->
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #e9ecef;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #4361ee;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#4361ee"/>
                 <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#4361ee"/>
               </svg>
-              <h3 style="font-size: 20px; font-weight: 600; margin: 0;">Customer Information</h3>
+              <h3 style="font-size: 16px; font-weight: 600; margin: 0;">Customer Information</h3>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 12px;">
               <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 13px; margin-bottom: 6px;">Customer Name</div>
-                <div style="font-weight: 500; color: #212529; font-size: 15px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">${invoice["Costomer Name"] || "Not Specified"}</div>
-              </div>
-              <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 13px; margin-bottom: 6px;">Customer Phone</div>
-                <div style="font-weight: 500; color: #212529; font-size: 15px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">${invoice["Mobile"] || "Not Provided"}</div>
+                <div style="font-weight: 600; color: #6c757d; margin-bottom: 3px;">Name</div>
+                <div style="padding: 5px; background: white; border-radius: 4px; border: 1px solid #e9ecef;">${invoice["Costomer Name"] || "Not Specified"}</div>
               </div>
               <div>
-                <div style="font-weight: 600; color: #6c757d; font-size: 13px; margin-bottom: 6px;">Customer GST</div>
-                <div style="font-weight: 500; color: #212529; font-size: 15px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">${invoice["GST"] || "Not Registered"}</div>
+                <div style="font-weight: 600; color: #6c757d; margin-bottom: 3px;">Phone</div>
+                <div style="padding: 5px; background: white; border-radius: 4px; border: 1px solid #e9ecef;">${invoice["Mobile"] || "Not Provided"}</div>
               </div>
-              <div style="grid-column: 1 / -1;">
-                <div style="font-weight: 600; color: #6c757d; font-size: 13px; margin-bottom: 6px;">Customer Address</div>
-                <div style="font-weight: 500; color: #212529; font-size: 15px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">${invoice["Address"] || "Not Provided"}</div>
+              <div>
+                <div style="font-weight: 600; color: #6c757d; margin-bottom: 3px;">GST</div>
+                <div style="padding: 5px; background: white; border-radius: 4px; border: 1px solid #e9ecef;">${invoice["GST"] || "Not Registered"}</div>
               </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px;">
+              <div style="font-weight: 600; color: #6c757d; margin-bottom: 3px;">Address</div>
+              <div style="padding: 5px; background: white; border-radius: 4px; border: 1px solid #e9ecef;">${invoice["Address"] || "Not Provided"}</div>
             </div>
           </div>
           
-          <!-- Items Table -->
-          <div style="margin: 20px 30px;">
-            <h3 style="color: #4361ee; margin-bottom: 15px; font-size: 18px;">Item Details</h3>
-            <table style="width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;">
+          <!-- Items Table - Compact -->
+          <div style="margin-bottom: 15px;">
+            <h3 style="color: #4361ee; margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid #4361ee; padding-bottom: 5px;">Item Details</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px;">
               <thead>
-                <tr style="background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);">
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">#</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Item Description</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Batch No</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Qty</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Rate (₹)</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Tax Rate</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Taxable Amt (₹)</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">SGST (₹)</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">CGST (₹)</th>
-                  <th style="color: white; padding: 15px; text-align: left; font-weight: 600; font-size: 14px; border: none;">Total (₹)</th>
+                <tr style="background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%); color: white;">
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">#</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Item</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Batch</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Qty</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Rate</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Tax%</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Tax Amt</th>
+                  <th style="padding: 8px; text-align: left; font-weight: 600; border: none;">Total</th>
                 </tr>
               </thead>
               <tbody>
       `;
       
-      rows.forEach((row, index) => {
+      // Limit to 15 items for single page
+      const maxItems = Math.min(rows.length, 15);
+      
+      for (let i = 0; i < maxItems; i++) {
+        const row = rows[i];
         const product = productData.find(p => p["Product ID"] === row["Product ID"]);
         const productName = product ? product["Product Name"] : "Not Found";
         const quantity = Number(row["Quantity"]) || 0;
@@ -1979,26 +1967,38 @@ Thank you for your Business! 🙏
         totalTaxAmount += taxes.taxAmount;
         itemCount++;
         
+        // Truncate long product names
+        const displayName = productName.length > 25 ? productName.substring(0, 22) + "..." : productName;
+        
         screenshotHTML += `
-                <tr style="${index % 2 === 0 ? 'background: rgba(0,0,0,0.015);' : ''}">
-                  <td style="padding: 15px; border: none;">${index + 1}</td>
-                  <td style="padding: 15px; border: none;">
-                    <strong>${productName}</strong><br>
-                    <span style="font-size: 13px; color: #6c757d;">Product ID: ${row["Product ID"]}</span>
+                <tr style="${i % 2 === 0 ? 'background: rgba(0,0,0,0.015);' : ''}">
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef;">${i + 1}</td>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef;">
+                    <div style="font-weight: 600;">${displayName}</div>
+                    <div style="font-size: 9px; color: #6c757d;">ID: ${row["Product ID"]}</div>
                   </td>
-                  <td style="padding: 15px; border: none;">
-                    <span style="background: #e8f4fd; color: #0366d6; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${batchNo}</span>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef;">
+                    <span style="background: #e8f4fd; color: #0366d6; padding: 2px 5px; border-radius: 3px; font-size: 10px; font-weight: 600;">${batchNo}</span>
                   </td>
-                  <td style="padding: 15px; border: none;">${quantity}</td>
-                  <td style="padding: 15px; border: none;">${price.toFixed(2)}</td>
-                  <td style="padding: 15px; border: none;">${taxPercentage}%</td>
-                  <td style="padding: 15px; border: none;">${taxes.taxableAmount.toFixed(2)}</td>
-                  <td style="padding: 15px; border: none;">${taxes.sgst.toFixed(2)}</td>
-                  <td style="padding: 15px; border: none;">${taxes.cgst.toFixed(2)}</td>
-                  <td style="padding: 15px; border: none; font-weight: 600;">${taxes.total.toFixed(2)}</td>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef; text-align: center;">${quantity}</td>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef; text-align: right;">${price.toFixed(2)}</td>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef; text-align: center;">${taxPercentage}%</td>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef; text-align: right;">${taxes.taxAmount.toFixed(2)}</td>
+                  <td style="padding: 6px; border-bottom: 1px solid #e9ecef; text-align: right; font-weight: 600;">${taxes.total.toFixed(2)}</td>
                 </tr>
         `;
-      });
+      }
+      
+      // Add note if items were truncated
+      if (rows.length > maxItems) {
+        screenshotHTML += `
+                <tr>
+                  <td colspan="8" style="padding: 8px; text-align: center; font-style: italic; color: #6c757d; border-bottom: 1px solid #e9ecef;">
+                    ... and ${rows.length - maxItems} more items
+                  </td>
+                </tr>
+        `;
+      }
       
       // Calculate effective tax percentage
       const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
@@ -2009,64 +2009,66 @@ Thank you for your Business! 🙏
             </table>
           </div>
           
-          <!-- Tax Summary -->
-          <div style="margin: 0 30px 30px 30px; padding: 25px; background: #f8f9fa; border-radius: 12px;">
-            <h3 style="color: #4361ee; margin-bottom: 20px; font-size: 18px;">Tax Summary</h3>
-            <div style="background: white; border-radius: 8px; padding: 20px; border: 1px solid #e9ecef;">
-              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
-                <span style="font-weight: 500; color: #6c757d;">Total Items:</span>
-                <span style="font-weight: 600; color: #212529;">${itemCount}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
-                <span style="font-weight: 500; color: #6c757d;">Taxable Amount:</span>
-                <span style="font-weight: 600; color: #212529;">₹${totalTaxableAmount.toFixed(2)}</span>
-              </div>
+          <!-- Tax Summary - Compact -->
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #e9ecef;">
+            <h3 style="color: #4361ee; margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid #4361ee; padding-bottom: 5px;">Tax Summary</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 12px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="color: #6c757d;">Total Items:</span>
+                  <span style="font-weight: 600;">${itemCount}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="color: #6c757d;">Taxable Amount:</span>
+                  <span style="font-weight: 600;">₹${totalTaxableAmount.toFixed(2)}</span>
+                </div>
       `;
       
       if (totalTaxAmount > 0) {
         screenshotHTML += `
-              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
-                <span style="font-weight: 500; color: #6c757d;">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
-                <span style="font-weight: 600; color: #212529;">₹${totalSGST.toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
-                <span style="font-weight: 500; color: #6c757d;">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
-                <span style="font-weight: 600; color: #212529;">₹${totalCGST.toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
-                <span style="font-weight: 500; color: #6c757d;">Total GST:</span>
-                <span style="font-weight: 600; color: #212529;">₹${totalTaxAmount.toFixed(2)}</span>
-              </div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="color: #6c757d;">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+                  <span style="font-weight: 600;">₹${totalSGST.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="color: #6c757d;">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+                  <span style="font-weight: 600;">₹${totalCGST.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="color: #6c757d;">Total GST:</span>
+                  <span style="font-weight: 600;">₹${totalTaxAmount.toFixed(2)}</span>
+                </div>
         `;
       } else {
         screenshotHTML += `
-              <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef;">
-                <span style="font-weight: 500; color: #6c757d;">GST:</span>
-                <span style="font-weight: 600; color: #212529;">NIL</span>
-              </div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                  <span style="color: #6c757d;">GST:</span>
+                  <span style="font-weight: 600;">NIL</span>
+                </div>
         `;
       }
       
       screenshotHTML += `
-              <div style="display: flex; justify-content: space-between; padding: 15px 0; border-bottom: none; font-size: 18px; margin-top: 10px;">
-                <span style="font-weight: 700; color: #4361ee;">GRAND TOTAL:</span>
-                <span style="font-weight: 700; color: #4361ee;">₹${grandTotal.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: center; background: white; border-radius: 8px; border: 2px solid #4361ee;">
+                <div style="text-align: center; padding: 15px;">
+                  <div style="color: #6c757d; font-size: 14px; margin-bottom: 5px;">GRAND TOTAL</div>
+                  <div style="color: #4361ee; font-size: 28px; font-weight: 700;">₹${grandTotal.toFixed(2)}</div>
+                  <div style="color: #6c757d; font-size: 11px; margin-top: 5px;">${itemCount} Items</div>
+                </div>
               </div>
             </div>
           </div>
           
-          <!-- Footer -->
-          <div style="margin: 30px; padding: 20px; border-top: 2px solid #e9ecef; color: #6c757d; font-size: 12px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <div>Generated on: ${new Date().toLocaleDateString()}</div>
+          <!-- Footer - Compact -->
+          <div style="border-top: 2px solid #e9ecef; padding-top: 10px; font-size: 10px; color: #6c757d;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <div>Generated: ${new Date().toLocaleDateString()}</div>
               <div>Invoice: ${currentInvoiceNumber}</div>
               <div>E. & O.E.</div>
             </div>
-            <div style="margin-top: 15px;">
-              <div style="font-weight: 600; color: #4361ee; margin-bottom: 5px;">Terms and Conditions:</div>
-              <div>1. Goods once sold will not be taken back</div>
-              <div>2. Subject to ${shopInfo.shopName} jurisdiction</div>
-              <div>3. All disputes subject to local jurisdiction only</div>
+            <div style="text-align: center; margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+              <strong>Terms:</strong> Goods once sold will not be taken back | Subject to ${shopInfo.shopName} jurisdiction | All disputes subject to local jurisdiction
             </div>
           </div>
         </div>
@@ -2135,7 +2137,7 @@ Thank you for your Business! 🙏
       }
     }
 
-    async function generatePDFFromCanvas(canvas) {
+    async function generateSinglePagePDF(canvas) {
       // Create PDF in A4 format
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -2146,38 +2148,29 @@ Thank you for your Business! 🙏
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Calculate dimensions to fit the canvas into PDF
-      const imgWidth = pdfWidth - 20; // 10mm margins on each side
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Calculate dimensions to fit the canvas into PDF (with margins)
+      const margin = 5; // Small margin
+      const availableWidth = pdfWidth - (margin * 2);
+      const availableHeight = pdfHeight - (margin * 2);
+      
+      // Calculate scale to fit canvas in one page
+      const scaleX = availableWidth / canvas.width;
+      const scaleY = availableHeight / canvas.height;
+      const scale = Math.min(scaleX, scaleY) * 0.95; // 95% to ensure it fits
+      
+      // Calculate scaled dimensions
+      const imgWidth = canvas.width * scale;
+      const imgHeight = canvas.height * scale;
+      
+      // Center the image on the page
+      const xPos = (pdfWidth - imgWidth) / 2;
+      const yPos = (pdfHeight - imgHeight) / 2;
       
       // Convert canvas to image data
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       
-      // Add image to PDF
-      pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
-      
-      // If content is longer than one page, add more pages
-      let currentHeight = imgHeight + 20;
-      while (currentHeight < canvas.height) {
-        pdf.addPage();
-        
-        // Calculate the portion of canvas to show on this page
-        const yOffset = currentHeight - 20;
-        const remainingHeight = canvas.height - yOffset;
-        const pageImgHeight = Math.min(remainingHeight, (canvas.height * imgWidth) / canvas.width);
-        
-        // Create a temporary canvas for this page's content
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = pageImgHeight;
-        const ctx = tempCanvas.getContext('2d');
-        ctx.drawImage(canvas, 0, yOffset, canvas.width, pageImgHeight, 0, 0, canvas.width, pageImgHeight);
-        
-        const tempImgData = tempCanvas.toDataURL('image/jpeg', 1.0);
-        pdf.addImage(tempImgData, 'JPEG', 10, 10, imgWidth, (pageImgHeight * imgWidth) / canvas.width);
-        
-        currentHeight += pageImgHeight;
-      }
+      // Add image to PDF centered on single page
+      pdf.addImage(imgData, 'JPEG', xPos, yPos, imgWidth, imgHeight);
       
       // Save the PDF
       const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
