@@ -6,7 +6,6 @@
   <title>Invoice Viewer</title>
   <!-- Include jsPDF library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <style>
     :root {
       --primary: #4361ee;
@@ -1777,7 +1776,7 @@ Thank you for your Business! 🙏
         });
     }
 
-    // NEW: Direct PDF Generation from Data
+    // SIMPLE WORKING PDF GENERATION
     async function generatePDF() {
       if (!currentInvoiceData) {
         showToast('⚠️ Please load an invoice first');
@@ -1800,8 +1799,116 @@ Thank you for your Business! 🙏
         let totalTaxAmount = 0;
         let itemCount = 0;
         
-        // Prepare items data for PDF table
-        const itemsTableData = [];
+        // Create PDF
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        // Set margins
+        const marginLeft = 15;
+        const marginTop = 20;
+        const pageWidth = 210;
+        const pageHeight = 297;
+        let currentY = marginTop;
+        
+        // Add shop header
+        pdf.setFontSize(22);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238); // Primary color
+        pdf.text(shopInfo.shopName, marginLeft, currentY);
+        
+        currentY += 8;
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(shopInfo.address, marginLeft, currentY);
+        currentY += 5;
+        pdf.text(`Phone: ${shopInfo.phone}`, marginLeft, currentY);
+        currentY += 5;
+        pdf.text(`GSTIN: ${shopGST}`, marginLeft, currentY);
+        
+        // Add invoice tag if available
+        if (invoice["Tag"]) {
+          pdf.setFontSize(9);
+          pdf.text(`Invoice Tag: ${invoice["Tag"]}`, pageWidth - marginLeft - 40, currentY - 10, { align: 'right' });
+        }
+        
+        currentY += 10;
+        
+        // Add invoice title
+        pdf.setFontSize(18);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238);
+        pdf.text('TAX INVOICE', marginLeft, currentY);
+        
+        currentY += 8;
+        
+        // Add invoice details
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`Invoice Number: ${invoice["Invoice Number"]}`, marginLeft, currentY);
+        pdf.text(`Date: ${formatDate(invoice["Date"])}`, pageWidth - marginLeft - 40, currentY, { align: 'right' });
+        
+        currentY += 5;
+        pdf.text(`Sales Person: ${invoice["Sales Person"] || "Not Specified"}`, marginLeft, currentY);
+        
+        currentY += 10;
+        
+        // Add customer section
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238);
+        pdf.text('CUSTOMER DETAILS', marginLeft, currentY);
+        
+        currentY += 6;
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        pdf.text(`Name: ${invoice["Costomer Name"] || "Not Specified"}`, marginLeft, currentY);
+        currentY += 5;
+        pdf.text(`Phone: ${invoice["Mobile"] || "Not Provided"}`, marginLeft, currentY);
+        currentY += 5;
+        pdf.text(`Address: ${invoice["Address"] || "Not Provided"}`, marginLeft, currentY);
+        currentY += 5;
+        pdf.text(`GSTIN: ${invoice["GST"] || "Not Registered"}`, marginLeft, currentY);
+        
+        currentY += 10;
+        
+        // Add items table header
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238);
+        pdf.text('ITEM DETAILS', marginLeft, currentY);
+        
+        currentY += 8;
+        
+        // Create table headers
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFillColor(67, 97, 238);
+        
+        // Draw header cells
+        const colWidths = [10, 50, 15, 12, 15, 15, 20, 15, 15, 20];
+        let xPos = marginLeft;
+        
+        const headers = ['#', 'Item Description', 'Batch', 'Qty', 'Rate', 'Tax %', 'Taxable Amt', 'SGST', 'CGST', 'Total'];
+        
+        headers.forEach((header, index) => {
+          pdf.rect(xPos, currentY - 5, colWidths[index], 8, 'F');
+          pdf.text(header, xPos + 2, currentY);
+          xPos += colWidths[index];
+        });
+        
+        currentY += 8;
+        
+        // Add items data
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
         
         rows.forEach((row, index) => {
           const product = productData.find(p => p["Product ID"] === row["Product ID"]);
@@ -1821,10 +1928,43 @@ Thank you for your Business! 🙏
           totalTaxAmount += taxes.taxAmount;
           itemCount++;
           
-          // Add to table data
-          itemsTableData.push([
+          // Check if we need a new page
+          if (currentY > pageHeight - 40) {
+            pdf.addPage();
+            currentY = marginTop;
+            
+            // Redraw headers on new page
+            xPos = marginLeft;
+            pdf.setFont(undefined, 'bold');
+            pdf.setTextColor(255, 255, 255);
+            pdf.setFillColor(67, 97, 238);
+            
+            headers.forEach((header, i) => {
+              pdf.rect(xPos, currentY - 5, colWidths[i], 8, 'F');
+              pdf.text(header, xPos + 2, currentY);
+              xPos += colWidths[i];
+            });
+            
+            currentY += 8;
+            pdf.setFont(undefined, 'normal');
+            pdf.setTextColor(0, 0, 0);
+          }
+          
+          // Draw row with alternate background
+          if (index % 2 === 0) {
+            pdf.setFillColor(240, 240, 240);
+            xPos = marginLeft;
+            colWidths.forEach(width => {
+              pdf.rect(xPos, currentY - 4, width, 6, 'F');
+              xPos += width;
+            });
+          }
+          
+          // Add row data
+          xPos = marginLeft;
+          const rowData = [
             (index + 1).toString(),
-            productName,
+            productName.substring(0, 30), // Limit item name length
             batchNo,
             quantity.toString(),
             `₹${price.toFixed(2)}`,
@@ -1833,143 +1973,26 @@ Thank you for your Business! 🙏
             `₹${taxes.sgst.toFixed(2)}`,
             `₹${taxes.cgst.toFixed(2)}`,
             `₹${taxes.total.toFixed(2)}`
-          ]);
+          ];
+          
+          rowData.forEach((data, dataIndex) => {
+            pdf.text(data, xPos + 2, currentY);
+            xPos += colWidths[dataIndex];
+          });
+          
+          currentY += 7;
         });
-        
-        // Calculate effective tax percentage
-        const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
-          (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
-        
-        // Create PDF
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        // Set margins
-        const marginLeft = 10;
-        const marginTop = 10;
-        const pageWidth = 210 - (marginLeft * 2);
-        let currentY = marginTop;
-        
-        // Add header with gradient effect
-        pdf.setFillColor(67, 97, 238); // Primary color
-        pdf.rect(0, 0, 210, 50, 'F');
-        
-        pdf.setFontSize(24);
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(shopInfo.shopName, marginLeft, 20);
-        
-        pdf.setFontSize(10);
-        pdf.text(shopInfo.address, marginLeft, 28);
-        pdf.text(`Phone: ${shopInfo.phone}`, marginLeft, 34);
-        pdf.text(`GSTIN: ${shopGST}`, marginLeft, 40);
-        
-        // Add invoice tag if available
-        if (invoice["Tag"]) {
-          pdf.setFontSize(9);
-          pdf.setTextColor(255, 255, 255);
-          pdf.text(`Invoice Tag: ${invoice["Tag"]}`, pageWidth - 40, 40, { align: 'right' });
-        }
-        
-        currentY = 55;
-        
-        // Add invoice title
-        pdf.setFontSize(18);
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFont(undefined, 'bold');
-        pdf.text('TAX INVOICE', marginLeft, currentY);
-        
-        currentY += 8;
-        
-        // Add invoice details
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
-        pdf.text(`Invoice Number: ${invoice["Invoice Number"]}`, marginLeft, currentY);
-        pdf.text(`Date: ${formatDate(invoice["Date"])}`, pageWidth - 40, currentY, { align: 'right' });
         
         currentY += 5;
-        pdf.text(`Sales Person: ${invoice["Sales Person"] || "Not Specified"}`, marginLeft, currentY);
-        
-        currentY += 10;
-        
-        // Add customer section
-        pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238); // Primary color
-        pdf.text('CUSTOMER DETAILS', marginLeft, currentY);
-        
-        currentY += 6;
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
-        pdf.setTextColor(0, 0, 0);
-        
-        const customerDetails = [
-          `Name: ${invoice["Costomer Name"] || "Not Specified"}`,
-          `Phone: ${invoice["Mobile"] || "Not Provided"}`,
-          `Address: ${invoice["Address"] || "Not Provided"}`,
-          `GSTIN: ${invoice["GST"] || "Not Registered"}`
-        ];
-        
-        customerDetails.forEach((detail, index) => {
-          pdf.text(detail, marginLeft, currentY + (index * 5));
-        });
-        
-        currentY += 20;
-        
-        // Add items table header
-        pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238);
-        pdf.text('ITEM DETAILS', marginLeft, currentY);
-        
-        currentY += 8;
-        
-        // Create items table using autoTable
-        pdf.autoTable({
-          startY: currentY,
-          head: [['#', 'Item Description', 'Batch No', 'Qty', 'Rate', 'Tax %', 'Taxable Amt', 'SGST', 'CGST', 'Total']],
-          body: itemsTableData,
-          headStyles: {
-            fillColor: [67, 97, 238],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold'
-          },
-          alternateRowStyles: {
-            fillColor: [240, 240, 240]
-          },
-          styles: {
-            fontSize: 8,
-            cellPadding: 2
-          },
-          columnStyles: {
-            0: { cellWidth: 10 },
-            1: { cellWidth: 40 },
-            2: { cellWidth: 20 },
-            3: { cellWidth: 12 },
-            4: { cellWidth: 15 },
-            5: { cellWidth: 15 },
-            6: { cellWidth: 20 },
-            7: { cellWidth: 15 },
-            8: { cellWidth: 15 },
-            9: { cellWidth: 20 }
-          },
-          margin: { left: marginLeft, right: marginLeft }
-        });
-        
-        // Get the final Y position after the table
-        currentY = pdf.lastAutoTable.finalY + 10;
         
         // Add tax breakdown if needed
         if (Object.keys(taxBreakdownByRate).length > 0) {
-          pdf.setFontSize(12);
+          pdf.setFontSize(11);
           pdf.setFont(undefined, 'bold');
           pdf.setTextColor(67, 97, 238);
-          pdf.text('TAX BREAKDOWN BY RATE', marginLeft, currentY);
+          pdf.text('TAX BREAKDOWN', marginLeft, currentY);
           
-          currentY += 8;
+          currentY += 6;
           pdf.setFontSize(9);
           pdf.setFont(undefined, 'normal');
           pdf.setTextColor(0, 0, 0);
@@ -1991,54 +2014,63 @@ Thank you for your Business! 🙏
         }
         
         // Add summary section
+        currentY += 5;
         pdf.setFontSize(12);
         pdf.setFont(undefined, 'bold');
         pdf.setTextColor(67, 97, 238);
         pdf.text('SUMMARY', marginLeft, currentY);
         
         currentY += 8;
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
-        pdf.setTextColor(0, 0, 0);
         
+        // Calculate effective tax percentage
+        const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+          (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
+        
+        // Create summary table
         const summaryData = [
-          { label: 'Total Items:', value: itemCount },
-          { label: 'Taxable Amount:', value: `₹${totalTaxableAmount.toFixed(2)}` }
+          ['Total Items:', itemCount.toString()],
+          ['Taxable Amount:', `₹${totalTaxableAmount.toFixed(2)}`]
         ];
         
         if (totalTaxAmount > 0) {
           summaryData.push(
-            { label: `SGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%:`, value: `₹${totalSGST.toFixed(2)}` },
-            { label: `CGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%:`, value: `₹${totalCGST.toFixed(2)}` },
-            { label: 'Total GST:', value: `₹${totalTaxAmount.toFixed(2)}` }
+            [`SGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%:`, `₹${totalSGST.toFixed(2)}`],
+            [`CGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%:`, `₹${totalCGST.toFixed(2)}`],
+            ['Total GST:', `₹${totalTaxAmount.toFixed(2)}`]
           );
         } else {
-          summaryData.push({ label: 'GST:', value: 'NIL' });
+          summaryData.push(['GST:', 'NIL']);
         }
         
-        summaryData.push({ label: 'GRAND TOTAL:', value: `₹${grandTotal.toFixed(2)}` });
+        summaryData.push(['GRAND TOTAL:', `₹${grandTotal.toFixed(2)}`]);
         
-        summaryData.forEach((item, index) => {
-          pdf.text(item.label, marginLeft, currentY + (index * 5));
-          pdf.text(item.value, pageWidth - 20, currentY + (index * 5), { align: 'right' });
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        
+        summaryData.forEach(([label, value]) => {
+          pdf.text(label, marginLeft, currentY);
+          pdf.text(value, pageWidth - marginLeft - 30, currentY, { align: 'right' });
+          currentY += 5;
         });
         
-        currentY += (summaryData.length * 5) + 10;
-        
         // Add footer
+        currentY = pageHeight - 20;
         pdf.setFontSize(8);
         pdf.setTextColor(100);
-        pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, marginLeft, 280);
-        pdf.text(`Invoice: ${currentInvoiceNumber}`, pageWidth / 2, 280, { align: 'center' });
-        pdf.text('E. & O.E.', pageWidth - 20, 280, { align: 'right' });
+        pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, marginLeft, currentY);
+        pdf.text(`Invoice: ${currentInvoiceNumber}`, pageWidth / 2, currentY, { align: 'center' });
+        pdf.text('E. & O.E.', pageWidth - marginLeft, currentY, { align: 'right' });
         
-        // Add terms and conditions
+        currentY += 5;
         pdf.setFontSize(9);
         pdf.setTextColor(0, 0, 0);
-        pdf.text('Terms and Conditions:', marginLeft, 285);
-        pdf.text('1. Goods once sold will not be taken back', marginLeft + 5, 289);
-        pdf.text(`2. Subject to ${shopInfo.shopName} jurisdiction`, marginLeft + 5, 293);
-        pdf.text('3. All disputes subject to local jurisdiction only', marginLeft + 5, 297);
+        pdf.text('Terms and Conditions:', marginLeft, currentY);
+        currentY += 4;
+        pdf.text('1. Goods once sold will not be taken back', marginLeft + 5, currentY);
+        currentY += 4;
+        pdf.text(`2. Subject to ${shopInfo.shopName} jurisdiction`, marginLeft + 5, currentY);
+        currentY += 4;
+        pdf.text('3. All disputes subject to local jurisdiction only', marginLeft + 5, currentY);
         
         // Save PDF
         const fileName = `Invoice_${currentInvoiceNumber}_${shopInfo.shopName.replace(/\s+/g, '_')}.pdf`;
