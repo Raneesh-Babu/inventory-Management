@@ -1783,96 +1783,141 @@ Thank you for your Business! 🙏
     }
 
     // PDF Generation Function
-    async function generatePDF() {
-      if (!currentInvoiceData) {
-        showToast('⚠️ Please load an invoice first');
-        return;
-      }
-      
-      // Show loading overlay
-      const pdfLoading = document.getElementById('pdfLoading');
-      pdfLoading.style.display = 'flex';
-      
-      try {
-        // Get the invoice container (excluding action buttons)
-        const invoiceContainer = document.querySelector('.invoice-container');
-        
-        // Temporarily hide action buttons and search section for PDF
-        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
-        const templateSelector = document.getElementById('templateSelector');
-        const shareSection = document.getElementById('shareSection');
-        const searchSection = document.getElementById('searchSection');
-        
-        const originalDisplay = {
-          actionButtonsContainer: actionButtonsContainer.style.display,
-          templateSelector: templateSelector.style.display,
-          shareSection: shareSection.style.display,
-          searchSection: searchSection.style.display
-        };
-        
-        // Hide elements that shouldn't be in PDF
-        actionButtonsContainer.style.display = 'none';
-        templateSelector.style.display = 'none';
-        shareSection.style.display = 'none';
-        searchSection.style.display = 'none';
-        
-        // Add PDF watermark
-        const pdfWatermark = document.createElement('div');
-        pdfWatermark.innerHTML = `
-          <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); opacity: 0.1; font-size: 80px; color: #4361ee; pointer-events: none; z-index: 9999; font-weight: bold;">
-            ${parseShopTag(localStorage.getItem("ShopTag") || "Your Shop").shopName}
-          </div>
-        `;
-        document.body.appendChild(pdfWatermark);
-        
-        // Use html2canvas to capture the invoice
-        const canvas = await html2canvas(invoiceContainer, {
-          scale: 2, // Higher quality
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          allowTaint: true
-        });
-        
-        // Remove watermark
-        document.body.removeChild(pdfWatermark);
-        
-        // Restore original display
-        actionButtonsContainer.style.display = originalDisplay.actionButtonsContainer;
-        templateSelector.style.display = originalDisplay.templateSelector;
-        shareSection.style.display = originalDisplay.shareSection;
-        searchSection.style.display = originalDisplay.searchSection;
-        
-        // Convert canvas to image
-        const imgData = canvas.toDataURL('image/png');
-        
-        // Calculate PDF dimensions
-        const imgWidth = 210; // A4 width in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Create PDF
-        const pdf = new jsPDF({
-          orientation: imgHeight > imgWidth ? 'portrait' : 'landscape',
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        // Add invoice image to PDF
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        
-        // Add footer with generation details
-        const pageCount = pdf.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          pdf.setPage(i);
-          pdf.setFontSize(8);
-          pdf.setTextColor(100);
-          pdf.text(
-            `Generated on: ${new Date().toLocaleDateString()} | Invoice: ${currentInvoiceNumber} | Page ${i} of ${pageCount}`,
-            pdf.internal.pageSize.getWidth() / 2,
-            pdf.internal.pageSize.getHeight() - 10,
-            { align: 'center' }
-          );
-        }
+async function generatePDF() {
+  if (!currentInvoiceData) {
+    showToast('⚠️ Please load an invoice first');
+    return;
+  }
+  
+  // Show loading overlay
+  const pdfLoading = document.getElementById('pdfLoading');
+  pdfLoading.style.display = 'flex';
+  
+  try {
+    // Create a temporary container for PDF generation
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '1000px';
+    tempContainer.style.background = 'white';
+    tempContainer.style.padding = '20px';
+    tempContainer.style.boxSizing = 'border-box';
+    
+    // Clone the main content
+    const invoiceHeader = document.querySelector('.invoice-header').cloneNode(true);
+    const invoiceBody = document.querySelector('.invoice-body').cloneNode(true);
+    
+    // Remove elements we don't want in PDF
+    const elementsToRemove = invoiceBody.querySelectorAll(
+      '#searchSection, #actionButtonsContainer, #templateSelector, #shareSection, #errorMsg'
+    );
+    elementsToRemove.forEach(el => el.remove());
+    
+    // Also remove any buttons and search inputs
+    const buttons = invoiceBody.querySelectorAll('button');
+    buttons.forEach(btn => btn.remove());
+    
+    // Build the PDF content
+    tempContainer.appendChild(invoiceHeader);
+    tempContainer.appendChild(invoiceBody);
+    document.body.appendChild(tempContainer);
+    
+    // Add PDF-specific watermark
+    const watermark = document.createElement('div');
+    watermark.innerHTML = `
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); opacity: 0.05; font-size: 60px; color: #000; pointer-events: none; z-index: 1000; font-weight: bold; white-space: nowrap;">
+        ${document.getElementById('shopName').textContent} - ${currentInvoiceNumber}
+      </div>
+    `;
+    tempContainer.appendChild(watermark);
+    
+    // Force reflow to ensure content is rendered
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Use html2canvas to capture the temporary container
+    const canvas = await html2canvas(tempContainer, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 1000
+    });
+    
+    // Clean up
+    document.body.removeChild(tempContainer);
+    
+    // Convert canvas to image
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Calculate PDF dimensions
+    const imgWidth = 190; // Slightly less than A4 width for margins
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: imgHeight > 297 ? 'portrait' : 'landscape', // A4 height = 297mm
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Add margins (10mm on each side)
+    const margin = 10;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    // Calculate dimensions to fit within page with margins
+    const maxWidth = pageWidth - (2 * margin);
+    const maxHeight = pageHeight - (2 * margin);
+    
+    let finalWidth = imgWidth;
+    let finalHeight = imgHeight;
+    
+    // Scale down if too large
+    if (finalWidth > maxWidth) {
+      const scale = maxWidth / finalWidth;
+      finalWidth = maxWidth;
+      finalHeight = finalHeight * scale;
+    }
+    
+    if (finalHeight > maxHeight) {
+      const scale = maxHeight / finalHeight;
+      finalHeight = maxHeight;
+      finalWidth = finalWidth * scale;
+    }
+    
+    // Center the image
+    const xPos = (pageWidth - finalWidth) / 2;
+    const yPos = (pageHeight - finalHeight) / 2;
+    
+    // Add invoice image to PDF
+    pdf.addImage(imgData, 'PNG', xPos, yPos, finalWidth, finalHeight);
+    
+    // Add footer with generation details
+    pdf.setFontSize(8);
+    pdf.setTextColor(100);
+    pdf.text(
+      `Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()} | Invoice: ${currentInvoiceNumber} | ${document.getElementById('shopName').textContent}`,
+      pageWidth / 2,
+      pageHeight - 5,
+      { align: 'center' }
+    );
+    
+    // Save PDF with invoice number in filename
+    const shopName = document.getElementById('shopName').textContent.replace(/\s+/g, '_');
+    const fileName = `Invoice_${currentInvoiceNumber}_${shopName}.pdf`;
+    pdf.save(fileName);
+    
+    showToast('✅ PDF downloaded successfully!');
+    
+  } catch (error) {
+    console.error('PDF Generation Error:', error);
+    showToast('❌ Error generating PDF. Please try again.');
+  } finally {
+    // Hide loading overlay
+    pdfLoading.style.display = 'none';
+  }
+}
         
         // Save PDF with invoice number in filename
         const shopName = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop").shopName;
