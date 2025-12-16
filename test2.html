@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invoice Viewer</title>
-  <!-- Include jsPDF and html2canvas libraries -->
+  <!-- Include jsPDF library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <style>
     :root {
       --primary: #4361ee;
@@ -569,11 +569,6 @@
       }
     }
     
-    /* PDF Styles */
-    .pdf-only {
-      display: none;
-    }
-    
     @media (max-width: 768px) {
       .invoice-container {
         margin: 15px;
@@ -754,12 +749,6 @@
       margin-bottom: 20px;
       font-size: 18px;
       font-weight: 600;
-    }
-    
-    /* PDF Fix: Ensure all content is visible */
-    .pdf-visible {
-      visibility: visible !important;
-      opacity: 1 !important;
     }
   </style>
 </head>
@@ -1788,7 +1777,7 @@ Thank you for your Business! 🙏
         });
     }
 
-    // PDF Generation Function - FIXED VERSION
+    // NEW: Direct PDF Generation from Data
     async function generatePDF() {
       if (!currentInvoiceData) {
         showToast('⚠️ Please load an invoice first');
@@ -1800,146 +1789,259 @@ Thank you for your Business! 🙏
       pdfLoading.style.display = 'flex';
       
       try {
-        // Wait for any animations to complete
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const { invoice, rows, productData } = currentInvoiceData;
+        const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
         
-        // Get the invoice container
-        const invoiceContainer = document.querySelector('.invoice-container');
+        // Calculate totals
+        let grandTotal = 0;
+        let totalTaxableAmount = 0;
+        let totalSGST = 0;
+        let totalCGST = 0;
+        let totalTaxAmount = 0;
+        let itemCount = 0;
         
-        // Store original display states
-        const elementsToHide = [
-          document.getElementById('actionButtonsContainer'),
-          document.getElementById('templateSelector'),
-          document.getElementById('shareSection'),
-          document.getElementById('searchSection')
-        ];
+        // Prepare items data for PDF table
+        const itemsTableData = [];
         
-        const originalDisplay = elementsToHide.map(el => ({
-          element: el,
-          display: el.style.display
-        }));
-        
-        // Hide elements that shouldn't be in PDF
-        elementsToHide.forEach(el => {
-          if (el) el.style.display = 'none';
+        rows.forEach((row, index) => {
+          const product = productData.find(p => p["Product ID"] === row["Product ID"]);
+          const productName = product ? product["Product Name"] : "Not Found";
+          const quantity = Number(row["Quantity"]) || 0;
+          const price = Number(row["Price"]) || 0;
+          const taxIncluded = product ? product["Tax Included"] : false;
+          const taxPercentage = product ? Number(product["Tax Percentage"]) || 0 : 0;
+          const batchNo = row["Batch No"] || "N/A";
+          
+          const taxes = calculateTaxes(price, quantity, taxPercentage, taxIncluded);
+          
+          grandTotal += taxes.total;
+          totalTaxableAmount += taxes.taxableAmount;
+          totalSGST += taxes.sgst;
+          totalCGST += taxes.cgst;
+          totalTaxAmount += taxes.taxAmount;
+          itemCount++;
+          
+          // Add to table data
+          itemsTableData.push([
+            (index + 1).toString(),
+            productName,
+            batchNo,
+            quantity.toString(),
+            `₹${price.toFixed(2)}`,
+            `${taxPercentage}%`,
+            `₹${taxes.taxableAmount.toFixed(2)}`,
+            `₹${taxes.sgst.toFixed(2)}`,
+            `₹${taxes.cgst.toFixed(2)}`,
+            `₹${taxes.total.toFixed(2)}`
+          ]);
         });
         
-        // Ensure all content is visible for PDF
-        document.body.classList.add('pdf-visible');
-        invoiceContainer.classList.add('pdf-visible');
-        
-        // Create a temporary clone for PDF generation
-        const clone = invoiceContainer.cloneNode(true);
-        clone.style.position = 'absolute';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
-        clone.style.width = invoiceContainer.offsetWidth + 'px';
-        clone.style.visibility = 'visible';
-        clone.style.opacity = '1';
-        
-        // Remove interactive elements from clone
-        const buttons = clone.querySelectorAll('button');
-        buttons.forEach(btn => btn.remove());
-        
-        // Remove search section from clone
-        const searchSectionClone = clone.querySelector('.search-section');
-        if (searchSectionClone) searchSectionClone.remove();
-        
-        // Remove template selector from clone
-        const templateSelectorClone = clone.querySelector('.template-selector');
-        if (templateSelectorClone) templateSelectorClone.remove();
-        
-        // Remove share section from clone
-        const shareSectionClone = clone.querySelector('.share-section');
-        if (shareSectionClone) shareSectionClone.remove();
-        
-        // Remove action buttons container from clone
-        const actionButtonsContainerClone = clone.querySelector('.action-buttons-container');
-        if (actionButtonsContainerClone) actionButtonsContainerClone.remove();
-        
-        document.body.appendChild(clone);
-        
-        // Use html2canvas with better settings
-        const canvas = await html2canvas(clone, {
-          scale: 1,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          allowTaint: false,
-          removeContainer: true,
-          onclone: function(clonedDoc) {
-            // Make sure all elements are visible in the clone
-            const allElements = clonedDoc.querySelectorAll('*');
-            allElements.forEach(el => {
-              el.style.visibility = 'visible';
-              el.style.opacity = '1';
-            });
-          }
-        });
-        
-        // Remove the clone
-        document.body.removeChild(clone);
-        
-        // Restore original display states
-        originalDisplay.forEach(item => {
-          if (item.element) {
-            item.element.style.display = item.display;
-          }
-        });
-        
-        // Remove visibility classes
-        document.body.classList.remove('pdf-visible');
-        invoiceContainer.classList.remove('pdf-visible');
-        
-        // Convert canvas to image
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-        
-        // Calculate PDF dimensions
-        const imgWidth = 210; // A4 width in mm
-        const pageHeight = 297; // A4 height in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        // Calculate effective tax percentage
+        const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+          (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
         
         // Create PDF
         const pdf = new jsPDF({
-          orientation: imgHeight > pageHeight ? 'portrait' : 'landscape',
+          orientation: 'portrait',
           unit: 'mm',
           format: 'a4'
         });
         
-        // Handle multi-page PDF if content is too long
-        let heightLeft = imgHeight;
-        let position = 0;
-        const imgWidthPdf = imgWidth;
-        const imgHeightPdf = (imgWidthPdf * canvas.height) / canvas.width;
+        // Set margins
+        const marginLeft = 10;
+        const marginTop = 10;
+        const pageWidth = 210 - (marginLeft * 2);
+        let currentY = marginTop;
         
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
-        heightLeft -= pageHeight;
+        // Add header with gradient effect
+        pdf.setFillColor(67, 97, 238); // Primary color
+        pdf.rect(0, 0, 210, 50, 'F');
         
-        // Add additional pages if needed
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeightPdf;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
-          heightLeft -= pageHeight;
+        pdf.setFontSize(24);
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(shopInfo.shopName, marginLeft, 20);
+        
+        pdf.setFontSize(10);
+        pdf.text(shopInfo.address, marginLeft, 28);
+        pdf.text(`Phone: ${shopInfo.phone}`, marginLeft, 34);
+        pdf.text(`GSTIN: ${shopGST}`, marginLeft, 40);
+        
+        // Add invoice tag if available
+        if (invoice["Tag"]) {
+          pdf.setFontSize(9);
+          pdf.setTextColor(255, 255, 255);
+          pdf.text(`Invoice Tag: ${invoice["Tag"]}`, pageWidth - 40, 40, { align: 'right' });
         }
         
-        // Add footer with generation details
-        const pageCount = pdf.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          pdf.setPage(i);
-          pdf.setFontSize(8);
-          pdf.setTextColor(100);
-          pdf.text(
-            `Generated on: ${new Date().toLocaleDateString()} | Invoice: ${currentInvoiceNumber} | Page ${i} of ${pageCount}`,
-            pdf.internal.pageSize.getWidth() / 2,
-            pdf.internal.pageSize.getHeight() - 10,
-            { align: 'center' }
+        currentY = 55;
+        
+        // Add invoice title
+        pdf.setFontSize(18);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('TAX INVOICE', marginLeft, currentY);
+        
+        currentY += 8;
+        
+        // Add invoice details
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.text(`Invoice Number: ${invoice["Invoice Number"]}`, marginLeft, currentY);
+        pdf.text(`Date: ${formatDate(invoice["Date"])}`, pageWidth - 40, currentY, { align: 'right' });
+        
+        currentY += 5;
+        pdf.text(`Sales Person: ${invoice["Sales Person"] || "Not Specified"}`, marginLeft, currentY);
+        
+        currentY += 10;
+        
+        // Add customer section
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238); // Primary color
+        pdf.text('CUSTOMER DETAILS', marginLeft, currentY);
+        
+        currentY += 6;
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        const customerDetails = [
+          `Name: ${invoice["Costomer Name"] || "Not Specified"}`,
+          `Phone: ${invoice["Mobile"] || "Not Provided"}`,
+          `Address: ${invoice["Address"] || "Not Provided"}`,
+          `GSTIN: ${invoice["GST"] || "Not Registered"}`
+        ];
+        
+        customerDetails.forEach((detail, index) => {
+          pdf.text(detail, marginLeft, currentY + (index * 5));
+        });
+        
+        currentY += 20;
+        
+        // Add items table header
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238);
+        pdf.text('ITEM DETAILS', marginLeft, currentY);
+        
+        currentY += 8;
+        
+        // Create items table using autoTable
+        pdf.autoTable({
+          startY: currentY,
+          head: [['#', 'Item Description', 'Batch No', 'Qty', 'Rate', 'Tax %', 'Taxable Amt', 'SGST', 'CGST', 'Total']],
+          body: itemsTableData,
+          headStyles: {
+            fillColor: [67, 97, 238],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240]
+          },
+          styles: {
+            fontSize: 8,
+            cellPadding: 2
+          },
+          columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 40 },
+            2: { cellWidth: 20 },
+            3: { cellWidth: 12 },
+            4: { cellWidth: 15 },
+            5: { cellWidth: 15 },
+            6: { cellWidth: 20 },
+            7: { cellWidth: 15 },
+            8: { cellWidth: 15 },
+            9: { cellWidth: 20 }
+          },
+          margin: { left: marginLeft, right: marginLeft }
+        });
+        
+        // Get the final Y position after the table
+        currentY = pdf.lastAutoTable.finalY + 10;
+        
+        // Add tax breakdown if needed
+        if (Object.keys(taxBreakdownByRate).length > 0) {
+          pdf.setFontSize(12);
+          pdf.setFont(undefined, 'bold');
+          pdf.setTextColor(67, 97, 238);
+          pdf.text('TAX BREAKDOWN BY RATE', marginLeft, currentY);
+          
+          currentY += 8;
+          pdf.setFontSize(9);
+          pdf.setFont(undefined, 'normal');
+          pdf.setTextColor(0, 0, 0);
+          
+          // Sort tax rates
+          const sortedRates = Object.keys(taxBreakdownByRate).sort((a, b) => parseFloat(a) - parseFloat(b));
+          
+          sortedRates.forEach(rate => {
+            const rateData = taxBreakdownByRate[rate];
+            if (parseFloat(rate) > 0) {
+              pdf.text(`Items @ ${rate}% GST (${rateData.count} items): ₹${rateData.taxableAmount.toFixed(2)}`, marginLeft, currentY);
+              currentY += 4;
+              pdf.text(`  SGST @ ${(rate/2).toFixed(2)}%: ₹${rateData.sgst.toFixed(2)}`, marginLeft + 5, currentY);
+              currentY += 4;
+              pdf.text(`  CGST @ ${(rate/2).toFixed(2)}%: ₹${rateData.cgst.toFixed(2)}`, marginLeft + 5, currentY);
+              currentY += 6;
+            }
+          });
+        }
+        
+        // Add summary section
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(67, 97, 238);
+        pdf.text('SUMMARY', marginLeft, currentY);
+        
+        currentY += 8;
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        const summaryData = [
+          { label: 'Total Items:', value: itemCount },
+          { label: 'Taxable Amount:', value: `₹${totalTaxableAmount.toFixed(2)}` }
+        ];
+        
+        if (totalTaxAmount > 0) {
+          summaryData.push(
+            { label: `SGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%:`, value: `₹${totalSGST.toFixed(2)}` },
+            { label: `CGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%:`, value: `₹${totalCGST.toFixed(2)}` },
+            { label: 'Total GST:', value: `₹${totalTaxAmount.toFixed(2)}` }
           );
+        } else {
+          summaryData.push({ label: 'GST:', value: 'NIL' });
         }
         
-        // Save PDF with invoice number in filename
-        const shopName = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop").shopName;
-        const fileName = `Invoice_${currentInvoiceNumber}_${shopName.replace(/\s+/g, '_')}.pdf`;
+        summaryData.push({ label: 'GRAND TOTAL:', value: `₹${grandTotal.toFixed(2)}` });
+        
+        summaryData.forEach((item, index) => {
+          pdf.text(item.label, marginLeft, currentY + (index * 5));
+          pdf.text(item.value, pageWidth - 20, currentY + (index * 5), { align: 'right' });
+        });
+        
+        currentY += (summaryData.length * 5) + 10;
+        
+        // Add footer
+        pdf.setFontSize(8);
+        pdf.setTextColor(100);
+        pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, marginLeft, 280);
+        pdf.text(`Invoice: ${currentInvoiceNumber}`, pageWidth / 2, 280, { align: 'center' });
+        pdf.text('E. & O.E.', pageWidth - 20, 280, { align: 'right' });
+        
+        // Add terms and conditions
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Terms and Conditions:', marginLeft, 285);
+        pdf.text('1. Goods once sold will not be taken back', marginLeft + 5, 289);
+        pdf.text(`2. Subject to ${shopInfo.shopName} jurisdiction`, marginLeft + 5, 293);
+        pdf.text('3. All disputes subject to local jurisdiction only', marginLeft + 5, 297);
+        
+        // Save PDF
+        const fileName = `Invoice_${currentInvoiceNumber}_${shopInfo.shopName.replace(/\s+/g, '_')}.pdf`;
         pdf.save(fileName);
         
         showToast('✅ PDF downloaded successfully!');
