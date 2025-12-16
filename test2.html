@@ -6,19 +6,24 @@
   <title>Invoice Viewer</title>
   <!-- Include jsPDF library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary: #4361ee;
-      --primary-dark: #3a56d4;
-      --secondary: #7209b7;
-      --light: #f8f9fa;
-      --dark: #212529;
-      --success: #4cc9f0;
-      --danger: #f72585;
-      --gray: #6c757d;
-      --gray-light: #e9ecef;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --secondary: #7c3aed;
+      --light: #f8fafc;
+      --dark: #1e293b;
+      --dark-light: #334155;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --gray: #64748b;
+      --gray-light: #e2e8f0;
       --border-radius: 12px;
-      --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.05);
       --transition: all 0.3s ease;
     }
     
@@ -29,27 +34,29 @@
     }
     
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
       color: var(--dark);
       line-height: 1.6;
       padding: 20px;
       min-height: 100vh;
+      font-size: 15px;
     }
     
     .invoice-container {
-      max-width: 1000px;
+      max-width: 1100px;
       background: white;
       margin: 30px auto;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
       overflow: hidden;
+      border: 1px solid var(--gray-light);
     }
     
     .invoice-header {
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
-      padding: 30px;
+      padding: 35px 40px;
       position: relative;
     }
     
@@ -62,100 +69,141 @@
     
     .shop-info {
       text-align: left;
+      flex: 1;
+      min-width: 300px;
     }
     
     .shop-name {
       font-size: 32px;
-      font-weight: 700;
+      font-weight: 800;
       margin-bottom: 12px;
-      letter-spacing: 0.5px;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .shop-details {
-      font-size: 15px;
-      opacity: 0.9;
+      font-size: 16px;
+      opacity: 0.95;
       line-height: 1.5;
     }
     
     .shop-address, .shop-phone {
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .shop-id {
-      font-size: 14px;
-      opacity: 0.8;
-      margin-top: 12px;
-      font-weight: 500;
+      font-size: 15px;
+      opacity: 0.9;
+      margin-top: 15px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.15);
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
     }
     
     .invoice-tag {
       background: rgba(255, 255, 255, 0.25);
-      padding: 10px 20px;
-      border-radius: 25px;
-      font-weight: 600;
-      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 16px;
       backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      align-self: flex-end;
     }
     
     .search-section {
-      padding: 30px;
+      padding: 35px 40px;
       background: white;
+      border-bottom: 1px solid var(--gray-light);
     }
     
     .search-container {
       display: flex;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
       gap: 15px;
     }
     
     .search-input {
       flex: 1;
-      padding: 16px 20px;
+      padding: 18px 24px;
       border-radius: var(--border-radius);
       border: 2px solid var(--gray-light);
       font-size: 16px;
       transition: var(--transition);
       background: var(--light);
+      font-weight: 500;
     }
     
     .search-input:focus {
       outline: none;
       border-color: var(--primary);
       background: white;
-      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     }
     
     .search-btn {
-      padding: 16px 28px;
+      padding: 18px 32px;
       border: none;
       border-radius: var(--border-radius);
-      background-color: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
       font-weight: 600;
+      font-size: 16px;
       cursor: pointer;
       transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
     .search-btn:hover {
-      background-color: var(--primary-dark);
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary) 100%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+    }
+    
+    .search-btn:active {
+      transform: translateY(0);
+    }
+    
+    .search-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
     }
     
     .invoice-body {
-      padding: 30px;
+      padding: 40px;
     }
     
     .error {
       color: var(--danger);
       text-align: center;
       margin: 20px 0;
-      padding: 16px;
-      background: rgba(247, 37, 133, 0.08);
+      padding: 20px;
+      background: rgba(239, 68, 68, 0.08);
       border-radius: var(--border-radius);
-      font-weight: 500;
+      font-weight: 600;
+      border-left: 4px solid var(--danger);
+    }
+    
+    .success {
+      color: var(--success);
+      text-align: center;
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(16, 185, 129, 0.08);
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      border-left: 4px solid var(--success);
     }
     
     .invoice-details {
@@ -166,6 +214,7 @@
       padding: 30px;
       background: var(--light);
       border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
     }
     
     .detail-group {
@@ -178,41 +227,48 @@
       color: var(--gray);
       font-size: 14px;
       margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .value {
-      font-weight: 500;
+      font-weight: 600;
       color: var(--dark);
-      font-size: 16px;
+      font-size: 18px;
+      padding: 10px 0;
+      border-bottom: 2px solid var(--primary-light);
     }
     
     /* Customer Info Section */
     .customer-section {
       background: white;
       border-radius: var(--border-radius);
-      padding: 25px;
+      padding: 30px;
       margin-bottom: 30px;
       border: 1px solid var(--gray-light);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow-light);
     }
     
-    .customer-header {
+    .section-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       color: var(--primary);
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--primary-light);
     }
     
-    .customer-header h3 {
-      font-size: 20px;
-      font-weight: 600;
+    .section-header h3 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
     }
     
     .customer-details {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
     }
     
     .customer-field {
@@ -223,29 +279,38 @@
     .field-label {
       font-weight: 600;
       color: var(--gray);
-      font-size: 13px;
-      margin-bottom: 6px;
+      font-size: 14px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .field-value {
       font-weight: 500;
       color: var(--dark);
-      font-size: 15px;
-      padding: 10px 12px;
+      font-size: 16px;
+      padding: 14px 16px;
       background: var(--light);
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--gray-light);
+      min-height: 50px;
+      display: flex;
+      align-items: center;
     }
     
     /* Items Table */
+    .items-table-container {
+      overflow-x: auto;
+      margin: 40px 0;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
+      box-shadow: var(--shadow-light);
+    }
+    
     .items-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      margin: 30px 0;
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      background: white;
+      border-collapse: collapse;
+      min-width: 1000px;
     }
     
     .items-table thead {
@@ -256,24 +321,27 @@
       color: white;
       padding: 20px 16px;
       text-align: left;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 15px;
       border: none;
+      white-space: nowrap;
     }
     
     .items-table th:first-child {
-      border-top-left-radius: var(--border-radius);
+      border-top-left-radius: 10px;
     }
     
     .items-table th:last-child {
-      border-top-right-radius: var(--border-radius);
+      border-top-right-radius: 10px;
     }
     
     .items-table td {
-      padding: 18px 16px;
+      padding: 20px 16px;
       border: none;
       background: white;
-      vertical-align: top;
+      vertical-align: middle;
+      font-size: 15px;
+      border-bottom: 1px solid var(--gray-light);
     }
     
     .items-table tbody tr {
@@ -281,7 +349,7 @@
     }
     
     .items-table tbody tr:hover {
-      background: rgba(67, 97, 238, 0.03);
+      background: rgba(37, 99, 235, 0.03);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
@@ -291,37 +359,38 @@
     }
     
     .items-table tbody tr:nth-child(even):hover {
-      background: rgba(67, 97, 238, 0.05);
+      background: rgba(37, 99, 235, 0.05);
     }
     
     /* Batch number styling */
     .batch-info {
       font-size: 13px;
       color: var(--gray);
-      margin-top: 4px;
+      margin-top: 6px;
       font-weight: 500;
     }
     
     .summary {
-      text-align: right;
-      margin-top: 30px;
-      padding: 25px;
+      margin-top: 40px;
+      padding: 30px;
       background: var(--light);
       border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
     }
     
     .total-amount {
-      font-size: 28px;
-      font-weight: 700;
+      font-size: 32px;
+      font-weight: 800;
       color: var(--primary);
       margin-top: 20px;
       padding-top: 20px;
       border-top: 2px solid var(--gray-light);
+      text-align: right;
     }
     
     .tax-details {
-      margin-top: 15px;
-      padding: 20px;
+      margin-top: 20px;
+      padding: 25px;
       background: white;
       border-radius: var(--border-radius);
       border: 1px solid var(--gray-light);
@@ -330,19 +399,24 @@
     .tax-row {
       display: flex;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 14px 0;
       border-bottom: 1px solid var(--gray-light);
+      font-size: 16px;
     }
     
     .tax-row:last-child {
       border-bottom: none;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--primary);
+      font-size: 18px;
+      padding-top: 20px;
+      margin-top: 10px;
+      border-top: 2px solid var(--primary-light);
     }
     
     .tax-label {
-      font-weight: 500;
-      color: var(--gray);
+      font-weight: 600;
+      color: var(--dark);
     }
     
     .tax-value {
@@ -351,21 +425,25 @@
     }
     
     .tax-breakdown {
-      margin-top: 25px;
-      padding: 20px;
-      background: var(--light);
+      margin-top: 30px;
+      padding: 25px;
+      background: white;
       border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
+      box-shadow: var(--shadow-light);
     }
     
     .tax-category {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     
     .tax-category-title {
-      font-weight: 600;
+      font-weight: 700;
       color: var(--primary);
-      margin-bottom: 10px;
-      font-size: 16px;
+      margin-bottom: 15px;
+      font-size: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--primary-light);
     }
     
     .tax-category-items {
@@ -375,32 +453,53 @@
     .tax-item {
       display: flex;
       justify-content: space-between;
-      padding: 5px 0;
+      padding: 10px 0;
       color: var(--gray);
+      font-size: 15px;
+      border-bottom: 1px dashed var(--gray-light);
+    }
+    
+    .tax-item:last-child {
+      border-bottom: none;
     }
     
     /* Action Buttons */
+    .action-buttons-container {
+      margin-top: 50px;
+      padding-top: 40px;
+      border-top: 2px solid var(--gray-light);
+    }
+    
+    .action-buttons-title {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 30px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
     .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
       margin: 30px 0;
-      flex-wrap: wrap;
     }
     
     .action-btn {
-      padding: 14px 28px;
+      padding: 18px 24px;
       border: none;
       border-radius: var(--border-radius);
-      font-weight: 600;
-      font-size: 15px;
+      font-weight: 700;
+      font-size: 16px;
       cursor: pointer;
       transition: var(--transition);
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 180px;
       justify-content: center;
+      gap: 12px;
+      text-align: center;
+      min-height: 60px;
     }
     
     .whatsapp-btn {
@@ -409,73 +508,80 @@
     }
     
     .copy-btn {
-      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      background: linear-gradient(135deg, var(--gray) 0%, #475569 100%);
       color: white;
     }
     
     .template-btn {
-      background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
     }
     
     .print-btn {
-      background: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+      background: linear-gradient(135deg, #0ea5e9 0%, var(--primary) 100%);
       color: white;
     }
     
     .pdf-btn {
-      background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+      background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
       color: white;
     }
     
     .action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
     
     .whatsapp-btn:hover {
-      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
+      box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
     }
     
     .copy-btn:hover {
-      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+      box-shadow: 0 8px 25px rgba(100, 116, 139, 0.3);
     }
     
     .template-btn:hover {
-      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
     }
     
     .print-btn:hover {
-      box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+      box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
     }
     
     .pdf-btn:hover {
-      box-shadow: 0 6px 20px rgba(247, 37, 133, 0.3);
+      box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3);
+    }
+    
+    .action-btn i {
+      font-size: 20px;
     }
     
     /* Template Selector */
     .template-selector {
       display: none;
-      background: var(--light);
-      padding: 25px;
+      background: white;
+      padding: 30px;
       border-radius: var(--border-radius);
-      margin: 20px 0;
+      margin: 30px 0;
+      border: 1px solid var(--gray-light);
+      box-shadow: var(--shadow-light);
     }
     
     .template-options {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      gap: 25px;
+      margin-top: 25px;
     }
     
     .template-option {
-      background: white;
+      background: var(--light);
       padding: 25px;
       border-radius: var(--border-radius);
       cursor: pointer;
       transition: var(--transition);
       border: 2px solid transparent;
+      height: 100%;
     }
     
     .template-option:hover {
@@ -486,13 +592,13 @@
     
     .template-option.active {
       border-color: var(--primary);
-      background: rgba(67, 97, 238, 0.05);
+      background: var(--primary-light);
     }
     
     .template-name {
       font-weight: 700;
       font-size: 18px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       color: var(--primary);
     }
     
@@ -504,40 +610,47 @@
     
     /* Share Section */
     .share-section {
-      background: var(--light);
-      padding: 25px;
+      background: white;
+      padding: 30px;
       border-radius: var(--border-radius);
-      margin: 20px 0;
+      margin: 30px 0;
+      border: 1px solid var(--gray-light);
+      box-shadow: var(--shadow-light);
     }
     
     .copy-link-container {
-      margin-top: 20px;
+      margin-top: 25px;
     }
     
     .copy-link-input {
       width: 100%;
-      padding: 12px 15px;
+      padding: 16px 20px;
       border: 2px solid var(--gray-light);
       border-radius: var(--border-radius);
-      font-size: 14px;
-      margin-bottom: 10px;
-      background: white;
+      font-size: 15px;
+      margin-bottom: 15px;
+      background: var(--light);
+      font-family: 'Courier New', monospace;
+      font-weight: 500;
     }
     
     /* Toast Notification */
     .toast {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 15px 25px;
+      bottom: 30px;
+      right: 30px;
+      padding: 18px 28px;
       background: var(--dark);
       color: white;
       border-radius: var(--border-radius);
       z-index: 1000;
       transform: translateY(100px);
       opacity: 0;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.4s ease, opacity 0.4s ease;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      font-weight: 600;
+      max-width: 400px;
+      border-left: 5px solid var(--primary);
     }
     
     .toast.show {
@@ -547,45 +660,61 @@
     
     /* Print Styles */
     @media print {
-      .search-section, .action-buttons, .template-selector, .share-section {
+      .search-section, .action-buttons-container, .template-selector, .share-section {
         display: none !important;
       }
       body {
         background: white !important;
         padding: 0 !important;
         margin: 0 !important;
+        font-size: 14px !important;
       }
       .invoice-container {
         box-shadow: none !important;
         margin: 0 !important;
         max-width: 100% !important;
+        border: none !important;
       }
       .invoice-header {
-        padding: 20px !important;
+        padding: 25px !important;
+        background: #f1f5f9 !important;
+        color: black !important;
+        border-bottom: 2px solid #333 !important;
       }
       .invoice-body {
-        padding: 20px !important;
+        padding: 25px !important;
+      }
+      .invoice-details, .customer-section, .tax-details, .tax-breakdown {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+      }
+      .action-btn, .search-btn {
+        display: none !important;
       }
     }
     
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .invoice-container {
         margin: 15px;
       }
       
+      .invoice-header, .search-section, .invoice-body {
+        padding: 25px;
+      }
+      
       .header-content {
         flex-direction: column;
-        text-align: center;
         gap: 20px;
       }
       
       .shop-info {
         text-align: center;
+        min-width: auto;
       }
       
       .invoice-tag {
-        margin-top: 15px;
         align-self: center;
+        margin-top: 15px;
       }
       
       .search-container {
@@ -594,7 +723,7 @@
       
       .invoice-details {
         grid-template-columns: 1fr;
-        padding: 20px;
+        padding: 25px;
       }
       
       .customer-details {
@@ -602,27 +731,59 @@
       }
       
       .items-table {
-        display: block;
-        overflow-x: auto;
+        min-width: 800px;
       }
       
       .items-table th,
       .items-table td {
-        padding: 14px 12px;
-        font-size: 13px;
+        padding: 16px 12px;
+        font-size: 14px;
       }
       
       .action-buttons {
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       }
       
       .action-btn {
-        width: 100%;
+        padding: 16px 20px;
+        font-size: 15px;
       }
       
-      .tax-details, .tax-breakdown {
-        padding: 15px;
+      .template-options {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 640px) {
+      body {
+        padding: 10px;
+      }
+      
+      .invoice-header, .search-section, .invoice-body {
+        padding: 20px;
+      }
+      
+      .shop-name {
+        font-size: 28px;
+      }
+      
+      .shop-details {
+        font-size: 15px;
+      }
+      
+      .section-header h3 {
+        font-size: 20px;
+      }
+      
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+      
+      .toast {
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        max-width: none;
       }
     }
     
@@ -632,7 +793,7 @@
     }
     
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
     
@@ -644,7 +805,6 @@
       border-radius: 50%;
       border-top-color: #fff;
       animation: spin 1s ease-in-out infinite;
-      margin-right: 10px;
     }
     
     @keyframes spin {
@@ -652,42 +812,53 @@
     }
     
     /* WhatsApp Preview */
+    .whatsapp-preview-container {
+      margin-top: 30px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: var(--border-radius);
+      padding: 25px;
+    }
+    
     .whatsapp-preview {
       background: white;
       border: 1px solid #ddd;
       border-radius: 10px;
-      padding: 15px;
-      margin: 20px 0;
-      font-family: monospace;
+      padding: 20px;
+      margin-top: 15px;
+      font-family: 'SF Mono', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       white-space: pre-wrap;
-      line-height: 1.4;
+      line-height: 1.5;
       max-height: 400px;
       overflow-y: auto;
+      font-size: 14px;
+      color: #1e293b;
+      border-left: 4px solid #25D366;
     }
     
     /* Info Badges */
     .info-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: rgba(67, 97, 238, 0.1);
-      border-radius: 6px;
-      font-size: 13px;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--primary-light);
+      border-radius: 8px;
+      font-size: 14px;
       color: var(--primary);
-      font-weight: 500;
+      font-weight: 600;
       margin-top: 5px;
     }
     
     /* Batch Number Highlight */
     .batch-highlight {
-      background: #e8f4fd;
-      color: #0366d6;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 12px;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
       font-weight: 600;
-      margin-left: 5px;
+      display: inline-block;
     }
     
     /* PDF Generation Loading */
@@ -697,57 +868,156 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 2000;
       flex-direction: column;
-      gap: 20px;
+      gap: 25px;
     }
     
     .pdf-loading-content {
       background: white;
-      padding: 40px;
+      padding: 50px;
       border-radius: var(--border-radius);
       text-align: center;
-      max-width: 400px;
+      max-width: 450px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
     
     .pdf-loading-spinner {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       border: 5px solid var(--gray-light);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
+      margin: 0 auto 25px;
     }
     
     .pdf-loading-text {
       color: var(--dark);
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
     }
     
     .pdf-loading-subtext {
       color: var(--gray);
-      margin-top: 10px;
+      font-size: 16px;
     }
     
-    /* Action Buttons Container */
-    .action-buttons-container {
-      margin-top: 40px;
-      padding-top: 30px;
-      border-top: 2px solid var(--gray-light);
+    /* Highlight important numbers */
+    .highlight-amount {
+      color: var(--primary);
+      font-weight: 700;
     }
     
-    .action-buttons-title {
-      text-align: center;
+    /* Section spacing */
+    .section-spacing {
+      margin: 40px 0;
+    }
+    
+    /* Status indicators */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .status-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    /* Card styling for better readability */
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 25px;
+      border: 1px solid var(--gray-light);
+      box-shadow: var(--shadow-light);
+      margin-bottom: 25px;
+    }
+    
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
       color: var(--primary);
       margin-bottom: 20px;
-      font-size: 18px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    
+    /* Improved table readability */
+    .table-cell {
+      padding: 15px;
+      vertical-align: middle;
+    }
+    
+    .table-header {
+      font-weight: 700;
+      color: white;
+      background: var(--primary);
+      padding: 18px 15px;
+    }
+    
+    /* Better contrast for text */
+    .text-high-contrast {
+      color: var(--dark);
       font-weight: 600;
+    }
+    
+    .text-medium-contrast {
+      color: var(--dark-light);
+      font-weight: 500;
+    }
+    
+    .text-low-contrast {
+      color: var(--gray);
+      font-weight: 400;
+    }
+    
+    /* Focus states for accessibility */
+    *:focus {
+      outline: 3px solid var(--primary-light);
+      outline-offset: 2px;
+    }
+    
+    /* Selection color */
+    ::selection {
+      background-color: var(--primary-light);
+      color: var(--dark);
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
   </style>
 </head>
@@ -766,37 +1036,49 @@
     <div class="invoice-header">
       <div class="header-content">
         <div class="shop-info">
-          <div class="shop-name" id="shopName">Loading Shop Name...</div>
+          <div class="shop-name" id="shopName">Invoice Viewer</div>
           <div class="shop-details">
-            <div class="shop-address" id="shopAddress">Loading address...</div>
-            <div class="shop-phone" id="shopPhone">Loading phone...</div>
+            <div class="shop-address" id="shopAddress">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>Loading address...</span>
+            </div>
+            <div class="shop-phone" id="shopPhone">
+              <i class="fas fa-phone"></i>
+              <span>Loading phone...</span>
+            </div>
           </div>
-          <div class="shop-id">Shop ID: <span id="shopTag">Loading...</span></div>
+          <div class="shop-id">
+            <i class="fas fa-store"></i>
+            <span>Shop ID: <span id="shopTag">Loading...</span></span>
+          </div>
         </div>
-        <div class="invoice-tag" id="invoiceTag" style="display: none;"></div>
+        <div class="invoice-tag" id="invoiceTag" style="display: none;">
+          <i class="fas fa-tag"></i>
+          <span id="tagText"></span>
+        </div>
       </div>
     </div>
 
     <div class="search-section" id="searchSection">
       <div class="search-container">
-        <input type="text" id="invoiceNumber" class="search-input" placeholder="Enter Invoice Number (e.g. INV1762933901829)">
+        <input type="text" id="invoiceNumber" class="search-input" placeholder="Enter Invoice Number (e.g. INV1762933901829)" aria-label="Invoice Number">
         <button class="search-btn" id="searchBtn" onclick="fetchInvoice()">
+          <i class="fas fa-search" id="searchIcon"></i>
           <span id="btnText">Search Invoice</span>
         </button>
       </div>
     </div>
 
     <div class="invoice-body">
-      <div id="errorMsg" class="error"></div>
-      <div id="invoiceDetails" class="invoice-details"></div>
+      <div id="errorMsg" class="error" style="display: none;"></div>
+      <div id="successMsg" class="success" style="display: none;"></div>
+      
+      <div id="invoiceDetails" class="invoice-details" style="display: none;"></div>
       
       <!-- Customer Information Section -->
       <div id="customerSection" class="customer-section" style="display:none;">
-        <div class="customer-header">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#4361ee"/>
-            <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#4361ee"/>
-          </svg>
+        <div class="section-header">
+          <i class="fas fa-user-circle fa-2x"></i>
           <h3>Customer Information</h3>
         </div>
         <div class="customer-details" id="customerDetails"></div>
@@ -804,68 +1086,88 @@
 
       <div id="itemsTable"></div>
       <div id="taxBreakdown"></div>
-      <div id="totalAmount" class="summary"></div>
+      <div id="totalAmount" class="summary" style="display: none;"></div>
       
       <!-- Action Buttons Container -->
       <div id="actionButtonsContainer" class="action-buttons-container" style="display:none;">
-        <div class="action-buttons-title">Invoice Actions</div>
+        <div class="action-buttons-title">
+          <i class="fas fa-bolt"></i>
+          Invoice Actions
+        </div>
         <div id="actionButtons" class="action-buttons">
-          <button class="action-btn whatsapp-btn" onclick="shareToWhatsApp()">
-            <span>📱</span> Share to WhatsApp
+          <button class="action-btn whatsapp-btn" onclick="shareToWhatsApp()" aria-label="Share to WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+            <span>Share to WhatsApp</span>
           </button>
-          <button class="action-btn copy-btn" onclick="copyInvoiceText()">
-            <span>📋</span> Copy Invoice Text
+          <button class="action-btn copy-btn" onclick="copyInvoiceText()" aria-label="Copy Invoice Text">
+            <i class="fas fa-copy"></i>
+            <span>Copy Invoice Text</span>
           </button>
-          <button class="action-btn pdf-btn" onclick="generatePDF()">
-            <span>📄</span> Download as PDF
+          <button class="action-btn pdf-btn" onclick="generatePDF()" aria-label="Download as PDF">
+            <i class="fas fa-file-pdf"></i>
+            <span>Download as PDF</span>
           </button>
-          <button class="action-btn template-btn" onclick="toggleTemplateSelector()">
-            <span>🎨</span> Change Template
+          <button class="action-btn template-btn" onclick="toggleTemplateSelector()" aria-label="Change Template">
+            <i class="fas fa-palette"></i>
+            <span>Change Template</span>
           </button>
-          <button class="action-btn print-btn" onclick="window.print()">
-            <span>🖨</span> Print Invoice
+          <button class="action-btn print-btn" onclick="window.print()" aria-label="Print Invoice">
+            <i class="fas fa-print"></i>
+            <span>Print Invoice</span>
           </button>
         </div>
       </div>
       
       <!-- Template Selector -->
       <div id="templateSelector" class="template-selector">
-        <h3 style="margin-bottom: 20px; color: var(--primary);">Choose Invoice Template</h3>
+        <h3 class="section-header" style="border: none; padding: 0; margin: 0 0 25px 0;">
+          <i class="fas fa-paint-brush"></i>
+          <span>Choose Invoice Template</span>
+        </h3>
         <div class="template-options">
           <div class="template-option active" data-template="modern" onclick="changeTemplate('modern')">
             <div class="template-name">Modern Gradient</div>
-            <div class="template-desc">Modern design with detailed tax breakdown</div>
+            <div class="template-desc">Clean modern design with detailed tax breakdown and improved readability</div>
           </div>
           <div class="template-option" data-template="whatsapp" onclick="changeTemplate('whatsapp')">
             <div class="template-name">WhatsApp Style</div>
-            <div class="template-desc">Formatted exactly like WhatsApp bill template with tax details</div>
+            <div class="template-desc">Formatted exactly like WhatsApp bill template with clear tax details</div>
           </div>
           <div class="template-option" data-template="detailed" onclick="changeTemplate('detailed')">
             <div class="template-name">Detailed Tax View</div>
-            <div class="template-desc">Comprehensive tax calculation breakdown</div>
+            <div class="template-desc">Comprehensive tax calculation breakdown with enhanced readability</div>
           </div>
           <div class="template-option" data-template="compact" onclick="changeTemplate('compact')">
             <div class="template-name">Compact View</div>
-            <div class="template-desc">Space-efficient design with essential tax info</div>
+            <div class="template-desc">Space-efficient design with essential tax info and clear typography</div>
           </div>
         </div>
       </div>
       
       <!-- Share Section -->
       <div id="shareSection" class="share-section" style="display:none;">
-        <h3 style="margin-bottom: 15px; color: var(--primary);">Share Invoice</h3>
+        <h3 class="section-header" style="border: none; padding: 0; margin: 0 0 20px 0;">
+          <i class="fas fa-share-alt"></i>
+          <span>Share Invoice</span>
+        </h3>
         <div class="copy-link-container">
-          <p style="margin-bottom: 10px; color: var(--gray);">Share this link to view invoice:</p>
-          <input type="text" id="invoiceLink" class="copy-link-input" readonly>
-          <button class="action-btn copy-btn" onclick="copyInvoiceLink()" style="min-width: auto; padding: 10px 20px;">
-            <span>🔗</span> Copy Link
+          <p class="text-medium-contrast" style="margin-bottom: 15px;">Share this link to view invoice:</p>
+          <input type="text" id="invoiceLink" class="copy-link-input" readonly aria-label="Invoice Share Link">
+          <button class="action-btn copy-btn" onclick="copyInvoiceLink()" style="padding: 14px 24px; width: 100%; max-width: 200px;">
+            <i class="fas fa-link"></i>
+            <span>Copy Link</span>
           </button>
         </div>
         
         <!-- WhatsApp Template Preview -->
-        <div id="whatsappPreview" style="margin-top: 25px;">
-          <h4 style="color: #25D366; margin-bottom: 15px;">WhatsApp Preview:</h4>
-          <div id="whatsappTemplatePreview" class="whatsapp-preview"></div>
+        <div id="whatsappPreview" style="margin-top: 35px; display: none;">
+          <h4 style="color: #25D366; margin-bottom: 15px; font-weight: 700; font-size: 18px;">
+            <i class="fab fa-whatsapp"></i>
+            WhatsApp Preview:
+          </h4>
+          <div class="whatsapp-preview-container">
+            <div id="whatsappTemplatePreview" class="whatsapp-preview"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -905,12 +1207,24 @@
       
       const savedTemplate = localStorage.getItem('invoiceTemplate') || 'modern';
       changeTemplate(savedTemplate, false);
+      
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'p') {
+          e.preventDefault();
+          window.print();
+        }
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          generatePDF();
+        }
+      });
     });
 
     function parseShopTag(shopTag) {
-      let shopName = "Your Shop";
-      let address = "Address not available";
-      let phone = "Phone not available";
+      let shopName = "Invoice Viewer Pro";
+      let address = "Business Address Not Available";
+      let phone = "Phone Not Available";
       
       if (shopTag) {
         const firstSplit = shopTag.split('-');
@@ -933,17 +1247,19 @@
 
     function loadShopInfo() {
       const shopIDTag = localStorage.getItem("ShopIDTag");
-      const shopTagValue = localStorage.getItem("ShopTag") || "Your Shop";
+      const shopTagValue = localStorage.getItem("ShopTag") || "Invoice Viewer Pro - Business Address/Phone";
       const shopInfo = parseShopTag(shopTagValue);
       
       if (shopIDTag) {
         document.getElementById('shopTag').textContent = shopIDTag;
         document.getElementById('shopName').textContent = shopInfo.shopName;
-        document.getElementById('shopAddress').textContent = shopInfo.address;
-        document.getElementById('shopPhone').textContent = shopInfo.phone;
+        document.getElementById('shopAddress').innerHTML = `<i class="fas fa-map-marker-alt"></i><span>${shopInfo.address}</span>`;
+        document.getElementById('shopPhone').innerHTML = `<i class="fas fa-phone"></i><span>${shopInfo.phone}</span>`;
       } else {
         document.getElementById('shopTag').textContent = "Not Set";
-        document.getElementById('shopName').textContent = "Please Set Shop Information";
+        document.getElementById('shopName').textContent = "Invoice Viewer";
+        document.getElementById('shopAddress').innerHTML = '<i class="fas fa-map-marker-alt"></i><span>Please set your shop information</span>';
+        document.getElementById('shopPhone').innerHTML = '<i class="fas fa-phone"></i><span>Update shop details</span>';
       }
     }
 
@@ -955,10 +1271,21 @@
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
       } catch (error) {
         return dateString;
       }
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
     }
 
     function calculateTaxes(price, quantity, taxPercentage, taxIncluded) {
@@ -995,6 +1322,7 @@
       const customerSection = document.getElementById("customerSection");
       const customerDetails = document.getElementById("customerDetails");
       const errorDiv = document.getElementById("errorMsg");
+      const successDiv = document.getElementById("successMsg");
       const itemsDiv = document.getElementById("itemsTable");
       const taxBreakdownDiv = document.getElementById("taxBreakdown");
       const totalDiv = document.getElementById("totalAmount");
@@ -1003,16 +1331,21 @@
       const shareSection = document.getElementById("shareSection");
       const searchBtn = document.getElementById("searchBtn");
       const btnText = document.getElementById("btnText");
+      const searchIcon = document.getElementById("searchIcon");
       const invoiceTag = document.getElementById("invoiceTag");
+      const tagText = document.getElementById("tagText");
 
       // Reset displays
       detailsDiv.innerHTML = "";
+      detailsDiv.style.display = "none";
       customerSection.style.display = "none";
       customerDetails.innerHTML = "";
-      errorDiv.innerText = "";
+      errorDiv.style.display = "none";
+      successDiv.style.display = "none";
       itemsDiv.innerHTML = "";
       taxBreakdownDiv.innerHTML = "";
       totalDiv.innerHTML = "";
+      totalDiv.style.display = "none";
       actionButtonsContainer.style.display = "none";
       actionButtons.style.display = "none";
       shareSection.style.display = "none";
@@ -1023,18 +1356,23 @@
       // Show loading state
       searchBtn.disabled = true;
       btnText.innerHTML = '<span class="loading"></span> Searching...';
+      searchIcon.className = "fas fa-spinner fa-spin";
 
       if (!invoiceNumber) {
-        errorDiv.innerText = "⚠️ Please enter an invoice number.";
+        errorDiv.textContent = "⚠️ Please enter an invoice number.";
+        errorDiv.style.display = "block";
         searchBtn.disabled = false;
         btnText.textContent = "Search Invoice";
+        searchIcon.className = "fas fa-search";
         return;
       }
 
       if (!shopIDTag) {
-        errorDiv.innerText = "⚠️ ShopIDTag not found. Please log in first.";
+        errorDiv.textContent = "⚠️ ShopIDTag not found. Please log in first.";
+        errorDiv.style.display = "block";
         searchBtn.disabled = false;
         btnText.textContent = "Search Invoice";
+        searchIcon.className = "fas fa-search";
         return;
       }
 
@@ -1052,9 +1390,11 @@
         );
 
         if (invoiceRows.length === 0) {
-          errorDiv.innerText = "❌ No invoice found for this number or invalid ShopID.";
+          errorDiv.textContent = "❌ No invoice found for this number or invalid ShopID.";
+          errorDiv.style.display = "block";
           searchBtn.disabled = false;
           btnText.textContent = "Search Invoice";
+          searchIcon.className = "fas fa-search";
           return;
         }
 
@@ -1072,6 +1412,10 @@
         // Display invoice
         displayInvoice();
 
+        // Show success message
+        successDiv.textContent = "✅ Invoice loaded successfully!";
+        successDiv.style.display = "block";
+
         // Show action buttons and share section
         actionButtonsContainer.style.display = "block";
         actionButtons.style.display = "flex";
@@ -1083,6 +1427,7 @@
         
         // Show WhatsApp preview
         if (currentTemplate === 'whatsapp') {
+          document.getElementById('whatsappPreview').style.display = 'block';
           displayWhatsAppPreview();
         }
         
@@ -1095,11 +1440,13 @@
         
       } catch (error) {
         console.error(error);
-        errorDiv.innerText = "⚠️ Error fetching data. Please try again.";
+        errorDiv.textContent = "⚠️ Error fetching data. Please try again.";
+        errorDiv.style.display = "block";
         showToast('❌ Error loading invoice');
       } finally {
         searchBtn.disabled = false;
         btnText.textContent = "Search Invoice";
+        searchIcon.className = "fas fa-search";
       }
     }
 
@@ -1114,11 +1461,12 @@
       const taxBreakdownDiv = document.getElementById("taxBreakdown");
       const totalDiv = document.getElementById("totalAmount");
       const invoiceTag = document.getElementById("invoiceTag");
+      const tagText = document.getElementById("tagText");
 
       // Display invoice tag
       if (invoice["Tag"]) {
-        invoiceTag.textContent = invoice["Tag"];
-        invoiceTag.style.display = "block";
+        tagText.textContent = invoice["Tag"];
+        invoiceTag.style.display = "flex";
       }
 
       // Apply current template
@@ -1139,40 +1487,41 @@
       detailsDiv.innerHTML = `
         <div class="detail-group">
           <span class="label">Invoice Number</span>
-          <span class="value">${invoice["Invoice Number"]}</span>
+          <span class="value text-high-contrast">${invoice["Invoice Number"]}</span>
         </div>
         <div class="detail-group">
           <span class="label">Invoice Date</span>
-          <span class="value">${formatDate(invoice["Date"])}</span>
+          <span class="value text-high-contrast">${formatDate(invoice["Date"])}</span>
         </div>
         <div class="detail-group">
           <span class="label">Sales Person</span>
-          <span class="value">${invoice["Sales Person"] || "Not Specified"}</span>
+          <span class="value text-high-contrast">${invoice["Sales Person"] || "Not Specified"}</span>
         </div>
         <div class="detail-group">
           <span class="label">Shop GST</span>
-          <span class="value">${shopGST}</span>
+          <span class="value text-high-contrast">${shopGST}</span>
         </div>
       `;
+      detailsDiv.style.display = "grid";
 
       // Display customer information section
       customerSection.style.display = "block";
       customerDetails.innerHTML = `
         <div class="customer-field">
           <span class="field-label">Customer Name</span>
-          <div class="field-value">${invoice["Costomer Name"] || "Not Specified"}</div>
+          <div class="field-value text-high-contrast">${invoice["Costomer Name"] || "Not Specified"}</div>
         </div>
         <div class="customer-field">
           <span class="field-label">Customer Phone</span>
-          <div class="field-value">${invoice["Mobile"] || "Not Provided"}</div>
+          <div class="field-value text-high-contrast">${invoice["Mobile"] || "Not Provided"}</div>
         </div>
         <div class="customer-field">
           <span class="field-label">Customer GST</span>
-          <div class="field-value">${invoice["GST"] || "Not Registered"}</div>
+          <div class="field-value text-high-contrast">${invoice["GST"] || "Not Registered"}</div>
         </div>
         <div class="customer-field" style="grid-column: 1 / -1;">
           <span class="field-label">Customer Address</span>
-          <div class="field-value">${invoice["Address"] || "Not Provided"}</div>
+          <div class="field-value text-high-contrast">${invoice["Address"] || "Not Provided"}</div>
         </div>
       `;
 
@@ -1181,54 +1530,57 @@
       
       if (currentTemplate === 'detailed' || currentTemplate === 'modern') {
         tableHTML = `
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Item Description</th>
-                <th>Batch No</th>
-                <th>Qty</th>
-                <th>Rate (₹)</th>
-                <th>Tax Rate</th>
-                <th>Taxable Amt (₹)</th>
-                <th>SGST (₹)</th>
-                <th>CGST (₹)</th>
-                <th>Total (₹)</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="items-table-container">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Item Description</th>
+                  <th>Batch No</th>
+                  <th>Qty</th>
+                  <th>Rate (₹)</th>
+                  <th>Tax Rate</th>
+                  <th>Taxable Amt (₹)</th>
+                  <th>SGST (₹)</th>
+                  <th>CGST (₹)</th>
+                  <th>Total (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
         `;
       } else if (currentTemplate === 'compact') {
         tableHTML = `
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Item</th>
-                <th>Batch</th>
-                <th>Qty</th>
-                <th>Rate</th>
-                <th>Tax %</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="items-table-container">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Item</th>
+                  <th>Batch</th>
+                  <th>Qty</th>
+                  <th>Rate</th>
+                  <th>Tax %</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
         `;
       } else if (currentTemplate === 'whatsapp') {
         tableHTML = `
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Item Description</th>
-                <th>Batch</th>
-                <th>Qty</th>
-                <th>Rate</th>
-                <th>Tax %</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="items-table-container">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Item Description</th>
+                  <th>Batch</th>
+                  <th>Qty</th>
+                  <th>Rate</th>
+                  <th>Tax %</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
         `;
       }
 
@@ -1269,54 +1621,54 @@
         if (currentTemplate === 'detailed' || currentTemplate === 'modern') {
           tableHTML += `
             <tr>
-              <td>${index + 1}</td>
+              <td class="text-high-contrast">${index + 1}</td>
               <td>
-                <strong>${productName}</strong><br>
-                <span class="batch-info">Product ID: ${row["Product ID"]}</span>
+                <div class="text-high-contrast" style="font-weight: 600; margin-bottom: 4px;">${productName}</div>
+                <div class="batch-info text-medium-contrast">Product ID: ${row["Product ID"]}</div>
               </td>
               <td>
                 <span class="batch-highlight">${batchNo}</span>
               </td>
-              <td>${quantity}</td>
-              <td>${price.toFixed(2)}</td>
-              <td>${taxPercentage}%</td>
-              <td>${taxes.taxableAmount.toFixed(2)}</td>
-              <td>${taxes.sgst.toFixed(2)}</td>
-              <td>${taxes.cgst.toFixed(2)}</td>
-              <td><strong>${taxes.total.toFixed(2)}</strong></td>
+              <td class="text-high-contrast">${quantity}</td>
+              <td class="text-high-contrast">${formatCurrency(price)}</td>
+              <td class="text-high-contrast">${taxPercentage}%</td>
+              <td class="text-high-contrast">${formatCurrency(taxes.taxableAmount)}</td>
+              <td class="text-high-contrast">${formatCurrency(taxes.sgst)}</td>
+              <td class="text-high-contrast">${formatCurrency(taxes.cgst)}</td>
+              <td class="text-high-contrast" style="font-weight: 700;">${formatCurrency(taxes.total)}</td>
             </tr>
           `;
         } else if (currentTemplate === 'compact') {
           tableHTML += `
             <tr>
-              <td>${index + 1}</td>
-              <td>${productName}</td>
+              <td class="text-high-contrast">${index + 1}</td>
+              <td class="text-high-contrast">${productName}</td>
               <td><span class="batch-highlight">${batchNo}</span></td>
-              <td>${quantity}</td>
-              <td>${price.toFixed(2)}</td>
-              <td>${taxPercentage}%</td>
-              <td>${taxes.total.toFixed(2)}</td>
+              <td class="text-high-contrast">${quantity}</td>
+              <td class="text-high-contrast">${formatCurrency(price)}</td>
+              <td class="text-high-contrast">${taxPercentage}%</td>
+              <td class="text-high-contrast" style="font-weight: 700;">${formatCurrency(taxes.total)}</td>
             </tr>
           `;
         } else if (currentTemplate === 'whatsapp') {
           tableHTML += `
             <tr>
-              <td>${index + 1}</td>
+              <td class="text-high-contrast">${index + 1}</td>
               <td>
-                ${productName}<br>
-                <span class="batch-info">Batch: ${batchNo}</span>
+                <div class="text-high-contrast" style="font-weight: 600;">${productName}</div>
+                <div class="batch-info text-medium-contrast">Batch: ${batchNo}</div>
               </td>
-              <td>${batchNo}</td>
-              <td>${quantity}</td>
-              <td>${price.toFixed(2)}</td>
-              <td>${taxPercentage}%</td>
-              <td>${taxes.total.toFixed(2)}</td>
+              <td class="text-high-contrast">${batchNo}</td>
+              <td class="text-high-contrast">${quantity}</td>
+              <td class="text-high-contrast">${formatCurrency(price)}</td>
+              <td class="text-high-contrast">${taxPercentage}%</td>
+              <td class="text-high-contrast" style="font-weight: 700;">${formatCurrency(taxes.total)}</td>
             </tr>
           `;
         }
       });
 
-      tableHTML += `</tbody></table>`;
+      tableHTML += `</tbody></table></div>`;
       itemsDiv.innerHTML = tableHTML;
       
       // Calculate effective tax percentage
@@ -1325,8 +1677,12 @@
       
       // Build tax breakdown section for detailed templates
       if (currentTemplate === 'detailed' || currentTemplate === 'modern') {
-        let taxBreakdownHTML = '<div class="tax-breakdown">';
-        taxBreakdownHTML += '<div class="tax-category"><div class="tax-category-title">Tax Breakdown by Rate</div><div class="tax-category-items">';
+        let taxBreakdownHTML = '<div class="tax-breakdown fade-in">';
+        taxBreakdownHTML += '<div class="section-header" style="border: none; padding: 0; margin: 0 0 20px 0;">';
+        taxBreakdownHTML += '<i class="fas fa-chart-pie"></i>';
+        taxBreakdownHTML += '<h3>Tax Breakdown by Rate</h3>';
+        taxBreakdownHTML += '</div>';
+        taxBreakdownHTML += '<div class="tax-category-items">';
         
         // Sort tax rates
         const sortedRates = Object.keys(taxBreakdownByRate).sort((a, b) => parseFloat(a) - parseFloat(b));
@@ -1336,66 +1692,71 @@
           if (parseFloat(rate) > 0) {
             taxBreakdownHTML += `
               <div class="tax-item">
-                <span>Items @ ${rate}% GST (${rateData.count} items):</span>
-                <span>₹${rateData.taxableAmount.toFixed(2)}</span>
+                <span class="text-medium-contrast">Items @ ${rate}% GST (${rateData.count} items):</span>
+                <span class="text-high-contrast" style="font-weight: 600;">${formatCurrency(rateData.taxableAmount)}</span>
               </div>
               <div class="tax-item">
-                <span>&nbsp;&nbsp;SGST @ ${(rate/2).toFixed(2)}%:</span>
-                <span>₹${rateData.sgst.toFixed(2)}</span>
+                <span class="text-low-contrast">&nbsp;&nbsp;SGST @ ${(rate/2).toFixed(2)}%:</span>
+                <span class="text-high-contrast">${formatCurrency(rateData.sgst)}</span>
               </div>
               <div class="tax-item">
-                <span>&nbsp;&nbsp;CGST @ ${(rate/2).toFixed(2)}%:</span>
-                <span>₹${rateData.cgst.toFixed(2)}</span>
+                <span class="text-low-contrast">&nbsp;&nbsp;CGST @ ${(rate/2).toFixed(2)}%:</span>
+                <span class="text-high-contrast">${formatCurrency(rateData.cgst)}</span>
               </div>
             `;
           }
         });
         
-        taxBreakdownHTML += '</div></div></div>';
+        taxBreakdownHTML += '</div></div>';
         taxBreakdownDiv.innerHTML = taxBreakdownHTML;
       }
       
       // Build total section with tax details
+      totalDiv.style.display = "block";
       let taxDetailsHTML = `
+        <div class="section-header" style="border: none; padding: 0; margin: 0 0 25px 0;">
+          <i class="fas fa-calculator"></i>
+          <h3>Invoice Summary</h3>
+        </div>
         <div class="tax-details">
           <div class="tax-row">
-            <span class="tax-label">Total Items:</span>
-            <span class="tax-value">${itemCount}</span>
+            <span class="tax-label text-medium-contrast">Total Items:</span>
+            <span class="tax-value text-high-contrast">${itemCount}</span>
           </div>
           <div class="tax-row">
-            <span class="tax-label">Taxable Amount:</span>
-            <span class="tax-value">₹${totalTaxableAmount.toFixed(2)}</span>
+            <span class="tax-label text-medium-contrast">Taxable Amount:</span>
+            <span class="tax-value text-high-contrast">${formatCurrency(totalTaxableAmount)}</span>
           </div>
       `;
       
       if (totalTaxAmount > 0) {
         taxDetailsHTML += `
           <div class="tax-row">
-            <span class="tax-label">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
-            <span class="tax-value">₹${totalSGST.toFixed(2)}</span>
+            <span class="tax-label text-medium-contrast">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+            <span class="tax-value text-high-contrast">${formatCurrency(totalSGST)}</span>
           </div>
           <div class="tax-row">
-            <span class="tax-label">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
-            <span class="tax-value">₹${totalCGST.toFixed(2)}</span>
+            <span class="tax-label text-medium-contrast">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+            <span class="tax-value text-high-contrast">${formatCurrency(totalCGST)}</span>
           </div>
           <div class="tax-row">
-            <span class="tax-label">Total GST:</span>
-            <span class="tax-value">₹${totalTaxAmount.toFixed(2)}</span>
+            <span class="tax-label text-medium-contrast">Total GST:</span>
+            <span class="tax-value text-high-contrast">${formatCurrency(totalTaxAmount)}</span>
           </div>
         `;
       } else {
         taxDetailsHTML += `
           <div class="tax-row">
-            <span class="tax-label">GST:</span>
-            <span class="tax-value">NIL</span>
+            <span class="tax-label text-medium-contrast">GST:</span>
+            <span class="tax-value text-high-contrast">NIL</span>
           </div>
         `;
       }
       
       taxDetailsHTML += `
           <div class="tax-row">
-            <span class="tax-label"><strong>Grand Total:</strong></span>
-            <span class="tax-value"><strong>₹${grandTotal.toFixed(2)}</strong></span>
+            <span class="tax-label text-high-contrast" style="font-size: 18px;">Grand Total:</span>
+            <span class="tax-value text-high-contrast" style="font-size: 22px; color: var(--primary);">${formatCurrency(grandTotal)}</span>
           </div>
         </div>
       `;
@@ -1421,7 +1782,7 @@
       if (!currentInvoiceData) return;
       
       const { invoice, rows, productData } = currentInvoiceData;
-      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
+      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Invoice Viewer Pro");
       
       // Calculate totals
       let grandTotal = 0;
@@ -1450,7 +1811,7 @@
         totalCGST += taxes.cgst;
         totalTaxAmount += taxes.taxAmount;
         
-        itemsList += `${index + 1}. ${productName} (Batch: ${batchNo})\n   Qty: ${quantity} x ₹${price.toFixed(2)} = ₹${total.toFixed(2)}\n   GST: ${taxPercentage}% (SGST: ${(taxPercentage/2).toFixed(2)}%, CGST: ${(taxPercentage/2).toFixed(2)}%)\n\n`;
+        itemsList += `${index + 1}. ${productName} (Batch: ${batchNo})\n   Qty: ${quantity} x ${formatCurrency(price)} = ${formatCurrency(total)}\n   GST: ${taxPercentage}% (SGST: ${(taxPercentage/2).toFixed(2)}%, CGST: ${(taxPercentage/2).toFixed(2)}%)\n\n`;
       });
       
       // Calculate effective tax rates
@@ -1483,11 +1844,11 @@ ${shopInfo.address}
 ${itemsList}
 📊 *TAX SUMMARY*
 ━━━━━━━━━━━━━━━━━━━━
-Taxable Amount : ₹${totalTaxableAmount.toFixed(2)}
-CGST @ ${cgstRate}% : ₹${totalCGST.toFixed(2)}
-SGST @ ${sgstRate}% : ₹${totalSGST.toFixed(2)}
+Taxable Amount : ${formatCurrency(totalTaxableAmount)}
+CGST @ ${cgstRate}% : ${formatCurrency(totalCGST)}
+SGST @ ${sgstRate}% : ${formatCurrency(totalSGST)}
 ━━━━━━━━━━━━━━━━━━━━
-*GRAND TOTAL : ₹${grandTotal.toFixed(2)}*
+*GRAND TOTAL : ${formatCurrency(grandTotal)}*
 ━━━━━━━━━━━━━━━━━━━━
 
 🔗 *Invoice Link:*
@@ -1503,7 +1864,6 @@ Thank you for your Business! 🙏
       
       // Display preview
       document.getElementById('whatsappTemplatePreview').textContent = whatsappTemplate;
-      document.getElementById('whatsappPreview').style.display = 'block';
     }
 
     function applyTemplate() {
@@ -1516,23 +1876,24 @@ Thank you for your Business! 🙏
       
       switch(currentTemplate) {
         case 'modern':
+          // Default styles already applied
           break;
           
         case 'whatsapp':
           container.style.backgroundColor = '#ffffff';
-          header.style.background = '#25D366';
+          header.style.background = 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)';
           header.style.color = 'white';
           break;
           
         case 'detailed':
           container.style.backgroundColor = '#ffffff';
-          header.style.background = 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
+          header.style.background = 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
           break;
           
         case 'compact':
           container.style.padding = '0';
-          header.style.padding = '20px';
-          document.querySelector('.invoice-body').style.padding = '20px';
+          header.style.padding = '25px';
+          document.querySelector('.invoice-body').style.padding = '25px';
           break;
       }
     }
@@ -1552,6 +1913,7 @@ Thank you for your Business! 🙏
       // Show/hide WhatsApp preview
       const whatsappPreview = document.getElementById('whatsappPreview');
       if (templateName === 'whatsapp' && currentInvoiceData) {
+        whatsappPreview.style.display = 'block';
         displayWhatsAppPreview();
       } else {
         whatsappPreview.style.display = 'none';
@@ -1561,6 +1923,8 @@ Thank you for your Business! 🙏
       if (currentInvoiceData && updateDisplay) {
         displayInvoice();
       }
+      
+      showToast(`✅ Template changed to ${templateName}`);
     }
 
     function toggleTemplateSelector() {
@@ -1587,10 +1951,13 @@ Thank you for your Business! 🙏
     }
 
     function shareToWhatsApp() {
-      if (!currentInvoiceData) return;
+      if (!currentInvoiceData) {
+        showToast('⚠️ Please load an invoice first');
+        return;
+      }
       
       const { invoice, rows, productData } = currentInvoiceData;
-      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
+      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Invoice Viewer Pro");
       
       // Calculate totals
       let grandTotal = 0;
@@ -1619,7 +1986,7 @@ Thank you for your Business! 🙏
         totalCGST += taxes.cgst;
         totalTaxAmount += taxes.taxAmount;
         
-        itemsList += `${index + 1}. ${productName} (Batch: ${batchNo})\n   Qty: ${quantity} x ₹${price.toFixed(2)} = ₹${total.toFixed(2)}\n   GST: ${taxPercentage}% (SGST: ${(taxPercentage/2).toFixed(2)}%, CGST: ${(taxPercentage/2).toFixed(2)}%)\n\n`;
+        itemsList += `${index + 1}. ${productName} (Batch: ${batchNo})\n   Qty: ${quantity} x ${formatCurrency(price)} = ${formatCurrency(total)}\n   GST: ${taxPercentage}% (SGST: ${(taxPercentage/2).toFixed(2)}%, CGST: ${(taxPercentage/2).toFixed(2)}%)\n\n`;
       });
       
       // Calculate effective tax rates
@@ -1652,11 +2019,11 @@ ${shopInfo.address}
 ${itemsList}
 📊 *TAX SUMMARY*
 ━━━━━━━━━━━━━━━━━━━━
-Taxable Amount : ₹${totalTaxableAmount.toFixed(2)}
-CGST @ ${cgstRate}% : ₹${totalCGST.toFixed(2)}
-SGST @ ${sgstRate}% : ₹${totalSGST.toFixed(2)}
+Taxable Amount : ${formatCurrency(totalTaxableAmount)}
+CGST @ ${cgstRate}% : ${formatCurrency(totalCGST)}
+SGST @ ${sgstRate}% : ${formatCurrency(totalSGST)}
 ━━━━━━━━━━━━━━━━━━━━
-*GRAND TOTAL : ₹${grandTotal.toFixed(2)}*
+*GRAND TOTAL : ${formatCurrency(grandTotal)}*
 ━━━━━━━━━━━━━━━━━━━━
 
 🔗 *Invoice Link:*
@@ -1677,10 +2044,13 @@ Thank you for your Business! 🙏
     }
 
     function copyInvoiceText() {
-      if (!currentInvoiceData) return;
+      if (!currentInvoiceData) {
+        showToast('⚠️ Please load an invoice first');
+        return;
+      }
       
       const { invoice, rows, productData } = currentInvoiceData;
-      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
+      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Invoice Viewer Pro");
       
       // Calculate totals
       let grandTotal = 0;
@@ -1735,7 +2105,7 @@ Thank you for your Business! 🙏
         totalCGST += taxes.cgst;
         totalTaxAmount += taxes.taxAmount;
         
-        text += `${(index + 1).toString().padEnd(4)} | ${productName.padEnd(20)} | ${batchNo.padEnd(10)} | ${quantity.toString().padEnd(4)} | ${price.toFixed(2).padEnd(6)} | ${taxPercentage.toString().padEnd(5)}% | ${taxes.taxableAmount.toFixed(2).padEnd(12)} | ${taxes.sgst.toFixed(2).padEnd(6)} | ${taxes.cgst.toFixed(2).padEnd(6)} | ${total.toFixed(2)}\n`;
+        text += `${(index + 1).toString().padEnd(4)} | ${productName.padEnd(20)} | ${batchNo.padEnd(10)} | ${quantity.toString().padEnd(4)} | ${formatCurrency(price).padEnd(10)} | ${taxPercentage.toString().padEnd(5)}% | ${formatCurrency(taxes.taxableAmount).padEnd(12)} | ${formatCurrency(taxes.sgst).padEnd(10)} | ${formatCurrency(taxes.cgst).padEnd(10)} | ${formatCurrency(total)}\n`;
       });
       
       text += `\n`;
@@ -1747,12 +2117,12 @@ Thank you for your Business! 🙏
       text += `Tax Summary:\n`;
       text += `-----------\n`;
       text += `Total Items: ${rows.length}\n`;
-      text += `Taxable Amount: ₹${totalTaxableAmount.toFixed(2)}\n`;
-      text += `SGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%: ₹${totalSGST.toFixed(2)}\n`;
-      text += `CGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%: ₹${totalCGST.toFixed(2)}\n`;
-      text += `Total GST: ₹${totalTaxAmount.toFixed(2)}\n\n`;
+      text += `Taxable Amount: ${formatCurrency(totalTaxableAmount)}\n`;
+      text += `SGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%: ${formatCurrency(totalSGST)}\n`;
+      text += `CGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%: ${formatCurrency(totalCGST)}\n`;
+      text += `Total GST: ${formatCurrency(totalTaxAmount)}\n\n`;
       
-      text += `GRAND TOTAL: ₹${grandTotal.toFixed(2)}\n\n`;
+      text += `GRAND TOTAL: ${formatCurrency(grandTotal)}\n\n`;
       text += `Invoice Link: ${generateShareableLink(currentInvoiceNumber)}\n\n`;
       text += `Terms and Conditions:\n`;
       text += `--------------------\n`;
@@ -1764,7 +2134,7 @@ Thank you for your Business! 🙏
       
       // Copy to clipboard
       navigator.clipboard.writeText(text)
-        .then(() => showToast('✅ Invoice text with all details copied to clipboard!'))
+        .then(() => showToast('✅ Invoice text copied to clipboard!'))
         .catch(() => {
           const textarea = document.createElement('textarea');
           textarea.value = text;
@@ -1772,7 +2142,7 @@ Thank you for your Business! 🙏
           textarea.select();
           document.execCommand('copy');
           document.body.removeChild(textarea);
-          showToast('✅ Invoice text with all details copied to clipboard!');
+          showToast('✅ Invoice text copied to clipboard!');
         });
     }
 
@@ -1789,7 +2159,7 @@ Thank you for your Business! 🙏
       
       try {
         const { invoice, rows, productData } = currentInvoiceData;
-        const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
+        const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Invoice Viewer Pro");
         
         // Calculate totals
         let grandTotal = 0;
@@ -1814,14 +2184,14 @@ Thank you for your Business! 🙏
         let currentY = marginTop;
         
         // Add shop header
-        pdf.setFontSize(22);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238); // Primary color
+        pdf.setFontSize(24);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(37, 99, 235); // Primary color
         pdf.text(shopInfo.shopName, marginLeft, currentY);
         
         currentY += 8;
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont("helvetica", "normal");
         pdf.setTextColor(0, 0, 0);
         pdf.text(shopInfo.address, marginLeft, currentY);
         currentY += 5;
@@ -1838,16 +2208,16 @@ Thank you for your Business! 🙏
         currentY += 10;
         
         // Add invoice title
-        pdf.setFontSize(18);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238);
+        pdf.setFontSize(20);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(37, 99, 235);
         pdf.text('TAX INVOICE', marginLeft, currentY);
         
         currentY += 8;
         
         // Add invoice details
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont("helvetica", "normal");
         pdf.setTextColor(0, 0, 0);
         pdf.text(`Invoice Number: ${invoice["Invoice Number"]}`, marginLeft, currentY);
         pdf.text(`Date: ${formatDate(invoice["Date"])}`, pageWidth - marginLeft - 40, currentY, { align: 'right' });
@@ -1859,13 +2229,13 @@ Thank you for your Business! 🙏
         
         // Add customer section
         pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(37, 99, 235);
         pdf.text('CUSTOMER DETAILS', marginLeft, currentY);
         
         currentY += 6;
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont("helvetica", "normal");
         pdf.setTextColor(0, 0, 0);
         
         pdf.text(`Name: ${invoice["Costomer Name"] || "Not Specified"}`, marginLeft, currentY);
@@ -1880,17 +2250,17 @@ Thank you for your Business! 🙏
         
         // Add items table header
         pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(37, 99, 235);
         pdf.text('ITEM DETAILS', marginLeft, currentY);
         
         currentY += 8;
         
         // Create table headers
         pdf.setFontSize(9);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont("helvetica", "bold");
         pdf.setTextColor(255, 255, 255);
-        pdf.setFillColor(67, 97, 238);
+        pdf.setFillColor(37, 99, 235);
         
         // Draw header cells
         const colWidths = [10, 50, 15, 12, 15, 15, 20, 15, 15, 20];
@@ -1907,7 +2277,7 @@ Thank you for your Business! 🙏
         currentY += 8;
         
         // Add items data
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont("helvetica", "normal");
         pdf.setTextColor(0, 0, 0);
         
         rows.forEach((row, index) => {
@@ -1935,9 +2305,9 @@ Thank you for your Business! 🙏
             
             // Redraw headers on new page
             xPos = marginLeft;
-            pdf.setFont(undefined, 'bold');
+            pdf.setFont("helvetica", "bold");
             pdf.setTextColor(255, 255, 255);
-            pdf.setFillColor(67, 97, 238);
+            pdf.setFillColor(37, 99, 235);
             
             headers.forEach((header, i) => {
               pdf.rect(xPos, currentY - 5, colWidths[i], 8, 'F');
@@ -1946,7 +2316,7 @@ Thank you for your Business! 🙏
             });
             
             currentY += 8;
-            pdf.setFont(undefined, 'normal');
+            pdf.setFont("helvetica", "normal");
             pdf.setTextColor(0, 0, 0);
           }
           
@@ -1988,13 +2358,13 @@ Thank you for your Business! 🙏
         // Add tax breakdown if needed
         if (Object.keys(taxBreakdownByRate).length > 0) {
           pdf.setFontSize(11);
-          pdf.setFont(undefined, 'bold');
-          pdf.setTextColor(67, 97, 238);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(37, 99, 235);
           pdf.text('TAX BREAKDOWN', marginLeft, currentY);
           
           currentY += 6;
           pdf.setFontSize(9);
-          pdf.setFont(undefined, 'normal');
+          pdf.setFont("helvetica", "normal");
           pdf.setTextColor(0, 0, 0);
           
           // Sort tax rates
@@ -2016,8 +2386,8 @@ Thank you for your Business! 🙏
         // Add summary section
         currentY += 5;
         pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
-        pdf.setTextColor(67, 97, 238);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(37, 99, 235);
         pdf.text('SUMMARY', marginLeft, currentY);
         
         currentY += 8;
@@ -2045,7 +2415,7 @@ Thank you for your Business! 🙏
         summaryData.push(['GRAND TOTAL:', `₹${grandTotal.toFixed(2)}`]);
         
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont("helvetica", "normal");
         
         summaryData.forEach(([label, value]) => {
           pdf.text(label, marginLeft, currentY);
@@ -2102,6 +2472,11 @@ Thank you for your Business! 🙏
       if (event.key === "Enter") {
         fetchInvoice();
       }
+    });
+
+    // Improve input focus
+    document.getElementById("invoiceNumber").addEventListener("focus", function() {
+      this.select();
     });
   </script>
 </body>
