@@ -251,6 +251,69 @@
       font-size: 28px;
       font-weight: 700;
       color: var(--primary);
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid var(--gray-light);
+    }
+    
+    .tax-details {
+      margin-top: 15px;
+      padding: 20px;
+      background: white;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-light);
+    }
+    
+    .tax-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .tax-row:last-child {
+      border-bottom: none;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .tax-label {
+      font-weight: 500;
+      color: var(--gray);
+    }
+    
+    .tax-value {
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .tax-breakdown {
+      margin-top: 25px;
+      padding: 20px;
+      background: var(--light);
+      border-radius: var(--border-radius);
+    }
+    
+    .tax-category {
+      margin-bottom: 20px;
+    }
+    
+    .tax-category-title {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .tax-category-items {
+      padding-left: 20px;
+    }
+    
+    .tax-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      color: var(--gray);
     }
     
     .action-buttons {
@@ -272,6 +335,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 180px;
+      justify-content: center;
     }
     
     .whatsapp-btn {
@@ -363,6 +428,27 @@
       line-height: 1.5;
     }
     
+    .share-section {
+      background: var(--light);
+      padding: 25px;
+      border-radius: var(--border-radius);
+      margin: 20px 0;
+    }
+    
+    .copy-link-container {
+      margin-top: 20px;
+    }
+    
+    .copy-link-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid var(--gray-light);
+      border-radius: var(--border-radius);
+      font-size: 14px;
+      margin-bottom: 10px;
+      background: white;
+    }
+    
     .toast {
       position: fixed;
       bottom: 20px;
@@ -384,7 +470,7 @@
     }
     
     @media print {
-      .search-section, .action-buttons, .template-selector {
+      .search-section, .action-buttons, .template-selector, .share-section {
         display: none;
       }
       body {
@@ -438,10 +524,15 @@
       
       .action-buttons {
         flex-direction: column;
+        align-items: stretch;
       }
       
       .action-btn {
-        justify-content: center;
+        width: 100%;
+      }
+      
+      .tax-details, .tax-breakdown {
+        padding: 15px;
       }
     }
     
@@ -469,21 +560,33 @@
       to { transform: rotate(360deg); }
     }
     
-    .copy-link-container {
-      background: var(--light);
-      padding: 20px;
-      border-radius: var(--border-radius);
+    .whatsapp-preview {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
       margin: 20px 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+      line-height: 1.4;
+      max-height: 400px;
+      overflow-y: auto;
     }
     
-    .copy-link-input {
-      width: 100%;
-      padding: 12px 15px;
-      border: 2px solid var(--gray-light);
-      border-radius: var(--border-radius);
-      font-size: 14px;
-      margin-bottom: 10px;
-      background: white;
+    .tax-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+      background: var(--primary);
+      color: white;
+    }
+    
+    .total-row {
+      background: rgba(67, 97, 238, 0.05);
+      font-weight: 600;
     }
   </style>
 </head>
@@ -518,6 +621,7 @@
       <div id="invoiceDetails" class="invoice-details"></div>
 
       <div id="itemsTable"></div>
+      <div id="taxBreakdown"></div>
       <div id="totalAmount" class="summary"></div>
       
       <!-- Action Buttons -->
@@ -542,30 +646,39 @@
         <div class="template-options">
           <div class="template-option active" data-template="modern" onclick="changeTemplate('modern')">
             <div class="template-name">Modern Gradient</div>
-            <div class="template-desc">Modern design with gradient colors and smooth animations</div>
+            <div class="template-desc">Modern design with detailed tax breakdown</div>
           </div>
-          <div class="template-option" data-template="minimal" onclick="changeTemplate('minimal')">
-            <div class="template-name">Minimal Clean</div>
-            <div class="template-desc">Simple, clean design with focus on readability</div>
+          <div class="template-option" data-template="whatsapp" onclick="changeTemplate('whatsapp')">
+            <div class="template-name">WhatsApp Style</div>
+            <div class="template-desc">Formatted exactly like WhatsApp bill template with tax details</div>
           </div>
-          <div class="template-option" data-template="professional" onclick="changeTemplate('professional')">
-            <div class="template-name">Professional</div>
-            <div class="template-desc">Corporate style with formal layout and muted colors</div>
+          <div class="template-option" data-template="detailed" onclick="changeTemplate('detailed')">
+            <div class="template-name">Detailed Tax View</div>
+            <div class="template-desc">Comprehensive tax calculation breakdown</div>
           </div>
           <div class="template-option" data-template="compact" onclick="changeTemplate('compact')">
             <div class="template-name">Compact View</div>
-            <div class="template-desc">Space-efficient design for quick overview</div>
+            <div class="template-desc">Space-efficient design with essential tax info</div>
           </div>
         </div>
       </div>
       
-      <!-- Copy Link Section -->
-      <div id="copyLinkContainer" class="copy-link-container" style="display:none;">
-        <h3 style="margin-bottom: 15px; color: var(--primary);">Share Invoice Link</h3>
-        <input type="text" id="invoiceLink" class="copy-link-input" readonly>
-        <button class="action-btn copy-btn" onclick="copyInvoiceLink()">
-          <span>🔗</span> Copy Invoice Link
-        </button>
+      <!-- Share Section -->
+      <div id="shareSection" class="share-section" style="display:none;">
+        <h3 style="margin-bottom: 15px; color: var(--primary);">Share Invoice</h3>
+        <div class="copy-link-container">
+          <p style="margin-bottom: 10px; color: var(--gray);">Share this link to view invoice:</p>
+          <input type="text" id="invoiceLink" class="copy-link-input" readonly>
+          <button class="action-btn copy-btn" onclick="copyInvoiceLink()" style="min-width: auto; padding: 10px 20px;">
+            <span>🔗</span> Copy Link
+          </button>
+        </div>
+        
+        <!-- WhatsApp Template Preview -->
+        <div id="whatsappPreview" style="margin-top: 25px;">
+          <h4 style="color: #25D366; margin-bottom: 15px;">WhatsApp Preview:</h4>
+          <div id="whatsappTemplatePreview" class="whatsapp-preview"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -583,6 +696,8 @@
     let currentInvoiceData = null;
     let currentInvoiceNumber = null;
     let currentTemplate = 'modern';
+    let shopGST = "Not Available";
+    let taxBreakdownByRate = {};
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
@@ -597,7 +712,6 @@
         fetchInvoice();
       }
       
-      // Apply saved template preference
       const savedTemplate = localStorage.getItem('invoiceTemplate') || 'modern';
       changeTemplate(savedTemplate, false);
     });
@@ -656,15 +770,43 @@
       }
     }
 
+    function calculateTaxes(price, quantity, taxPercentage, taxIncluded) {
+      const totalAmount = price * quantity;
+      let taxableAmount, taxAmount, sgst, cgst;
+      
+      if (taxIncluded) {
+        // If tax is included in the price
+        taxableAmount = totalAmount / (1 + (taxPercentage / 100));
+        taxAmount = totalAmount - taxableAmount;
+      } else {
+        // If tax is not included in the price
+        taxableAmount = totalAmount;
+        taxAmount = taxableAmount * (taxPercentage / 100);
+      }
+      
+      // Split tax equally between SGST and CGST
+      sgst = taxAmount / 2;
+      cgst = taxAmount / 2;
+      
+      return {
+        taxableAmount,
+        taxAmount,
+        sgst,
+        cgst,
+        total: taxableAmount + taxAmount
+      };
+    }
+
     async function fetchInvoice() {
       const invoiceNumber = document.getElementById("invoiceNumber").value.trim();
       const shopIDTag = localStorage.getItem("ShopIDTag");
       const detailsDiv = document.getElementById("invoiceDetails");
       const errorDiv = document.getElementById("errorMsg");
       const itemsDiv = document.getElementById("itemsTable");
+      const taxBreakdownDiv = document.getElementById("taxBreakdown");
       const totalDiv = document.getElementById("totalAmount");
       const actionButtons = document.getElementById("actionButtons");
-      const copyLinkContainer = document.getElementById("copyLinkContainer");
+      const shareSection = document.getElementById("shareSection");
       const searchBtn = document.getElementById("searchBtn");
       const btnText = document.getElementById("btnText");
       const invoiceTag = document.getElementById("invoiceTag");
@@ -673,11 +815,13 @@
       detailsDiv.innerHTML = "";
       errorDiv.innerText = "";
       itemsDiv.innerHTML = "";
+      taxBreakdownDiv.innerHTML = "";
       totalDiv.innerHTML = "";
       actionButtons.style.display = "none";
-      copyLinkContainer.style.display = "none";
+      shareSection.style.display = "none";
       invoiceTag.style.display = "none";
       currentInvoiceData = null;
+      taxBreakdownByRate = {};
 
       // Show loading state
       searchBtn.disabled = true;
@@ -698,7 +842,6 @@
       }
 
       try {
-        // Fetch data
         const [productResponse, salesResponse] = await Promise.all([
           fetch(productUrl, { headers: { Authorization: `Token ${apiKey}` } }),
           fetch(salesUrl, { headers: { Authorization: `Token ${apiKey}` } })
@@ -718,6 +861,9 @@
           return;
         }
 
+        // Get shop GST from first row
+        shopGST = invoiceRows[0]["GST"] || "Not Available";
+        
         // Store invoice data
         currentInvoiceData = {
           invoice: invoiceRows[0],
@@ -729,13 +875,18 @@
         // Display invoice
         displayInvoice();
 
-        // Show action buttons and link
+        // Show action buttons and share section
         actionButtons.style.display = "flex";
-        copyLinkContainer.style.display = "block";
+        shareSection.style.display = "block";
         
         // Generate and display shareable link
         const shareableLink = generateShareableLink(invoiceNumber);
         document.getElementById('invoiceLink').value = shareableLink;
+        
+        // Show WhatsApp preview
+        if (currentTemplate === 'whatsapp') {
+          displayWhatsAppPreview();
+        }
         
         // Update URL
         const newUrl = new URL(window.location);
@@ -760,6 +911,7 @@
       const { invoice, rows, productData } = currentInvoiceData;
       const detailsDiv = document.getElementById("invoiceDetails");
       const itemsDiv = document.getElementById("itemsTable");
+      const taxBreakdownDiv = document.getElementById("taxBreakdown");
       const totalDiv = document.getElementById("totalAmount");
       const invoiceTag = document.getElementById("invoiceTag");
 
@@ -772,138 +924,401 @@
       // Apply current template
       applyTemplate();
 
+      // Reset tax breakdown
+      taxBreakdownByRate = {};
+      
+      // Calculate totals
+      let grandTotal = 0;
+      let totalTaxableAmount = 0;
+      let totalSGST = 0;
+      let totalCGST = 0;
+      let totalTaxAmount = 0;
+      let itemCount = 0;
+
       // Display details based on template
-      if (currentTemplate === 'compact') {
-        detailsDiv.innerHTML = `
-          <div class="detail-group">
-            <span class="label">Invoice #</span>
-            <span class="value">${invoice["Invoice Number"]}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">Customer</span>
-            <span class="value">${invoice["Costomer Name"]}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">Date</span>
-            <span class="value">${formatDate(invoice["Date"])}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">Mobile</span>
-            <span class="value">${invoice["Mobile"]}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">Total Items</span>
-            <span class="value">${rows.length}</span>
-          </div>
-        `;
-      } else {
-        detailsDiv.innerHTML = `
-          <div class="detail-group">
-            <span class="label">Invoice Number</span>
-            <span class="value">${invoice["Invoice Number"]}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">Customer Name</span>
-            <span class="value">${invoice["Costomer Name"]}</span>
-          </div>
+      detailsDiv.innerHTML = `
+        <div class="detail-group">
+          <span class="label">Invoice Number</span>
+          <span class="value">${invoice["Invoice Number"]}</span>
+        </div>
+        <div class="detail-group">
+          <span class="label">Customer Name</span>
+          <span class="value">${invoice["Costomer Name"]}</span>
+        </div>
+        <div class="detail-group">
+          <span class="label">Date</span>
+          <span class="value">${formatDate(invoice["Date"])}</span>
+        </div>
+        <div class="detail-group">
+          <span class="label">Customer GST</span>
+          <span class="value">${invoice["GST"] || "Nil"}</span>
+        </div>
+        ${currentTemplate !== 'compact' ? `
           <div class="detail-group">
             <span class="label">Mobile</span>
-            <span class="value">${invoice["Mobile"]}</span>
+            <span class="value">${invoice["Mobile"] || "N/A"}</span>
           </div>
           <div class="detail-group">
             <span class="label">Address</span>
-            <span class="value">${invoice["Address"]}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">GST</span>
-            <span class="value">${invoice["GST"] || "Nil"}</span>
-          </div>
-          <div class="detail-group">
-            <span class="label">Date</span>
-            <span class="value">${formatDate(invoice["Date"])}</span>
+            <span class="value">${invoice["Address"] || "N/A"}</span>
           </div>
           <div class="detail-group">
             <span class="label">Sales Person</span>
-            <span class="value">${invoice["Sales Person"]}</span>
+            <span class="value">${invoice["Sales Person"] || "N/A"}</span>
           </div>
+        ` : ''}
+      `;
+
+      // Build items table based on template
+      let tableHTML = '';
+      
+      if (currentTemplate === 'detailed' || currentTemplate === 'modern') {
+        tableHTML = `
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item Description</th>
+                <th>HSN/SAC</th>
+                <th>Qty</th>
+                <th>Rate (₹)</th>
+                <th>Tax Rate</th>
+                <th>Taxable Amt (₹)</th>
+                <th>SGST (₹)</th>
+                <th>CGST (₹)</th>
+                <th>Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+      } else if (currentTemplate === 'compact') {
+        tableHTML = `
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Tax %</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+      } else if (currentTemplate === 'whatsapp') {
+        tableHTML = `
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Item Description</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Tax %</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
         `;
       }
 
-      // Build items table
-      let tableHTML = `
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Sl. No</th>
-              <th>Item Name</th>
-              <th>Product ID</th>
-              ${currentTemplate !== 'compact' ? '<th>Batch No</th>' : ''}
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      let grandTotal = 0;
       rows.forEach((row, index) => {
         const product = productData.find(p => p["Product ID"] === row["Product ID"]);
         const productName = product ? product["Product Name"] : "Not Found";
-        const total = (Number(row["Quantity"]) || 0) * (Number(row["Price"]) || 0);
-        grandTotal += total;
+        const quantity = Number(row["Quantity"]) || 0;
+        const price = Number(row["Price"]) || 0;
+        const taxIncluded = product ? product["Tax Included"] : false;
+        const taxPercentage = product ? Number(product["Tax Percentage"]) || 0 : 0;
+        
+        const taxes = calculateTaxes(price, quantity, taxPercentage, taxIncluded);
+        
+        // Update tax breakdown by rate
+        if (!taxBreakdownByRate[taxPercentage]) {
+          taxBreakdownByRate[taxPercentage] = {
+            taxableAmount: 0,
+            sgst: 0,
+            cgst: 0,
+            taxAmount: 0,
+            count: 0
+          };
+        }
+        taxBreakdownByRate[taxPercentage].taxableAmount += taxes.taxableAmount;
+        taxBreakdownByRate[taxPercentage].sgst += taxes.sgst;
+        taxBreakdownByRate[taxPercentage].cgst += taxes.cgst;
+        taxBreakdownByRate[taxPercentage].taxAmount += taxes.taxAmount;
+        taxBreakdownByRate[taxPercentage].count++;
+        
+        grandTotal += taxes.total;
+        totalTaxableAmount += taxes.taxableAmount;
+        totalSGST += taxes.sgst;
+        totalCGST += taxes.cgst;
+        totalTaxAmount += taxes.taxAmount;
+        itemCount++;
 
-        tableHTML += `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${productName}</td>
-            <td>${row["Product ID"]}</td>
-            ${currentTemplate !== 'compact' ? `<td>${row["Batch No"]}</td>` : ''}
-            <td>${row["Quantity"]}</td>
-            <td>₹${Number(row["Price"]).toFixed(2)}</td>
-            <td>₹${total.toFixed(2)}</td>
-          </tr>
-        `;
+        if (currentTemplate === 'detailed' || currentTemplate === 'modern') {
+          tableHTML += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${productName}<br><small>${row["Product ID"]} | Batch: ${row["Batch No"]}</small></td>
+              <td>-</td>
+              <td>${quantity}</td>
+              <td>${price.toFixed(2)}</td>
+              <td>${taxPercentage}%</td>
+              <td>${taxes.taxableAmount.toFixed(2)}</td>
+              <td>${taxes.sgst.toFixed(2)}</td>
+              <td>${taxes.cgst.toFixed(2)}</td>
+              <td><strong>${taxes.total.toFixed(2)}</strong></td>
+            </tr>
+          `;
+        } else if (currentTemplate === 'compact') {
+          tableHTML += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${productName}</td>
+              <td>${quantity}</td>
+              <td>${price.toFixed(2)}</td>
+              <td>${taxPercentage}%</td>
+              <td>${taxes.total.toFixed(2)}</td>
+            </tr>
+          `;
+        } else if (currentTemplate === 'whatsapp') {
+          tableHTML += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${productName}</td>
+              <td>${quantity}</td>
+              <td>${price.toFixed(2)}</td>
+              <td>${taxPercentage}%</td>
+              <td>${taxes.total.toFixed(2)}</td>
+            </tr>
+          `;
+        }
       });
 
       tableHTML += `</tbody></table>`;
       itemsDiv.innerHTML = tableHTML;
-      totalDiv.innerHTML = `<div class="total-amount">Grand Total: ₹${grandTotal.toFixed(2)}</div>`;
+      
+      // Calculate effective tax percentage
+      const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+        (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
+      
+      // Build tax breakdown section for detailed templates
+      if (currentTemplate === 'detailed' || currentTemplate === 'modern') {
+        let taxBreakdownHTML = '<div class="tax-breakdown">';
+        taxBreakdownHTML += '<div class="tax-category"><div class="tax-category-title">Tax Breakdown by Rate</div><div class="tax-category-items">';
+        
+        // Sort tax rates
+        const sortedRates = Object.keys(taxBreakdownByRate).sort((a, b) => parseFloat(a) - parseFloat(b));
+        
+        sortedRates.forEach(rate => {
+          const rateData = taxBreakdownByRate[rate];
+          if (parseFloat(rate) > 0) {
+            taxBreakdownHTML += `
+              <div class="tax-item">
+                <span>Items @ ${rate}% GST (${rateData.count} items):</span>
+                <span>₹${rateData.taxableAmount.toFixed(2)}</span>
+              </div>
+              <div class="tax-item">
+                <span>&nbsp;&nbsp;SGST @ ${(rate/2).toFixed(2)}%:</span>
+                <span>₹${rateData.sgst.toFixed(2)}</span>
+              </div>
+              <div class="tax-item">
+                <span>&nbsp;&nbsp;CGST @ ${(rate/2).toFixed(2)}%:</span>
+                <span>₹${rateData.cgst.toFixed(2)}</span>
+              </div>
+            `;
+          }
+        });
+        
+        taxBreakdownHTML += '</div></div></div>';
+        taxBreakdownDiv.innerHTML = taxBreakdownHTML;
+      }
+      
+      // Build total section with tax details
+      let taxDetailsHTML = `
+        <div class="tax-details">
+          <div class="tax-row">
+            <span class="tax-label">Total Items:</span>
+            <span class="tax-value">${itemCount}</span>
+          </div>
+          <div class="tax-row">
+            <span class="tax-label">Taxable Amount:</span>
+            <span class="tax-value">₹${totalTaxableAmount.toFixed(2)}</span>
+          </div>
+      `;
+      
+      if (totalTaxAmount > 0) {
+        taxDetailsHTML += `
+          <div class="tax-row">
+            <span class="tax-label">SGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+            <span class="tax-value">₹${totalSGST.toFixed(2)}</span>
+          </div>
+          <div class="tax-row">
+            <span class="tax-label">CGST (${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%):</span>
+            <span class="tax-value">₹${totalCGST.toFixed(2)}</span>
+          </div>
+          <div class="tax-row">
+            <span class="tax-label">Total GST:</span>
+            <span class="tax-value">₹${totalTaxAmount.toFixed(2)}</span>
+          </div>
+        `;
+      } else {
+        taxDetailsHTML += `
+          <div class="tax-row">
+            <span class="tax-label">GST:</span>
+            <span class="tax-value">NIL</span>
+          </div>
+        `;
+      }
+      
+      taxDetailsHTML += `
+          <div class="tax-row">
+            <span class="tax-label"><strong>Grand Total:</strong></span>
+            <span class="tax-value"><strong>₹${grandTotal.toFixed(2)}</strong></span>
+          </div>
+        </div>
+      `;
+      
+      totalDiv.innerHTML = taxDetailsHTML;
       
       // Add animations
       detailsDiv.classList.add('fade-in');
       itemsDiv.classList.add('fade-in');
+      if (taxBreakdownDiv.innerHTML) {
+        taxBreakdownDiv.classList.add('fade-in');
+      }
       totalDiv.classList.add('fade-in');
+      
+      // Display WhatsApp preview if needed
+      if (currentTemplate === 'whatsapp') {
+        displayWhatsAppPreview();
+      }
+    }
+
+    function displayWhatsAppPreview() {
+      if (!currentInvoiceData) return;
+      
+      const { invoice, rows, productData } = currentInvoiceData;
+      const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
+      
+      // Calculate totals
+      let grandTotal = 0;
+      let totalTaxableAmount = 0;
+      let totalSGST = 0;
+      let totalCGST = 0;
+      let totalTaxAmount = 0;
+      
+      // Build items list with tax details
+      let itemsList = '';
+      rows.forEach((row, index) => {
+        const product = productData.find(p => p["Product ID"] === row["Product ID"]);
+        const productName = product ? product["Product Name"] : "Not Found";
+        const quantity = Number(row["Quantity"]) || 0;
+        const price = Number(row["Price"]) || 0;
+        const taxIncluded = product ? product["Tax Included"] : false;
+        const taxPercentage = product ? Number(product["Tax Percentage"]) || 0 : 0;
+        
+        const taxes = calculateTaxes(price, quantity, taxPercentage, taxIncluded);
+        const total = taxes.taxableAmount + taxes.taxAmount;
+        
+        grandTotal += total;
+        totalTaxableAmount += taxes.taxableAmount;
+        totalSGST += taxes.sgst;
+        totalCGST += taxes.cgst;
+        totalTaxAmount += taxes.taxAmount;
+        
+        itemsList += `${index + 1}. ${productName}\n   Qty: ${quantity} x ₹${price.toFixed(2)} = ₹${total.toFixed(2)}\n   GST: ${taxPercentage}% (SGST: ${(taxPercentage/2).toFixed(2)}%, CGST: ${(taxPercentage/2).toFixed(2)}%)\n\n`;
+      });
+      
+      // Calculate effective tax rates
+      const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+        (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
+      const cgstRate = (parseFloat(effectiveTaxPercentage) / 2).toFixed(2);
+      const sgstRate = (parseFloat(effectiveTaxPercentage) / 2).toFixed(2);
+      
+      // Build tax breakdown by rate for WhatsApp
+      let taxBreakdownText = '';
+      const sortedRates = Object.keys(taxBreakdownByRate).sort((a, b) => parseFloat(a) - parseFloat(b));
+      
+      sortedRates.forEach(rate => {
+        const rateData = taxBreakdownByRate[rate];
+        if (parseFloat(rate) > 0) {
+          taxBreakdownText += `   @${rate}% GST: ₹${rateData.taxableAmount.toFixed(2)}\n`;
+        }
+      });
+      
+      // Generate WhatsApp template with enhanced tax details
+      const whatsappTemplate = `*${shopInfo.shopName}*
+${shopInfo.address}
+📞 Ph: ${shopInfo.phone}
+📍 GSTIN: ${shopGST}
+
+🧾 *TAX INVOICE*
+━━━━━━━━━━━━━━━━━━━━
+📋 Invoice No : ${invoice["Invoice Number"]}
+📅 Date       : ${formatDate(invoice["Date"])}
+👤 Sales By   : ${invoice["Sales Person"] || "N/A"}
+
+👤 *BILL TO*
+━━━━━━━━━━━━━━━━━━━━
+👤 Name    : ${invoice["Costomer Name"]}
+📱 Mobile  : ${invoice["Mobile"] || "N/A"}
+🏠 Address : ${invoice["Address"] || "N/A"}
+📋 GST No  : ${invoice["GST"] || "NIL"}
+
+📦 *ITEM DETAILS*
+━━━━━━━━━━━━━━━━━━━━
+${itemsList}
+📊 *TAX SUMMARY*
+━━━━━━━━━━━━━━━━━━━━
+Taxable Amount : ₹${totalTaxableAmount.toFixed(2)}
+
+*Tax Breakdown:*
+${taxBreakdownText}
+CGST @ ${cgstRate}% : ₹${totalCGST.toFixed(2)}
+SGST @ ${sgstRate}% : ₹${totalSGST.toFixed(2)}
+━━━━━━━━━━━━━━━━━━━━
+*GRAND TOTAL : ₹${grandTotal.toFixed(2)}*
+━━━━━━━━━━━━━━━━━━━━
+
+🔗 *Invoice Link:*
+${generateShareableLink(currentInvoiceNumber)}
+
+📞 *Contact for Queries:*
+${shopInfo.phone}
+
+Thank you for your Business! 🙏
+*Terms:*
+• Goods once sold will not be taken back
+• Subject to ${shopInfo.shopName} jurisdiction`;
+      
+      // Display preview
+      document.getElementById('whatsappTemplatePreview').textContent = whatsappTemplate;
+      document.getElementById('whatsappPreview').style.display = 'block';
     }
 
     function applyTemplate() {
       const container = document.querySelector('.invoice-container');
       const header = document.querySelector('.invoice-header');
-      const table = document.querySelector('.items-table');
       
       // Reset styles
       container.style = '';
       header.style = '';
-      if (table) table.style = '';
       
       switch(currentTemplate) {
         case 'modern':
-          // Already set as default
           break;
           
-        case 'minimal':
+        case 'whatsapp':
           container.style.backgroundColor = '#ffffff';
-          header.style.background = '#f8f9fa';
-          header.style.color = '#212529';
+          header.style.background = '#25D366';
+          header.style.color = 'white';
           break;
           
-        case 'professional':
+        case 'detailed':
           container.style.backgroundColor = '#ffffff';
           header.style.background = 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
-          if (table) {
-            table.style.border = '1px solid #dee2e6';
-            table.querySelector('thead').style.background = '#2c3e50';
-          }
           break;
           
         case 'compact':
@@ -926,6 +1341,14 @@
         }
       });
       
+      // Show/hide WhatsApp preview
+      const whatsappPreview = document.getElementById('whatsappPreview');
+      if (templateName === 'whatsapp' && currentInvoiceData) {
+        displayWhatsAppPreview();
+      } else {
+        whatsappPreview.style.display = 'none';
+      }
+      
       // Re-display invoice if we have data
       if (currentInvoiceData && updateDisplay) {
         displayInvoice();
@@ -945,12 +1368,11 @@
     function copyInvoiceLink() {
       const linkInput = document.getElementById('invoiceLink');
       linkInput.select();
-      linkInput.setSelectionRange(0, 99999); // For mobile devices
+      linkInput.setSelectionRange(0, 99999);
       
       navigator.clipboard.writeText(linkInput.value)
         .then(() => showToast('✅ Invoice link copied to clipboard!'))
         .catch(() => {
-          // Fallback for older browsers
           document.execCommand('copy');
           showToast('✅ Invoice link copied to clipboard!');
         });
@@ -959,26 +1381,99 @@
     function shareToWhatsApp() {
       if (!currentInvoiceData) return;
       
-      const { invoice, rows } = currentInvoiceData;
+      const { invoice, rows, productData } = currentInvoiceData;
       const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
-      const invoiceLink = generateShareableLink(currentInvoiceNumber);
       
       // Calculate totals
-      let totalAmount = 0;
-      rows.forEach(row => {
-        totalAmount += (Number(row["Quantity"]) || 0) * (Number(row["Price"]) || 0);
+      let grandTotal = 0;
+      let totalTaxableAmount = 0;
+      let totalSGST = 0;
+      let totalCGST = 0;
+      let totalTaxAmount = 0;
+      
+      // Build items list with tax details
+      let itemsList = '';
+      rows.forEach((row, index) => {
+        const product = productData.find(p => p["Product ID"] === row["Product ID"]);
+        const productName = product ? product["Product Name"] : "Not Found";
+        const quantity = Number(row["Quantity"]) || 0;
+        const price = Number(row["Price"]) || 0;
+        const taxIncluded = product ? product["Tax Included"] : false;
+        const taxPercentage = product ? Number(product["Tax Percentage"]) || 0 : 0;
+        
+        const taxes = calculateTaxes(price, quantity, taxPercentage, taxIncluded);
+        const total = taxes.taxableAmount + taxes.taxAmount;
+        
+        grandTotal += total;
+        totalTaxableAmount += taxes.taxableAmount;
+        totalSGST += taxes.sgst;
+        totalCGST += taxes.cgst;
+        totalTaxAmount += taxes.taxAmount;
+        
+        itemsList += `${index + 1}. ${productName}\n   Qty: ${quantity} x ₹${price.toFixed(2)} = ₹${total.toFixed(2)}\n   GST: ${taxPercentage}% (SGST: ${(taxPercentage/2).toFixed(2)}%, CGST: ${(taxPercentage/2).toFixed(2)}%)\n\n`;
       });
       
-      // Create WhatsApp message
-      const message = `📄 *Invoice Details*\n\n` +
-                     `*Shop:* ${shopInfo.shopName}\n` +
-                     `*Invoice #:* ${invoice["Invoice Number"]}\n` +
-                     `*Customer:* ${invoice["Costomer Name"]}\n` +
-                     `*Date:* ${formatDate(invoice["Date"])}\n` +
-                     `*Items:* ${rows.length}\n` +
-                     `*Total:* ₹${totalAmount.toFixed(2)}\n\n` +
-                     `View full invoice:\n${invoiceLink}\n\n` +
-                     `Thank you for your business! 🛍️`;
+      // Calculate effective tax rates
+      const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+        (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
+      const cgstRate = (parseFloat(effectiveTaxPercentage) / 2).toFixed(2);
+      const sgstRate = (parseFloat(effectiveTaxPercentage) / 2).toFixed(2);
+      
+      // Build tax breakdown by rate
+      let taxBreakdownText = '';
+      const sortedRates = Object.keys(taxBreakdownByRate).sort((a, b) => parseFloat(a) - parseFloat(b));
+      
+      sortedRates.forEach(rate => {
+        const rateData = taxBreakdownByRate[rate];
+        if (parseFloat(rate) > 0) {
+          taxBreakdownText += `   @${rate}% GST: ₹${rateData.taxableAmount.toFixed(2)}\n`;
+        }
+      });
+      
+      // Create WhatsApp message with enhanced tax details
+      const message = `*${shopInfo.shopName}*
+${shopInfo.address}
+📞 Ph: ${shopInfo.phone}
+📍 GSTIN: ${shopGST}
+
+🧾 *TAX INVOICE*
+━━━━━━━━━━━━━━━━━━━━
+📋 Invoice No : ${invoice["Invoice Number"]}
+📅 Date       : ${formatDate(invoice["Date"])}
+👤 Sales By   : ${invoice["Sales Person"] || "N/A"}
+
+👤 *BILL TO*
+━━━━━━━━━━━━━━━━━━━━
+👤 Name    : ${invoice["Costomer Name"]}
+📱 Mobile  : ${invoice["Mobile"] || "N/A"}
+🏠 Address : ${invoice["Address"] || "N/A"}
+📋 GST No  : ${invoice["GST"] || "NIL"}
+
+📦 *ITEM DETAILS*
+━━━━━━━━━━━━━━━━━━━━
+${itemsList}
+📊 *TAX SUMMARY*
+━━━━━━━━━━━━━━━━━━━━
+Taxable Amount : ₹${totalTaxableAmount.toFixed(2)}
+
+*Tax Breakdown:*
+${taxBreakdownText}
+CGST @ ${cgstRate}% : ₹${totalCGST.toFixed(2)}
+SGST @ ${sgstRate}% : ₹${totalSGST.toFixed(2)}
+━━━━━━━━━━━━━━━━━━━━
+*GRAND TOTAL : ₹${grandTotal.toFixed(2)}*
+━━━━━━━━━━━━━━━━━━━━
+
+🔗 *Invoice Link:*
+${generateShareableLink(currentInvoiceNumber)}
+
+📞 *Contact for Queries:*
+${shopInfo.phone}
+
+Thank you for your Business! 🙏
+*Terms:*
+• Goods once sold will not be taken back
+• Subject to ${shopInfo.shopName} jurisdiction`;
       
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
@@ -992,52 +1487,106 @@
       const { invoice, rows, productData } = currentInvoiceData;
       const shopInfo = parseShopTag(localStorage.getItem("ShopTag") || "Your Shop");
       
-      // Build text version
-      let text = `INVOICE\n`;
-      text += `========\n\n`;
-      text += `Shop: ${shopInfo.shopName}\n`;
-      text += `Address: ${shopInfo.address}\n`;
-      text += `Phone: ${shopInfo.phone}\n\n`;
-      text += `Invoice #: ${invoice["Invoice Number"]}\n`;
-      text += `Customer: ${invoice["Costomer Name"]}\n`;
-      text += `Mobile: ${invoice["Mobile"]}\n`;
-      text += `Address: ${invoice["Address"]}\n`;
-      text += `Date: ${formatDate(invoice["Date"])}\n`;
-      text += `GST: ${invoice["GST"] || "Nil"}\n`;
-      text += `Sales Person: ${invoice["Sales Person"]}\n\n`;
-      text += `ITEMS:\n`;
-      text += `------\n`;
-      
+      // Calculate totals
       let grandTotal = 0;
+      let totalTaxableAmount = 0;
+      let totalSGST = 0;
+      let totalCGST = 0;
+      let totalTaxAmount = 0;
+      
+      // Build detailed text version with tax breakdown
+      let text = `TAX INVOICE\n`;
+      text += `============\n\n`;
+      text += `Seller Details:\n`;
+      text += `--------------\n`;
+      text += `Shop Name: ${shopInfo.shopName}\n`;
+      text += `Address: ${shopInfo.address}\n`;
+      text += `Phone: ${shopInfo.phone}\n`;
+      text += `GSTIN: ${shopGST}\n\n`;
+      
+      text += `Invoice Information:\n`;
+      text += `-------------------\n`;
+      text += `Invoice Number: ${invoice["Invoice Number"]}\n`;
+      text += `Invoice Date: ${formatDate(invoice["Date"])}\n`;
+      text += `Sales Person: ${invoice["Sales Person"] || "N/A"}\n\n`;
+      
+      text += `Buyer Details:\n`;
+      text += `-------------\n`;
+      text += `Name: ${invoice["Costomer Name"]}\n`;
+      text += `Mobile: ${invoice["Mobile"] || "N/A"}\n`;
+      text += `Address: ${invoice["Address"] || "N/A"}\n`;
+      text += `GSTIN: ${invoice["GST"] || "NIL"}\n\n`;
+      
+      text += `Item Details:\n`;
+      text += `------------\n`;
+      text += `S.No | Item Description | HSN/SAC | Qty | Rate | Tax % | Taxable Amt | SGST | CGST | Total\n`;
+      text += `----------------------------------------------------------------------------------------\n`;
+      
       rows.forEach((row, index) => {
         const product = productData.find(p => p["Product ID"] === row["Product ID"]);
         const productName = product ? product["Product Name"] : "Not Found";
-        const total = (Number(row["Quantity"]) || 0) * (Number(row["Price"]) || 0);
-        grandTotal += total;
+        const quantity = Number(row["Quantity"]) || 0;
+        const price = Number(row["Price"]) || 0;
+        const taxIncluded = product ? product["Tax Included"] : false;
+        const taxPercentage = product ? Number(product["Tax Percentage"]) || 0 : 0;
         
-        text += `${index + 1}. ${productName}\n`;
-        text += `   Product ID: ${row["Product ID"]}\n`;
-        text += `   Batch: ${row["Batch No"]}\n`;
-        text += `   Qty: ${row["Quantity"]} x ₹${Number(row["Price"]).toFixed(2)} = ₹${total.toFixed(2)}\n\n`;
+        const taxes = calculateTaxes(price, quantity, taxPercentage, taxIncluded);
+        const total = taxes.taxableAmount + taxes.taxAmount;
+        
+        grandTotal += total;
+        totalTaxableAmount += taxes.taxableAmount;
+        totalSGST += taxes.sgst;
+        totalCGST += taxes.cgst;
+        totalTaxAmount += taxes.taxAmount;
+        
+        text += `${(index + 1).toString().padEnd(4)} | ${productName.padEnd(20)} | - | ${quantity.toString().padEnd(4)} | ${price.toFixed(2).padEnd(6)} | ${taxPercentage.toString().padEnd(5)}% | ${taxes.taxableAmount.toFixed(2).padEnd(12)} | ${taxes.sgst.toFixed(2).padEnd(6)} | ${taxes.cgst.toFixed(2).padEnd(6)} | ${total.toFixed(2)}\n`;
       });
       
       text += `\n`;
+      
+      // Calculate effective tax percentage
+      const effectiveTaxPercentage = totalTaxableAmount > 0 ? 
+        (totalTaxAmount / totalTaxableAmount * 100).toFixed(2) : "0.00";
+      
+      text += `Tax Summary:\n`;
+      text += `-----------\n`;
+      text += `Total Items: ${rows.length}\n`;
+      text += `Taxable Amount: ₹${totalTaxableAmount.toFixed(2)}\n`;
+      
+      // Add tax breakdown by rate
+      const sortedRates = Object.keys(taxBreakdownByRate).sort((a, b) => parseFloat(a) - parseFloat(b));
+      sortedRates.forEach(rate => {
+        const rateData = taxBreakdownByRate[rate];
+        if (parseFloat(rate) > 0) {
+          text += `  @ ${rate}% GST (${rateData.count} items): ₹${rateData.taxableAmount.toFixed(2)}\n`;
+        }
+      });
+      
+      text += `SGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%: ₹${totalSGST.toFixed(2)}\n`;
+      text += `CGST @ ${(parseFloat(effectiveTaxPercentage)/2).toFixed(2)}%: ₹${totalCGST.toFixed(2)}\n`;
+      text += `Total GST: ₹${totalTaxAmount.toFixed(2)}\n\n`;
+      
       text += `GRAND TOTAL: ₹${grandTotal.toFixed(2)}\n\n`;
-      text += `Invoice Link: ${generateShareableLink(currentInvoiceNumber)}\n`;
-      text += `\nThank you for your business!`;
+      text += `Invoice Link: ${generateShareableLink(currentInvoiceNumber)}\n\n`;
+      text += `Terms and Conditions:\n`;
+      text += `--------------------\n`;
+      text += `1. Goods once sold will not be taken back\n`;
+      text += `2. Subject to ${shopInfo.shopName} jurisdiction\n`;
+      text += `3. E. & O.E.\n\n`;
+      text += `Generated on: ${new Date().toLocaleDateString()}\n`;
+      text += `Thank you for your business!`;
       
       // Copy to clipboard
       navigator.clipboard.writeText(text)
-        .then(() => showToast('✅ Invoice text copied to clipboard!'))
+        .then(() => showToast('✅ Invoice text with tax details copied to clipboard!'))
         .catch(() => {
-          // Fallback for older browsers
           const textarea = document.createElement('textarea');
           textarea.value = text;
           document.body.appendChild(textarea);
           textarea.select();
           document.execCommand('copy');
           document.body.removeChild(textarea);
-          showToast('✅ Invoice text copied to clipboard!');
+          showToast('✅ Invoice text with tax details copied to clipboard!');
         });
     }
 
